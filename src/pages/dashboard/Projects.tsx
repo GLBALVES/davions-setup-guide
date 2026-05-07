@@ -519,7 +519,7 @@ function KanbanCard({
         {/* Deadline progress bar */}
         {(() => {
           const status = galleryExpiryStatus ?? deadlineStatus ?? upcomingSessionStatus;
-          const deadline = project.gallery_expires_at ?? effectiveDeadline ?? (upcomingSessionStatus && project.shoot_date ? project.shoot_date : null);
+          const deadline = effectiveGalleryExpiry ?? effectiveDeadline ?? (upcomingSessionStatus && project.shoot_date ? project.shoot_date : null);
           // Start anchor: for gallery expiry use shoot_date; for delivery deadlines use created_at
           const startAnchor = (galleryExpiryStatus || upcomingSessionStatus)
             ? (project.shoot_date ?? project.created_at)
