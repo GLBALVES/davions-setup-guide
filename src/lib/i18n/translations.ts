@@ -145,6 +145,7 @@ export const translations = {
       editOneSession: "Edit One Session",
       saveChanges: "Save changes",
       saved: "Changes saved",
+      saveAndContinue: "Save & Continue",
     },
     // ── Galleries page ──
     galleries: {
