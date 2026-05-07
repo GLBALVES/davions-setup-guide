@@ -1,79 +1,89 @@
 ## Objetivo
-Formatar em tempo real os campos de valor monetário do `SessionForm.tsx` conforme o idioma do app (PT/ES → `1.500,00` · EN → `1,500.00`), mantendo o `$` à esquerda. O state interno continua em formato canônico (`"1500.50"` com ponto decimal) para não quebrar a lógica existente de salvamento em centavos.
+Quando uma sessão tiver `balance_due_timing = 'session_day'` e o booking deixar saldo restante (deposit pago, balance pendente), disparar **automaticamente** um email com lembrete e **link de pagamento Stripe** para o cliente, no horário definido pelo offset (ex.: 24h antes, no início, 2h depois).
 
-## Campos afetados (apenas SessionForm)
+## Como funciona hoje (resumo)
 
-**Step 3 — Payment**
-- Session Price (linha ~2082) → `price`
-- Deposit Amount quando `depositType === "fixed"` (linha ~2232) → `depositAmount`
-
-**Step 4 — Additional Photos**
-- Tier · Price/photo (linha ~2464) → `photoTiers[].price_per_photo`
-
-**Step 5 — Extras**
-- Extra · Price (linha ~2580) → `sessionExtras[].price`
-
-**Previews derivados** (apenas display, sem input):
-- `Tax: $X.XX` / `Total: $X.XX` (linhas 2145–2146)
-- `Deposit: $X.XX` / `Remaining: $X.XX` (linhas 2249–2258)
-- Tier preview `× $X.XX = $X.XX` (linhas 2477–2479)
-
-**Fora de escopo:** `taxRate %`, `depositAmount %`, `min_photos`, `quantity`, `balanceDueOffsetHours` — não são moeda.
+- `sessions.balance_due_timing` ∈ {`session_day`, `gallery_checkout`, `after_delivery`}
+- `sessions.balance_due_offset_hours`: inteiro com sinal — negativo = horas antes; 0 = no início da sessão; positivo = horas depois.
+- Bookings com `deposit_enabled=true` pagam só o `depositBase` no checkout; o `remainingBalance` fica pendente em Stripe (`deposit_paid` flag, sem invoice).
+- `workflow-email-cron` é uma edge function que varre triggers e chama `send-workflow-email` (que mescla template + variáveis e envia via SMTP do photographer). Há tabela `workflow_email_dispatched` para dedupe.
+- Templates ficam em `workflow_email_templates` com `stage_trigger` único por photographer.
 
 ## Implementação
 
-### 1. Novo helper `src/lib/currency-format.ts`
+### 1. Migração: adicionar trigger `balance_due_session_day`
+- Atualizar o tipo CHECK do schema (não há check no `workflow_email_templates`, é texto livre — não precisa migration).
+- **Sem nova tabela.** Reutilizar `workflow_email_templates` e `workflow_email_dispatched`.
+- Indexar `bookings(payment_status, booked_date)` se já não existir, para a varredura do cron.
 
-Funções puras parametrizadas por `lang: "en" | "pt" | "es"`:
+### 2. Edge function nova: `create-balance-payment-link`
+- Recebe `booking_id` (server-to-server).
+- Busca booking + session + valor restante.
+- Cria um Stripe Checkout Session (modo `payment`, sem subscription) cobrando o `remainingBalance` na conta Connect do photographer.
+- Retorna `{ url }`. Inclui `metadata.booking_id`, `metadata.payment_kind = 'balance_due'`.
+- Webhook `session-booking-webhook` (existente) já trata pagamentos via metadata — adicionar branch para marcar `payment_status='paid'` no booking quando `payment_kind='balance_due'`.
 
-- **`formatCurrencyInput(raw: string, lang)`** → string para exibição
-  - Aceita o valor canônico (`"1500.50"`) ou já formatado e devolve no formato local
-  - PT/ES: vírgula = decimal, ponto = milhar
-  - EN: ponto = decimal, vírgula = milhar
-  - Preserva separador decimal final enquanto o usuário digita (ex: `1500,` continua `1.500,`)
-  - Limita a 2 casas decimais
-  - Re-aplica separadores de milhar à parte inteira
+### 3. Edge function nova: `get-balance-payment-link`
+- Endpoint **público** (verify_jwt=false) que recebe um `token` (assinado) e:
+  - decifra `booking_id` + `expires_at`
+  - chama internamente `create-balance-payment-link`
+  - faz redirect 302 para a URL do Stripe Checkout
+- Por que via redirect: o link no email precisa ser estável e clicável depois; criar a session Stripe na hora evita expiração do link Stripe (24h).
+- Token = `base64url(JSON{booking_id, exp})` + HMAC-SHA256 com `SUPABASE_SERVICE_ROLE_KEY` (suficiente para impedir adivinhação).
 
-- **`parseCurrencyInput(formatted: string, lang)`** → string canônica `"1500.50"`
-  - Remove separadores de milhar
-  - Converte vírgula decimal (PT/ES) para ponto
-  - Strip tudo que não for dígito/decimal
-  - Retorna `""` para input vazio (preserva placeholder)
+### 4. Modificar `workflow-email-cron`
+Adicionar quarta seção:
+```
+4) balance_due_session_day — bookings com deposit pago, sessão com balance_due_timing='session_day',
+   offset hours definido, ainda não dispatched, e cujo "fire time" (booked_date + start_time + offset_hours)
+   já passou (ou está dentro de uma janela de tolerância de 1h).
+```
+- Query: `bookings` join `sessions` join `session_availability` filtrando `payment_status IN ('deposit_paid')` e `sessions.deposit_enabled=true` e `sessions.balance_due_timing='session_day'`.
+- Calcular `fire_at = booked_date + start_time + (offset_hours * 1h)`.
+- Disparar quando `now() >= fire_at` e `now() < fire_at + 24h` (limite de janela).
+- Vars enviadas ao template: `client_name`, `shoot_date`, `shoot_time`, `session_type`, `balance_amount`, `payment_link` (URL do `get-balance-payment-link?token=…`), `studio_name`.
 
-- **`displayMoney(num: number, lang)`** → string formatada para previews (sem o `$`, que continua em JSX)
-  - Usa `Intl.NumberFormat` com `minimumFractionDigits: 2, maximumFractionDigits: 2`
+### 5. Frontend — `WorkflowEmailTemplates.tsx`
+- Adicionar `"balance_due_session_day"` em uma nova categoria `PAYMENT_TRIGGERS`.
+- Adicionar `DEFAULT_CONTENT` em PT/EN/ES (subject + html) — ex.:
+  ```
+  Subject: "Lembrete: pagamento da sessão {{session_type}}"
+  Body: explica que o saldo de {{balance_amount}} pode ser quitado em {{payment_link}}.
+  ```
+- Adicionar nova variável `{{payment_link}}` e `{{balance_amount}}` em `VARIABLES` e `SAMPLE_PREVIEW`.
+- Aba Help / texto explicativo: o disparo segue o offset configurado em **Sessions → Payment → On the session day**.
 
-### 2. Alterações em `SessionForm.tsx`
-
-Para cada `<Input>` de moeda listado:
-```tsx
-<Input
-  type="text"
-  inputMode="decimal"
-  value={formatCurrencyInput(state, lang)}
-  onChange={(e) => setState(parseCurrencyInput(e.target.value, lang))}
-  placeholder={lang === "en" ? "0.00" : "0,00"}
-  ...
-/>
+### 6. Webhook update
+Em `session-booking-webhook`:
+```
+if (metadata.payment_kind === 'balance_due') {
+  await supabase.from('bookings').update({ payment_status: 'paid' }).eq('id', metadata.booking_id);
+  // dispara workflow trigger 'balance_due_paid' opcional (fora deste escopo)
+}
 ```
 
-Para os previews:
-```tsx
-<span>${displayMoney(taxAmt, lang)}</span>
-```
+### 7. Cron schedule
+- O cron `workflow-email-cron` já roda periodicamente (assumindo job pg_cron existente). Validar que está em pelo menos 15 min de cadência. Se rodar de hora em hora, a janela de tolerância de 1h cobre.
+- Se não houver job, criar via `supabase--insert`:
+  ```sql
+  select cron.schedule('workflow-email-cron', '*/15 * * * *',
+    $$ select net.http_post(url:='…/functions/v1/workflow-email-cron', headers:=…) $$);
+  ```
+  (verificar antes se já existe — não duplicar.)
 
-`lang` já está disponível via `useLanguage()` (linha 108).
-
-### 3. Compatibilidade
-- O state interno permanece canônico (`"1500.50"`), então `parseFloat(price || "0") * 100` em `handleFinish`, `handleFinishTiers`, `handleFinishExtras` continua funcionando sem alteração.
-- `loadSession` já popula os states com strings canônicas (`"1500.50"`) — `formatCurrencyInput` os exibe formatados ao renderizar.
-- Cálculos derivados (`priceVal * taxRate / 100`, `tier.price_per_photo * tier.min_photos`) ficam intactos.
-
-### 4. Notas técnicas
-- Cursor: ao formatar em tempo real, o cursor pula para o final. Comportamento aceitável para campos numéricos curtos (escolha do usuário).
-- Não há mudança em traduções, schema do DB ou outras páginas.
-- Nenhuma migração de dados é necessária.
+## Considerações
+- **Dedupe**: a unique constraint `(photographer_id, trigger, project_id, booking_id, gallery_id)` em `workflow_email_dispatched` impede disparo duplicado para o mesmo booking.
+- **Pausados**: `send-workflow-email` já ignora projects pausados.
+- **Auto-send**: respeitar `template.auto_send` e `template.enabled`.
+- **Sem deposit**: se `deposit_enabled=false` e `balance_due_timing='session_day'`, o booking já é pago integralmente no checkout — pular.
+- **Status do booking**: ignorar bookings cancelados (`status='cancelled'`).
+- **i18n**: subject/body em PT padrão, mas o photographer pode editar; helper de texto multilíngue só em DEFAULT_CONTENT.
 
 ## Arquivos tocados
-- `src/lib/currency-format.ts` *(novo)*
-- `src/pages/dashboard/SessionForm.tsx` *(4 inputs + 4 previews)*
+- `supabase/functions/create-balance-payment-link/index.ts` *(novo)*
+- `supabase/functions/get-balance-payment-link/index.ts` *(novo, verify_jwt=false)*
+- `supabase/functions/workflow-email-cron/index.ts` *(adicionar bloco 4)*
+- `supabase/functions/session-booking-webhook/index.ts` *(branch balance_due no webhook)*
+- `supabase/config.toml` *(verify_jwt=false para get-balance-payment-link)*
+- `src/components/dashboard/WorkflowEmailTemplates.tsx` *(novo trigger + defaults + variáveis)*
+- *(opcional)* `supabase/insert` — agendar cron se não existe
