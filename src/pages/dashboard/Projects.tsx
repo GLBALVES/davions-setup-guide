@@ -524,7 +524,22 @@ function KanbanCard({
           const startAnchor = (galleryExpiryStatus || upcomingSessionStatus)
             ? (project.shoot_date ?? project.created_at)
             : project.created_at;
-          if (!status || !deadline) return null;
+          if (!status || !deadline) {
+            // Show a subtle warning when this stage expects a deadline but none is set
+            const expectsDeadline =
+              project.stage === "shot" ||
+              project.stage === "post_production" ||
+              project.stage === "proof_gallery" ||
+              project.stage === "final_gallery" ||
+              project.stage === "upcoming";
+            if (!expectsDeadline) return null;
+            return (
+              <div className="mt-3 flex items-center gap-1 text-[9px] text-muted-foreground/60 italic">
+                <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+                <span>{(p_t as any).noDeadlineSet ?? "Sem prazo definido"}</span>
+              </div>
+            );
+          }
           const progress = getDeadlineProgress(startAnchor, deadline);
           const barColor = DEADLINE_BAR[status] ?? "bg-border";
           // Label text (days/hours left)
