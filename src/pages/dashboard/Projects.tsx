@@ -321,7 +321,9 @@ function KanbanCard({
   return (
     <div ref={setNodeRef} style={style} className="group relative">
       <div
-        className={`border bg-card rounded-sm p-3 flex flex-col gap-2 transition-colors cursor-pointer ${borderClass} ${project.is_paused ? "opacity-60 border-dashed" : ""}`}
+        {...attributes}
+        {...listeners}
+        className={`border bg-card rounded-sm p-3 flex flex-col gap-2 transition-colors cursor-grab active:cursor-grabbing ${borderClass} ${project.is_paused ? "opacity-60 border-dashed" : ""}`}
         onClick={() => onView(project)}
       >
         {project.is_paused && (
@@ -332,15 +334,12 @@ function KanbanCard({
         )}
         {/* drag handle + actions */}
         <div className="flex items-start justify-between gap-1">
-          <button
-            {...attributes}
-            {...listeners}
-            className="shrink-0 text-muted-foreground/30 hover:text-muted-foreground cursor-grab active:cursor-grabbing mt-0.5"
+          <span
+            className="shrink-0 text-muted-foreground/30 mt-0.5"
             aria-label={p_t.dragHandle}
-            onClick={(e) => e.stopPropagation()}
           >
             <GripVertical className="h-3.5 w-3.5" />
-          </button>
+          </span>
           <p className="flex-1 text-xs font-medium leading-snug truncate">{project.client_name || project.title}</p>
           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
             {project.stage === "upcoming" && onTogglePause && (
