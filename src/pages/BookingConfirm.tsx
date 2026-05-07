@@ -1131,11 +1131,20 @@ const BookingConfirm = () => {
               <Button
                 size="sm"
                 onClick={goNext}
-                disabled={!canProceed()}
+                disabled={!canProceed() || isSavingContinue}
                 className="text-xs gap-1.5 tracking-wider uppercase font-light"
               >
-                {t.sessions.saveAndContinue}
-                <ChevronRight className="h-3.5 w-3.5" />
+                {isSavingContinue ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Saving…
+                  </>
+                ) : (
+                  <>
+                    {t.sessions.saveAndContinue}
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </>
+                )}
               </Button>
             ) : (
               // On the last step (payment), no "Next" button needed — payment button handles it
