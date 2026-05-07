@@ -161,6 +161,7 @@ const SessionForm = () => {
   const [bookingNoticeDays, setBookingNoticeDays] = useState("1");
   const [bookingWindowDays, setBookingWindowDays] = useState("60");
   const [virtualBlockPercent, setVirtualBlockPercent] = useState("0");
+  const [showSpotsLeft, setShowSpotsLeft] = useState(true);
   const [hideFromStore, setHideFromStore] = useState(false);
 
   const editor = useEditor({
@@ -529,6 +530,7 @@ const SessionForm = () => {
     setBookingNoticeDays(String(sAny3.booking_notice_days ?? 1));
     setBookingWindowDays(String(sAny3.booking_window_days ?? 60));
     setVirtualBlockPercent(String(sAny3.virtual_block_percent ?? 0));
+    setShowSpotsLeft((s as any).show_spots_left ?? true);
     setHideFromStore((s as any).hide_from_store ?? false);
     // Load contract — prefer linked template id (auto-syncs latest edits)
     const existingContract = sAny3.contract_text ?? "";
@@ -928,6 +930,7 @@ const SessionForm = () => {
         booking_notice_days: parseInt(bookingNoticeDays) || 1,
         booking_window_days: parseInt(bookingWindowDays) || 60,
         virtual_block_percent: Math.min(100, Math.max(0, parseInt(virtualBlockPercent) || 0)),
+        show_spots_left: showSpotsLeft,
         hide_from_store: hideFromStore,
       } as any)
       .eq("id", sessionId);
@@ -2925,6 +2928,17 @@ const SessionForm = () => {
                           Maximum is 90% to ensure clients always see at least some availability.
                         </p>
                       )}
+                    </div>
+
+                    {/* Show available spots badge */}
+                    <div className="border border-border p-5 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs tracking-wider uppercase font-light">Show available spots</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Displays the "X vagas" badge under each time slot on the booking page (only when a slot has more than one spot).
+                        </p>
+                      </div>
+                      <Switch checked={showSpotsLeft} onCheckedChange={setShowSpotsLeft} />
                     </div>
 
                     {/* Hide from store */}
