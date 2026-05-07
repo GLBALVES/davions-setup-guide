@@ -585,7 +585,8 @@ const Personalize = () => {
       business_country: businessCountry.trim() || null,
       business_currency: businessCurrency.trim() || null,
       business_tax_id: businessTaxId.trim() || null,
-      business_sales_tax: businessSalesTax.trim() === "" ? null : Number(businessSalesTax.replace(",", "."))
+      business_sales_tax: businessSalesTax.trim() === "" ? null : Number(businessSalesTax.replace(",", ".")),
+      business_tax_name: businessTaxName.trim() || null
     }).eq("id", user!.id);
     if (error) {
       toast({ title: "Failed to save", description: error.message, variant: "destructive" });
