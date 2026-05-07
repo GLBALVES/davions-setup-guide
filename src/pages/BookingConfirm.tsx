@@ -338,6 +338,17 @@ const BookingConfirm = () => {
         if (cfData) setContractCustomFields(cfData);
       }
 
+      // Load any previously stored client answers for this booking
+      const { data: cfvData } = await (supabase as any)
+        .from("booking_custom_field_values")
+        .select("field_key, value")
+        .eq("booking_id", bookingId);
+      if (Array.isArray(cfvData)) {
+        const map: Record<string, string> = {};
+        cfvData.forEach((r: any) => { map[r.field_key] = r.value ?? ""; });
+        setCustomFieldAnswers(map);
+      }
+
       setLoading(false);
     };
 
