@@ -120,6 +120,7 @@ const SAMPLE_PREVIEW: Record<string, string> = {
   "{{shoot_time}}": "14:00",
   "{{balance_amount}}": "R$ 350,00",
   "{{payment_link}}": "https://davions.com/pay/exemplo",
+  "{{briefing_link}}": "https://davions.com/briefing/exemplo",
 };
 
 function fillSample(html: string): string {
