@@ -37,16 +37,24 @@ serve(async (req) => {
 
     // Bug fix: correctly detect deposit vs full payment
     const wasDeposit = session.metadata?.is_deposit === "true";
+    const paymentKind = session.metadata?.payment_kind;
 
     if (bookingId) {
-      await supabase
-        .from("bookings")
-        .update({
-          status: "confirmed",
-          payment_status: wasDeposit ? "deposit_paid" : "paid",
-          stripe_payment_intent_id: session.payment_intent as string,
-        })
-        .eq("id", bookingId);
+      if (paymentKind === "balance_due") {
+        await supabase
+          .from("bookings")
+          .update({ payment_status: "paid" })
+          .eq("id", bookingId);
+      } else {
+        await supabase
+          .from("bookings")
+          .update({
+            status: "confirmed",
+            payment_status: wasDeposit ? "deposit_paid" : "paid",
+            stripe_payment_intent_id: session.payment_intent as string,
+          })
+          .eq("id", bookingId);
+      }
     }
 
     // Insert in-app notification for the photographer
