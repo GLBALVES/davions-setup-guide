@@ -321,9 +321,15 @@ function KanbanCard({
   return (
     <div ref={setNodeRef} style={style} className="group relative">
       <div
-        className={`border bg-card rounded-sm p-3 flex flex-col gap-2 transition-colors cursor-pointer ${borderClass}`}
+        className={`border bg-card rounded-sm p-3 flex flex-col gap-2 transition-colors cursor-pointer ${borderClass} ${project.is_paused ? "opacity-60 border-dashed" : ""}`}
         onClick={() => onView(project)}
       >
+        {project.is_paused && (
+          <div className="flex items-center gap-1 text-[9px] tracking-[0.2em] uppercase text-amber-500">
+            <Pause className="h-2.5 w-2.5" />
+            <span>Pausada</span>
+          </div>
+        )}
         {/* drag handle + actions */}
         <div className="flex items-start justify-between gap-1">
           <button
