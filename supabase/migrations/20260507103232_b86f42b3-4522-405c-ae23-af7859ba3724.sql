@@ -1,0 +1,1 @@
+ALTER TABLE public.sessions ADD COLUMN IF NOT EXISTS one_session_details jsonb NOT NULL DEFAULT '{}'::jsonb;
