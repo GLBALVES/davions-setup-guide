@@ -536,7 +536,7 @@ function KanbanCard({
             return (
               <div className="mt-3 flex items-center gap-1 text-[9px] text-muted-foreground/60 italic">
                 <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
-                <span>{p_t.noDeadlineSet ?? "Sem prazo definido"}</span>
+                <span>{(p_t as any).noDeadlineSet ?? "Sem prazo definido"}</span>
               </div>
             );
           }
