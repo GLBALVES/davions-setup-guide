@@ -546,11 +546,11 @@ const SessionDetailPage = () => {
 
       const { data: bookingsData } = await supabase
         .from("bookings")
-        .select("availability_id, booked_date")
+        .select("availability_id, booked_date, status")
         .in("availability_id", defs.map((d) => d.id))
         .gte("booked_date", fromDate)
         .lte("booked_date", toDate)
-        .eq("status", "confirmed");
+        .in("status", ["confirmed", "pending"]);
 
       const bookedKeys = new Set<string>(
         (bookingsData ?? [])
