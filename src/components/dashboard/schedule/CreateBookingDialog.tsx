@@ -822,7 +822,7 @@ export function CreateBookingDialog({
                             <Select value={osDepositType} onValueChange={(v) => setOsDepositType(v as any)}>
                               <SelectTrigger className="text-xs h-8 w-16"><SelectValue /></SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="fixed">R$</SelectItem>
+                                <SelectItem value="fixed">$</SelectItem>
                                 <SelectItem value="percentage">%</SelectItem>
                               </SelectContent>
                             </Select>
@@ -837,7 +837,7 @@ export function CreateBookingDialog({
                             <Select value={osDiscountType} onValueChange={(v) => setOsDiscountType(v as any)}>
                               <SelectTrigger className="text-xs h-8 w-16"><SelectValue /></SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="fixed">R$</SelectItem>
+                                <SelectItem value="fixed">$</SelectItem>
                                 <SelectItem value="percentage">%</SelectItem>
                               </SelectContent>
                             </Select>
@@ -927,7 +927,7 @@ export function CreateBookingDialog({
                             <Select value={osPDepositType} onValueChange={(v) => setOsPDepositType(v as any)}>
                               <SelectTrigger className="text-xs h-8 w-16"><SelectValue /></SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="fixed">R$</SelectItem>
+                                <SelectItem value="fixed">$</SelectItem>
                                 <SelectItem value="percent">%</SelectItem>
                               </SelectContent>
                             </Select>
