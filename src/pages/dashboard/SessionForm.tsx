@@ -530,6 +530,7 @@ const SessionForm = () => {
     setBookingNoticeDays(String(sAny3.booking_notice_days ?? 1));
     setBookingWindowDays(String(sAny3.booking_window_days ?? 60));
     setVirtualBlockPercent(String(sAny3.virtual_block_percent ?? 0));
+    setShowSpotsLeft((s as any).show_spots_left ?? true);
     setHideFromStore((s as any).hide_from_store ?? false);
     // Load contract — prefer linked template id (auto-syncs latest edits)
     const existingContract = sAny3.contract_text ?? "";
