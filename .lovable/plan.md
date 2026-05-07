@@ -1,89 +1,81 @@
-## Objetivo
-Quando uma sessão tiver `balance_due_timing = 'session_day'` e o booking deixar saldo restante (deposit pago, balance pendente), disparar **automaticamente** um email com lembrete e **link de pagamento Stripe** para o cliente, no horário definido pelo offset (ex.: 24h antes, no início, 2h depois).
+# Conectar valor aos Custom Fields do contrato
 
-## Como funciona hoje (resumo)
+Hoje cada custom field tem apenas um `default_value` global. Vamos passar a permitir 3 origens de valor por campo, escolhidas no editor de contratos. A resolução continua automática (sem revisão manual).
 
-- `sessions.balance_due_timing` ∈ {`session_day`, `gallery_checkout`, `after_delivery`}
-- `sessions.balance_due_offset_hours`: inteiro com sinal — negativo = horas antes; 0 = no início da sessão; positivo = horas depois.
-- Bookings com `deposit_enabled=true` pagam só o `depositBase` no checkout; o `remainingBalance` fica pendente em Stripe (`deposit_paid` flag, sem invoice).
-- `workflow-email-cron` é uma edge function que varre triggers e chama `send-workflow-email` (que mescla template + variáveis e envia via SMTP do photographer). Há tabela `workflow_email_dispatched` para dedupe.
-- Templates ficam em `workflow_email_templates` com `stage_trigger` único por photographer.
+## 1. Modelo de dados
 
-## Implementação
+Migration em `contract_custom_fields`:
+- `value_source TEXT NOT NULL DEFAULT 'static'` — `'static' | 'mapped' | 'client_input'`
+- `mapped_key TEXT` — quando `value_source = 'mapped'`, guarda a chave de uma variável built-in (ex: `client_tax_id`, `client_address`, `session_title`, etc.)
+- `client_prompt TEXT` — quando `value_source = 'client_input'`, é o rótulo da pergunta ao cliente
+- `client_input_type TEXT DEFAULT 'text'` — `'text' | 'textarea' | 'date' | 'number'`
+- `required BOOLEAN DEFAULT false`
 
-### 1. Migração: adicionar trigger `balance_due_session_day`
-- Atualizar o tipo CHECK do schema (não há check no `workflow_email_templates`, é texto livre — não precisa migration).
-- **Sem nova tabela.** Reutilizar `workflow_email_templates` e `workflow_email_dispatched`.
-- Indexar `bookings(payment_status, booked_date)` se já não existir, para a varredura do cron.
+(`default_value` continua existindo como fallback.)
 
-### 2. Edge function nova: `create-balance-payment-link`
-- Recebe `booking_id` (server-to-server).
-- Busca booking + session + valor restante.
-- Cria um Stripe Checkout Session (modo `payment`, sem subscription) cobrando o `remainingBalance` na conta Connect do photographer.
-- Retorna `{ url }`. Inclui `metadata.booking_id`, `metadata.payment_kind = 'balance_due'`.
-- Webhook `session-booking-webhook` (existente) já trata pagamentos via metadata — adicionar branch para marcar `payment_status='paid'` no booking quando `payment_kind='balance_due'`.
+Nova tabela `booking_custom_field_values` para guardar respostas do cliente:
+- `booking_id UUID` (FK lógica)
+- `field_key TEXT`
+- `value TEXT`
+- PK: (booking_id, field_key)
+- RLS: fotógrafo dono via `bookings.photographer_id`; insert público via service_role no fluxo de booking.
 
-### 3. Edge function nova: `get-balance-payment-link`
-- Endpoint **público** (verify_jwt=false) que recebe um `token` (assinado) e:
-  - decifra `booking_id` + `expires_at`
-  - chama internamente `create-balance-payment-link`
-  - faz redirect 302 para a URL do Stripe Checkout
-- Por que via redirect: o link no email precisa ser estável e clicável depois; criar a session Stripe na hora evita expiração do link Stripe (24h).
-- Token = `base64url(JSON{booking_id, exp})` + HMAC-SHA256 com `SUPABASE_SERVICE_ROLE_KEY` (suficiente para impedir adivinhação).
+## 2. Editor de contratos (`ContractEditor.tsx`)
 
-### 4. Modificar `workflow-email-cron`
-Adicionar quarta seção:
+No bloco de "adicionar custom field", trocar o input único por um pequeno form:
+- Label
+- Select **Origem do valor**: `Texto fixo` / `Mapear a campo existente` / `Perguntar ao cliente`
+- Se `mapped`: Select com a lista de `CONTRACT_VARIABLES` (client_name, client_email, client_phone, client_tax_id, client_address, session_*, photographer_*, studio_*, etc.)
+- Se `client_input`: campo com o texto da pergunta + tipo (text/textarea/date/number) + checkbox obrigatório
+- Se `static`: input de valor padrão (comportamento atual)
+
+Listagem dos custom fields mostra um badge com a origem (Mapeado / Cliente / Fixo).
+
+## 3. Booking — coleta dos valores do cliente
+
+No wizard de agendamento (mesma tela do `Your Info` / briefing — `BookingConfirm` / componente do passo de dados do cliente):
+- Buscar os `contract_custom_fields` do fotógrafo onde `value_source = 'client_input'` E que apareçam no `contract_text` da sessão (regex `[[key]]` ou `data-variable="key"`).
+- Renderizar uma seção **"Informações para o contrato"** com cada pergunta como input do tipo configurado.
+- Validar `required` antes de avançar.
+- No submit do booking, gravar em `booking_custom_field_values`.
+
+## 4. Resolução em `resolveContractVariables`
+
+Atualizar a função para aceitar um terceiro parâmetro `customFieldValues?: Record<string, string>` e mudar a precedência:
 ```
-4) balance_due_session_day — bookings com deposit pago, sessão com balance_due_timing='session_day',
-   offset hours definido, ainda não dispatched, e cujo "fire time" (booked_date + start_time + offset_hours)
-   já passou (ou está dentro de uma janela de tolerância de 1h).
-```
-- Query: `bookings` join `sessions` join `session_availability` filtrando `payment_status IN ('deposit_paid')` e `sessions.deposit_enabled=true` e `sessions.balance_due_timing='session_day'`.
-- Calcular `fire_at = booked_date + start_time + (offset_hours * 1h)`.
-- Disparar quando `now() >= fire_at` e `now() < fire_at + 24h` (limite de janela).
-- Vars enviadas ao template: `client_name`, `shoot_date`, `shoot_time`, `session_type`, `balance_amount`, `payment_link` (URL do `get-balance-payment-link?token=…`), `studio_name`.
-
-### 5. Frontend — `WorkflowEmailTemplates.tsx`
-- Adicionar `"balance_due_session_day"` em uma nova categoria `PAYMENT_TRIGGERS`.
-- Adicionar `DEFAULT_CONTENT` em PT/EN/ES (subject + html) — ex.:
-  ```
-  Subject: "Lembrete: pagamento da sessão {{session_type}}"
-  Body: explica que o saldo de {{balance_amount}} pode ser quitado em {{payment_link}}.
-  ```
-- Adicionar nova variável `{{payment_link}}` e `{{balance_amount}}` em `VARIABLES` e `SAMPLE_PREVIEW`.
-- Aba Help / texto explicativo: o disparo segue o offset configurado em **Sessions → Payment → On the session day**.
-
-### 6. Webhook update
-Em `session-booking-webhook`:
-```
-if (metadata.payment_kind === 'balance_due') {
-  await supabase.from('bookings').update({ payment_status: 'paid' }).eq('id', metadata.booking_id);
-  // dispara workflow trigger 'balance_due_paid' opcional (fora deste escopo)
-}
+valor final = customFieldValues[key]                          // resposta do cliente
+            ?? data[mapped_key] (se value_source = 'mapped')   // valor mapeado
+            ?? data[key]                                       // override por sessão (futuro)
+            ?? default_value                                   // fallback
+            ?? ""
 ```
 
-### 7. Cron schedule
-- O cron `workflow-email-cron` já roda periodicamente (assumindo job pg_cron existente). Validar que está em pelo menos 15 min de cadência. Se rodar de hora em hora, a janela de tolerância de 1h cobre.
-- Se não houver job, criar via `supabase--insert`:
-  ```sql
-  select cron.schedule('workflow-email-cron', '*/15 * * * *',
-    $$ select net.http_post(url:='…/functions/v1/workflow-email-cron', headers:=…) $$);
-  ```
-  (verificar antes se já existe — não duplicar.)
+Pontos de chamada a atualizar:
+- `BookingConfirm.tsx` — carregar `booking_custom_field_values` do booking atual e passar à função.
+- `SessionDetailPage.tsx` (preview no painel) — carregar valores se já existir booking; senão, usar mapped/default.
+- `session-booking-webhook` (edge) e qualquer lugar que congele HTML do contrato no booking — resolver com os valores antes de gravar `bookings.contract_html_snapshot`.
 
-## Considerações
-- **Dedupe**: a unique constraint `(photographer_id, trigger, project_id, booking_id, gallery_id)` em `workflow_email_dispatched` impede disparo duplicado para o mesmo booking.
-- **Pausados**: `send-workflow-email` já ignora projects pausados.
-- **Auto-send**: respeitar `template.auto_send` e `template.enabled`.
-- **Sem deposit**: se `deposit_enabled=false` e `balance_due_timing='session_day'`, o booking já é pago integralmente no checkout — pular.
-- **Status do booking**: ignorar bookings cancelados (`status='cancelled'`).
-- **i18n**: subject/body em PT padrão, mas o photographer pode editar; helper de texto multilíngue só em DEFAULT_CONTENT.
+## 5. i18n
 
-## Arquivos tocados
-- `supabase/functions/create-balance-payment-link/index.ts` *(novo)*
-- `supabase/functions/get-balance-payment-link/index.ts` *(novo, verify_jwt=false)*
-- `supabase/functions/workflow-email-cron/index.ts` *(adicionar bloco 4)*
-- `supabase/functions/session-booking-webhook/index.ts` *(branch balance_due no webhook)*
-- `supabase/config.toml` *(verify_jwt=false para get-balance-payment-link)*
-- `src/components/dashboard/WorkflowEmailTemplates.tsx` *(novo trigger + defaults + variáveis)*
-- *(opcional)* `supabase/insert` — agendar cron se não existe
+Adicionar strings PT/EN/ES em `LanguageContext` para: "Origem do valor", "Texto fixo", "Mapear a campo existente", "Perguntar ao cliente", "Pergunta ao cliente", "Tipo do campo", "Obrigatório", "Informações para o contrato".
+
+## 6. Memória
+
+Atualizar `mem://features/contracts-custom-fields` descrevendo as 3 origens e a tabela de respostas.
+
+## Detalhes técnicos
+
+- Lista de `mapped_key` permitidas = `CONTRACT_VARIABLES` exportado de `ContractEditor.tsx` (já existe).
+- `value_source = 'client_input'` com campo não usado no contrato da sessão NÃO deve ser perguntado (filtra pelo HTML do contrato).
+- Manter compatibilidade: registros antigos ficam com `value_source = 'static'` (default da migration), comportamento idêntico ao atual.
+- Sem realtime; sem alterar fluxo de assinatura.
+
+## Arquivos afetados
+
+- migration nova (schema + tabela + RLS)
+- `src/pages/dashboard/ContractEditor.tsx` (UI + tipos + resolveContractVariables)
+- `src/pages/store/SessionDetailPage.tsx` (preview)
+- `src/pages/BookingConfirm.tsx` (coleta + persistência + resolução)
+- componente do passo "Your Info" do wizard (renderizar perguntas)
+- `supabase/functions/session-booking-webhook/index.ts` (snapshot do contrato)
+- `src/contexts/LanguageContext.tsx` (i18n)
