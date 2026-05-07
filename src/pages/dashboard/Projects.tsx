@@ -156,6 +156,7 @@ function KanbanCard({
   onEdit,
   onDelete,
   onArchive,
+  onTogglePause,
   shotDeadlineDays,
   postProdDeadlineDays,
   onSetDeadline,
@@ -166,6 +167,7 @@ function KanbanCard({
   onEdit: (p: ClientProject) => void;
   onDelete: (id: string) => void;
   onArchive: (id: string) => void;
+  onTogglePause?: (id: string, paused: boolean) => void;
   shotDeadlineDays?: number | null;
   postProdDeadlineDays?: number | null;
   onSetDeadline?: (projectId: string, deadline: string | null) => void;
