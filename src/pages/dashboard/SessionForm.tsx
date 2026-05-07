@@ -382,6 +382,11 @@ const SessionForm = () => {
         setDepositAmount(sAny.deposit_amount ? (sAny.deposit_amount / 100).toFixed(2) : "");
       }
       setAllowTip(sAny.allow_tip ?? false);
+      const sAny3 = s as unknown as { balance_due_timing?: string; balance_due_offset_hours?: number };
+      if (sAny3.balance_due_timing === "gallery_checkout" || sAny3.balance_due_timing === "after_delivery" || sAny3.balance_due_timing === "session_day") {
+        setBalanceDueTiming(sAny3.balance_due_timing);
+      }
+      setBalanceDueOffsetHours(String(sAny3.balance_due_offset_hours ?? 0));
     }
 
     const [availRes, configRes] = await Promise.all([
