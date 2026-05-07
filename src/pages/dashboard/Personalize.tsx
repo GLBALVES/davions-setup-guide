@@ -272,6 +272,7 @@ const Personalize = () => {
 
   const questionRefs = useRef<(HTMLDivElement | null)[]>([]);
   const optionsContainerRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const briefingScrollContainerRef = useRef<HTMLDivElement>(null);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const heroInputRef = useRef<HTMLInputElement>(null);
