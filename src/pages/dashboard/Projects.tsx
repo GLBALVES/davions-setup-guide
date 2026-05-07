@@ -521,10 +521,10 @@ function KanbanCard({
               ) : null))}
             </div>
           )}
-          {project.session_title && (
+          {(project.session_title || project.session_type) && (
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70">
               <Camera className="h-2.5 w-2.5 shrink-0" />
-              <span className="truncate italic">{project.session_title}</span>
+              <span className="truncate italic">{project.session_title ?? project.session_type}</span>
             </div>
           )}
         </div>
