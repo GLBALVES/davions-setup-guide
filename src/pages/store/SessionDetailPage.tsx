@@ -1873,7 +1873,9 @@ const SessionDetailPage = () => {
                     className="flex-1 gap-2 text-xs tracking-wider uppercase font-light rounded-none h-11"
                   >
                     {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                    {session.deposit_enabled
+                    {(session as any).payment_required === false
+                      ? `Confirm Booking`
+                      : session.deposit_enabled
                       ? `Pay deposit ${formatCurrency(chargeAmount)}`
                       : `Pay ${formatCurrency(chargeAmount)}`}
                   </Button>
