@@ -1300,8 +1300,7 @@ const Personalize = () => {
                             setTimeout(() => {
                               requestAnimationFrame(() => {
                                 requestAnimationFrame(() => {
-                                  const container = briefingScrollContainerRef.current;
-                                  if (container) container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+                                  questionLabelRefs.current[nextIdx]?.focus();
                                 });
                               });
                             }, 0);
