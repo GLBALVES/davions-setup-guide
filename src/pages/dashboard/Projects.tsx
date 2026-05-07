@@ -1700,6 +1700,13 @@ const Projects = () => {
     toast.success(p_t.projectRemoved);
   };
 
+  const handleTogglePause = async (id: string, paused: boolean) => {
+    await supabase.from("client_projects" as any).update({ is_paused: paused } as any).eq("id", id);
+    setProjects((prev) => prev.map((p) => p.id === id ? { ...p, is_paused: paused } : p));
+    setSheetProject((prev) => prev?.id === id ? { ...prev, is_paused: paused } : prev);
+    toast.success(paused ? "Sessão pausada — aguardando reagendamento" : "Sessão retomada");
+  };
+
   const handleArchive = async (id: string) => {
     await supabase.from("client_projects" as any).update({ stage: "archived" } as any).eq("id", id);
     setProjects((prev) => prev.map((p) => p.id === id ? { ...p, stage: "archived" as Stage } : p));
