@@ -147,6 +147,18 @@ export function CreateBookingDialog({
   const [osIncludes, setOsIncludes] = useState<string[]>([]);
   const [osIncludeInput, setOsIncludeInput] = useState("");
   const [osCreating, setOsCreating] = useState(false);
+  // Optional extras (One Session)
+  const [osMoreOpen, setOsMoreOpen] = useState(false);
+  const [osDepositValue, setOsDepositValue] = useState<number | "">("");
+  const [osDepositType, setOsDepositType] = useState<"fixed" | "percentage">("fixed");
+  const [osDiscountValue, setOsDiscountValue] = useState<number | "">("");
+  const [osDiscountType, setOsDiscountType] = useState<"fixed" | "percentage">("fixed");
+  const [osDeliveryDays, setOsDeliveryDays] = useState<number | "">("");
+  const [osExtraPhotoPrice, setOsExtraPhotoPrice] = useState<number | "">("");
+  const [osFullAddress, setOsFullAddress] = useState("");
+  const [osHeadcount, setOsHeadcount] = useState<number | "">("");
+  const [osInternalNotes, setOsInternalNotes] = useState("");
+  const [osClientNotes, setOsClientNotes] = useState("");
 
   // Contracts & Briefings for one session
   const [contracts, setContracts] = useState<{ id: string; name: string; body: string }[]>([]);
