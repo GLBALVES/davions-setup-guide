@@ -2150,8 +2150,8 @@ const SessionForm = () => {
                               </div>
                               {priceVal > 0 && (
                                 <div className="flex flex-col gap-1 text-[10px] text-muted-foreground">
-                                  <span>Tax: <span className="text-foreground font-light">${taxAmt.toFixed(2)}</span></span>
-                                  <span>Total: <span className="text-foreground font-light">${total.toFixed(2)}</span></span>
+                                  <span>Tax: <span className="text-foreground font-light">${displayMoney(taxAmt, lang as CurrencyLang)}</span></span>
+                                  <span>Total: <span className="text-foreground font-light">${displayMoney(total, lang as CurrencyLang)}</span></span>
                                 </div>
                               )}
                             </div>
@@ -2239,13 +2239,20 @@ const SessionForm = () => {
                                     </span>
                                     <Input
                                       id="deposit-amt"
-                                      type="number"
-                                      min="0"
+                                      type={depositType === "percent" ? "number" : "text"}
+                                      inputMode="decimal"
+                                      min={depositType === "percent" ? "0" : undefined}
                                       max={depositType === "percent" ? "100" : undefined}
-                                      step="0.01"
-                                      value={depositAmount}
-                                      onChange={(e) => setDepositAmount(e.target.value)}
-                                      placeholder={depositType === "percent" ? "25" : "0.00"}
+                                      step={depositType === "percent" ? "1" : undefined}
+                                      value={depositType === "percent" ? depositAmount : formatCurrencyInput(depositAmount, lang as CurrencyLang)}
+                                      onChange={(e) => {
+                                        if (depositType === "percent") {
+                                          setDepositAmount(e.target.value);
+                                        } else {
+                                          setDepositAmount(parseCurrencyInput(e.target.value, lang as CurrencyLang));
+                                        }
+                                      }}
+                                      placeholder={depositType === "percent" ? "25" : currencyPlaceholder(lang as CurrencyLang)}
                                       className="pl-7 h-8 text-sm"
                                     />
                                   </div>
@@ -2256,14 +2263,14 @@ const SessionForm = () => {
                                       <span>
                                         Deposit:{" "}
                                         <span className="text-foreground font-light">
-                                          ${depositInDollars.toFixed(2)}
+                                          ${displayMoney(depositInDollars, lang as CurrencyLang)}
                                         </span>
                                       </span>
                                     )}
                                     <span>
                                       Remaining:{" "}
                                       <span className={cn("font-light", remaining < 0 ? "text-destructive" : "text-foreground")}>
-                                        ${Math.max(remaining, 0).toFixed(2)}
+                                        ${displayMoney(Math.max(remaining, 0), lang as CurrencyLang)}
                                       </span>{" "}
                                       due at session
                                     </span>
@@ -2470,10 +2477,14 @@ const SessionForm = () => {
                               <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
                                 <Input
-                                  type="number" min="0" step="0.01"
-                                  value={tier.price_per_photo}
-                                  placeholder="0.00"
-                                  onChange={(e) => setPhotoTiers((prev) => prev.map((t, i) => i === idx ? { ...t, price_per_photo: e.target.value } : t))}
+                                  type="text"
+                                  inputMode="decimal"
+                                  value={formatCurrencyInput(tier.price_per_photo, lang as CurrencyLang)}
+                                  placeholder={currencyPlaceholder(lang as CurrencyLang)}
+                                  onChange={(e) => {
+                                    const parsed = parseCurrencyInput(e.target.value, lang as CurrencyLang);
+                                    setPhotoTiers((prev) => prev.map((t, i) => i === idx ? { ...t, price_per_photo: parsed } : t));
+                                  }}
                                   className="pl-7 h-8 text-sm"
                                 />
                               </div>
@@ -2482,9 +2493,9 @@ const SessionForm = () => {
                           {tier.min_photos > 0 && parseFloat(tier.price_per_photo || "0") > 0 && (
                             <p className="text-[10px] text-muted-foreground">
                               {tier.min_photos} extra photo{tier.min_photos > 1 ? "s" : ""} ×{" "}
-                              <span className="text-foreground font-light">${parseFloat(tier.price_per_photo).toFixed(2)}</span>{" "}
+                              <span className="text-foreground font-light">${displayMoney(parseFloat(tier.price_per_photo), lang as CurrencyLang)}</span>{" "}
                               ={" "}
-                              <span className="text-foreground font-light">${(parseFloat(tier.price_per_photo) * tier.min_photos).toFixed(2)}</span>
+                              <span className="text-foreground font-light">${displayMoney(parseFloat(tier.price_per_photo) * tier.min_photos, lang as CurrencyLang)}</span>
                             </p>
                           )}
                         </div>
@@ -2586,10 +2597,14 @@ const SessionForm = () => {
                               <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
                                 <input
-                                  type="number" min="0" step="0.01"
-                                  value={extra.price}
-                                  placeholder="0.00"
-                                  onChange={(e) => setSessionExtras((prev) => prev.map((x, i) => i === idx ? { ...x, price: e.target.value } : x))}
+                                  type="text"
+                                  inputMode="decimal"
+                                  value={formatCurrencyInput(extra.price, lang as CurrencyLang)}
+                                  placeholder={currencyPlaceholder(lang as CurrencyLang)}
+                                  onChange={(e) => {
+                                    const parsed = parseCurrencyInput(e.target.value, lang as CurrencyLang);
+                                    setSessionExtras((prev) => prev.map((x, i) => i === idx ? { ...x, price: parsed } : x));
+                                  }}
                                   className="pl-7 h-8 text-sm w-full border border-input bg-background rounded-md pr-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                                 />
                               </div>
