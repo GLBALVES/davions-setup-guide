@@ -268,6 +268,7 @@ export default function WorkflowEmailTemplates() {
     reminder_14_days: { label: "Pré-sessão · 14 dias antes", desc: "Enviado 14 dias antes do ensaio (se ativado na sessão)." },
     reminder_7_days: { label: "Pré-sessão · 7 dias antes", desc: "Enviado 7 dias antes do ensaio (se ativado na sessão)." },
     reminder_1_day: { label: "Pré-sessão · 1 dia antes", desc: "Enviado 1 dia antes do ensaio (se ativado na sessão)." },
+    balance_due_session_day: { label: "Pagamento · saldo no dia da sessão", desc: "Enviado conforme o offset configurado em Sessions → Payment → On the session day, com link de pagamento do saldo restante." },
   };
 
   const fetchTemplates = useCallback(async () => {
