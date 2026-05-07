@@ -1071,13 +1071,13 @@ const Personalize = () => {
                   <Dialog open={briefingDialogOpen} onOpenChange={(open) => {
                   setBriefingDialogOpen(open);
                 }}>
-                    <DialogContent className="max-w-2xl w-full" style={{ maxHeight: "90vh", overflowY: "auto" }}>
-                      <DialogHeader>
+                    <DialogContent className="max-w-2xl w-full p-0 flex flex-col" style={{ maxHeight: "90vh" }}>
+                      <DialogHeader className="px-6 pt-6 pb-3 shrink-0 border-b border-border">
                         <DialogTitle className="text-sm tracking-widest uppercase font-light">
                           {editingBriefing ? t.personalize.editBriefing : t.personalize.newBriefingTitle}
                         </DialogTitle>
                       </DialogHeader>
-                      <div className="flex flex-col gap-5 pt-2">
+                      <div className="flex flex-col gap-5 px-6 py-4 overflow-y-auto flex-1 min-h-0">
                         {/* Briefing name */}
                         <div className="flex flex-col gap-1.5">
                           <Label className="text-[11px] tracking-wider uppercase font-light">{t.personalize.briefingName}</Label>
