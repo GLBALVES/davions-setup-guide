@@ -110,6 +110,22 @@ serve(async (req) => {
       bookingId = newBooking.id;
     }
 
+    // ── Free booking: no payment required ──
+    if (!paymentRequired) {
+      await supabase
+        .from("bookings")
+        .update({ status: "confirmed", payment_status: "not_required" })
+        .eq("id", bookingId);
+      if (slotId) {
+        await supabase.from("session_availability").update({ is_booked: true }).eq("id", slotId);
+      }
+      const successUrl = `${origin}/booking-success?store=${storeSlug}&session=${sessionId}&booking=${bookingId}`;
+      return new Response(JSON.stringify({ url: successUrl, free: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     // ── Lazy Connect: auto-create account on first checkout ──
     let onboardingRequired = false;
     if (!stripeAccountId) {
