@@ -781,6 +781,8 @@ const SessionForm = () => {
         deposit_amount: finalDepositAmount,
         deposit_type: depositType,
         allow_tip: allowTip,
+        balance_due_timing: balanceDueTiming,
+        balance_due_offset_hours: balanceDueTiming === "session_day" ? parseInt(balanceDueOffsetHours || "0", 10) : 0,
       } as any)
       .eq("id", sessionId);
 
