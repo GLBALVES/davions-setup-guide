@@ -2280,6 +2280,7 @@ export const translations = {
       editOneSession: "Editar Sessão Avulsa",
       saveChanges: "Salvar alterações",
       saved: "Alterações salvas",
+      saveAndContinue: "Salvar & Continuar",
     },
     galleries: {
       title: "Galerias",
