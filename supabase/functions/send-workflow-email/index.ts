@@ -47,6 +47,54 @@ serve(async (req) => {
       });
     }
 
+    // Skip if related project is paused (awaiting reschedule)
+    {
+      let pausedProject = false;
+      if (project_id) {
+        const { data: proj } = await supabase
+          .from("client_projects")
+          .select("is_paused")
+          .eq("id", project_id)
+          .maybeSingle();
+        if (proj?.is_paused) pausedProject = true;
+      } else if (booking_id) {
+        const { data: proj } = await supabase
+          .from("client_projects")
+          .select("is_paused")
+          .eq("booking_id", booking_id)
+          .maybeSingle();
+        if (proj?.is_paused) pausedProject = true;
+      } else if (gallery_id) {
+        const { data: g } = await supabase
+          .from("galleries")
+          .select("project_id, booking_id")
+          .eq("id", gallery_id)
+          .maybeSingle();
+        const pid = (g as any)?.project_id;
+        const bid = (g as any)?.booking_id;
+        if (pid) {
+          const { data: proj } = await supabase
+            .from("client_projects")
+            .select("is_paused")
+            .eq("id", pid)
+            .maybeSingle();
+          if (proj?.is_paused) pausedProject = true;
+        } else if (bid) {
+          const { data: proj } = await supabase
+            .from("client_projects")
+            .select("is_paused")
+            .eq("booking_id", bid)
+            .maybeSingle();
+          if (proj?.is_paused) pausedProject = true;
+        }
+      }
+      if (pausedProject) {
+        return new Response(JSON.stringify({ skipped: true, reason: "project_paused" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Dedupe (per project/booking/gallery + trigger)
     if (!force) {
       const { data: already } = await supabase
