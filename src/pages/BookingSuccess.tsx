@@ -216,10 +216,14 @@ const BookingSuccess = () => {
     if (value && (typeof value !== "string" || value.trim())) clearMissing(qId);
   };
 
-  const setCheckboxAnswer = (qId: string, option: string, checked: boolean) => {
+  const setCheckboxAnswer = (qId: string, option: string, checked: boolean, max?: number | null) => {
     setAnswers((prev) => {
       const current = (prev[qId] as string[]) ?? [];
-      const nextArr = checked ? [...current, option] : current.filter((o) => o !== option);
+      let nextArr = checked ? [...current, option] : current.filter((o) => o !== option);
+      if (checked && max && max > 0 && nextArr.length > max) {
+        // ignore selection beyond max
+        return prev;
+      }
       if (nextArr.length > 0) clearMissing(qId);
       return { ...prev, [qId]: nextArr };
     });
