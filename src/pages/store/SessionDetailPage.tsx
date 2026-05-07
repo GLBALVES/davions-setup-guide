@@ -304,6 +304,7 @@ const SessionDetailPage = () => {
   const [step, setStep] = useState<BookingStep>("product");
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [calendarMonth, setCalendarMonth] = useState<Date>(startOfToday());
   const [selectedSlot, setSelectedSlot] = useState<GeneratedSlot | null>(null);
   const [selectedExtras, setSelectedExtras] = useState<SelectedExtra[]>([]);
   const clientStorageKey = `booking_client_${sessionSlug}`;
