@@ -488,8 +488,8 @@ const BookingConfirm = () => {
       ].map((s) => (s || "").trim()).filter(Boolean).join(", "),
       studio_email: (photographer as any)?.email || "",
     };
-    return resolveContractVariables(session.contract_text, data, contractCustomFields);
-  }, [session, booking, avail, photographer, clientInfo, contractCustomFields, bonuses, invoiceItems]);
+    return resolveContractVariables(session.contract_text, data, contractCustomFields as any, customFieldAnswers);
+  }, [session, booking, avail, photographer, clientInfo, contractCustomFields, bonuses, invoiceItems, customFieldAnswers]);
 
   /* ── Build a list of resolved fields actually used in the contract for the preview banner ── */
   const resolvedFieldsPreview = useMemo(() => {
