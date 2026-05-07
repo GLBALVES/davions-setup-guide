@@ -125,6 +125,8 @@ const SessionForm = () => {
   const [depositAmount, setDepositAmount] = useState("");
   const [depositType, setDepositType] = useState<"fixed" | "percent">("fixed");
   const [allowTip, setAllowTip] = useState(false);
+  const [balanceDueTiming, setBalanceDueTiming] = useState<"session_day" | "gallery_checkout" | "after_delivery">("session_day");
+  const [balanceDueOffsetHours, setBalanceDueOffsetHours] = useState("0");
 
   // ── Additional Photos step ──
   interface PhotoTier {
