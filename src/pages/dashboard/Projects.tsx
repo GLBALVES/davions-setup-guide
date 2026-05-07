@@ -1435,12 +1435,20 @@ const Projects = () => {
   const handleSetGalleryExpiry = async (projectId: string, expiresAt: string | null) => {
     const project = projects.find((p) => p.id === projectId);
     if (!project?.booking_id) { toast.error("Galeria não vinculada a um agendamento."); return; }
+    // Force end-of-day (23:59:59.999) per contractual rule
+    let normalized: string | null = null;
+    if (expiresAt) {
+      const datePart = expiresAt.substring(0, 10);
+      const d = new Date(`${datePart}T00:00:00`);
+      d.setHours(23, 59, 59, 999);
+      normalized = d.toISOString();
+    }
     const { error } = await supabase
       .from("galleries" as any)
-      .update({ expires_at: expiresAt } as any)
+      .update({ expires_at: normalized } as any)
       .eq("booking_id", project.booking_id);
     if (error) { toast.error("Erro ao salvar expiração: " + error.message); return; }
-    setProjects((prev) => prev.map((p) => p.id === projectId ? { ...p, gallery_expires_at: expiresAt } : p));
+    setProjects((prev) => prev.map((p) => p.id === projectId ? { ...p, gallery_expires_at: normalized } : p));
   };
 
   const sensors = useSensors(

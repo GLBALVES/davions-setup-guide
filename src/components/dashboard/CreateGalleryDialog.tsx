@@ -248,9 +248,12 @@ export function CreateGalleryDialog({
       }
     } else {
       // INSERT — apply default expiry if configured
-      const expiresAt = defaultExpiryDays
-        ? new Date(Date.now() + defaultExpiryDays * 86400000).toISOString()
-        : null;
+      const expiresAt = (() => {
+        if (!defaultExpiryDays) return null;
+        const d = new Date(Date.now() + defaultExpiryDays * 86400000);
+        d.setHours(23, 59, 59, 999);
+        return d.toISOString();
+      })();
 
       const insertPayload: Record<string, string | boolean | null> = {
         photographer_id: user.id,

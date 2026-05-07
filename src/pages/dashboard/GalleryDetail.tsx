@@ -941,14 +941,19 @@ const GalleryDetail = () => {
   // ── Expiration date ──────────────────────────────────────────────────────────
   const saveExpiresAt = async (date: Date | undefined) => {
     if (!gallery) return;
-    const value = date ? date.toISOString() : null;
+    let value: string | null = null;
+    if (date) {
+      const d = new Date(date);
+      d.setHours(23, 59, 59, 999);
+      value = d.toISOString();
+    }
     const { error } = await supabase
       .from("galleries")
       .update({ expires_at: value } as any)
       .eq("id", gallery.id);
     if (!error) {
       setGallery((g) => g ? { ...g, expires_at: value } : g);
-      setExpiresAt(date);
+      setExpiresAt(value ? new Date(value) : undefined);
       toast({ title: date ? "Expiration date set" : "Expiration date removed" });
     }
   };

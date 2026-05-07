@@ -87,6 +87,7 @@ serve(async (req) => {
     if (reactivationFeeCents === 0) {
       const newExpiry = new Date();
       newExpiry.setDate(newExpiry.getDate() + extensionDays);
+      newExpiry.setHours(23, 59, 59, 999);
       await supabase
         .from("galleries")
         .update({ expires_at: newExpiry.toISOString() })
