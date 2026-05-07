@@ -1124,14 +1124,17 @@ function OneSessionCard({
             </Button>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button
+                <Button
+                  size="sm"
+                  variant="ghost"
                   onClick={() => setConvertDialogOpen(true)}
-                  className="p-1.5 transition-colors text-muted-foreground hover:text-foreground"
+                  className="text-[10px] tracking-wider uppercase font-light gap-1.5 h-8 px-2"
                 >
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </button>
+                  <Repeat className="h-3 w-3" />
+                  {s.convertToSession}
+                </Button>
               </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">{s.convertToSession}</TooltipContent>
+              <TooltipContent side="top" className="text-xs">{s.convertConfirm}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
