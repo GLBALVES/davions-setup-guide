@@ -1280,6 +1280,19 @@ const Personalize = () => {
                         <FieldRow label={t.personalize.taxIdVat}>
                           <Input value={businessTaxId} onChange={(e) => setBusinessTaxId(e.target.value)} placeholder="e.g. 12-3456789" className="h-9 text-sm font-light" />
                         </FieldRow>
+                        <FieldRow label={(t.personalize as any).salesTax || "Sales Tax (%)"}>
+                          <Input
+                            type="number"
+                            inputMode="decimal"
+                            min={0}
+                            max={100}
+                            step="0.01"
+                            value={businessSalesTax}
+                            onChange={(e) => setBusinessSalesTax(e.target.value)}
+                            placeholder="e.g. 8.25"
+                            className="h-9 text-sm font-light"
+                          />
+                        </FieldRow>
                       </div>
                     </section>
                     <Button onClick={handleSaveBusiness} disabled={savingBusiness} size="sm" className="gap-2 text-xs tracking-wider uppercase font-light w-fit">
