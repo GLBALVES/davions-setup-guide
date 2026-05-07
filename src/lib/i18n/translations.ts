@@ -2274,6 +2274,9 @@ export const translations = {
       converted: "Convertida em sessão padrão",
       noOneSessions: "Nenhuma sessão avulsa",
       oneSessionsHint: "Sessões criadas via agendamento manual aparecem aqui",
+      editOneSession: "Editar Sessão Avulsa",
+      saveChanges: "Salvar alterações",
+      saved: "Alterações salvas",
     },
     galleries: {
       title: "Galerias",
