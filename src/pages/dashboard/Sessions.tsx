@@ -313,6 +313,7 @@ const Sessions = () => {
                           }
                         }}
                         onDelete={(id) => setSessions((prev) => prev.filter((ss) => ss.id !== id))}
+                        onEdited={fetchSessions}
                       />
                     ))}
                   </div>
