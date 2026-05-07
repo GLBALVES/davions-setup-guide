@@ -231,12 +231,26 @@ function KanbanCard({
   const effectiveDeadline = shotEffectiveDeadline ?? postProdEffectiveDeadline;
   const deadlineStatus = effectiveDeadline ? getDeadlineStatus(effectiveDeadline) : null;
 
-  // Gallery expiry urgency for proof_gallery / final_gallery stages
-  const galleryExpiryStatus = (() => {
+  // Effective gallery expiry: explicit gallery_expires_at, else derived shoot_date + column days
+  const effectiveGalleryExpiry = (() => {
     if (project.stage !== "proof_gallery" && project.stage !== "final_gallery") return null;
-    if (!project.gallery_expires_at) return null;
-    return getDeadlineStatus(project.gallery_expires_at);
+    if (project.gallery_expires_at) return project.gallery_expires_at;
+    const days = project.stage === "proof_gallery" ? proofDeadlineDays : finalDeadlineDays;
+    if (days != null && project.shoot_date) {
+      try {
+        const shoot = new Date(project.shoot_date);
+        if (!isNaN(shoot.getTime())) {
+          const d = new Date(shoot);
+          d.setDate(d.getDate() + days);
+          return d.toISOString();
+        }
+      } catch { /* ignore */ }
+    }
+    return null;
   })();
+
+  // Gallery expiry urgency for proof_gallery / final_gallery stages
+  const galleryExpiryStatus = effectiveGalleryExpiry ? getDeadlineStatus(effectiveGalleryExpiry) : null;
 
   // Upcoming session proximity alert
   const upcomingSessionStatus = (() => {
