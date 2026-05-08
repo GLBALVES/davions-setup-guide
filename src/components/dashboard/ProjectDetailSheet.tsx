@@ -905,7 +905,57 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                 {isOpen ? <ChevronUp className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />}
               </div>
 
-              {isOpen && (
+              {isOpen && editingInvoiceId === inv.id && (
+                <div className="border-t border-border/40 px-3 py-2.5 flex flex-col gap-2 bg-background/70 rounded-b-md">
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargeDescription}</Label>
+                    <Input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} className="h-7 text-xs" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargeAmount}</Label>
+                      <Input type="number" min={0} step="0.01" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className="h-7 text-xs" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{(tp as any).chargeFee ?? "Valor da taxa"}</Label>
+                      <Input type="number" min={0} step="0.01" value={editFee} onChange={(e) => setEditFee(e.target.value)} className="h-7 text-xs" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargeDueDate}</Label>
+                      <Input type="date" value={editDue} onChange={(e) => setEditDue(e.target.value)} className="h-7 text-xs" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargePaid}</Label>
+                      <Input type="number" min={0} step="0.01" value={editPaid} onChange={(e) => setEditPaid(e.target.value)} className="h-7 text-xs" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Status</Label>
+                    <Select value={editStatus} onValueChange={(v) => setEditStatus(v as InvoiceStatus)}>
+                      <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent className="z-[60]">
+                        {(Object.keys(invoiceStatusLabels) as InvoiceStatus[]).map((s) => (
+                          <SelectItem key={s} value={s} className="text-xs">{invoiceStatusLabels[s]}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex gap-2 justify-end pt-1">
+                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setEditingInvoiceId(null)}>
+                      {tp.chargeCancel}
+                    </Button>
+                    <Button size="sm" className="h-7 text-xs"
+                      onClick={() => updateInvoiceMutation.mutate(inv.id)}
+                      disabled={updateInvoiceMutation.isPending || !editAmount}>
+                      {updateInvoiceMutation.isPending ? tp.chargeSaving : tp.chargeSave}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {isOpen && editingInvoiceId !== inv.id && (
                 <div className="border-t border-border/40 px-3 py-2.5 flex flex-col gap-2.5 bg-background/50 rounded-b-md">
                   <div className="grid grid-cols-3 gap-2 text-[10px]">
                     <div>
@@ -938,6 +988,12 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                   )}
 
                   <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      onClick={() => startEditInvoice(inv)}
+                      className="text-[10px] px-2 py-0.5 rounded-sm border border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors flex items-center gap-1"
+                    >
+                      <Pencil className="h-2.5 w-2.5" /> {editLabel}
+                    </button>
                     {inv.status !== "paid" && (
                       <button
                         onClick={() => updateStatusMutation.mutate({ id: inv.id, status: "paid", paid_amount: Number(inv.amount) })}
