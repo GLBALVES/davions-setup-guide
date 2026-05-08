@@ -3189,6 +3189,47 @@ export type Database = {
           },
         ]
       }
+      project_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          payment_date: string
+          photographer_id: string
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          payment_date?: string
+          photographer_id: string
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          payment_date?: string
+          photographer_id?: string
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_payments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       push_subscriptions: {
         Row: {
           auth: string
