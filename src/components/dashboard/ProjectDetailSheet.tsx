@@ -185,10 +185,19 @@ interface ProjectPayment {
   created_at: string;
 }
 
-function ReceivedPaymentsLog({ projectId, photographerId }: { projectId: string; photographerId: string }) {
+function ReceivedPaymentsLog({
+  projectId,
+  photographerId,
+  showForm,
+  onToggleForm,
+}: {
+  projectId: string;
+  photographerId: string;
+  showForm: boolean;
+  onToggleForm: () => void;
+}) {
   const { lang } = useLanguage();
   const queryClient = useQueryClient();
-  const [showForm, setShowForm] = useState(false);
   const [desc, setDesc] = useState("");
   const [amount, setAmount] = useState(""); // canonical "1500.50"
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -231,7 +240,7 @@ function ReceivedPaymentsLog({ projectId, photographerId }: { projectId: string;
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qKey });
       toast.success(L.added);
-      setShowForm(false); setDesc(""); setAmount(""); setDate(new Date().toISOString().slice(0, 10));
+      onToggleForm(); setDesc(""); setAmount(""); setDate(new Date().toISOString().slice(0, 10));
     },
     onError: (e: any) => toast.error(`${L.error}${e?.message ? `: ${e.message}` : ""}`),
   });
@@ -254,12 +263,6 @@ function ReceivedPaymentsLog({ projectId, photographerId }: { projectId: string;
     <div className="flex flex-col gap-2 rounded-md border border-border/50 bg-muted/10 p-3">
       <div className="flex items-center justify-between">
         <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{L.title}</span>
-        <button
-          onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Plus className="h-3 w-3" /> {L.add}
-        </button>
       </div>
 
       {showForm && (
@@ -286,7 +289,7 @@ function ReceivedPaymentsLog({ projectId, photographerId }: { projectId: string;
           </div>
           <div className="flex gap-2 justify-end">
             <Button variant="ghost" size="sm" className="h-7 text-xs"
-              onClick={() => { setShowForm(false); setDesc(""); setAmount(""); }}>
+              onClick={() => { onToggleForm(); setDesc(""); setAmount(""); }}>
               {L.cancel}
             </Button>
             <Button size="sm" className="h-7 text-xs"
@@ -336,11 +339,14 @@ function ReceivedPaymentsLog({ projectId, photographerId }: { projectId: string;
 
 // ── Payments section component ──
 function PaymentsSection({ project, photographerId }: { project: ProjectSheetData; photographerId: string }) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const tp = t.projects;
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const addPaymentLabel = lang === "pt" ? "Adicionar pagamento" : lang === "es" ? "Agregar pago" : "Add payment";
 
   // Form state
   const [formDesc, setFormDesc]       = useState("");
@@ -500,12 +506,20 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <SectionLabel>{tp.paymentsSection}</SectionLabel>
-        <button
-          onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Plus className="h-3 w-3" /> {tp.newCharge}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowPaymentForm((v) => !v)}
+            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Plus className="h-3 w-3" /> {addPaymentLabel}
+          </button>
+          <button
+            onClick={() => setShowForm((v) => !v)}
+            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Plus className="h-3 w-3" /> {tp.newCharge}
+          </button>
+        </div>
       </div>
 
       {(summaryTotal > 0 || summaryReceived > 0) && (
@@ -710,7 +724,12 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       )}
 
       {/* ── Received payments log ───────────────────────────────────────── */}
-      <ReceivedPaymentsLog projectId={project.id} photographerId={photographerId} />
+      <ReceivedPaymentsLog
+        projectId={project.id}
+        photographerId={photographerId}
+        showForm={showPaymentForm}
+        onToggleForm={() => setShowPaymentForm((v) => !v)}
+      />
 
       <div className="flex flex-col gap-2">
         {invoices.map((inv) => {
