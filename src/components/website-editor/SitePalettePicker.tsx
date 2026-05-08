@@ -16,8 +16,12 @@ const SITE_TOKENS: { var: string; label: string }[] = [
   { var: "--site-lines", label: "Lines" },
   { var: "--site-secondary-bg", label: "Secondary BG" },
   { var: "--site-secondary-headings", label: "Secondary H" },
+  { var: "--site-secondary-paragraphs", label: "Secondary P" },
+  { var: "--site-secondary-lines", label: "Secondary Lines" },
   { var: "--site-button-bg", label: "Button BG" },
   { var: "--site-button-text", label: "Button Text" },
+  { var: "--site-button-bg-hover", label: "Button BG Hover" },
+  { var: "--site-button-text-hover", label: "Button Text Hover" },
 ];
 
 const NEUTRALS = ["#000000", "#1a1a1a", "#444444", "#888888", "#cccccc", "#f5f5f5", "#ffffff", "transparent"];
