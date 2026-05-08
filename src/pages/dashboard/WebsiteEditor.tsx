@@ -4873,6 +4873,7 @@ const WebsiteEditor = () => {
     current: { site, sections: activePageSections, pageId: activePageInfo.id },
     enabled: historyEnabled,
     onApply: historyApply,
+    storageKey: user?.id ?? null,
   });
 
   const undoLabel = lang === "pt" ? "Desfazer" : lang === "es" ? "Deshacer" : "Undo";
