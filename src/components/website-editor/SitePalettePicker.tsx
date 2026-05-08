@@ -157,72 +157,73 @@ export function SitePaletteColorOptions({
         </div>
       )}
 
-      <div className="space-y-1.5">
+      <div className="space-y-2">
+        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+          Custom (HEX)
+        </p>
+        <div className="flex items-center gap-1.5">
+          <input
+            type="color"
+            value={hex.startsWith("#") ? hex : "#000000"}
+            onMouseDown={(e) => e.stopPropagation()}
+            onChange={(e) => apply(e.target.value)}
+            className="h-8 w-8 rounded border border-border cursor-pointer p-0"
+          />
+          <input
+            type="text"
+            value={hex}
+            onMouseDown={(e) => e.stopPropagation()}
+            onChange={(e) => setHex(e.target.value)}
+            onBlur={() => apply(hex)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                apply(hex);
+                onCommit?.();
+              }
+            }}
+            placeholder="#000000"
+            className="flex-1 h-8 rounded-md border border-border bg-background px-2 text-xs font-mono"
+          />
+        </div>
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
-          onClick={() => setShowCustom((v) => !v)}
+          onClick={() => setShowPresets((v) => !v)}
           className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium hover:text-foreground transition-colors flex items-center gap-1"
         >
-          Custom (HEX)
-          <span className="text-[8px]">{showCustom ? "▲" : "▼"}</span>
+          Presets
+          <span className="text-[8px]">{showPresets ? "▲" : "▼"}</span>
         </button>
-        {showCustom && (
-          <>
-            <div className="space-y-1 mb-2">
-              {PRESET_ROWS.map((row, ri) => (
-                <div key={ri} className="grid grid-cols-8 gap-1">
-                  {row.map((c, ci) => {
-                    const isTransparent = c === "transparent";
-                    const active = hex.toLowerCase() === c.toLowerCase();
-                    return (
-                      <button
-                        key={`${ri}-${ci}`}
-                        type="button"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => apply(c)}
-                        title={c}
-                        className={cn(
-                          "h-6 w-6 rounded border transition-all",
-                          active ? "ring-2 ring-foreground ring-offset-1" : "border-border hover:scale-110",
-                        )}
-                        style={{
-                          background: isTransparent
-                            ? "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 6px 6px"
-                            : c,
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center gap-1.5">
-              <input
-                type="color"
-                value={hex.startsWith("#") ? hex : "#000000"}
-                onMouseDown={(e) => e.stopPropagation()}
-                onChange={(e) => apply(e.target.value)}
-                className="h-8 w-8 rounded border border-border cursor-pointer p-0"
-              />
-              <input
-                type="text"
-                value={hex}
-                onMouseDown={(e) => e.stopPropagation()}
-                onChange={(e) => setHex(e.target.value)}
-                onBlur={() => apply(hex)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    apply(hex);
-                    onCommit?.();
-                  }
-                }}
-                placeholder="#000000"
-                className="flex-1 h-8 rounded-md border border-border bg-background px-2 text-xs font-mono"
-              />
-            </div>
-          </>
+        {showPresets && (
+          <div className="space-y-1">
+            {PRESET_ROWS.map((row, ri) => (
+              <div key={ri} className="grid grid-cols-8 gap-1">
+                {row.map((c, ci) => {
+                  const isTransparent = c === "transparent";
+                  const active = hex.toLowerCase() === c.toLowerCase();
+                  return (
+                    <button
+                      key={`${ri}-${ci}`}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => apply(c)}
+                      title={c}
+                      className={cn(
+                        "h-6 w-6 rounded border transition-all",
+                        active ? "ring-2 ring-foreground ring-offset-1" : "border-border hover:scale-110",
+                      )}
+                      style={{
+                        background: isTransparent
+                          ? "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 6px 6px"
+                          : c,
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
