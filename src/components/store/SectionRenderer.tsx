@@ -534,13 +534,29 @@ function TextBlock({ title, subtitle, body, align = "center", ctx, blockSettings
 
 // ─── Image + Text ───────────────────────────────────────────────────────────
 
+function buildUnifiedHtml(title?: string, body?: string) {
+  const t = title || "";
+  const b = body || "";
+  const isHtml = /<[a-z][\s\S]*>/i.test(b);
+  const bodyHtml = isHtml ? b : b.replace(/\n/g, "<br />");
+  return t ? `<h2>${t}</h2>${bodyHtml}` : bodyHtml;
+}
+
+const IMAGE_TEXT_RICH_CLASS =
+  "site-rich-text site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed [&_h1]:font-serif [&_h1]:italic [&_h1]:text-2xl [&_h1]:md:text-3xl [&_h1]:text-foreground [&_h1]:mb-4 [&_h1]:tracking-wide [&_h2]:site-h2 [&_h2]:text-2xl [&_h2]:md:text-3xl [&_h2]:font-extralight [&_h2]:tracking-wide [&_h2]:text-foreground [&_h2]:mb-4 [&_h3]:font-serif [&_h3]:italic [&_h3]:text-xl [&_h3]:text-foreground [&_h3]:mb-3 [&_blockquote]:border-l-2 [&_blockquote]:border-foreground/20 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:underline [&_a]:text-foreground";
+
 function ImageTextBlock(props: any) {
-  const { image, title, body, ctx } = props;
+  const { image, title, body, ctx, blockSettings } = props;
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   const buttons = resolveBlockButtons(props);
+  const contentMaxWidth = blockSettings?.contentMaxWidth;
+  const initialHtml = buildUnifiedHtml(title, body);
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-10 items-center">
+      <div
+        className={`mx-auto flex flex-col md:flex-row gap-10 items-center ${contentMaxWidth ? "" : "max-w-6xl"}`}
+        style={contentMaxWidth ? { maxWidth: `${contentMaxWidth}px` } : undefined}
+      >
         <div className="w-full md:w-1/2">
           <EditableImage
             value={image}
@@ -561,24 +577,15 @@ function ImageTextBlock(props: any) {
           </EditableImage>
         </div>
         <div className="w-full md:w-1/2">
-          {(c.editMode || title) && (
-            <EditableText
-              as="h2"
-              editMode={c.editMode}
-              value={title || ""}
-              placeholder="Add a title"
-              onChange={(v) => c.set("title", v)}
-              className="site-h2 text-2xl md:text-3xl font-extralight tracking-wide mb-4 text-foreground block"
-            />
-          )}
-          <EditableText
-            as="p"
+          <EditableRichText
             editMode={c.editMode}
-            value={body || ""}
-            placeholder="Add body text"
-            multiline
-            onChange={(v) => c.set("body", v)}
-            className="site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line block"
+            value={initialHtml}
+            placeholder="Write your content here… Select text to format (Heading, Bold, Color…)"
+            onChange={(v) => {
+              c.set("body", v);
+              if (title) c.set("title", "");
+            }}
+            className={IMAGE_TEXT_RICH_CLASS}
           />
           <BlockButtons
             buttons={buttons}
@@ -594,12 +601,17 @@ function ImageTextBlock(props: any) {
 // ─── Text + Image ───────────────────────────────────────────────────────────
 
 function TextImageBlock(props: any) {
-  const { image, title, body, ctx } = props;
+  const { image, title, body, ctx, blockSettings } = props;
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   const buttons = resolveBlockButtons(props);
+  const contentMaxWidth = blockSettings?.contentMaxWidth;
+  const initialHtml = buildUnifiedHtml(title, body);
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row-reverse gap-10 items-center">
+      <div
+        className={`mx-auto flex flex-col md:flex-row-reverse gap-10 items-center ${contentMaxWidth ? "" : "max-w-6xl"}`}
+        style={contentMaxWidth ? { maxWidth: `${contentMaxWidth}px` } : undefined}
+      >
         <div className="w-full md:w-1/2">
           <EditableImage
             value={image}
@@ -620,24 +632,15 @@ function TextImageBlock(props: any) {
           </EditableImage>
         </div>
         <div className="w-full md:w-1/2">
-          {(c.editMode || title) && (
-            <EditableText
-              as="h2"
-              editMode={c.editMode}
-              value={title || ""}
-              placeholder="Add a title"
-              onChange={(v) => c.set("title", v)}
-              className="site-h2 text-2xl md:text-3xl font-extralight tracking-wide mb-4 text-foreground block"
-            />
-          )}
-          <EditableText
-            as="p"
+          <EditableRichText
             editMode={c.editMode}
-            value={body || ""}
-            placeholder="Add body text"
-            multiline
-            onChange={(v) => c.set("body", v)}
-            className="site-paragraph-1 text-sm font-light text-muted-foreground leading-relaxed whitespace-pre-line block"
+            value={initialHtml}
+            placeholder="Write your content here… Select text to format (Heading, Bold, Color…)"
+            onChange={(v) => {
+              c.set("body", v);
+              if (title) c.set("title", "");
+            }}
+            className={IMAGE_TEXT_RICH_CLASS}
           />
           <BlockButtons
             buttons={buttons}
@@ -649,8 +652,6 @@ function TextImageBlock(props: any) {
     </section>
   );
 }
-
-// ─── Gallery Grid ───────────────────────────────────────────────────────────
 
 type GalleryItem = { image: string; title?: string; caption?: string; link?: string };
 

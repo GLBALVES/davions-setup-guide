@@ -222,13 +222,24 @@ function TextContentEditor({ props, onChange }: { props: any; onChange: (p: any)
 }
 
 function ImageTextContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
+  // Unified content: merge legacy title into body so it's a single rich-text area.
+  const initialBody = (() => {
+    const body = props.body || "";
+    const title = props.title || "";
+    if (!title) return body;
+    const isHtml = /<[a-z][\s\S]*>/i.test(body);
+    const bodyHtml = isHtml ? body : body.replace(/\n/g, "<br />");
+    return `<h2>${title}</h2>${bodyHtml}`;
+  })();
   return (
     <div className="space-y-3">
-      <Field label="Title">
-        <RichTextField value={props.title || ""} onChange={(v) => onChange({ ...props, title: v })} />
-      </Field>
-      <Field label="Body">
-        <RichTextField multiline value={props.body || ""} onChange={(v) => onChange({ ...props, body: v })} />
+      <Field label="Content">
+        <RichTextField
+          multiline
+          value={initialBody}
+          onChange={(v) => onChange({ ...props, body: v, title: "" })}
+          placeholder="Write your content here… Use the floating toolbar to set Heading, Bold, Color…"
+        />
       </Field>
       <Field label="Image">
         <ImageUploadField
@@ -1095,7 +1106,7 @@ export const BlockSettingsPanel = ({
             <Slider value={[s.paddingRight ?? 0]} min={0} max={200} step={8} onValueChange={([v]) => update({ paddingRight: v })} />
           </div>
 
-          {section.type === "text" && (
+          {(section.type === "text" || section.type === "image-text" || section.type === "text-image") && (
             <div className="space-y-1.5 pt-2 border-t border-border/60">
               <label className="text-xs font-medium text-muted-foreground">
                 Content Width: {s.contentMaxWidth ?? 768}px
