@@ -2500,6 +2500,8 @@ export const translations = {
       bookingPaymentPending: "Aguardando pagamento",
       documentsSection: "Documentos",
       contractsSubsection: "Contratos",
+      readOnly: "Somente leitura",
+      signedOn: "Assinado em",
       briefingsSubsection: "Questionários",
       openInEditor: "Abrir no editor",
       noContracts: "Nenhum contrato criado ainda",
