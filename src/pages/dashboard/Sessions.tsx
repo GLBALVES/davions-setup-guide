@@ -89,10 +89,11 @@ const Sessions = () => {
     setLoading(true);
     const [{ data: sessionsData }, { data: photoData }] = await Promise.all([
       supabase.from("sessions").select("*").eq("photographer_id", photographerId).order("sort_order", { ascending: true }),
-      supabase.from("photographers").select("store_slug").eq("id", photographerId).single(),
+      supabase.from("photographers").select("store_slug, custom_domain").eq("id", photographerId).single(),
     ]);
     setSessions(sessionsData ?? []);
     setStoreSlug(photoData?.store_slug ?? null);
+    setCustomDomain((photoData as any)?.custom_domain ?? null);
     setLoading(false);
   };
 
