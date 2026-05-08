@@ -454,10 +454,8 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         photographer_id: photographerId,
         description:     formDesc.trim() || tp.chargeDescription,
         amount:          parseFloat(formAmount) || 0,
-        status:          formStatus,
-        due_date:        formDue || null,
-        paid_amount:     parseFloat(formPaid) || 0,
-        paid_at:         formStatus === "paid" ? new Date().toISOString() : null,
+        fee_amount:      parseFloat(formFee) || 0,
+        status:          "pending",
       } as any);
       if (error) throw error;
     },
@@ -465,7 +463,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       queryClient.invalidateQueries({ queryKey: qKey });
       toast.success(tp.chargeAdded);
       setShowForm(false);
-      setFormDesc(""); setFormAmount(""); setFormDue(""); setFormStatus("pending"); setFormPaid("");
+      setFormDesc(""); setFormAmount(""); setFormFee(""); setFormDue(""); setFormStatus("pending"); setFormPaid("");
     },
     onError: () => toast.error(tp.errorAddingCharge),
   });
