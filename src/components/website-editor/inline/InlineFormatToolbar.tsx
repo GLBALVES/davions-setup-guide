@@ -140,6 +140,21 @@ export default function InlineFormatToolbar() {
   const [showBlock, setShowBlock] = useState(false);
   const [customSize, setCustomSize] = useState<string>("");
   const toolbarRef = useRef<HTMLDivElement | null>(null);
+  // Snapshot of the user's selection range. Updated on every valid selection
+  // change so we can restore it before applying a format — important because
+  // clicking inside the toolbar (especially the native <input type="color">
+  // picker) can collapse or steal the selection from the editable host.
+  const savedRangeRef = useRef<Range | null>(null);
+
+  const restoreSelection = useCallback(() => {
+    const r = savedRangeRef.current;
+    if (!r) return false;
+    const sel = window.getSelection();
+    if (!sel) return false;
+    sel.removeAllRanges();
+    sel.addRange(r);
+    return true;
+  }, []);
 
   const updateFromSelection = useCallback(() => {
     const sel = window.getSelection();
