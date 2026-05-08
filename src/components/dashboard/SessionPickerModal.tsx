@@ -28,7 +28,7 @@ interface Props {
 }
 
 export function SessionPickerModal({
-  open, onOpenChange, sessions, currentSessionId, onSelect,
+  open, onOpenChange, sessions, currentSessionId, onSelect, onCreateNewSession, onCreateOneSession,
 }: Props) {
   const { t } = useLanguage();
   const tp = t.projects;
