@@ -286,12 +286,22 @@ function ReceivedPaymentsLog({
             </div>
           </div>
           <div className="flex flex-col gap-1">
+            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{L.fee}</Label>
+            <Input
+              inputMode="decimal"
+              placeholder={currencyPlaceholder(currencyLang)}
+              value={formatCurrencyInput(fee, currencyLang)}
+              onChange={(e) => setFee(parseCurrencyInput(e.target.value, currencyLang))}
+              className="h-7 text-xs"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
             <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{L.desc}</Label>
             <Input placeholder={L.descPh} value={desc} onChange={(e) => setDesc(e.target.value)} className="h-7 text-xs" />
           </div>
           <div className="flex gap-2 justify-end">
             <Button variant="ghost" size="sm" className="h-7 text-xs"
-              onClick={() => { onToggleForm(); setDesc(""); setAmount(""); }}>
+              onClick={() => { onToggleForm(); setDesc(""); setAmount(""); setFee(""); }}>
               {L.cancel}
             </Button>
             <Button size="sm" className="h-7 text-xs"
