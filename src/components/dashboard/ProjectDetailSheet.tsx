@@ -40,6 +40,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { checkBookingConflict, syncProjectDateToBooking, timeToMinutes } from "@/lib/booking-conflict";
+import { formatCurrencyInput, parseCurrencyInput, currencyPlaceholder, type CurrencyLang } from "@/lib/currency-format";
 import { BriefingDialog } from "@/components/dashboard/schedule/BookingDetailSheet";
 
 type Stage = "upcoming" | "shot" | "proof_gallery" | "post_production" | "final_gallery" | "archived";
@@ -189,8 +190,10 @@ function ReceivedPaymentsLog({ projectId, photographerId }: { projectId: string;
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [desc, setDesc] = useState("");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(""); // canonical "1500.50"
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+
+  const currencyLang: CurrencyLang = lang === "pt" ? "pt" : lang === "es" ? "es" : "en";
 
   const L = {
     en: { title: "Received Payments", add: "Add payment", date: "Date", amount: "Amount", desc: "Description", descPh: "e.g. Bank transfer", save: "Save", cancel: "Cancel", empty: "No payments recorded", added: "Payment added", removed: "Payment removed", error: "Error saving payment", total: "Total received" },
@@ -230,7 +233,7 @@ function ReceivedPaymentsLog({ projectId, photographerId }: { projectId: string;
       toast.success(L.added);
       setShowForm(false); setDesc(""); setAmount(""); setDate(new Date().toISOString().slice(0, 10));
     },
-    onError: () => toast.error(L.error),
+    onError: (e: any) => toast.error(`${L.error}${e?.message ? `: ${e.message}` : ""}`),
   });
 
   const deleteMutation = useMutation({
@@ -268,7 +271,13 @@ function ReceivedPaymentsLog({ projectId, photographerId }: { projectId: string;
             </div>
             <div className="flex flex-col gap-1">
               <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{L.amount}</Label>
-              <Input type="number" min={0} step="0.01" placeholder="0,00" value={amount} onChange={(e) => setAmount(e.target.value)} className="h-7 text-xs" />
+              <Input
+                inputMode="decimal"
+                placeholder={currencyPlaceholder(currencyLang)}
+                value={formatCurrencyInput(amount, currencyLang)}
+                onChange={(e) => setAmount(parseCurrencyInput(e.target.value, currencyLang))}
+                className="h-7 text-xs"
+              />
             </div>
           </div>
           <div className="flex flex-col gap-1">
