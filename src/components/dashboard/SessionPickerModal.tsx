@@ -187,7 +187,7 @@ export function SessionPickerModal({
                 className="w-full text-left border-2 border-dashed border-muted-foreground/30 hover:border-foreground/50 transition-colors rounded-lg overflow-hidden flex flex-col items-center justify-center min-h-[140px] gap-2"
               >
                 <Plus className="h-6 w-6 text-muted-foreground/50" />
-                <span className="text-xs text-muted-foreground">{tp.addSession || "Add session"}</span>
+                <span className="text-xs text-muted-foreground">{(tp as any).addSession || "Add session"}</span>
               </button>
             )}
           </div>
