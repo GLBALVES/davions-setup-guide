@@ -1050,6 +1050,26 @@ const Personalize = () => {
                                 <Button
                             size="icon"
                             variant="ghost"
+                            className="h-7 w-7"
+                            title={(t.personalize as any).duplicateBriefing ?? "Duplicate"}
+                            onClick={() => {
+                              const clonedQuestions = (b.questions || []).map((q) => ({
+                                ...q,
+                                id: (typeof crypto !== "undefined" && (crypto as any).randomUUID)
+                                  ? (crypto as any).randomUUID()
+                                  : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+                                options: Array.isArray(q.options) ? [...q.options] : [],
+                              }));
+                              setEditingBriefing(null);
+                              setBriefingName(`${b.name || t.personalize.untitled} (${(t.personalize as any).copySuffix ?? "copy"})`);
+                              setBriefingQuestions(clonedQuestions);
+                              setBriefingDialogOpen(true);
+                            }}>
+                                  <Copy className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                            size="icon"
+                            variant="ghost"
                             className="h-7 w-7 text-destructive hover:text-destructive"
                             disabled={deletingBriefingId === b.id}
                             onClick={async () => {
