@@ -19,8 +19,17 @@ import {
   Check, Copy, AlertCircle, Store, Globe, ExternalLink,
   Upload, Loader2, X, Plus, Pencil, Trash2, Type, Image,
   Instagram, Youtube, Linkedin, Facebook, BarChart2, Palette,
-  Layout, FileText, Link2, Phone, ChevronDown, ChevronUp, Download, ChevronRight } from
+  Layout, FileText, Link2, Phone, ChevronDown, ChevronUp, Download, ChevronRight, GripVertical } from
 "lucide-react";
+import {
+  DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy,
+  useSortable, arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
@@ -48,6 +57,28 @@ const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   multi_image: "Multi image",
   date: "Date"
 };
+
+// Sortable wrapper for briefing questions (drag-and-drop reorder)
+function SortableQuestionItem({
+  id,
+  children,
+}: {
+  id: string;
+  children: (handleProps: { listeners: any; attributes: any }) => React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 10 : "auto",
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children({ listeners, attributes })}
+    </div>
+  );
+}
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
@@ -321,6 +352,20 @@ const Personalize = () => {
   const [editingBriefing, setEditingBriefing] = useState<Briefing | null>(null);
   const [briefingName, setBriefingName] = useState("");
   const [briefingQuestions, setBriefingQuestions] = useState<BriefingQuestion[]>([]);
+  const briefingDndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+  const handleBriefingQuestionsDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setBriefingQuestions((prev) => {
+      const oldIdx = prev.findIndex((q) => q.id === active.id);
+      const newIdx = prev.findIndex((q) => q.id === over.id);
+      if (oldIdx < 0 || newIdx < 0) return prev;
+      return arrayMove(prev, oldIdx, newIdx);
+    });
+  };
   const [savingBriefing, setSavingBriefing] = useState(false);
   const [deletingBriefingId, setDeletingBriefingId] = useState<string | null>(null);
 
@@ -1226,11 +1271,26 @@ const Personalize = () => {
                             </p>
                         }
 
+                          <DndContext sensors={briefingDndSensors} collisionDetection={closestCenter} onDragEnd={handleBriefingQuestionsDragEnd}>
+                            <SortableContext items={briefingQuestions.map((q) => q.id)} strategy={verticalListSortingStrategy}>
                           {briefingQuestions.map((q, idx) =>
-                            <div key={q.id} ref={(el) => { questionRefs.current[idx] = el; }} className="border border-border p-4 flex flex-col gap-3">
+                            <SortableQuestionItem key={q.id} id={q.id}>
+                              {({ listeners, attributes }) => (
+                            <div ref={(el) => { questionRefs.current[idx] = el; }} className="border border-border p-4 flex flex-col gap-3 bg-background">
                               {/* Question header */}
                               <div className="flex items-center justify-between gap-2">
-                                <span className="text-[10px] tracking-wider uppercase text-muted-foreground">{t.personalize.questionN} {idx + 1}</span>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    {...attributes}
+                                    {...listeners}
+                                    className="text-muted-foreground/60 hover:text-foreground cursor-grab active:cursor-grabbing touch-none"
+                                    aria-label="Drag to reorder"
+                                  >
+                                    <GripVertical className="h-3.5 w-3.5" />
+                                  </button>
+                                  <span className="text-[10px] tracking-wider uppercase text-muted-foreground">{t.personalize.questionN} {idx + 1}</span>
+                                </div>
                                 <div className="flex items-center gap-1">
                                   <Button
                                 type="button"
@@ -1423,7 +1483,11 @@ const Personalize = () => {
                                 </div>
                           }
                             </div>
+                              )}
+                            </SortableQuestionItem>
                         )}
+                            </SortableContext>
+                          </DndContext>
                         </div>
                       </div>
 
