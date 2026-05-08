@@ -632,12 +632,12 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       })()}
 
 
-      {invoices.length > 0 && (
+      {(summaryTotal > 0 || summaryReceived > 0) && (
         <div className="grid grid-cols-3 gap-2">
           {[
-            { label: tp.chargeTotal,    value: totalAmount,  color: "text-foreground" },
-            { label: tp.chargeReceived, value: totalPaid,    color: "text-emerald-600" },
-            { label: tp.chargeBalance,  value: totalBalance, color: totalBalance > 0 ? "text-amber-600" : "text-muted-foreground" },
+            { label: tp.chargeTotal,    value: summaryTotal,    color: "text-foreground" },
+            { label: tp.chargeReceived, value: summaryReceived, color: "text-emerald-600" },
+            { label: tp.chargeBalance,  value: summaryBalance,  color: summaryBalance > 0 ? "text-amber-600" : "text-muted-foreground" },
           ].map((s) => (
             <div key={s.label} className="flex flex-col items-center rounded-md border border-border/50 bg-muted/20 py-2 px-1">
               <span className="text-[9px] uppercase tracking-widest text-muted-foreground">{s.label}</span>
