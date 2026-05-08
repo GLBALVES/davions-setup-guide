@@ -164,12 +164,18 @@ export function SitePaletteColorOptions({
           Custom (HEX)
         </p>
         <div className="flex items-center gap-1.5">
-          <input
-            type="color"
-            value={hex.startsWith("#") ? hex : "#000000"}
-            onMouseDown={(e) => e.stopPropagation()}
-            onChange={(e) => apply(e.target.value)}
-            className="h-8 w-8 rounded border border-border cursor-pointer p-0"
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => setShowWheel((v) => !v)}
+            title="Open color wheel"
+            className="h-8 w-8 rounded border border-border cursor-pointer p-0 shrink-0"
+            style={{
+              background:
+                hex && hex !== "transparent"
+                  ? hex
+                  : "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 6px 6px",
+            }}
           />
           <input
             type="text"
