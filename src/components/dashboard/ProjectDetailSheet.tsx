@@ -1056,9 +1056,20 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
   const bookingId = (project as any).booking_id ?? null;
   const [contractOpen, setContractOpen] = useState(false);
   const projectId = project.id;
-  const { data: contractSnapshot, refetch: refetchContractSnapshot } = useQuery<{ html: string | null; signedAt: string | null } | null>({
+  const { data: contractSnapshot, refetch: refetchContractSnapshot } = useQuery<{ html: string | null; signedAt: string | null; signature: string | null } | null>({
     queryKey: ["project-contract-snapshot", projectId, bookingId],
     queryFn: async () => {
+      // Always read signature from the booking (only stored there)
+      let signature: string | null = null;
+      if (bookingId) {
+        const { data: sigRow } = await supabase
+          .from("bookings")
+          .select("contract_signature_data")
+          .eq("id", bookingId)
+          .maybeSingle();
+        signature = (sigRow as any)?.contract_signature_data ?? null;
+      }
+
       // Prefer the signed copy stored on the project itself
       const { data: proj } = await supabase
         .from("client_projects" as any)
@@ -1067,7 +1078,7 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
         .maybeSingle();
       const projHtml = (proj as any)?.signed_contract_html ?? null;
       const projSignedAt = (proj as any)?.contract_signed_at ?? null;
-      if (projHtml) return { html: projHtml, signedAt: projSignedAt };
+      if (projHtml) return { html: projHtml, signedAt: projSignedAt, signature };
 
       // Fallback: read from the linked booking (legacy / pre-payment snapshots)
       if (!bookingId) return null;
@@ -1080,8 +1091,7 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
       const html = (data as any)?.contract_html_snapshot ?? null;
       const signedAt = (data as any)?.contract_signed_at ?? null;
 
-      // Auto-recover legacy bookings: if no snapshot exists, ask the
-      // backend to rebuild it from the session template + booking data.
+      // Auto-recover legacy bookings: rebuild snapshot from template if missing
       if (!html && bookingId) {
         try {
           const { data: rebuilt } = await supabase.functions.invoke("backfill-contract-snapshot", {
@@ -1096,6 +1106,7 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
             return {
               html: (again as any)?.contract_html_snapshot ?? null,
               signedAt: (again as any)?.contract_signed_at ?? null,
+              signature,
             };
           }
         } catch (e) {
@@ -1103,7 +1114,7 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
         }
       }
 
-      return { html, signedAt };
+      return { html, signedAt, signature };
     },
     enabled: !!projectId,
   });
@@ -1208,8 +1219,8 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
       </div>
 
       <Dialog open={contractOpen} onOpenChange={setContractOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
-          <DialogHeader>
+        <DialogContent className="max-w-3xl h-[85vh] p-0 gap-0 flex flex-col overflow-hidden">
+          <DialogHeader className="px-6 pt-5 pb-3 border-b border-border shrink-0">
             <DialogTitle className="flex items-center gap-2 flex-wrap">
               <FileTextIcon className="h-4 w-4 text-purple-500" />
               {tp.contractsSubsection}
@@ -1221,12 +1232,29 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
               )}
             </DialogTitle>
           </DialogHeader>
-          <ScrollArea className="flex-1 pr-4">
+          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5">
             <div
               className="prose prose-sm max-w-none text-sm select-text"
               dangerouslySetInnerHTML={{ __html: contractSnapshot?.html ?? "" }}
             />
-          </ScrollArea>
+            {contractSnapshot?.signature && (
+              <div className="mt-8 pt-6 border-t border-border">
+                <p className="text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground mb-2">
+                  Client signature
+                </p>
+                <img
+                  src={contractSnapshot.signature}
+                  alt="Client signature"
+                  className="h-24 object-contain object-left bg-white border border-border p-2"
+                />
+                {contractSnapshot.signedAt && (
+                  <p className="text-[10px] font-light text-muted-foreground/60 mt-2">
+                    Signed on {new Date(contractSnapshot.signedAt).toLocaleString()}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 

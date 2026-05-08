@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { resolveContractVariables } from "@/pages/dashboard/ContractEditor";
+import SignatureCanvas from "react-signature-canvas";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -192,6 +193,8 @@ const BookingConfirm = () => {
 
   // Contract state
   const [contractAccepted, setContractAccepted] = useState(false);
+  const [signatureData, setSignatureData] = useState<string | null>(null);
+  const signatureRef = useRef<any>(null);
   const [contractPreviewOpen, setContractPreviewOpen] = useState(false);
   const [contractCustomFields, setContractCustomFields] = useState<Array<{ id: string; field_key: string; field_label: string; default_value: string; value_source?: string | null; mapped_key?: string | null; client_prompt?: string | null; client_input_type?: string | null; required?: boolean | null }>>([]);
   const [customFieldAnswers, setCustomFieldAnswers] = useState<Record<string, string>>({});
@@ -469,6 +472,7 @@ const BookingConfirm = () => {
               booking_id: booking.id,
               contract_html: resolvedContractHtml,
               client_tax_id: clientInfo.tax_id?.trim() || null,
+              signature_data: signatureData,
             },
           });
         } catch (snapErr) {
@@ -594,12 +598,28 @@ const BookingConfirm = () => {
             booking_id: booking.id,
             contract_html: resolvedContractHtml,
             client_tax_id: clientInfo.tax_id?.trim() || null,
+            signature_data: signatureData,
           },
         });
       } catch (err) {
         console.error("Save contract snapshot error:", err);
       }
     }
+  };
+
+  const handleSignatureEnd = () => {
+    try {
+      const dataUrl = signatureRef.current?.getCanvas()?.toDataURL("image/png") ?? null;
+      setSignatureData(dataUrl);
+    } catch (e) {
+      console.error("signature capture error:", e);
+    }
+  };
+
+  const handleSignatureClear = () => {
+    signatureRef.current?.clear();
+    setSignatureData(null);
+    if (contractAccepted) setContractAccepted(false);
   };
 
   /* ── Build steps dynamically ── */
@@ -638,7 +658,7 @@ const BookingConfirm = () => {
       return false;
     }
     if (activeStep.key === "contract") {
-      return contractAccepted;
+      return contractAccepted && !!signatureData;
     }
     return true;
   };
@@ -1205,13 +1225,44 @@ const BookingConfirm = () => {
               />
             </div>
 
-            <div className="p-5 flex flex-col gap-3">
+            <div className="p-5 flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground">
+                    Sign here
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleSignatureClear}
+                    className="text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition"
+                  >
+                    Clear
+                  </button>
+                </div>
+                <div className="border border-border bg-background relative">
+                  <SignatureCanvas
+                    ref={signatureRef}
+                    penColor="hsl(var(--foreground))"
+                    onEnd={handleSignatureEnd}
+                    canvasProps={{
+                      className: "w-full h-32 cursor-crosshair",
+                    }}
+                  />
+                </div>
+                {!signatureData && (
+                  <p className="text-[10px] font-light text-muted-foreground/70">
+                    Draw your signature above to confirm acceptance.
+                  </p>
+                )}
+              </div>
+
               <label className="flex items-start gap-2.5 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={contractAccepted}
                   onChange={(e) => handleAcceptContract(e.target.checked)}
-                  className="h-4 w-4 accent-foreground mt-0.5"
+                  disabled={!signatureData}
+                  className="h-4 w-4 accent-foreground mt-0.5 disabled:opacity-40"
                 />
                 <span className="text-xs font-light text-muted-foreground">
                   I have read and agree to the terms of this service agreement.
