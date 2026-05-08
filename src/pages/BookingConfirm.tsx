@@ -573,13 +573,13 @@ const BookingConfirm = () => {
     setContractAccepted(checked);
     if (checked && booking?.id && resolvedContractHtml) {
       try {
-        await (supabase as any)
-          .from("bookings")
-          .update({
-            contract_html_snapshot: resolvedContractHtml,
+        await supabase.functions.invoke("register-contract-acceptance", {
+          body: {
+            booking_id: booking.id,
+            contract_html: resolvedContractHtml,
             client_tax_id: clientInfo.tax_id?.trim() || null,
-          })
-          .eq("id", booking.id);
+          },
+        });
       } catch (err) {
         console.error("Save contract snapshot error:", err);
       }
