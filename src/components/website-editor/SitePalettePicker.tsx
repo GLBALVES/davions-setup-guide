@@ -85,6 +85,7 @@ export function SitePaletteColorOptions({
   onCommit,
 }: SitePaletteColorOptionsProps) {
   const [showPresets, setShowPresets] = useState(false);
+  const [showWheel, setShowWheel] = useState(false);
   const [hex, setHex] = useState(value || "#000000");
 
   useEffect(() => {
