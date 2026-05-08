@@ -491,31 +491,11 @@ export default function InlineFormatToolbar() {
           <Palette className="h-3.5 w-3.5" />
         </button>
         {showColor && (
-          <div className="absolute top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg p-2 min-w-[220px]">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">
-              Site palette
-            </p>
-            <div className="grid grid-cols-8 gap-1 mb-2">
-              {readSitePaletteHexes().map((c) => (
-                <button
-                  key={c.var}
-                  type="button"
-                  onMouseDown={guard(() => onApplyColor(c.hex))}
-                  className="w-6 h-6 rounded border border-border"
-                  style={{ background: c.hex }}
-                  title={`${c.label} · ${c.hex}`}
-                />
-              ))}
-            </div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">
-              Custom
-            </p>
-            <div className="pt-1" onMouseDown={(e) => e.stopPropagation()}>
-              <SitePalettePicker
-                value="#000000"
-                onChange={(v) => onApplyColor(v)}
-              />
-            </div>
+          <div className="absolute top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg p-2 w-64">
+            <SitePaletteColorOptions
+              value="#000000"
+              onChange={(v) => onApplyColor(v)}
+            />
           </div>
         )}
       </div>
