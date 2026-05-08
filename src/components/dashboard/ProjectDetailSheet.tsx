@@ -2332,3 +2332,88 @@ export function ProjectDetailSheet({
     </Dialog>
   );
 }
+
+function ProjectBriefingSubsection({
+  bookingId,
+  photographerId,
+  labelTitle,
+  emptyText,
+}: {
+  bookingId: string | null;
+  photographerId: string;
+  labelTitle: string;
+  emptyText: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const { data } = useQuery({
+    queryKey: ["project-briefing-status", bookingId],
+    queryFn: async () => {
+      if (!bookingId) return null;
+      const { data: booking } = await (supabase as any)
+        .from("bookings")
+        .select("session_id")
+        .eq("id", bookingId)
+        .maybeSingle();
+      if (!booking?.session_id) return null;
+      const { data: session } = await (supabase as any)
+        .from("sessions")
+        .select("briefing_id")
+        .eq("id", booking.session_id)
+        .maybeSingle();
+      if (!session?.briefing_id) return null;
+      const [{ data: brief }, { data: resp }] = await Promise.all([
+        (supabase as any).from("briefings").select("id, name").eq("id", session.briefing_id).maybeSingle(),
+        (supabase as any)
+          .from("booking_briefing_responses")
+          .select("submitted_at")
+          .eq("booking_id", bookingId)
+          .eq("briefing_id", session.briefing_id)
+          .maybeSingle(),
+      ]);
+      if (!brief) return null;
+      return { id: brief.id as string, name: brief.name as string, answered: !!resp };
+    },
+    enabled: !!bookingId && !!photographerId,
+  });
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">{labelTitle}</p>
+      {!data ? (
+        <p className="text-[11px] text-muted-foreground/50 italic pl-1">{emptyText}</p>
+      ) : (
+        <div className="flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/20 px-3 py-2">
+          <FileText className="h-4 w-4 text-blue-500 shrink-0" />
+          <span className="flex-1 text-xs font-medium truncate">{data.name || "Untitled Briefing"}</span>
+          {data.answered ? (
+            <>
+              <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600">
+                <CheckCircle2 className="h-3 w-3" /> Respondido
+              </span>
+              <button
+                onClick={() => setOpen(true)}
+                className="text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors px-2 py-1 border border-border/50 rounded-sm"
+              >
+                Visualizar
+              </button>
+            </>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-[10px] text-amber-600">
+              <Clock className="h-3 w-3" /> Pendente
+            </span>
+          )}
+        </div>
+      )}
+      {data && bookingId && (
+        <BriefingDialog
+          open={open}
+          onClose={() => setOpen(false)}
+          bookingId={bookingId}
+          briefingId={data.id}
+        />
+      )}
+    </div>
+  );
+}
+
