@@ -471,6 +471,7 @@ const BookingConfirm = () => {
               booking_id: booking.id,
               contract_html: resolvedContractHtml,
               client_tax_id: clientInfo.tax_id?.trim() || null,
+              signature_data: signatureData,
             },
           });
         } catch (snapErr) {
