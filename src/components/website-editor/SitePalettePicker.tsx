@@ -24,7 +24,7 @@ const SITE_TOKENS: { var: string; label: string }[] = [
   { var: "--site-button-text-hover", label: "Button Text Hover" },
 ];
 
-const NEUTRALS = ["#000000", "#1a1a1a", "#444444", "#888888", "#cccccc", "#f5f5f5", "#ffffff", "transparent"];
+
 
 /** Resolve a CSS color string (hex, rgb, rgba, hsl, color()) to #rrggbb. */
 function resolveCssColor(value: string): string {
@@ -147,36 +147,24 @@ export function SitePalettePicker({
           </div>
         )}
 
-        {/* Neutrals */}
-        <div className="space-y-1.5 mb-3">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-            Neutrals
-          </p>
-          <div className="grid grid-cols-8 gap-1.5">
-            {NEUTRALS.map((n) => {
-              if (n === "transparent" && !allowTransparent) return null;
-              const active = hex.toLowerCase() === n.toLowerCase();
-              return (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => apply(n)}
-                  title={n}
-                  className={cn(
-                    "h-6 w-6 rounded border transition-all",
-                    active ? "ring-2 ring-foreground ring-offset-1" : "border-border hover:scale-110",
-                  )}
-                  style={{
-                    background:
-                      n === "transparent"
-                        ? "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 6px 6px"
-                        : n,
-                  }}
-                />
-              );
-            })}
+        {/* Transparent (only when allowed) */}
+        {allowTransparent && (
+          <div className="space-y-1.5 mb-3">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+              Transparent
+            </p>
+            <button
+              type="button"
+              onClick={() => apply("transparent")}
+              title="transparent"
+              className={cn(
+                "h-6 w-6 rounded border transition-all",
+                hex === "transparent" ? "ring-2 ring-foreground ring-offset-1" : "border-border hover:scale-110",
+              )}
+              style={{ background: "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 6px 6px" }}
+            />
           </div>
-        </div>
+        )}
 
         {/* Custom hex */}
         <div className="space-y-1.5">

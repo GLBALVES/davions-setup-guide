@@ -554,20 +554,8 @@ export default function InlineFormatToolbar() {
               ))}
             </div>
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">
-              Neutrals
+              Custom
             </p>
-            <div className="grid grid-cols-8 gap-1 mb-2">
-              {["#000000", "#374151", "#6B7280", "#9CA3AF", "#D1D5DB", "#FFFFFF"].map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onMouseDown={guard(() => onApplyColor(c))}
-                  className="w-6 h-6 rounded border border-border"
-                  style={{ background: c }}
-                  title={c}
-                />
-              ))}
-            </div>
             <div className="pt-1" onMouseDown={(e) => e.stopPropagation()}>
               <SitePalettePicker
                 value="#000000"
