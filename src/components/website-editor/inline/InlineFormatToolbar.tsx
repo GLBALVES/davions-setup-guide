@@ -67,8 +67,12 @@ const SITE_COLOR_TOKENS: { var: string; label: string }[] = [
   { var: "--site-lines", label: "Lines" },
   { var: "--site-secondary-bg", label: "Secondary BG" },
   { var: "--site-secondary-headings", label: "Secondary H" },
+  { var: "--site-secondary-paragraphs", label: "Secondary P" },
+  { var: "--site-secondary-lines", label: "Secondary Lines" },
   { var: "--site-button-bg", label: "Button BG" },
   { var: "--site-button-text", label: "Button Text" },
+  { var: "--site-button-bg-hover", label: "Button BG Hover" },
+  { var: "--site-button-text-hover", label: "Button Text Hover" },
 ];
 
 function cssToHex(value: string): string | null {
