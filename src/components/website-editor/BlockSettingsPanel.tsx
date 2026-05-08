@@ -34,6 +34,7 @@ export interface BlockSettings {
   contentMaxWidth?: number;
   textMaxWidth?: number;
   imageMaxWidth?: number;
+  blockPosition?: "left" | "center" | "right";
   colorScheme?: "light" | "dark" | "auto";
   animation?: "none" | "fade-up" | "fade-in" | "slide-left";
 }
