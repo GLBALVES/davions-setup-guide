@@ -356,8 +356,19 @@ function SectionBlock({
     : bs.animation === "slide-left" ? "block-anim-slide-left"
     : "";
 
+  const padYCustom = bs.paddingTop !== undefined || bs.paddingBottom !== undefined;
+  const padXCustom = bs.paddingLeft !== undefined || bs.paddingRight !== undefined;
+
   return (
-    <div style={wrapperStyle} className={[schemeClass, animClass].filter(Boolean).join(" ")}>
+    <div
+      style={wrapperStyle}
+      className={[
+        schemeClass,
+        animClass,
+        padYCustom ? "block-pad-y-custom" : "",
+        padXCustom ? "block-pad-x-custom" : "",
+      ].filter(Boolean).join(" ")}
+    >
       {bs.backgroundImage && (
         <div
           aria-hidden
