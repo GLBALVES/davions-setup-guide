@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { buildBookingUrl } from "@/lib/booking-url";
 import { formatCurrencyInput, parseCurrencyInput, displayMoney, currencyPlaceholder, type CurrencyLang } from "@/lib/currency-format";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
