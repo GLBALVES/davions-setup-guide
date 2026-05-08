@@ -221,9 +221,34 @@ export default function InlineFormatToolbar() {
     applyInlineStyle(host, { fontSize: `${px}px`, lineHeight: "1.2" });
     setShowSize(false);
   };
-  const onApplyBlock = (tag: string) => {
+  const onApplyBlock = (key: ElementKey) => {
+    const tag = ELEMENT_TO_TAG[key];
     // formatBlock expects "<H1>", "<P>", "<BLOCKQUOTE>" etc.
     execSimple(host, "formatBlock", `<${tag}>`);
+    // After the block conversion, find the resulting block element that
+    // contains the current selection and tag it with `data-site-typo` so the
+    // typography injected by the design system applies.
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      let n: Node | null = sel.anchorNode;
+      while (n && n.nodeType !== 1) n = n.parentNode;
+      let el = n as HTMLElement | null;
+      while (el && el !== host) {
+        if (el.tagName === tag) {
+          el.setAttribute("data-site-typo", key);
+          // Strip any inline font styles so the design-system rule wins.
+          el.style.removeProperty("font-family");
+          el.style.removeProperty("font-size");
+          el.style.removeProperty("font-weight");
+          el.style.removeProperty("line-height");
+          el.style.removeProperty("letter-spacing");
+          el.style.removeProperty("text-transform");
+          break;
+        }
+        el = el.parentElement;
+      }
+      fireInput(host);
+    }
     setShowBlock(false);
   };
   const onApplyLink = () => {
@@ -241,12 +266,25 @@ export default function InlineFormatToolbar() {
     while (n && n.nodeType !== 1) n = n.parentNode;
     let el = n as HTMLElement | null;
     while (el && el !== host) {
+      const typoKey = el.getAttribute?.("data-site-typo") as ElementKey | null;
+      if (typoKey) {
+        for (const g of ELEMENT_GROUPS) {
+          const item = g.items.find((i) => i.key === typoKey);
+          if (item) return item.label;
+        }
+      }
       const t = el.tagName;
-      const found = BLOCK_PRESETS.find((b) => b.tag === t);
-      if (found) return found.label;
+      if (t === "H1") return "Heading 1";
+      if (t === "H2") return "Heading 2";
+      if (t === "H3") return "Heading 3";
+      if (t === "H4") return "Heading 4";
+      if (t === "H5") return "Heading 5";
+      if (t === "H6") return "Heading 6";
+      if (t === "BLOCKQUOTE") return "Pullquote";
+      if (t === "P") return "Paragraph 1";
       el = el.parentElement;
     }
-    return "Body";
+    return "Paragraph 1";
   })();
 
   const node = (
