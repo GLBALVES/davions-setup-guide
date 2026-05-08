@@ -223,32 +223,56 @@ export default function InlineFormatToolbar() {
   };
   const onApplyBlock = (key: ElementKey) => {
     const tag = ELEMENT_TO_TAG[key];
-    // formatBlock expects "<H1>", "<P>", "<BLOCKQUOTE>" etc.
-    execSimple(host, "formatBlock", `<${tag}>`);
-    // After the block conversion, find the resulting block element that
-    // contains the current selection and tag it with `data-site-typo` so the
-    // typography injected by the design system applies.
-    const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0) {
-      let n: Node | null = sel.anchorNode;
-      while (n && n.nodeType !== 1) n = n.parentNode;
-      let el = n as HTMLElement | null;
-      while (el && el !== host) {
-        if (el.tagName === tag) {
-          el.setAttribute("data-site-typo", key);
-          // Strip any inline font styles so the design-system rule wins.
-          el.style.removeProperty("font-family");
-          el.style.removeProperty("font-size");
-          el.style.removeProperty("font-weight");
-          el.style.removeProperty("line-height");
-          el.style.removeProperty("letter-spacing");
-          el.style.removeProperty("text-transform");
-          break;
+    // Two cases:
+    // 1) Rich-text host (DIV from EditableRichText): use formatBlock and tag
+    //    the resulting block with data-site-typo. Persists via innerHTML.
+    // 2) Single-line host (EditableText where the host IS the <p>/<h2>/span):
+    //    formatBlock is unreliable AND attributes set on the host itself are
+    //    NOT persisted by EditableText.commit (which only stores innerHTML).
+    //    So we wrap the entire host content in a <span data-site-typo="X"> —
+    //    this lives inside innerHTML and survives commit + re-render.
+    const isRichTextHost = host.tagName === "DIV";
+
+    if (isRichTextHost) {
+      execSimple(host, "formatBlock", `<${tag}>`);
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        let n: Node | null = sel.anchorNode;
+        while (n && n.nodeType !== 1) n = n.parentNode;
+        let el = n as HTMLElement | null;
+        while (el && el !== host) {
+          if (el.tagName === tag) {
+            el.setAttribute("data-site-typo", key);
+            el.style.removeProperty("font-family");
+            el.style.removeProperty("font-size");
+            el.style.removeProperty("font-weight");
+            el.style.removeProperty("line-height");
+            el.style.removeProperty("letter-spacing");
+            el.style.removeProperty("text-transform");
+            break;
+          }
+          el = el.parentElement;
         }
-        el = el.parentElement;
       }
-      fireInput(host);
+    } else {
+      // Unwrap any prior root-level data-site-typo wrapper.
+      const onlyChild =
+        host.children.length === 1 && host.childNodes.length === 1
+          ? (host.firstElementChild as HTMLElement | null)
+          : null;
+      let inner = host.innerHTML;
+      if (onlyChild && onlyChild.tagName === "SPAN" && onlyChild.hasAttribute("data-site-typo")) {
+        inner = onlyChild.innerHTML;
+      }
+      host.innerHTML = `<span data-site-typo="${key}">${inner || "\u200B"}</span>`;
+      // Restore selection inside the new wrapper so the toolbar stays put.
+      const sel = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(host.firstElementChild!);
+      sel?.removeAllRanges();
+      sel?.addRange(range);
     }
+    fireInput(host);
     setShowBlock(false);
   };
   const onApplyLink = () => {
