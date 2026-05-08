@@ -351,6 +351,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   // Form state
   const [formDesc, setFormDesc]       = useState("");
   const [formAmount, setFormAmount]   = useState("");
+  const [formFee, setFormFee]         = useState("");
   const [formDue, setFormDue]         = useState("");
   const [formStatus, setFormStatus]   = useState<InvoiceStatus>("pending");
   const [formPaid, setFormPaid]       = useState("");
@@ -453,10 +454,8 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         photographer_id: photographerId,
         description:     formDesc.trim() || tp.chargeDescription,
         amount:          parseFloat(formAmount) || 0,
-        status:          formStatus,
-        due_date:        formDue || null,
-        paid_amount:     parseFloat(formPaid) || 0,
-        paid_at:         formStatus === "paid" ? new Date().toISOString() : null,
+        fee_amount:      parseFloat(formFee) || 0,
+        status:          "pending",
       } as any);
       if (error) throw error;
     },
@@ -464,7 +463,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       queryClient.invalidateQueries({ queryKey: qKey });
       toast.success(tp.chargeAdded);
       setShowForm(false);
-      setFormDesc(""); setFormAmount(""); setFormDue(""); setFormStatus("pending"); setFormPaid("");
+      setFormDesc(""); setFormAmount(""); setFormFee(""); setFormDue(""); setFormStatus("pending"); setFormPaid("");
     },
     onError: () => toast.error(tp.errorAddingCharge),
   });
@@ -678,33 +677,15 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                 onChange={(e) => setFormAmount(e.target.value)} className="h-7 text-xs" />
             </div>
             <div className="flex flex-col gap-1">
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargeDueDate}</Label>
-              <Input type="date" value={formDue} onChange={(e) => setFormDue(e.target.value)} className="h-7 text-xs" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1">
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargeStatus}</Label>
-              <Select value={formStatus} onValueChange={(v) => setFormStatus(v as InvoiceStatus)}>
-                <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {(Object.keys(INVOICE_STATUS_STYLES) as InvoiceStatus[]).map((k) => (
-                    <SelectItem key={k} value={k} className="text-xs">{invoiceStatusLabels[k]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargePaidAmount}</Label>
-              <Input type="number" placeholder="0,00" min={0} value={formPaid}
-                onChange={(e) => setFormPaid(e.target.value)} className="h-7 text-xs" />
+              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{(tp as any).chargeFee ?? "Valor da taxa"}</Label>
+              <Input type="number" placeholder="0,00" min={0} value={formFee}
+                onChange={(e) => setFormFee(e.target.value)} className="h-7 text-xs" />
             </div>
           </div>
 
           <div className="flex gap-2 justify-end pt-1">
             <Button variant="ghost" size="sm" className="h-7 text-xs"
-              onClick={() => { setShowForm(false); setFormDesc(""); setFormAmount(""); setFormDue(""); setFormStatus("pending"); setFormPaid(""); }}>
+              onClick={() => { setShowForm(false); setFormDesc(""); setFormAmount(""); setFormFee(""); }}>
               {tp.chargeCancel}
             </Button>
             <Button size="sm" className="h-7 text-xs" onClick={() => addMutation.mutate()}
