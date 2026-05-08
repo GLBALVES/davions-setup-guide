@@ -101,5 +101,6 @@ verify_jwt = false
 
 [functions.register-contract-acceptance]
 verify_jwt = false
+
 [functions.backfill-contract-snapshot]
 verify_jwt = false
