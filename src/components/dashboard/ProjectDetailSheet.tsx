@@ -1160,10 +1160,15 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
       <Dialog open={contractOpen} onOpenChange={setContractOpen}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 flex-wrap">
               <FileTextIcon className="h-4 w-4 text-purple-500" />
               {tp.contractsSubsection}
               <span className="ml-2 text-[10px] font-normal text-muted-foreground/60 uppercase tracking-widest">{(tp as any).readOnly ?? "Read-only"}</span>
+              {contractSnapshot?.signedAt && (
+                <span className="text-[10px] font-normal text-muted-foreground/60">
+                  · {(tp as any).signedOn ?? "Signed on"} {new Date(contractSnapshot.signedAt).toLocaleString()}
+                </span>
+              )}
             </DialogTitle>
           </DialogHeader>
           <ScrollArea className="flex-1 pr-4">
