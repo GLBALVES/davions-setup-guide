@@ -175,7 +175,7 @@ export function SessionPickerModal({
                 className="w-full text-left border-2 border-dashed border-primary/40 hover:border-primary transition-colors rounded-lg overflow-hidden flex flex-col items-center justify-center min-h-[140px] gap-2 bg-primary/5"
               >
                 <Zap className="h-6 w-6 text-primary/60" />
-                <span className="text-xs font-medium text-primary/80">{tp.oneSession || "One Session"}</span>
+                <span className="text-xs font-medium text-primary/80">{(tp as any).oneSession || "One Session"}</span>
               </button>
             )}
 
