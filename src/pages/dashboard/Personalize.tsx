@@ -263,6 +263,57 @@ const Personalize = () => {
   const [newFieldRequired, setNewFieldRequired] = useState(false);
   const [addingField, setAddingField] = useState(false);
   const [deletingFieldId, setDeletingFieldId] = useState<string | null>(null);
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+
+  const startEditContractField = (f: ContractField) => {
+    setEditingFieldId(f.id);
+    setNewFieldLabel(f.field_label);
+    setNewFieldDefault(f.default_value || "");
+    setNewFieldSource((f.value_source as any) || "static");
+    setNewFieldMappedKey(f.mapped_key || "");
+    setNewFieldClientPrompt(f.client_prompt || "");
+    setNewFieldInputType((f.client_input_type as any) || "text");
+    setNewFieldRequired(!!f.required);
+  };
+
+  const resetContractFieldForm = () => {
+    setEditingFieldId(null);
+    setNewFieldLabel("");
+    setNewFieldDefault("");
+    setNewFieldSource("static");
+    setNewFieldMappedKey("");
+    setNewFieldClientPrompt("");
+    setNewFieldInputType("text");
+    setNewFieldRequired(false);
+  };
+
+  const handleUpdateContractField = async () => {
+    if (!editingFieldId || !newFieldLabel.trim()) return;
+    setAddingField(true);
+    const updatePayload: any = {
+      field_label: newFieldLabel.trim(),
+      default_value: newFieldSource === "static" ? newFieldDefault.trim() : "",
+      value_source: newFieldSource,
+      mapped_key: newFieldSource === "mapped" ? (newFieldMappedKey || null) : null,
+      client_prompt: newFieldSource === "client_input" ? (newFieldClientPrompt.trim() || newFieldLabel.trim()) : null,
+      client_input_type: newFieldSource === "client_input" ? newFieldInputType : "text",
+      required: newFieldSource === "client_input" ? newFieldRequired : false,
+    };
+    const { data, error } = await (supabase as any)
+      .from("contract_custom_fields")
+      .update(updatePayload)
+      .eq("id", editingFieldId)
+      .select("id, field_key, field_label, default_value, value_source, mapped_key, client_prompt, client_input_type, required")
+      .single();
+    if (data && !error) {
+      setContractFields((prev) => prev.map((f) => f.id === editingFieldId ? data : f));
+      resetContractFieldForm();
+      toast({ title: (t.personalize as any).contractFieldUpdated ?? "Field updated" });
+    } else if (error) {
+      toast({ title: error.message, variant: "destructive" });
+    }
+    setAddingField(false);
+  };
 
   // ── Briefings ────────────────────────────────────────────────────────────────
   const [briefings, setBriefings] = useState<Briefing[]>([]);
@@ -891,17 +942,26 @@ const Personalize = () => {
                                   }
                                 </div>
                               </div>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-7 w-7 text-destructive hover:text-destructive shrink-0"
-                                disabled={deletingFieldId === f.id}
-                                onClick={() => handleDeleteContractField(f.id)}>
-                                {deletingFieldId === f.id ?
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                }
-                              </Button>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7"
+                                  onClick={() => startEditContractField(f)}>
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7 text-destructive hover:text-destructive"
+                                  disabled={deletingFieldId === f.id}
+                                  onClick={() => handleDeleteContractField(f.id)}>
+                                  {deletingFieldId === f.id ?
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  }
+                                </Button>
+                              </div>
                             </div>
                             );
                           })}
@@ -1008,18 +1068,32 @@ const Personalize = () => {
                           </div>
                         )}
 
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="self-start gap-1.5 text-xs tracking-wider uppercase font-light"
-                          disabled={!newFieldLabel.trim() || addingField || (newFieldSource === "mapped" && !newFieldMappedKey)}
-                          onClick={handleAddContractField}>
-                          {addingField ?
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
-                            <Plus className="h-3.5 w-3.5" />
-                          }
-                          {t.personalize.newContractField}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 text-xs tracking-wider uppercase font-light"
+                            disabled={!newFieldLabel.trim() || addingField || (newFieldSource === "mapped" && !newFieldMappedKey)}
+                            onClick={editingFieldId ? handleUpdateContractField : handleAddContractField}>
+                            {addingField ?
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
+                              editingFieldId ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />
+                            }
+                            {editingFieldId
+                              ? ((t.personalize as any).saveContractField ?? "Save changes")
+                              : t.personalize.newContractField}
+                          </Button>
+                          {editingFieldId && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="gap-1.5 text-xs tracking-wider uppercase font-light"
+                              onClick={resetContractFieldForm}>
+                              <X className="h-3.5 w-3.5" />
+                              {(t.personalize as any).cancel ?? "Cancel"}
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </section>
 
