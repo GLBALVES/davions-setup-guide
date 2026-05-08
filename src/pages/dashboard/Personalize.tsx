@@ -1483,7 +1483,11 @@ const Personalize = () => {
                                 </div>
                           }
                             </div>
+                              )}
+                            </SortableQuestionItem>
                         )}
+                            </SortableContext>
+                          </DndContext>
                         </div>
                       </div>
 
