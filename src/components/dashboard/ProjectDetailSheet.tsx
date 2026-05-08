@@ -506,6 +506,9 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         </div>
       )}
 
+      {/* ── Received payments log ───────────────────────────────────────── */}
+      <ReceivedPaymentsLog projectId={project.id} photographerId={photographerId} />
+
       <div className="flex flex-col gap-2">
         {invoices.map((inv) => {
           const cfg    = INVOICE_STATUS_STYLES[inv.status] ?? INVOICE_STATUS_STYLES.pending;
