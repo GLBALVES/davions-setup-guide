@@ -6180,6 +6180,7 @@ export const translations = {
       eventPaymentFailed: "Pago Fallido",
       eventNewChat: "Nuevo Mensaje de Chat",
       eventNewBug: "Nuevo Reporte de Bug",
+      eventBriefingResponse: "Briefing Respondido",
       inApp: "En la App",
       email: "Email",
       browserPush: "Push del Navegador",
