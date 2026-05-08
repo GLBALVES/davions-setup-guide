@@ -509,8 +509,16 @@ function TextBlock({ title, subtitle, body, align = "center", ctx, blockSettings
       : (initialHtml || "").replace(/\n/g, "<br />");
   }
 
+  // When the user provides explicit padding via blockSettings, drop the
+  // hardcoded vertical padding so a 0 value really means 0 (no leftover space).
+  const hasCustomPadY =
+    blockSettings?.paddingTop !== undefined || blockSettings?.paddingBottom !== undefined;
+  const hasCustomPadX =
+    blockSettings?.paddingLeft !== undefined || blockSettings?.paddingRight !== undefined;
+  const sectionPadClass = `${hasCustomPadY ? "" : "py-12 sm:py-16"} ${hasCustomPadX ? "" : "px-5 sm:px-6"}`.trim();
+
   return (
-    <section className="py-12 sm:py-16 px-5 sm:px-6">
+    <section className={sectionPadClass}>
       <div
         className={`mx-auto ${alignClass} ${contentMaxWidth ? "" : "max-w-3xl"}`}
         style={contentMaxWidth ? { maxWidth: `${contentMaxWidth}px` } : undefined}
