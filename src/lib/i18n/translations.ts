@@ -1900,6 +1900,7 @@ export const translations = {
       eventNewChat: "New Chat Message",
       eventNewBug: "New Bug Report",
       eventBriefingResponse: "Briefing Answered",
+      eventGalleryCheckout: "Gallery Checkout",
       inApp: "In-App",
       email: "Email",
       browserPush: "Browser Push",
