@@ -1025,19 +1025,21 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
 
   const qKey = ["project-documents", project.id];
 
-  // Fetch contracts
-  const { data: contracts = [] } = useQuery<{ id: string; name: string }[]>({
-    queryKey: ["project-contracts-list", photographerId],
+  // Fetch the signed contract snapshot from the booking linked to this project
+  const bookingId = (project as any).booking_id ?? null;
+  const { data: contractSnapshot } = useQuery<{ html: string | null } | null>({
+    queryKey: ["project-contract-snapshot", bookingId],
     queryFn: async () => {
+      if (!bookingId) return null;
       const { data, error } = await supabase
-        .from("contracts")
-        .select("id, name")
-        .eq("photographer_id", photographerId)
-        .order("updated_at", { ascending: false });
+        .from("bookings")
+        .select("contract_html_snapshot")
+        .eq("id", bookingId)
+        .maybeSingle();
       if (error) throw error;
-      return data ?? [];
+      return { html: (data as any)?.contract_html_snapshot ?? null };
     },
-    enabled: !!photographerId,
+    enabled: !!bookingId,
   });
 
   // Fetch briefings
