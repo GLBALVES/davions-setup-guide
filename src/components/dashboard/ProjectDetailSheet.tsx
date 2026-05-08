@@ -206,6 +206,13 @@ function ReceivedPaymentsLog({
   const [feeManual, setFeeManual] = useState(false);
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
 
+  // Edit state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDesc, setEditDesc] = useState("");
+  const [editAmount, setEditAmount] = useState("");
+  const [editFee, setEditFee] = useState("");
+  const [editDate, setEditDate] = useState("");
+
   // Auto-compute fee from session tax rate unless the user edits it manually
   useEffect(() => {
     if (feeManual || !taxRate) return;
@@ -220,10 +227,10 @@ function ReceivedPaymentsLog({
   const currencyLang: CurrencyLang = lang === "pt" ? "pt" : lang === "es" ? "es" : "en";
 
   const L = {
-    en: { title: "Received Payments", add: "Add payment", date: "Date", amount: "Amount", fee: "Fee amount", desc: "Description", descPh: "e.g. Legacy payment from another system", save: "Save", cancel: "Cancel", empty: "No payments recorded", added: "Payment added", removed: "Payment removed", error: "Error saving payment", total: "Total received" },
-    pt: { title: "Pagamentos Recebidos", add: "Adicionar pagamento", date: "Data", amount: "Valor", fee: "Valor da taxa", desc: "Descrição", descPh: "ex.: Pagamento legado de outro sistema", save: "Salvar", cancel: "Cancelar", empty: "Nenhum pagamento registrado", added: "Pagamento adicionado", removed: "Pagamento removido", error: "Erro ao salvar pagamento", total: "Total recebido" },
-    es: { title: "Pagos Recibidos", add: "Agregar pago", date: "Fecha", amount: "Monto", fee: "Valor de la tarifa", desc: "Descripción", descPh: "ej.: Pago heredado de otro sistema", save: "Guardar", cancel: "Cancelar", empty: "Sin pagos registrados", added: "Pago agregado", removed: "Pago eliminado", error: "Error al guardar pago", total: "Total recibido" },
-  }[lang as "en" | "pt" | "es"] ?? { title: "Received Payments", add: "Add payment", date: "Date", amount: "Amount", fee: "Fee amount", desc: "Description", descPh: "", save: "Save", cancel: "Cancel", empty: "No payments recorded", added: "Payment added", removed: "Payment removed", error: "Error saving payment", total: "Total received" };
+    en: { title: "Received Payments", add: "Add payment", date: "Date", amount: "Amount", fee: "Fee amount", desc: "Description", descPh: "e.g. Legacy payment from another system", save: "Save", cancel: "Cancel", empty: "No payments recorded", added: "Payment added", removed: "Payment removed", updated: "Payment updated", error: "Error saving payment", total: "Total received", edit: "Edit" },
+    pt: { title: "Pagamentos Recebidos", add: "Adicionar pagamento", date: "Data", amount: "Valor", fee: "Valor da taxa", desc: "Descrição", descPh: "ex.: Pagamento legado de outro sistema", save: "Salvar", cancel: "Cancelar", empty: "Nenhum pagamento registrado", added: "Pagamento adicionado", removed: "Pagamento removido", updated: "Pagamento atualizado", error: "Erro ao salvar pagamento", total: "Total recebido", edit: "Editar" },
+    es: { title: "Pagos Recibidos", add: "Agregar pago", date: "Fecha", amount: "Monto", fee: "Valor de la tarifa", desc: "Descripción", descPh: "ej.: Pago heredado de otro sistema", save: "Guardar", cancel: "Cancelar", empty: "Sin pagos registrados", added: "Pago agregado", removed: "Pago eliminado", updated: "Pago actualizado", error: "Error al guardar pago", total: "Total recibido", edit: "Editar" },
+  }[lang as "en" | "pt" | "es"] ?? { title: "Received Payments", add: "Add payment", date: "Date", amount: "Amount", fee: "Fee amount", desc: "Description", descPh: "", save: "Save", cancel: "Cancel", empty: "No payments recorded", added: "Payment added", removed: "Payment removed", updated: "Payment updated", error: "Error saving payment", total: "Total received", edit: "Edit" };
 
   const qKey = ["project-payments", projectId];
 
@@ -260,6 +267,32 @@ function ReceivedPaymentsLog({
     },
     onError: (e: any) => toast.error(`${L.error}${e?.message ? `: ${e.message}` : ""}`),
   });
+
+  const updateMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).from("project_payments").update({
+        description: editDesc.trim(),
+        amount: parseFloat(editAmount) || 0,
+        fee_amount: parseFloat(editFee) || 0,
+        payment_date: editDate,
+      }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qKey });
+      toast.success(L.updated);
+      setEditingId(null);
+    },
+    onError: (e: any) => toast.error(`${L.error}${e?.message ? `: ${e.message}` : ""}`),
+  });
+
+  const startEdit = (p: ProjectPayment) => {
+    setEditingId(p.id);
+    setEditDesc(p.description ?? "");
+    setEditAmount(String(p.amount ?? ""));
+    setEditFee(String((p as any).fee_amount ?? ""));
+    setEditDate(p.payment_date);
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -333,7 +366,50 @@ function ReceivedPaymentsLog({
 
       {payments.length > 0 && (
         <div className="flex flex-col gap-1">
-          {payments.map((p) => (
+          {payments.map((p) => editingId === p.id ? (
+            <div key={p.id} className="rounded-md border border-border/60 bg-background p-2.5 flex flex-col gap-2">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1">
+                  <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{L.date}</Label>
+                  <Input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="h-7 text-xs" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{L.amount}</Label>
+                  <Input
+                    inputMode="decimal"
+                    placeholder={currencyPlaceholder(currencyLang)}
+                    value={formatCurrencyInput(editAmount, currencyLang)}
+                    onChange={(e) => setEditAmount(parseCurrencyInput(e.target.value, currencyLang))}
+                    className="h-7 text-xs"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{L.fee}</Label>
+                <Input
+                  inputMode="decimal"
+                  placeholder={currencyPlaceholder(currencyLang)}
+                  value={formatCurrencyInput(editFee, currencyLang)}
+                  onChange={(e) => setEditFee(parseCurrencyInput(e.target.value, currencyLang))}
+                  className="h-7 text-xs"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{L.desc}</Label>
+                <Input placeholder={L.descPh} value={editDesc} onChange={(e) => setEditDesc(e.target.value)} className="h-7 text-xs" />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setEditingId(null)}>
+                  {L.cancel}
+                </Button>
+                <Button size="sm" className="h-7 text-xs"
+                  onClick={() => updateMutation.mutate(p.id)}
+                  disabled={updateMutation.isPending || !editAmount || !editDate}>
+                  {L.save}
+                </Button>
+              </div>
+            </div>
+          ) : (
             <div key={p.id} className="flex items-center gap-2 px-2 py-1.5 rounded-sm bg-background border border-border/40">
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
               <div className="flex-1 min-w-0">
@@ -345,6 +421,13 @@ function ReceivedPaymentsLog({
                 </p>
               </div>
               <span className="text-xs font-semibold tabular-nums text-emerald-600 shrink-0">{fmt(Number(p.amount))}</span>
+              <button
+                onClick={() => startEdit(p)}
+                className="text-muted-foreground/50 hover:text-foreground transition-colors shrink-0"
+                title={L.edit}
+              >
+                <Pencil className="h-3 w-3" />
+              </button>
               <button
                 onClick={() => deleteMutation.mutate(p.id)}
                 className="text-muted-foreground/50 hover:text-destructive transition-colors shrink-0"
@@ -371,8 +454,10 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const [showForm, setShowForm] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
 
   const addPaymentLabel = lang === "pt" ? "Adicionar pagamento" : lang === "es" ? "Agregar pago" : "Add payment";
+  const editLabel = lang === "pt" ? "Editar" : lang === "es" ? "Editar" : "Edit";
 
   // Form state
   const [formDesc, setFormDesc]       = useState("");
@@ -382,6 +467,14 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const [formDue, setFormDue]         = useState("");
   const [formStatus, setFormStatus]   = useState<InvoiceStatus>("pending");
   const [formPaid, setFormPaid]       = useState("");
+
+  // Edit form state
+  const [editDesc, setEditDesc] = useState("");
+  const [editAmount, setEditAmount] = useState("");
+  const [editFee, setEditFee] = useState("");
+  const [editDue, setEditDue] = useState("");
+  const [editPaid, setEditPaid] = useState("");
+  const [editStatus, setEditStatus] = useState<InvoiceStatus>("pending");
 
   const qKey = ["project-invoices", project.id];
 
@@ -517,6 +610,37 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: qKey }),
   });
+
+  const updateInvoiceMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("project_invoices" as any).update({
+        description: editDesc.trim() || tp.chargeDescription,
+        amount: parseFloat(editAmount) || 0,
+        fee_amount: parseFloat(editFee) || 0,
+        due_date: editDue || null,
+        status: editStatus,
+        paid_amount: parseFloat(editPaid) || 0,
+        paid_at: editStatus === "paid" ? new Date().toISOString() : null,
+      } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qKey });
+      setEditingInvoiceId(null);
+      toast.success(tp.chargeAdded);
+    },
+    onError: () => toast.error(tp.errorAddingCharge),
+  });
+
+  const startEditInvoice = (inv: ProjectInvoice) => {
+    setEditingInvoiceId(inv.id);
+    setEditDesc(inv.description ?? "");
+    setEditAmount(String(inv.amount ?? ""));
+    setEditFee(String((inv as any).fee_amount ?? ""));
+    setEditDue(inv.due_date ?? "");
+    setEditPaid(String(inv.paid_amount ?? ""));
+    setEditStatus(inv.status);
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -781,7 +905,57 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                 {isOpen ? <ChevronUp className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />}
               </div>
 
-              {isOpen && (
+              {isOpen && editingInvoiceId === inv.id && (
+                <div className="border-t border-border/40 px-3 py-2.5 flex flex-col gap-2 bg-background/70 rounded-b-md">
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargeDescription}</Label>
+                    <Input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} className="h-7 text-xs" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargeAmount}</Label>
+                      <Input type="number" min={0} step="0.01" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} className="h-7 text-xs" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{(tp as any).chargeFee ?? "Valor da taxa"}</Label>
+                      <Input type="number" min={0} step="0.01" value={editFee} onChange={(e) => setEditFee(e.target.value)} className="h-7 text-xs" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargeDueDate}</Label>
+                      <Input type="date" value={editDue} onChange={(e) => setEditDue(e.target.value)} className="h-7 text-xs" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargePaid}</Label>
+                      <Input type="number" min={0} step="0.01" value={editPaid} onChange={(e) => setEditPaid(e.target.value)} className="h-7 text-xs" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Status</Label>
+                    <Select value={editStatus} onValueChange={(v) => setEditStatus(v as InvoiceStatus)}>
+                      <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent className="z-[60]">
+                        {(Object.keys(invoiceStatusLabels) as InvoiceStatus[]).map((s) => (
+                          <SelectItem key={s} value={s} className="text-xs">{invoiceStatusLabels[s]}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex gap-2 justify-end pt-1">
+                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setEditingInvoiceId(null)}>
+                      {tp.chargeCancel}
+                    </Button>
+                    <Button size="sm" className="h-7 text-xs"
+                      onClick={() => updateInvoiceMutation.mutate(inv.id)}
+                      disabled={updateInvoiceMutation.isPending || !editAmount}>
+                      {updateInvoiceMutation.isPending ? tp.chargeSaving : tp.chargeSave}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {isOpen && editingInvoiceId !== inv.id && (
                 <div className="border-t border-border/40 px-3 py-2.5 flex flex-col gap-2.5 bg-background/50 rounded-b-md">
                   <div className="grid grid-cols-3 gap-2 text-[10px]">
                     <div>
@@ -814,6 +988,12 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                   )}
 
                   <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      onClick={() => startEditInvoice(inv)}
+                      className="text-[10px] px-2 py-0.5 rounded-sm border border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors flex items-center gap-1"
+                    >
+                      <Pencil className="h-2.5 w-2.5" /> {editLabel}
+                    </button>
                     {inv.status !== "paid" && (
                       <button
                         onClick={() => updateStatusMutation.mutate({ id: inv.id, status: "paid", paid_amount: Number(inv.amount) })}
