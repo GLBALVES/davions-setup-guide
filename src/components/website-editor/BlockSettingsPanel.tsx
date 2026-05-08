@@ -1068,6 +1068,30 @@ export const BlockSettingsPanel = ({
             </div>
           )}
 
+          {section.type === "text" && (
+            <div className="space-y-1.5 pt-2 border-t border-border/60">
+              <label className="text-xs font-medium text-muted-foreground">Position</label>
+              <div className="flex gap-1">
+                {(["left", "center", "right"] as const).map((p) => {
+                  const current = s.blockPosition || "center";
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => update({ blockPosition: p })}
+                      className={`flex-1 h-8 text-xs rounded border capitalize ${current === p ? "bg-foreground text-background border-foreground" : "bg-background text-foreground border-border hover:bg-muted"}`}
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground/80 leading-relaxed">
+                Position of the text element within the section.
+              </p>
+            </div>
+          )}
+
           {(section.type === "image-text" || section.type === "text-image") && (
             <>
               <div className="space-y-1.5 pt-2 border-t border-border/60">
