@@ -501,7 +501,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       queryClient.invalidateQueries({ queryKey: qKey });
       toast.success(tp.chargeAdded);
       setShowForm(false);
-      setFormDesc(""); setFormAmount(""); setFormFee(""); setFormDue(""); setFormStatus("pending"); setFormPaid("");
+      setFormDesc(""); setFormAmount(""); setFormFee(""); setFormFeeManual(false); setFormDue(""); setFormStatus("pending"); setFormPaid("");
     },
     onError: () => toast.error(tp.errorAddingCharge),
   });
