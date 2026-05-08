@@ -4851,6 +4851,74 @@ const WebsiteEditor = () => {
     pageActions.setSections(next);
   }, [pageActions]);
 
+  // ── Undo / Redo ──────────────────────────────────────────────────────────
+  // Snapshots `{ site, sections, pageId }` whenever the user edits anything.
+  // History resets when switching pages, so undo always replays the current
+  // page's timeline. Re-applies a snapshot via the existing auto-save pipeline:
+  //   - site → diffed into a snake_case patch fed back through updateSite()
+  //   - sections → pushed through pageActions.setSections() (PagesPanel persists)
+  const historyEnabled = !!site && !!activePageInfo.id && !!pageActions;
+  const historyApply = useCallback((snap: { site: PreviewSiteConfig | null; sections: PageSection[]; pageId: string | null }) => {
+    // Restore site fields via diff patch (only changed snake_case keys).
+    const sitePatch = diffSitePatch(site as Record<string, unknown>, snap.site as Record<string, unknown>);
+    if (Object.keys(sitePatch).length > 0) updateSite(sitePatch);
+    // Restore sections on the active page.
+    if (pageActions && snap.pageId === activePageInfo.id) {
+      pageActions.setSections(snap.sections);
+    }
+    setSelectedBlockIndex(null);
+  }, [site, updateSite, pageActions, activePageInfo.id]);
+
+  const { undo, redo, canUndo, canRedo } = useEditorHistory({
+    current: { site, sections: activePageSections, pageId: activePageInfo.id },
+    enabled: historyEnabled,
+    onApply: historyApply,
+  });
+
+  const undoLabel = lang === "pt" ? "Desfazer" : lang === "es" ? "Deshacer" : "Undo";
+  const redoLabel = lang === "pt" ? "Refazer" : lang === "es" ? "Rehacer" : "Redo";
+  const undoneToast = lang === "pt" ? "Desfeito" : lang === "es" ? "Deshecho" : "Undone";
+  const redoneToast = lang === "pt" ? "Refeito" : lang === "es" ? "Rehecho" : "Redone";
+  const nothingToUndo = lang === "pt" ? "Nada para desfazer" : lang === "es" ? "Nada que deshacer" : "Nothing to undo";
+  const nothingToRedo = lang === "pt" ? "Nada para refazer" : lang === "es" ? "Nada que rehacer" : "Nothing to redo";
+
+  const handleUndoClick = useCallback(() => {
+    if (undo()) toast.success(undoneToast);
+    else toast(nothingToUndo);
+  }, [undo, undoneToast, nothingToUndo]);
+  const handleRedoClick = useCallback(() => {
+    if (redo()) toast.success(redoneToast);
+    else toast(nothingToRedo);
+  }, [redo, redoneToast, nothingToRedo]);
+
+  // Keyboard shortcuts: Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, Ctrl+Y.
+  // Skip when focus is inside a text input / contentEditable so the browser's
+  // native undo on the typing buffer keeps working — our handler picks up after.
+  useEffect(() => {
+    const isEditableTarget = (el: EventTarget | null): boolean => {
+      const node = el as HTMLElement | null;
+      if (!node) return false;
+      const tag = node.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+      if (node.isContentEditable) return true;
+      return false;
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod) return;
+      const key = e.key.toLowerCase();
+      const isUndo = key === "z" && !e.shiftKey;
+      const isRedo = (key === "z" && e.shiftKey) || key === "y";
+      if (!isUndo && !isRedo) return;
+      if (isEditableTarget(e.target)) return;
+      e.preventDefault();
+      if (isUndo) handleUndoClick();
+      else handleRedoClick();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [handleUndoClick, handleRedoClick]);
+
   const [saving, setSaving] = useState(false);
 
   const labels = {
