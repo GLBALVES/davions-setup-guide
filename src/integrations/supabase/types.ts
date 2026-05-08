@@ -700,6 +700,7 @@ export type Database = {
           consent_given_at: string | null
           contract_html_snapshot: string | null
           contract_locked: boolean
+          contract_signature_data: string | null
           contract_signed_at: string | null
           contract_signed_ip: string | null
           contract_signed_user_agent: string | null
@@ -722,6 +723,7 @@ export type Database = {
           consent_given_at?: string | null
           contract_html_snapshot?: string | null
           contract_locked?: boolean
+          contract_signature_data?: string | null
           contract_signed_at?: string | null
           contract_signed_ip?: string | null
           contract_signed_user_agent?: string | null
@@ -744,6 +746,7 @@ export type Database = {
           consent_given_at?: string | null
           contract_html_snapshot?: string | null
           contract_locked?: boolean
+          contract_signature_data?: string | null
           contract_signed_at?: string | null
           contract_signed_ip?: string | null
           contract_signed_user_agent?: string | null
