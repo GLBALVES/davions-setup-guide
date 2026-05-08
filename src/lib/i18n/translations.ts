@@ -4006,6 +4006,7 @@ export const translations = {
       eventNewChat: "Nova Mensagem no Chat",
       eventNewBug: "Novo Bug Report",
       eventBriefingResponse: "Briefing Respondido",
+      eventGalleryCheckout: "Checkout da Galeria",
       inApp: "No App",
       email: "Email",
       browserPush: "Push do Navegador",
