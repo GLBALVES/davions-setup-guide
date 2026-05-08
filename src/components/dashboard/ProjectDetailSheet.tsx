@@ -678,7 +678,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
 
           <div className="flex flex-col gap-1">
             <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargeDescription}</Label>
-            <Input placeholder={tp.descriptionPlaceholder} value={formDesc}
+            <Input placeholder={tp.chargeDescriptionPlaceholder} value={formDesc}
               onChange={(e) => setFormDesc(e.target.value)} className="h-7 text-xs" />
           </div>
 
