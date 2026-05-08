@@ -69,6 +69,27 @@ const BookingSuccess = () => {
   const [submittingBriefing, setSubmittingBriefing] = useState(false);
   const [briefingSubmitted, setBriefingSubmitted] = useState(false);
   const [missingIds, setMissingIds] = useState<Set<string>>(new Set());
+  const [briefingChoice, setBriefingChoice] = useState<"pending" | "now" | "later">("pending");
+
+  const lang: "en" | "pt" | "es" = (() => {
+    const saved = (typeof window !== "undefined" && localStorage.getItem("davions_lang")) as any;
+    if (saved === "pt" || saved === "es" || saved === "en") return saved;
+    const nav = (typeof navigator !== "undefined" && navigator.language?.toLowerCase()) || "";
+    if (nav.startsWith("pt")) return "pt";
+    if (nav.startsWith("es")) return "es";
+    return "en";
+  })();
+  const tr = {
+    prompt: { en: "Would you like to answer the briefing now?", pt: "Deseja responder o briefing agora?", es: "¿Desea responder el briefing ahora?" }[lang],
+    answerNow: { en: "Answer now", pt: "Responder agora", es: "Responder ahora" }[lang],
+    answerLater: { en: "Answer later", pt: "Responder depois", es: "Responder más tarde" }[lang],
+    laterNotice: {
+      en: "No problem — you can answer the briefing later from your confirmation email.",
+      pt: "Sem problema — você pode responder o briefing depois pelo e-mail de confirmação.",
+      es: "Sin problema — puede responder el briefing más tarde desde su correo de confirmación.",
+    }[lang],
+    changeMind: { en: "Answer now instead", pt: "Responder agora", es: "Responder ahora" }[lang],
+  };
 
   // ── Confirm payment (always try when we have a checkoutSessionId) ─────────
   const tryConfirmBooking = async (
@@ -387,6 +408,35 @@ const BookingSuccess = () => {
               <div className="p-5 flex flex-col items-center gap-3 text-center">
                 <CheckCircle className="h-8 w-8 text-primary" strokeWidth={1.5} />
                 <p className="text-sm font-light">Thank you! Your answers have been received.</p>
+              </div>
+            ) : briefingChoice === "pending" ? (
+              <div className="p-5 flex flex-col gap-3">
+                <p className="text-sm font-light text-center">{tr.prompt}</p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button
+                    onClick={() => setBriefingChoice("now")}
+                    className="flex-1 text-xs tracking-wider uppercase font-light"
+                  >
+                    {tr.answerNow}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setBriefingChoice("later")}
+                    className="flex-1 text-xs tracking-wider uppercase font-light"
+                  >
+                    {tr.answerLater}
+                  </Button>
+                </div>
+              </div>
+            ) : briefingChoice === "later" ? (
+              <div className="p-5 flex flex-col items-center gap-3 text-center">
+                <p className="text-[11px] text-muted-foreground">{tr.laterNotice}</p>
+                <button
+                  onClick={() => setBriefingChoice("now")}
+                  className="text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground underline"
+                >
+                  {tr.changeMind}
+                </button>
               </div>
             ) : (
               <div className="p-5 flex flex-col gap-5">
