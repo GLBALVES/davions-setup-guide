@@ -327,6 +327,7 @@ export const translations = {
       chargeRemoved: "Charge removed",
       errorAddingCharge: "Error adding charge",
       chargeDescription: "Description",
+      chargeDescriptionPlaceholder: "e.g.: Scenery add-on",
       chargeAmount: "Amount",
       chargeDueDate: "Due date",
       chargeStatus: "Status",
