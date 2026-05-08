@@ -320,25 +320,32 @@ export default function InlineFormatToolbar() {
           <ChevronDown className="h-3 w-3 opacity-60" />
         </button>
         {showBlock && (
-          <div className="absolute top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg py-1 min-w-[160px] z-[10000]">
-            {BLOCK_PRESETS.map((b) => {
-              const Icon =
-                b.id === "h1" ? Heading1 :
-                b.id === "h2" ? Heading2 :
-                b.id === "h3" ? Heading3 :
-                b.id === "blockquote" ? Quote : Type;
-              return (
-                <button
-                  key={b.id}
-                  type="button"
-                  onMouseDown={guard(() => onApplyBlock(b.tag))}
-                  className="w-full text-left px-3 py-1.5 hover:bg-muted text-foreground flex items-center gap-2"
-                >
-                  <Icon className="h-3.5 w-3.5 opacity-70" />
-                  <span>{b.label}</span>
-                </button>
-              );
-            })}
+          <div className="absolute top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg py-1 min-w-[200px] max-h-[340px] overflow-y-auto z-[10000]">
+            {ELEMENT_GROUPS.map((group) => (
+              <div key={group.key} className="py-1">
+                <div className="px-3 py-1 text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                  {group.label}
+                </div>
+                {group.items.map((item) => {
+                  const Icon =
+                    item.key === "h1" ? Heading1 :
+                    item.key === "h2" ? Heading2 :
+                    item.key === "h3" ? Heading3 :
+                    item.key === "pullquote" ? Quote : Type;
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onMouseDown={guard(() => onApplyBlock(item.key))}
+                      className="w-full text-left px-3 py-1.5 hover:bg-muted text-foreground flex items-center gap-2"
+                    >
+                      <Icon className="h-3.5 w-3.5 opacity-70" />
+                      <span data-site-typo={item.key}>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         )}
       </div>
