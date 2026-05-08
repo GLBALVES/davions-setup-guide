@@ -1271,11 +1271,26 @@ const Personalize = () => {
                             </p>
                         }
 
+                          <DndContext sensors={briefingDndSensors} collisionDetection={closestCenter} onDragEnd={handleBriefingQuestionsDragEnd}>
+                            <SortableContext items={briefingQuestions.map((q) => q.id)} strategy={verticalListSortingStrategy}>
                           {briefingQuestions.map((q, idx) =>
-                            <div key={q.id} ref={(el) => { questionRefs.current[idx] = el; }} className="border border-border p-4 flex flex-col gap-3">
+                            <SortableQuestionItem key={q.id} id={q.id}>
+                              {({ listeners, attributes }) => (
+                            <div ref={(el) => { questionRefs.current[idx] = el; }} className="border border-border p-4 flex flex-col gap-3 bg-background">
                               {/* Question header */}
                               <div className="flex items-center justify-between gap-2">
-                                <span className="text-[10px] tracking-wider uppercase text-muted-foreground">{t.personalize.questionN} {idx + 1}</span>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    {...attributes}
+                                    {...listeners}
+                                    className="text-muted-foreground/60 hover:text-foreground cursor-grab active:cursor-grabbing touch-none"
+                                    aria-label="Drag to reorder"
+                                  >
+                                    <GripVertical className="h-3.5 w-3.5" />
+                                  </button>
+                                  <span className="text-[10px] tracking-wider uppercase text-muted-foreground">{t.personalize.questionN} {idx + 1}</span>
+                                </div>
                                 <div className="flex items-center gap-1">
                                   <Button
                                 type="button"
