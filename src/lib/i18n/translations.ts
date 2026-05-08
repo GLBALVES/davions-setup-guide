@@ -357,6 +357,8 @@ export const translations = {
       // Documents section
       documentsSection: "Documents",
       contractsSubsection: "Contracts",
+      readOnly: "Read-only",
+      signedOn: "Signed on",
       briefingsSubsection: "Briefings",
       openInEditor: "Open in editor",
       noContracts: "No contracts created yet",
