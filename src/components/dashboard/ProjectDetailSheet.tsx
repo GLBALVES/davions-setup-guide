@@ -434,7 +434,18 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     enabled: !!project.booking_id,
   });
 
-  // Fetch manual project payments (shared cache with ReceivedPaymentsLog)
+  const sessionTaxRate = (bookingPayment?.sessions as any)?.tax_rate ?? 0;
+
+  // Auto-compute charge fee from session tax rate unless manually edited
+  useEffect(() => {
+    if (formFeeManual || !sessionTaxRate) return;
+    const amt = parseFloat(formAmount);
+    if (!isFinite(amt) || amt <= 0) {
+      setFormFee("");
+      return;
+    }
+    setFormFee((amt * sessionTaxRate / 100).toFixed(2));
+  }, [formAmount, sessionTaxRate, formFeeManual]);
   const { data: projectPayments = [] } = useQuery<ProjectPayment[]>({
     queryKey: ["project-payments", project.id],
     queryFn: async () => {
