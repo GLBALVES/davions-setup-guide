@@ -1287,7 +1287,7 @@ function TestimonialsBlock({ items = [], variant = "cards", title = "Testimonial
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+          <Title className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground block" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {displayItems.map((item: any, i: number) => (
               <div key={i} className="flex flex-col">
@@ -1314,7 +1314,7 @@ function TestimonialsBlock({ items = [], variant = "cards", title = "Testimonial
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6 bg-muted/10">
         <div className="max-w-5xl mx-auto">
-          <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+          <Title className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground block" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-center">
             {displayItems.map((item: any, i: number) => (
               <div key={i} className="flex flex-col items-center">
@@ -1341,7 +1341,7 @@ function TestimonialsBlock({ items = [], variant = "cards", title = "Testimonial
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6 bg-muted/10">
         <div className="max-w-5xl mx-auto">
-          <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+          <Title className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground block" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {displayItems.map((item: any, i: number) => (
               <blockquote key={i} className="border-l-2 border-border pl-6">
@@ -1386,7 +1386,7 @@ function TestimonialsBlock({ items = [], variant = "cards", title = "Testimonial
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6 bg-muted/10">
       <div className="max-w-5xl mx-auto">
-        <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+        <Title className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground block" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {displayItems.map((item: any, i: number) => (
             <blockquote key={i} className="border-l-2 border-border pl-6">
