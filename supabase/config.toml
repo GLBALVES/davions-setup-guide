@@ -104,3 +104,6 @@ verify_jwt = false
 
 [functions.backfill-contract-snapshot]
 verify_jwt = false
+
+[functions.notify-briefing-response]
+verify_jwt = false

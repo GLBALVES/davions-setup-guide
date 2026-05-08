@@ -974,6 +974,7 @@ const Settings = () => {
                             payment_failed: t.notif.eventPaymentFailed,
                             new_chat_message: t.notif.eventNewChat,
                             new_bug_report: t.notif.eventNewBug,
+                            briefing_response: t.notif.eventBriefingResponse,
                           };
                           return (
                             <div key={event} className="grid grid-cols-4 gap-4 px-4 py-3 border-t border-border items-center">
