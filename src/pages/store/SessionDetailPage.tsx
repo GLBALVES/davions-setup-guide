@@ -940,6 +940,9 @@ const SessionDetailPage = () => {
               qty: e.qty,
             })),
             customFieldAnswers,
+            contractHtml: resolvedContractHtml || null,
+            signatureData: signatureData || null,
+            clientTaxId: customFieldAnswers?.client_tax_id || null,
           },
         }
       );
