@@ -78,6 +78,7 @@ export function SitePalettePicker({
   disabled = false,
 }: SitePalettePickerProps) {
   const [open, setOpen] = useState(false);
+  const [showCustom, setShowCustom] = useState(false);
   const [hex, setHex] = useState(value || "#000000");
 
   useEffect(() => {
