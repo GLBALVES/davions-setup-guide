@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, ImageIcon, Trash2, Upload, Image } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { SitePalettePicker } from "@/components/website-editor/SitePalettePicker";
 
 export interface SlideColorConfig {
   type: "solid" | "gradient";
@@ -339,7 +340,7 @@ const CarrosselBackgroundEditor = ({ background, onChange, activeSlide }: Props)
               ))}
             </div>
             <div className="flex items-center gap-2">
-              <input type="color" value={effectiveColor} onChange={(e) => updateColor({ color: e.target.value })} className="w-8 h-8 rounded cursor-pointer border-0" />
+              <SitePalettePicker value={effectiveColor} onChange={(v) => updateColor({ color: v })} />
               <Input value={effectiveColor} onChange={(e) => updateColor({ color: e.target.value })} className="h-8 text-sm font-mono" placeholder="#000000" />
             </div>
           </TabsContent>
@@ -357,11 +358,11 @@ const CarrosselBackgroundEditor = ({ background, onChange, activeSlide }: Props)
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="flex items-center gap-1">
-                <input type="color" value={effectiveColor} onChange={(e) => updateColor({ color: e.target.value })} className="w-7 h-7 rounded cursor-pointer border-0" />
+                <SitePalettePicker value={effectiveColor} onChange={(v) => updateColor({ color: v })} />
                 <Input value={effectiveColor} onChange={(e) => updateColor({ color: e.target.value })} className="h-7 text-xs font-mono" />
               </div>
               <div className="flex items-center gap-1">
-                <input type="color" value={effectiveColor2 || "#4a1942"} onChange={(e) => updateColor({ color2: e.target.value })} className="w-7 h-7 rounded cursor-pointer border-0" />
+                <SitePalettePicker value={effectiveColor2 || "#4a1942"} onChange={(v) => updateColor({ color2: v })} />
                 <Input value={effectiveColor2 || ""} onChange={(e) => updateColor({ color2: e.target.value })} className="h-7 text-xs font-mono" />
               </div>
             </div>
