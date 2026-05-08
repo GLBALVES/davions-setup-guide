@@ -4450,6 +4450,12 @@ const WebsiteEditor = () => {
   // to the slide being edited.
   const [editorActiveSlideId, setEditorActiveSlideId] = useState<string | null>(null);
   const [activePageSections, setActivePageSections] = useState<PageSection[]>([]);
+  // Ref kept in sync with activePageSections so callbacks fired in quick
+  // succession (e.g. inline rich-text formatting that calls c.set twice for
+  // body+title within the same render cycle) always read the latest sections
+  // and don't clobber each other via a stale closure.
+  const activePageSectionsRef = useRef<PageSection[]>([]);
+  useEffect(() => { activePageSectionsRef.current = activePageSections; }, [activePageSections]);
   const [selectedBlockIndex, setSelectedBlockIndex] = useState<number | null>(null);
   const [navLinks, setNavLinks] = useState<PreviewNavLink[]>([]);
   const [activePageInfo, setActivePageInfo] = useState<{ id: string | null; showHeaderFooter: boolean; headerConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null }>({ id: null, showHeaderFooter: true, headerConfig: null });
@@ -4816,11 +4822,14 @@ const WebsiteEditor = () => {
   // Inline edit: update a single prop path on a section, persist via pageActions
   const handleBlockPropChange = useCallback((sectionId: string, path: string, value: any) => {
     if (!pageActions) return;
-    const idx = activePageSections.findIndex((s) => s.id === sectionId);
+    // Always read the freshest sections from the ref — the closure captured by
+    // useCallback would otherwise be stale when several `c.set(...)` calls
+    // fire back-to-back from the same inline-edit commit (e.g. body + title).
+    const current = activePageSectionsRef.current;
+    const idx = current.findIndex((s) => s.id === sectionId);
     if (idx === -1) return;
-    const next = activePageSections.map((s, i) => {
+    const next = current.map((s, i) => {
       if (i !== idx) return s;
-      // deep-clone props and apply path
       const newProps = JSON.parse(JSON.stringify(s.props || {}));
       const parts = path.split(".");
       let cursor: any = newProps;
@@ -4836,8 +4845,9 @@ const WebsiteEditor = () => {
       cursor[parts[parts.length - 1]] = value;
       return { ...s, props: newProps };
     });
+    activePageSectionsRef.current = next;
     pageActions.setSections(next);
-  }, [pageActions, activePageSections]);
+  }, [pageActions]);
 
   const [saving, setSaving] = useState(false);
 
