@@ -378,6 +378,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const [formDesc, setFormDesc]       = useState("");
   const [formAmount, setFormAmount]   = useState("");
   const [formFee, setFormFee]         = useState("");
+  const [formFeeManual, setFormFeeManual] = useState(false);
   const [formDue, setFormDue]         = useState("");
   const [formStatus, setFormStatus]   = useState<InvoiceStatus>("pending");
   const [formPaid, setFormPaid]       = useState("");
