@@ -40,6 +40,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { checkBookingConflict, syncProjectDateToBooking, timeToMinutes } from "@/lib/booking-conflict";
+import { formatCurrencyInput, parseCurrencyInput, currencyPlaceholder, type CurrencyLang } from "@/lib/currency-format";
 import { BriefingDialog } from "@/components/dashboard/schedule/BookingDetailSheet";
 
 type Stage = "upcoming" | "shot" | "proof_gallery" | "post_production" | "final_gallery" | "archived";
