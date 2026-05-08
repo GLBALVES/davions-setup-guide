@@ -9,6 +9,14 @@ import { Check } from "lucide-react";
  * `<input type="color">` across the website editor so users stay on-brand.
  */
 
+/** Preset color rows shown when the user expands "Custom (HEX)". */
+const PRESET_ROWS: string[][] = [
+  ["transparent", "#ffffff", "#f5f5f0", "#e8e6e1", "#c9c7c2", "#6b7a8a", "#1f1f1f", "#000000"],
+  ["#1a1a1a", "#e8d8c8", "#d9c4a8", "#c9a87c", "#bda489", "#e8c4c4", "#d4c4d4", "#b8c4b0"],
+  ["#7a8a5a", "#7a9a6a", "#a89a8a", "#8a9aaa", "#8a8a8a", "#5a6a7a", "#c4b8d0", "#a8b4a8"],
+  ["#5a3a8a", "#c47a5a", "#d4a878", "#a88858", "#8a6a4a", "#5a3a2a", "#3a2a1a", "#2a1a0a"],
+];
+
 const SITE_TOKENS: { var: string; label: string }[] = [
   { var: "--site-bg", label: "Background" },
   { var: "--site-headings", label: "Headings" },
@@ -70,6 +78,7 @@ export function SitePalettePicker({
   disabled = false,
 }: SitePalettePickerProps) {
   const [open, setOpen] = useState(false);
+  const [showCustom, setShowCustom] = useState(false);
   const [hex, setHex] = useState(value || "#000000");
 
   useEffect(() => {
@@ -166,34 +175,71 @@ export function SitePalettePicker({
           </div>
         )}
 
-        {/* Custom hex */}
+        {/* Custom (HEX) — collapsible */}
         <div className="space-y-1.5">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-            Custom
-          </p>
-          <div className="flex items-center gap-1.5">
-            <input
-              type="color"
-              value={hex.startsWith("#") ? hex : "#000000"}
-              onChange={(e) => apply(e.target.value)}
-              className="h-8 w-8 rounded border border-border cursor-pointer p-0"
-            />
-            <input
-              type="text"
-              value={hex}
-              onChange={(e) => setHex(e.target.value)}
-              onBlur={() => apply(hex)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  apply(hex);
-                  setOpen(false);
-                }
-              }}
-              placeholder="#000000"
-              className="flex-1 h-8 rounded-md border border-border bg-background px-2 text-xs font-mono"
-            />
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowCustom((v) => !v)}
+            className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium hover:text-foreground transition-colors flex items-center gap-1"
+          >
+            Custom (HEX)
+            <span className="text-[8px]">{showCustom ? "▲" : "▼"}</span>
+          </button>
+          {showCustom && (
+            <>
+              {/* Preset rows */}
+              <div className="space-y-1 mb-2">
+                {PRESET_ROWS.map((row, ri) => (
+                  <div key={ri} className="grid grid-cols-8 gap-1">
+                    {row.map((c, ci) => {
+                      const isTransparent = c === "transparent";
+                      const active = hex.toLowerCase() === c.toLowerCase();
+                      return (
+                        <button
+                          key={`${ri}-${ci}`}
+                          type="button"
+                          onClick={() => apply(c)}
+                          title={c}
+                          className={cn(
+                            "h-6 w-6 rounded border transition-all",
+                            active ? "ring-2 ring-foreground ring-offset-1" : "border-border hover:scale-110",
+                          )}
+                          style={{
+                            background: isTransparent
+                              ? "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 6px 6px"
+                              : c,
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="color"
+                  value={hex.startsWith("#") ? hex : "#000000"}
+                  onChange={(e) => apply(e.target.value)}
+                  className="h-8 w-8 rounded border border-border cursor-pointer p-0"
+                />
+                <input
+                  type="text"
+                  value={hex}
+                  onChange={(e) => setHex(e.target.value)}
+                  onBlur={() => apply(hex)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      apply(hex);
+                      setOpen(false);
+                    }
+                  }}
+                  placeholder="#000000"
+                  className="flex-1 h-8 rounded-md border border-border bg-background px-2 text-xs font-mono"
+                />
+              </div>
+            </>
+          )}
         </div>
       </PopoverContent>
     </Popover>
