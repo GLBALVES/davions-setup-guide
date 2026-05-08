@@ -121,25 +121,34 @@ serve(async (req) => {
         .eq("id", bookingId)
         .maybeSingle();
 
-      if (bkContract && !(bkContract as any).contract_locked && (bkContract as any).contract_html_snapshot) {
+      if (bkContract && !(bkContract as any).contract_locked) {
         const { data: sess } = await supabase
           .from("sessions")
           .select("contract_text, contract_id")
           .eq("id", (bkContract as any).session_id)
           .maybeSingle();
 
+        let snapshotHtml = (bkContract as any).contract_html_snapshot as string | null;
+        if (!snapshotHtml && sess?.contract_text) {
+          snapshotHtml = sess.contract_text;
+        }
+
         const hasContract = !!(sess?.contract_text || sess?.contract_id);
-        if (hasContract) {
+        if (hasContract && snapshotHtml) {
           const signedAt = new Date().toISOString();
           await supabase
             .from("bookings")
-            .update({ contract_signed_at: signedAt, contract_locked: true })
+            .update({
+              contract_html_snapshot: snapshotHtml,
+              contract_signed_at: signedAt,
+              contract_locked: true,
+            })
             .eq("id", bookingId);
 
           await supabase
             .from("client_projects")
             .update({
-              signed_contract_html: (bkContract as any).contract_html_snapshot,
+              signed_contract_html: snapshotHtml,
               contract_signed_at: signedAt,
               contract_signed_ip: (bkContract as any).contract_signed_ip,
               contract_signed_user_agent: (bkContract as any).contract_signed_user_agent,
