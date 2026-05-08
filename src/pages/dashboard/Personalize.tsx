@@ -1051,7 +1051,7 @@ const Personalize = () => {
                             size="icon"
                             variant="ghost"
                             className="h-7 w-7"
-                            title={t.personalize.duplicateBriefing ?? "Duplicate"}
+                            title={(t.personalize as any).duplicateBriefing ?? "Duplicate"}
                             onClick={() => {
                               const clonedQuestions = (b.questions || []).map((q) => ({
                                 ...q,
@@ -1061,7 +1061,7 @@ const Personalize = () => {
                                 options: Array.isArray(q.options) ? [...q.options] : [],
                               }));
                               setEditingBriefing(null);
-                              setBriefingName(`${b.name || t.personalize.untitled} (${t.personalize.copySuffix ?? "copy"})`);
+                              setBriefingName(`${b.name || t.personalize.untitled} (${(t.personalize as any).copySuffix ?? "copy"})`);
                               setBriefingQuestions(clonedQuestions);
                               setBriefingDialogOpen(true);
                             }}>
