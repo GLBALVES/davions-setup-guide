@@ -107,3 +107,6 @@ verify_jwt = false
 
 [functions.notify-briefing-response]
 verify_jwt = false
+
+[functions.notify-gallery-checkout]
+verify_jwt = false

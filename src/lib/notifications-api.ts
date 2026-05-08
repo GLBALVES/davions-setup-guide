@@ -68,6 +68,7 @@ export const NOTIFICATION_EVENTS = [
   "new_chat_message",
   "new_bug_report",
   "briefing_response",
+  "gallery_checkout",
 ] as const;
 
 export async function fetchNotificationPreferences(photographerId: string) {
