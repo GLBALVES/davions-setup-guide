@@ -15,6 +15,7 @@ import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Eye, Share2, Search, A
 import { EditOneSessionDialog } from "@/components/dashboard/EditOneSessionDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { buildBookingUrl } from "@/lib/booking-url";
 import { SessionsSkeleton } from "@/components/dashboard/skeletons/SessionsSkeleton";
 import {
   DndContext,
