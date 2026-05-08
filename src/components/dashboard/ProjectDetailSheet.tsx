@@ -508,7 +508,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
             onClick={() => setShowPaymentForm((v) => !v)}
             className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
           >
-            <Plus className="h-3 w-3" /> {t.projects?.addPayment || "Add payment"}
+            <Plus className="h-3 w-3" /> {addPaymentLabel}
           </button>
           <button
             onClick={() => setShowForm((v) => !v)}
