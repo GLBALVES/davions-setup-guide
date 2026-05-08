@@ -186,8 +186,17 @@ export default function InlineFormatToolbar() {
     savedRangeRef.current = range.cloneRange();
   }, []);
 
+  // While any popover is open we must NOT close the toolbar from a
+  // selectionchange (e.g. while dragging inside the color wheel the host's
+  // selection may briefly collapse — closing the toolbar would unmount the
+  // picker mid-drag and the new color would never get applied).
+  const popoverOpen = showColor || showFont || showSize || showBlock;
+  const popoverOpenRef = useRef(popoverOpen);
+  useEffect(() => { popoverOpenRef.current = popoverOpen; }, [popoverOpen]);
+
   useEffect(() => {
     const onSelChange = () => {
+      if (popoverOpenRef.current) return;
       // If the selection moved inside the toolbar itself, ignore.
       const sel = window.getSelection();
       if (!sel) return;
