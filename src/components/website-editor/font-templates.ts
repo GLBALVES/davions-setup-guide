@@ -290,13 +290,13 @@ const ELEMENT_TO_SELECTORS: Record<ElementKey, string> = {
   // Headings: also match raw tags inside any .site-rich-text container so
   // text written via the inline rich-text editor (Text block, columns) gets
   // the chosen template typography automatically.
-  h1: ".site-h1, [data-site-typo='h1'], .site-rich-text h1",
-  h2: ".site-h2, [data-site-typo='h2'], .site-rich-text h2",
-  h3: ".site-h3, [data-site-typo='h3'], .site-rich-text h3",
-  h4: ".site-h4, [data-site-typo='h4'], .site-rich-text h4",
-  h5: ".site-h5, [data-site-typo='h5'], .site-rich-text h5",
-  h6: ".site-h6, [data-site-typo='h6'], .site-rich-text h6",
-  paragraph_1: ".site-paragraph-1, [data-site-typo='paragraph_1'], .site-rich-text p",
+  h1: ".site-h1, [data-site-typo='h1'], .site-rich-text h1:not([data-site-typo])",
+  h2: ".site-h2, [data-site-typo='h2'], .site-rich-text h2:not([data-site-typo])",
+  h3: ".site-h3, [data-site-typo='h3'], .site-rich-text h3:not([data-site-typo])",
+  h4: ".site-h4, [data-site-typo='h4'], .site-rich-text h4:not([data-site-typo])",
+  h5: ".site-h5, [data-site-typo='h5'], .site-rich-text h5:not([data-site-typo])",
+  h6: ".site-h6, [data-site-typo='h6'], .site-rich-text h6:not([data-site-typo])",
+  paragraph_1: ".site-paragraph-1, [data-site-typo='paragraph_1'], .site-rich-text p:not([data-site-typo])",
   paragraph_2: ".site-paragraph-2, [data-site-typo='paragraph_2']",
   paragraph_3: ".site-paragraph-3, [data-site-typo='paragraph_3']",
   logo_text: ".site-logo-text, [data-site-typo='logo_text']",
