@@ -336,12 +336,14 @@ function ReceivedPaymentsLog({ projectId, photographerId }: { projectId: string;
 
 // ── Payments section component ──
 function PaymentsSection({ project, photographerId }: { project: ProjectSheetData; photographerId: string }) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const tp = t.projects;
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const addPaymentLabel = lang === "pt" ? "Adicionar pagamento" : lang === "es" ? "Agregar pago" : "Add payment";
 
   // Form state
   const [formDesc, setFormDesc]       = useState("");
