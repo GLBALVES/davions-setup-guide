@@ -550,6 +550,8 @@ function ImageTextBlock(props: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   const buttons = resolveBlockButtons(props);
   const contentMaxWidth = blockSettings?.contentMaxWidth;
+  const textMaxWidth = blockSettings?.textMaxWidth;
+  const imageMaxWidth = blockSettings?.imageMaxWidth;
   const initialHtml = buildUnifiedHtml(title, body);
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
@@ -557,7 +559,10 @@ function ImageTextBlock(props: any) {
         className={`mx-auto flex flex-col md:flex-row gap-10 items-center ${contentMaxWidth ? "" : "max-w-6xl"}`}
         style={contentMaxWidth ? { maxWidth: `${contentMaxWidth}px` } : undefined}
       >
-        <div className="w-full md:w-1/2">
+        <div
+          className={`w-full ${imageMaxWidth ? "md:flex-1" : "md:w-1/2"}`}
+          style={imageMaxWidth ? { maxWidth: `${imageMaxWidth}px` } : undefined}
+        >
           <EditableImage
             value={image}
             onChange={(url) => c.set("image", url)}
@@ -576,7 +581,10 @@ function ImageTextBlock(props: any) {
             </div>
           </EditableImage>
         </div>
-        <div className="w-full md:w-1/2">
+        <div
+          className={`w-full ${textMaxWidth ? "md:flex-1" : "md:w-1/2"}`}
+          style={textMaxWidth ? { maxWidth: `${textMaxWidth}px` } : undefined}
+        >
           <EditableRichText
             editMode={c.editMode}
             value={initialHtml}
@@ -605,6 +613,8 @@ function TextImageBlock(props: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   const buttons = resolveBlockButtons(props);
   const contentMaxWidth = blockSettings?.contentMaxWidth;
+  const textMaxWidth = blockSettings?.textMaxWidth;
+  const imageMaxWidth = blockSettings?.imageMaxWidth;
   const initialHtml = buildUnifiedHtml(title, body);
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
@@ -612,7 +622,10 @@ function TextImageBlock(props: any) {
         className={`mx-auto flex flex-col md:flex-row-reverse gap-10 items-center ${contentMaxWidth ? "" : "max-w-6xl"}`}
         style={contentMaxWidth ? { maxWidth: `${contentMaxWidth}px` } : undefined}
       >
-        <div className="w-full md:w-1/2">
+        <div
+          className={`w-full ${imageMaxWidth ? "md:flex-1" : "md:w-1/2"}`}
+          style={imageMaxWidth ? { maxWidth: `${imageMaxWidth}px` } : undefined}
+        >
           <EditableImage
             value={image}
             onChange={(url) => c.set("image", url)}
@@ -631,7 +644,10 @@ function TextImageBlock(props: any) {
             </div>
           </EditableImage>
         </div>
-        <div className="w-full md:w-1/2">
+        <div
+          className={`w-full ${textMaxWidth ? "md:flex-1" : "md:w-1/2"}`}
+          style={textMaxWidth ? { maxWidth: `${textMaxWidth}px` } : undefined}
+        >
           <EditableRichText
             editMode={c.editMode}
             value={initialHtml}
