@@ -501,6 +501,9 @@ function TextBlock({ title, subtitle, body, align = "center", ctx, blockSettings
   const alignClass =
     align === "left" ? "text-left" : align === "right" ? "text-right" : "text-center";
   const contentMaxWidth = blockSettings?.contentMaxWidth;
+  const blockPosition = blockSettings?.blockPosition || "center";
+  const positionClass =
+    blockPosition === "left" ? "mr-auto ml-0" : blockPosition === "right" ? "ml-auto mr-0" : "mx-auto";
 
   // Unified body. If legacy title/subtitle exist, merge them into body as
   // H2 / small-caps subtitle so users can edit everything in one rich-text area.
