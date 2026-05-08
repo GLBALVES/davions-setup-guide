@@ -69,7 +69,7 @@ interface BriefingQuestion {
   options: string[];
 }
 
-function BriefingDialog({
+export function BriefingDialog({
   open,
   onClose,
   bookingId,
