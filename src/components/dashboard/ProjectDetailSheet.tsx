@@ -1056,7 +1056,7 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
   const bookingId = (project as any).booking_id ?? null;
   const [contractOpen, setContractOpen] = useState(false);
   const projectId = project.id;
-  const { data: contractSnapshot } = useQuery<{ html: string | null; signedAt: string | null } | null>({
+  const { data: contractSnapshot, refetch: refetchContractSnapshot } = useQuery<{ html: string | null; signedAt: string | null } | null>({
     queryKey: ["project-contract-snapshot", projectId, bookingId],
     queryFn: async () => {
       // Prefer the signed copy stored on the project itself
@@ -1077,10 +1077,33 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
         .eq("id", bookingId)
         .maybeSingle();
       if (error) throw error;
-      return {
-        html: (data as any)?.contract_html_snapshot ?? null,
-        signedAt: (data as any)?.contract_signed_at ?? null,
-      };
+      const html = (data as any)?.contract_html_snapshot ?? null;
+      const signedAt = (data as any)?.contract_signed_at ?? null;
+
+      // Auto-recover legacy bookings: if no snapshot exists, ask the
+      // backend to rebuild it from the session template + booking data.
+      if (!html && bookingId) {
+        try {
+          const { data: rebuilt } = await supabase.functions.invoke("backfill-contract-snapshot", {
+            body: { booking_id: bookingId },
+          });
+          if ((rebuilt as any)?.ok) {
+            const { data: again } = await supabase
+              .from("bookings")
+              .select("contract_html_snapshot, contract_signed_at")
+              .eq("id", bookingId)
+              .maybeSingle();
+            return {
+              html: (again as any)?.contract_html_snapshot ?? null,
+              signedAt: (again as any)?.contract_signed_at ?? null,
+            };
+          }
+        } catch (e) {
+          console.error("backfill-contract-snapshot error:", e);
+        }
+      }
+
+      return { html, signedAt };
     },
     enabled: !!projectId,
   });
