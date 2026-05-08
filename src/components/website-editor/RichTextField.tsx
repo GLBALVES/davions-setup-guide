@@ -403,9 +403,9 @@ export function RichTextField({
     setShowSize(false);
   };
 
-  const onApplyColor = (color: string) => {
+  const onApplyColor = (color: string, closePicker = true) => {
     apply(`color:${color}`);
-    closeAllPopovers();
+    if (closePicker) closeAllPopovers();
   };
   const onApplyFont = (stack: string) => {
     apply(`font-family:${stack}`);
@@ -605,10 +605,14 @@ export function RichTextField({
             />
           </ToolbarButton>
           {showColor && (
-            <div className="absolute z-20 top-full mt-1 right-0 bg-background border border-border rounded-md shadow-lg p-2 w-64 max-w-[calc(100vw-2rem)]">
+            <div
+              className="absolute z-20 top-full mt-1 right-0 bg-background border border-border rounded-md shadow-lg p-2 w-64 max-w-[calc(100vw-2rem)]"
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+            >
               <SitePaletteColorOptions
                 value={activeColorHex || "#000000"}
-                onChange={(v) => onApplyColor(v)}
+                onChange={(v) => onApplyColor(v, false)}
               />
             </div>
           )}
