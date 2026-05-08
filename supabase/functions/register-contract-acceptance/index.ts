@@ -15,7 +15,7 @@ serve(async (req) => {
   }
 
   try {
-    const { booking_id, contract_html, client_tax_id } = await req.json();
+    const { booking_id, contract_html, client_tax_id, signature_data } = await req.json();
 
     if (!booking_id || !uuidRegex.test(booking_id) || typeof contract_html !== "string") {
       return new Response(
@@ -61,6 +61,9 @@ serve(async (req) => {
     };
     if (typeof client_tax_id === "string") {
       updates.client_tax_id = client_tax_id.trim() || null;
+    }
+    if (typeof signature_data === "string" && signature_data.startsWith("data:image")) {
+      updates.contract_signature_data = signature_data;
     }
 
     const { error } = await supabase
