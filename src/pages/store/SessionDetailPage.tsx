@@ -477,6 +477,68 @@ const SessionDetailPage = () => {
           });
         }
 
+        // Also treat bookings from OTHER sessions on those dates as blocked, so
+        // overlapping campaign slots get disabled.
+        if (campaignDates.length > 0) {
+          const { data: otherBookingsData } = await (supabase as any)
+            .from("bookings")
+            .select("availability_id, booked_date, status, session_id")
+            .eq("photographer_id", s.photographer_id)
+            .in("booked_date", campaignDates)
+            .in("status", ["confirmed", "pending"]);
+
+          const sameCampaignAvailSet = new Set(allAvailIds);
+          const externalBookings = ((otherBookingsData ?? []) as any[]).filter(
+            (b) => !sameCampaignAvailSet.has(b.availability_id),
+          );
+          const externalAvailIds = Array.from(
+            new Set(externalBookings.map((b) => b.availability_id).filter(Boolean)),
+          );
+          if (externalAvailIds.length > 0) {
+            const { data: externalAvails } = await (supabase as any)
+              .from("session_availability")
+              .select("id, start_time, end_time, session_id")
+              .in("id", externalAvailIds);
+            const externalAvailMap = new Map<string, any>();
+            for (const a of (externalAvails ?? []) as any[]) externalAvailMap.set(a.id, a);
+
+            const extSessionIds = Array.from(
+              new Set(
+                Array.from(externalAvailMap.values())
+                  .map((a: any) => a.session_id)
+                  .filter((id: any): id is string => !!id),
+              ),
+            );
+            const extDurMap = new Map<string, number>();
+            if (extSessionIds.length > 0) {
+              const { data: extSessions } = await (supabase as any)
+                .from("sessions")
+                .select("id, duration_minutes")
+                .in("id", extSessionIds);
+              for (const es of (extSessions ?? []) as any[]) extDurMap.set(es.id, es.duration_minutes ?? 60);
+            }
+
+            for (const b of externalBookings) {
+              const a = externalAvailMap.get(b.availability_id);
+              if (!a) continue;
+              const startHHmm = (a.start_time ?? "00:00").slice(0, 5);
+              let endHHmm = (a.end_time ?? "").slice(0, 5);
+              if (!endHHmm) {
+                const dur = extDurMap.get(a.session_id) ?? 60;
+                const [h, m] = startHHmm.split(":").map(Number);
+                const total = h * 60 + m + dur;
+                endHHmm = `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+              }
+              if (!blockedByDateCampaign.has(b.booked_date)) blockedByDateCampaign.set(b.booked_date, []);
+              blockedByDateCampaign.get(b.booked_date)!.push({
+                start: startHHmm,
+                end: endHHmm,
+                all_day: false,
+              });
+            }
+          }
+        }
+
         const isCampaignSlotBlocked = (dateKey: string, slotStart: string, slotEnd: string): boolean => {
           const ranges = blockedByDateCampaign.get(dateKey);
           if (!ranges) return false;
