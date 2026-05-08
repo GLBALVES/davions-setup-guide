@@ -400,6 +400,46 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     enabled: !!project.booking_id,
   });
 
+  // Fetch manual project payments (shared cache with ReceivedPaymentsLog)
+  const { data: projectPayments = [] } = useQuery<ProjectPayment[]>({
+    queryKey: ["project-payments", project.id],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("project_payments")
+        .select("*")
+        .eq("project_id", project.id)
+        .order("payment_date", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as ProjectPayment[];
+    },
+    enabled: !!project.id,
+  });
+
+  // Compute booking financial breakdown (in major units / currency)
+  const bookingFinancials = (() => {
+    if (!bookingPayment) return { grandTotal: 0, paid: 0 };
+    const ps = bookingPayment.payment_status;
+    const isFullPaid = ps === "paid";
+    const isDepositPaid = ps === "deposit_paid";
+    const sess = bookingPayment.sessions as any;
+    const sessionPrice = sess?.price ?? 0;
+    const taxRate = sess?.tax_rate ?? 0;
+    const depositEnabled = sess?.deposit_enabled ?? false;
+    const depositAmount = sess?.deposit_amount ?? 0;
+    const depositType = sess?.deposit_type ?? "fixed";
+    const extrasTotal = bookingPayment.extras_total ?? 0;
+    const subtotal = sessionPrice + extrasTotal;
+    const taxAmount = Math.round(subtotal * taxRate / 100);
+    const grandTotalCents = subtotal + taxAmount;
+    const isPercentDeposit = depositType === "percent" || depositType === "percentage";
+    const depositValue = depositEnabled
+      ? (isPercentDeposit ? Math.round(grandTotalCents * depositAmount / 100) : depositAmount)
+      : 0;
+    const depositPaid = isDepositPaid || isFullPaid ? depositValue : 0;
+    const paidCents = isFullPaid ? grandTotalCents : depositPaid;
+    return { grandTotal: grandTotalCents / 100, paid: paidCents / 100 };
+  })();
+
   const addMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("project_invoices" as any).insert({
