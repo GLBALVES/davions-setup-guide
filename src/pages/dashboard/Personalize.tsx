@@ -58,6 +58,28 @@ const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   date: "Date"
 };
 
+// Sortable wrapper for briefing questions (drag-and-drop reorder)
+function SortableQuestionItem({
+  id,
+  children,
+}: {
+  id: string;
+  children: (handleProps: { listeners: any; attributes: any }) => React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 10 : "auto",
+  };
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children({ listeners, attributes })}
+    </div>
+  );
+}
+
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DOMAIN_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/;
 
