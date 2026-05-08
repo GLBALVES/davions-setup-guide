@@ -526,6 +526,7 @@ function useSessionActions(
 function SortableSessionCard({
   session,
   storeSlug,
+  customDomain,
   isManual,
   onClick,
   onStatusChange,
@@ -574,6 +575,7 @@ function SortableSessionCard({
 function SortableSessionRow({
   session,
   storeSlug,
+  customDomain,
   isManual,
   onClick,
   onStatusChange,
@@ -621,6 +623,7 @@ function SortableSessionRow({
 function SessionCard({
   session,
   storeSlug,
+  customDomain,
   isManual,
   onClick,
   onStatusChange,
@@ -842,6 +845,7 @@ function SessionCard({
 function SessionRow({
   session,
   storeSlug,
+  customDomain,
   isManual,
   onClick,
   onStatusChange,
