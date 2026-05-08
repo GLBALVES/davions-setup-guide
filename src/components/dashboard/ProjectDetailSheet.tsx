@@ -486,9 +486,13 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     },
   });
 
-  const totalAmount  = invoices.reduce((s, i) => s + Number(i.amount), 0);
-  const totalPaid    = invoices.reduce((s, i) => s + Number(i.paid_amount), 0);
-  const totalBalance = totalAmount - totalPaid;
+  const invoicesTotal     = invoices.reduce((s, i) => s + Number(i.amount), 0);
+  const invoicesPaid      = invoices.reduce((s, i) => s + Number(i.paid_amount), 0);
+  const manualPaymentsSum = projectPayments.reduce((s, p) => s + Number(p.amount), 0);
+
+  const summaryTotal    = bookingFinancials.grandTotal + invoicesTotal;
+  const summaryReceived = bookingFinancials.paid + invoicesPaid + manualPaymentsSum;
+  const summaryBalance  = summaryTotal - summaryReceived;
 
   const fmt = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
 
