@@ -4004,6 +4004,7 @@ export const translations = {
       eventPaymentFailed: "Pagamento Falhou",
       eventNewChat: "Nova Mensagem no Chat",
       eventNewBug: "Novo Bug Report",
+      eventBriefingResponse: "Briefing Respondido",
       inApp: "No App",
       email: "Email",
       browserPush: "Push do Navegador",
