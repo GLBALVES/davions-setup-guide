@@ -1106,7 +1106,7 @@ export const BlockSettingsPanel = ({
             <Slider value={[s.paddingRight ?? 0]} min={0} max={200} step={8} onValueChange={([v]) => update({ paddingRight: v })} />
           </div>
 
-          {section.type === "text" && (
+          {(section.type === "text" || section.type === "image-text" || section.type === "text-image") && (
             <div className="space-y-1.5 pt-2 border-t border-border/60">
               <label className="text-xs font-medium text-muted-foreground">
                 Content Width: {s.contentMaxWidth ?? 768}px
