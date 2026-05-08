@@ -28,11 +28,12 @@ import WorkflowEmailTemplates from "@/components/dashboard/WorkflowEmailTemplate
 import ImageUploadField from "@/components/website-editor/ImageUploadField";
 
 // ── Briefing types ─────────────────────────────────────────────────────────────
-type QuestionType = "short_text" | "long_text" | "multiple_choice" | "checkboxes" | "yes_no" | "multi_image";
+type QuestionType = "short_text" | "long_text" | "multiple_choice" | "checkboxes" | "yes_no" | "multi_image" | "date";
 interface BriefingQuestion {
   id: string;
   type: QuestionType;
   label: string;
+  description?: string;
   required: boolean;
   options: string[];
   max_select?: number | null;
@@ -44,7 +45,8 @@ const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   multiple_choice: "Multiple choice",
   checkboxes: "Checkboxes",
   yes_no: "Yes / No",
-  multi_image: "Multi image"
+  multi_image: "Multi image",
+  date: "Date"
 };
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
