@@ -1126,23 +1126,21 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
       {/* ── Contracts sub-section ────────────────────────────────────────── */}
       <div className="flex flex-col gap-1.5">
         <p className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">{tp.contractsSubsection}</p>
-        {contracts.length === 0 ? (
+        {!contractSnapshot?.html ? (
           <p className="text-[11px] text-muted-foreground/50 italic pl-1">{tp.noContracts}</p>
         ) : (
-          <div className="flex flex-col gap-1">
-            {contracts.map((c) => (
-              <a
-                key={c.id}
-                href={`/dashboard/contracts/${c.id}/edit`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/20 px-3 py-2 hover:bg-muted/40 transition-colors group"
-              >
-                <FileTextIcon className="h-4 w-4 text-purple-500 shrink-0" />
-                <span className="flex-1 text-xs font-medium truncate">{c.name || "Untitled Contract"}</span>
-                <span className="text-[10px] text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity">{tp.openInEditor}</span>
-              </a>
-            ))}
+          <div className="rounded-md border border-border/50 bg-muted/10">
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-border/40">
+              <FileTextIcon className="h-3.5 w-3.5 text-purple-500 shrink-0" />
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                {tp.contractsSubsection}
+              </span>
+              <span className="ml-auto text-[10px] text-muted-foreground/60">{tp.readOnly ?? "Read-only"}</span>
+            </div>
+            <div
+              className="prose prose-sm max-w-none px-4 py-3 text-xs select-text pointer-events-none"
+              dangerouslySetInnerHTML={{ __html: contractSnapshot.html }}
+            />
           </div>
         )}
       </div>
