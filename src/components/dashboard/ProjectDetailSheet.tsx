@@ -305,7 +305,7 @@ function ReceivedPaymentsLog({
               inputMode="decimal"
               placeholder={currencyPlaceholder(currencyLang)}
               value={formatCurrencyInput(fee, currencyLang)}
-              onChange={(e) => setFee(parseCurrencyInput(e.target.value, currencyLang))}
+              onChange={(e) => { setFeeManual(true); setFee(parseCurrencyInput(e.target.value, currencyLang)); }}
               className="h-7 text-xs"
             />
           </div>
@@ -315,7 +315,7 @@ function ReceivedPaymentsLog({
           </div>
           <div className="flex gap-2 justify-end">
             <Button variant="ghost" size="sm" className="h-7 text-xs"
-              onClick={() => { onToggleForm(); setDesc(""); setAmount(""); setFee(""); }}>
+              onClick={() => { onToggleForm(); setDesc(""); setAmount(""); setFee(""); setFeeManual(false); }}>
               {L.cancel}
             </Button>
             <Button size="sm" className="h-7 text-xs"
