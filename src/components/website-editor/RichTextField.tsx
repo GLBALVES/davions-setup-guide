@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Bold, Italic, Underline, Eraser, Type, Palette, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FONT_PRESETS } from "@/components/website-editor/site-fonts";
-import { SitePalettePicker } from "./SitePalettePicker";
+import { SitePaletteColorOptions } from "./SitePalettePicker";
 
 /**
  * Field that stores a value as HTML (for inline formatting like color/font/size)
@@ -22,12 +22,6 @@ const SIZE_PRESETS: { id: string; label: string; px: number }[] = [
   { id: "lg", label: "L", px: 20 },
   { id: "xl", label: "XL", px: 28 },
   { id: "2xl", label: "2XL", px: 40 },
-];
-
-const COLOR_SWATCHES = [
-  "#000000", "#374151", "#6B7280", "#9CA3AF", "#D1D5DB", "#FFFFFF",
-  "#EF4444", "#F97316", "#EAB308", "#22C55E", "#06B6D4", "#3B82F6",
-  "#8B5CF6", "#EC4899",
 ];
 
 function looksLikeHtml(s: string): boolean {
