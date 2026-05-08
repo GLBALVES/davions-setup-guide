@@ -635,7 +635,7 @@ function SessionCard({
 }) {
   const { t } = useLanguage();
   const s = t.sessions;
-  const { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail, openDeleteDialog, deleteDialogOpen, setDeleteDialogOpen, deleteLoading, handleConfirmDelete } = useSessionActions(session, storeSlug, onDelete);
+  const { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail, openDeleteDialog, deleteDialogOpen, setDeleteDialogOpen, deleteLoading, handleConfirmDelete } = useSessionActions(session, storeSlug, customDomain, onDelete);
 
   const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -856,7 +856,7 @@ function SessionRow({
 }) {
   const { t } = useLanguage();
   const s = t.sessions;
-  const { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail, openDeleteDialog, deleteDialogOpen, setDeleteDialogOpen, deleteLoading, handleConfirmDelete } = useSessionActions(session, storeSlug, onDelete);
+  const { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail, openDeleteDialog, deleteDialogOpen, setDeleteDialogOpen, deleteLoading, handleConfirmDelete } = useSessionActions(session, storeSlug, customDomain, onDelete);
 
   const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
