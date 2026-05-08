@@ -306,7 +306,7 @@ const ELEMENT_TO_SELECTORS: Record<ElementKey, string> = {
   overlay_sub_navigation: ".site-overlay-subnav, [data-site-typo='overlay_sub_navigation']",
   button: ".site-button, [data-site-typo='button']",
   form_label: ".site-form-label, [data-site-typo='form_label']",
-  pullquote: ".site-pullquote, [data-site-typo='pullquote'], .site-rich-text blockquote",
+  pullquote: ".site-pullquote, [data-site-typo='pullquote'], .site-rich-text blockquote:not([data-site-typo])",
 };
 
 /** Build a CSS string targeting all element classes/data-attrs. */
