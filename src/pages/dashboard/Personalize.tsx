@@ -352,6 +352,20 @@ const Personalize = () => {
   const [editingBriefing, setEditingBriefing] = useState<Briefing | null>(null);
   const [briefingName, setBriefingName] = useState("");
   const [briefingQuestions, setBriefingQuestions] = useState<BriefingQuestion[]>([]);
+  const briefingDndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+  const handleBriefingQuestionsDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setBriefingQuestions((prev) => {
+      const oldIdx = prev.findIndex((q) => q.id === active.id);
+      const newIdx = prev.findIndex((q) => q.id === over.id);
+      if (oldIdx < 0 || newIdx < 0) return prev;
+      return arrayMove(prev, oldIdx, newIdx);
+    });
+  };
   const [savingBriefing, setSavingBriefing] = useState(false);
   const [deletingBriefingId, setDeletingBriefingId] = useState<string | null>(null);
 
