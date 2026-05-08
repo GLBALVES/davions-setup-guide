@@ -485,10 +485,11 @@ function HeroBlock(props: any) {
 
 // ─── Text ───────────────────────────────────────────────────────────────────
 
-function TextBlock({ title, subtitle, body, align = "center", ctx }: any) {
+function TextBlock({ title, subtitle, body, align = "center", ctx, blockSettings }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   const alignClass =
     align === "left" ? "text-left" : align === "right" ? "text-right" : "text-center";
+  const contentMaxWidth = blockSettings?.contentMaxWidth;
 
   // Unified body. If legacy title/subtitle exist, merge them into body as
   // H2 / small-caps subtitle so users can edit everything in one rich-text area.
@@ -510,7 +511,10 @@ function TextBlock({ title, subtitle, body, align = "center", ctx }: any) {
 
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6">
-      <div className={`max-w-3xl mx-auto ${alignClass}`}>
+      <div
+        className={`mx-auto ${alignClass} ${contentMaxWidth ? "" : "max-w-3xl"}`}
+        style={contentMaxWidth ? { maxWidth: `${contentMaxWidth}px` } : undefined}
+      >
         <EditableRichText
           editMode={c.editMode}
           value={initialHtml}
