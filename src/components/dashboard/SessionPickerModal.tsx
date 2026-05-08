@@ -107,71 +107,95 @@ export function SessionPickerModal({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-4">
-          {filtered.length === 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {filtered.map((session) => {
+              const isCurrent = session.id === currentSessionId;
+              return (
+                <button
+                  key={session.id}
+                  type="button"
+                  onClick={() => {
+                    if (!isCurrent) {
+                      onSelect(session.id);
+                      onOpenChange(false);
+                    }
+                  }}
+                  className={cn(
+                    "relative flex flex-col rounded-lg border overflow-hidden text-left transition-all hover:shadow-md group",
+                    isCurrent
+                      ? "border-foreground/60 ring-1 ring-foreground/20"
+                      : "border-border hover:border-foreground/30"
+                  )}
+                >
+                  {/* Cover image */}
+                  <div className="relative w-full aspect-[4/3] bg-muted/40 overflow-hidden">
+                    {session.cover_image_url ? (
+                      <img
+                        src={session.cover_image_url}
+                        alt={session.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
+                        <DollarSign className="h-8 w-8" />
+                      </div>
+                    )}
+                    {isCurrent && (
+                      <div className="absolute top-2 right-2 bg-foreground text-background rounded-full p-1">
+                        <Check className="h-3 w-3" />
+                      </div>
+                    )}
+                    {session.session_type_name && (
+                      <Badge variant="secondary" className="absolute bottom-2 left-2 text-[9px] px-1.5 py-0.5 bg-background/80 backdrop-blur-sm">
+                        {session.session_type_name}
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="p-2.5 flex flex-col gap-1">
+                    <p className="text-xs font-medium truncate leading-tight">{session.title}</p>
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs font-semibold tabular-nums">{fmt(session.price)}</span>
+                      <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                        <Clock className="h-2.5 w-2.5" />
+                        {session.duration_minutes}min
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+
+            {/* One Session quick-create card */}
+            {onCreateOneSession && (
+              <button
+                type="button"
+                onClick={() => onCreateOneSession()}
+                className="w-full text-left border-2 border-dashed border-primary/40 hover:border-primary transition-colors rounded-lg overflow-hidden flex flex-col items-center justify-center min-h-[140px] gap-2 bg-primary/5"
+              >
+                <Zap className="h-6 w-6 text-primary/60" />
+                <span className="text-xs font-medium text-primary/80">{tp.oneSession || "One Session"}</span>
+              </button>
+            )}
+
+            {/* Add new session card */}
+            {onCreateNewSession && (
+              <button
+                type="button"
+                onClick={() => onCreateNewSession()}
+                className="w-full text-left border-2 border-dashed border-muted-foreground/30 hover:border-foreground/50 transition-colors rounded-lg overflow-hidden flex flex-col items-center justify-center min-h-[140px] gap-2"
+              >
+                <Plus className="h-6 w-6 text-muted-foreground/50" />
+                <span className="text-xs text-muted-foreground">{tp.addSession || "Add session"}</span>
+              </button>
+            )}
+          </div>
+
+          {filtered.length === 0 && !onCreateNewSession && !onCreateOneSession && (
             <p className="text-sm text-muted-foreground text-center py-8 italic">
               {tp.noSessionsFound || "No sessions found"}
             </p>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {filtered.map((session) => {
-                const isCurrent = session.id === currentSessionId;
-                return (
-                  <button
-                    key={session.id}
-                    type="button"
-                    onClick={() => {
-                      if (!isCurrent) {
-                        onSelect(session.id);
-                        onOpenChange(false);
-                      }
-                    }}
-                    className={cn(
-                      "relative flex flex-col rounded-lg border overflow-hidden text-left transition-all hover:shadow-md group",
-                      isCurrent
-                        ? "border-foreground/60 ring-1 ring-foreground/20"
-                        : "border-border hover:border-foreground/30"
-                    )}
-                  >
-                    {/* Cover image */}
-                    <div className="relative w-full aspect-[4/3] bg-muted/40 overflow-hidden">
-                      {session.cover_image_url ? (
-                        <img
-                          src={session.cover_image_url}
-                          alt={session.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
-                          <DollarSign className="h-8 w-8" />
-                        </div>
-                      )}
-                      {isCurrent && (
-                        <div className="absolute top-2 right-2 bg-foreground text-background rounded-full p-1">
-                          <Check className="h-3 w-3" />
-                        </div>
-                      )}
-                      {session.session_type_name && (
-                        <Badge variant="secondary" className="absolute bottom-2 left-2 text-[9px] px-1.5 py-0.5 bg-background/80 backdrop-blur-sm">
-                          {session.session_type_name}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="p-2.5 flex flex-col gap-1">
-                      <p className="text-xs font-medium truncate leading-tight">{session.title}</p>
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="text-xs font-semibold tabular-nums">{fmt(session.price)}</span>
-                        <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-                          <Clock className="h-2.5 w-2.5" />
-                          {session.duration_minutes}min
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
           )}
         </div>
       </DialogContent>
