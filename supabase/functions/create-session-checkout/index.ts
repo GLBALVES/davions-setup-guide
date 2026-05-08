@@ -37,6 +37,9 @@ serve(async (req) => {
       clientEmail,
       clientName,
       selectedExtras = [],
+      contractHtml = null,
+      signatureData = null,
+      clientTaxId = null,
     } = await req.json();
 
     // Format booking date & time for display (12-hour AM/PM)
