@@ -24,7 +24,7 @@ const SITE_TOKENS: { var: string; label: string }[] = [
   { var: "--site-button-text-hover", label: "Button Text Hover" },
 ];
 
-const NEUTRALS = ["#000000", "#1a1a1a", "#444444", "#888888", "#cccccc", "#f5f5f5", "#ffffff", "transparent"];
+
 
 /** Resolve a CSS color string (hex, rgb, rgba, hsl, color()) to #rrggbb. */
 function resolveCssColor(value: string): string {
