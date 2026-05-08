@@ -33,7 +33,7 @@ async function createVapidAuth(endpoint: string, vapidPub: Uint8Array, vapidPriv
       JSON.stringify({
         aud: audience,
         exp: now + 43200,
-        sub: "mailto:noreply@davions.app",
+        sub: "mailto:noreply@davions.com",
       })
     )
   );
