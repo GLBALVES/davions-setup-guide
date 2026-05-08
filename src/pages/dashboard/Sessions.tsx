@@ -411,6 +411,7 @@ const Sessions = () => {
 function useSessionActions(
   session: Session,
   storeSlug: string | null,
+  customDomain: string | null,
   onDelete?: (id: string) => void
 ) {
   const { toast } = useToast();
@@ -421,9 +422,11 @@ function useSessionActions(
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const bookingUrl = storeSlug
-    ? `${window.location.origin}/store/${storeSlug}/${session.slug ?? session.id}`
-    : null;
+  const bookingUrl = buildBookingUrl({
+    customDomain,
+    storeSlug,
+    sessionSlugOrId: session.slug ?? session.id,
+  });
 
   const handleToggleStatus = async (e: React.MouseEvent, onStatusChange: (id: string, status: string) => void) => {
     e.stopPropagation();
