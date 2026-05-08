@@ -4565,6 +4565,7 @@ export const translations = {
       chargeRemoved: "Cobro eliminado",
       errorAddingCharge: "Error al agregar cobro",
       chargeDescription: "Descripción",
+      chargeDescriptionPlaceholder: "ej.: Adicional de escenario",
       chargeAmount: "Monto",
       chargeDueDate: "Vencimiento",
       chargeStatus: "Estado",
