@@ -606,35 +606,10 @@ export function RichTextField({
           </ToolbarButton>
           {showColor && (
             <div className="absolute z-20 top-full mt-1 right-0 bg-background border border-border rounded-md shadow-lg p-2 w-[200px] max-w-[calc(100vw-2rem)]">
-              <div className="grid grid-cols-7 gap-1 mb-2">
-                {COLOR_SWATCHES.map((c) => {
-                  const isActive = activeColorHex?.toUpperCase() === c.toUpperCase();
-                  return (
-                    <button
-                      key={c}
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        onApplyColor(c);
-                      }}
-                      className={cn(
-                        "w-6 h-6 rounded border",
-                        isActive
-                          ? "border-primary ring-2 ring-primary ring-offset-1"
-                          : "border-border",
-                      )}
-                      style={{ background: c }}
-                      title={c}
-                    />
-                  );
-                })}
-              </div>
-              <div className="pt-1">
-                <SitePalettePicker
-                  value={activeColorHex || "#000000"}
-                  onChange={(v) => onApplyColor(v)}
-                />
-              </div>
+              <SitePaletteColorOptions
+                value={activeColorHex || "#000000"}
+                onChange={(v) => onApplyColor(v)}
+              />
             </div>
           )}
         </div>
