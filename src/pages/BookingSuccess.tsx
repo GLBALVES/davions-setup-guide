@@ -456,6 +456,9 @@ const BookingSuccess = () => {
                         <span className="ml-2 text-[10px] tracking-wider uppercase text-destructive">Required</span>
                       )}
                     </p>
+                    {q.description && (
+                      <p className="text-[11px] font-light text-muted-foreground whitespace-pre-wrap">{q.description}</p>
+                    )}
 
                     {/* Short text */}
                     {q.type === "short_text" && (
@@ -465,6 +468,16 @@ const BookingSuccess = () => {
                         onChange={(e) => setTextAnswer(q.id, e.target.value)}
                         className="h-9 w-full px-3 text-sm font-light bg-background border border-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                         placeholder="Your answer…"
+                      />
+                    )}
+
+                    {/* Date */}
+                    {q.type === "date" && (
+                      <input
+                        type="date"
+                        value={(answers[q.id] as string) ?? ""}
+                        onChange={(e) => setTextAnswer(q.id, e.target.value)}
+                        className="h-9 w-full px-3 text-sm font-light bg-background border border-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                       />
                     )}
 
