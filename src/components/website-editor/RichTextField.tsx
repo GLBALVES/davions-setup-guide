@@ -605,7 +605,7 @@ export function RichTextField({
             />
           </ToolbarButton>
           {showColor && (
-            <div className="absolute z-20 top-full mt-1 right-0 bg-background border border-border rounded-md shadow-lg p-2 w-[200px] max-w-[calc(100vw-2rem)]">
+            <div className="absolute z-20 top-full mt-1 right-0 bg-background border border-border rounded-md shadow-lg p-2 w-64 max-w-[calc(100vw-2rem)]">
               <SitePaletteColorOptions
                 value={activeColorHex || "#000000"}
                 onChange={(v) => onApplyColor(v)}
