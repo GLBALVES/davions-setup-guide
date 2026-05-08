@@ -240,7 +240,7 @@ function ReceivedPaymentsLog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qKey });
       toast.success(L.added);
-      setShowForm(false); setDesc(""); setAmount(""); setDate(new Date().toISOString().slice(0, 10));
+      onToggleForm(); setDesc(""); setAmount(""); setDate(new Date().toISOString().slice(0, 10));
     },
     onError: (e: any) => toast.error(`${L.error}${e?.message ? `: ${e.message}` : ""}`),
   });
