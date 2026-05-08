@@ -501,12 +501,20 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <SectionLabel>{tp.paymentsSection}</SectionLabel>
-        <button
-          onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Plus className="h-3 w-3" /> {tp.newCharge}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowPaymentForm((v) => !v)}
+            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Plus className="h-3 w-3" /> {t.projects?.addPayment || "Add payment"}
+          </button>
+          <button
+            onClick={() => setShowForm((v) => !v)}
+            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Plus className="h-3 w-3" /> {tp.newCharge}
+          </button>
+        </div>
       </div>
 
       {(summaryTotal > 0 || summaryReceived > 0) && (
