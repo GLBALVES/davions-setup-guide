@@ -2334,6 +2334,54 @@ export function ProjectDetailSheet({
         sessions={photographerSessions as PickerSession[]}
         currentSessionId={bookingData?.session_id ?? photographerSessions.find((s) => s.title === (project.session_title ?? project.session_type))?.id ?? null}
         onSelect={handleSessionChange}
+        onCreateNewSession={() => {
+          setSessionPickerOpen(false);
+          navigate("/dashboard/sessions/new");
+        }}
+        onCreateOneSession={async () => {
+          if (creatingOneSession || !photographerId) return;
+          setCreatingOneSession(true);
+          try {
+            const { data, error } = await (supabase as any)
+              .from("sessions")
+              .insert({
+                photographer_id: photographerId,
+                title: "One Session",
+                duration_minutes: 60,
+                session_model: "one_session",
+                hide_from_store: true,
+                status: "active",
+                price: 0,
+              })
+              .select("id")
+              .single();
+            if (error) throw error;
+            setOneSessionId(data.id as string);
+            setSessionPickerOpen(false);
+            setOneSessionDialogOpen(true);
+          } catch (err: any) {
+            toast.error(err?.message ?? "Failed to create one session");
+          } finally {
+            setCreatingOneSession(false);
+          }
+        }}
+      />
+
+      <EditOneSessionDialog
+        open={oneSessionDialogOpen}
+        onOpenChange={(o) => {
+          setOneSessionDialogOpen(o);
+          if (!o) setOneSessionId(null);
+        }}
+        sessionId={oneSessionId}
+        onSaved={async () => {
+          if (oneSessionId) {
+            queryClient.invalidateQueries({ queryKey: ["photographer-sessions-for-project", photographerId] });
+            await handleSessionChange(oneSessionId);
+          }
+          setOneSessionDialogOpen(false);
+          setOneSessionId(null);
+        }}
       />
     </Dialog>
   );
