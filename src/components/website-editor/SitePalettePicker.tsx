@@ -83,7 +83,7 @@ export function SitePaletteColorOptions({
   allowTransparent = false,
   onCommit,
 }: SitePaletteColorOptionsProps) {
-  const [showCustom, setShowCustom] = useState(false);
+  const [showPresets, setShowPresets] = useState(false);
   const [hex, setHex] = useState(value || "#000000");
 
   useEffect(() => {
