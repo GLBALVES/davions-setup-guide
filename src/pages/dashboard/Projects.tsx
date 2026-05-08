@@ -1522,7 +1522,7 @@ const Projects = () => {
     // 2. Fetch confirmed bookings that don't have a project yet
     const { data: bookings } = await supabase
       .from("bookings")
-      .select("id, client_name, client_email, booked_date, session_id, sessions(title, session_type_id)")
+      .select("id, client_name, client_email, booked_date, session_id, contract_html_snapshot, contract_signed_at, contract_signed_ip, contract_signed_user_agent, contract_locked, sessions(title, session_type_id)")
       .eq("photographer_id", photographerId)
       .in("status", ["confirmed", "completed"]);
 
@@ -1545,6 +1545,10 @@ const Projects = () => {
         shoot_date: b.booked_date ?? null,
         shoot_time: (b.session_availability as any)?.start_time?.slice(0, 5) ?? null,
         position: (existingProjects?.length ?? 0) + i,
+        signed_contract_html: b.contract_locked ? b.contract_html_snapshot ?? null : null,
+        contract_signed_at: b.contract_signed_at ?? null,
+        contract_signed_ip: b.contract_signed_ip ?? null,
+        contract_signed_user_agent: b.contract_signed_user_agent ?? null,
       }));
       await supabase.from("client_projects" as any).insert(toInsert as any);
     }
