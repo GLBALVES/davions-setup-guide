@@ -4598,6 +4598,8 @@ export const translations = {
       bookingPaymentPending: "Esperando pago",
       documentsSection: "Documentos",
       contractsSubsection: "Contratos",
+      readOnly: "Solo lectura",
+      signedOn: "Firmado el",
       briefingsSubsection: "Cuestionarios",
       openInEditor: "Abrir en editor",
       noContracts: "Aún no hay contratos creados",
