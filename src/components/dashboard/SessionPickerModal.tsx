@@ -23,6 +23,8 @@ interface Props {
   sessions: PickerSession[];
   currentSessionId: string | null;
   onSelect: (sessionId: string) => void;
+  onCreateNewSession?: () => void;
+  onCreateOneSession?: () => void;
 }
 
 export function SessionPickerModal({
