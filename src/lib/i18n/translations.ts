@@ -2461,8 +2461,8 @@ export const translations = {
       deadlineFinalDelivery: "Prazo para entrega final",
       // Seção de pagamentos
       paymentsSection: "Pagamentos",
-      newCharge: "Nova cobrança",
-      addCharge: "+ Nova cobrança",
+      newCharge: "Adicionar cobrança",
+      addCharge: "+ Adicionar cobrança",
       noChargesRecorded: "Nenhuma cobrança registrada",
       chargeAdded: "Cobrança adicionada",
       chargeRemoved: "Cobrança removida",
