@@ -30,45 +30,109 @@ interface Options {
   enabled: boolean;
   /** Re-apply a previous snapshot to live state. */
   onApply: (snap: EditorSnapshot) => void;
+  /** Optional sessionStorage namespace key (e.g. photographer id) to persist
+   *  past/future across page reloads within the same browser session. */
+  storageKey?: string | null;
 }
 
 const clone = <T,>(v: T): T => (v == null ? v : (JSON.parse(JSON.stringify(v)) as T));
 const isEqual = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
-export function useEditorHistory({ current, enabled, onApply }: Options) {
+interface PersistedHistory {
+  past: EditorSnapshot[];
+  future: EditorSnapshot[];
+  baseline: EditorSnapshot | null;
+}
+
+const buildStorageKey = (ns: string | null | undefined, pageId: string | null) =>
+  ns && pageId ? `lov-editor-history:${ns}:${pageId}` : null;
+
+const loadPersisted = (key: string | null): PersistedHistory | null => {
+  if (!key || typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PersistedHistory;
+    if (!parsed || !Array.isArray(parsed.past) || !Array.isArray(parsed.future)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const savePersisted = (key: string | null, value: PersistedHistory) => {
+  if (!key || typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Quota exceeded or storage disabled — silently ignore. The in-memory
+    // history still works; we just can't survive a refresh this time.
+  }
+};
+
+export function useEditorHistory({ current, enabled, onApply, storageKey }: Options) {
   const pastRef = useRef<EditorSnapshot[]>([]);
   const futureRef = useRef<EditorSnapshot[]>([]);
   const lastSnapshotRef = useRef<EditorSnapshot | null>(null);
   const applyingRef = useRef(false);
   const applyingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const restoredRef = useRef(false);
   const [, force] = useState(0);
   const rerender = useCallback(() => force((v) => (v + 1) | 0), []);
 
+  const persistKey = buildStorageKey(storageKey, current.pageId);
+
+  // Debounced write of past/future/baseline to sessionStorage.
+  const schedulePersist = useCallback(() => {
+    if (!persistKey) return;
+    if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+    persistTimerRef.current = setTimeout(() => {
+      savePersisted(persistKey, {
+        past: pastRef.current,
+        future: futureRef.current,
+        baseline: lastSnapshotRef.current,
+      });
+    }, 200);
+  }, [persistKey]);
+
   // Reset history when switching pages (different page = different timeline).
+  // Restore from sessionStorage if a stack for the new page exists.
   useEffect(() => {
     pastRef.current = [];
     futureRef.current = [];
     lastSnapshotRef.current = null;
+    restoredRef.current = false;
+    const restored = loadPersisted(persistKey);
+    if (restored) {
+      pastRef.current = restored.past || [];
+      futureRef.current = restored.future || [];
+      lastSnapshotRef.current = restored.baseline || null;
+      restoredRef.current = true;
+    }
     rerender();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current.pageId]);
+  }, [current.pageId, storageKey]);
 
   // Track changes and push debounced snapshots into the past stack.
   useEffect(() => {
     if (!enabled) return;
-    // Initialize baseline lazily on the first enabled render.
+    // Initialize baseline lazily on the first enabled render — but if we
+    // already restored a baseline from sessionStorage, keep it so the first
+    // post-reload edit produces a real diff against pre-refresh state.
     if (!lastSnapshotRef.current) {
       lastSnapshotRef.current = clone(current);
+      schedulePersist();
       return;
     }
     if (applyingRef.current) {
-      // We're re-applying a snapshot — keep baseline in sync, don't record.
       lastSnapshotRef.current = clone(current);
       if (applyingTimerRef.current) clearTimeout(applyingTimerRef.current);
       applyingTimerRef.current = setTimeout(() => {
         applyingRef.current = false;
       }, DEBOUNCE_MS + 100);
+      schedulePersist();
       return;
     }
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
@@ -80,12 +144,33 @@ export function useEditorHistory({ current, enabled, onApply }: Options) {
       if (pastRef.current.length > MAX_HISTORY) pastRef.current.shift();
       futureRef.current = [];
       lastSnapshotRef.current = next;
+      schedulePersist();
       rerender();
     }, DEBOUNCE_MS);
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
-  }, [enabled, current, rerender]);
+  }, [enabled, current, rerender, schedulePersist]);
+
+  // Flush pending persist on unmount / page hide.
+  useEffect(() => {
+    const flush = () => {
+      if (!persistKey) return;
+      if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+      savePersisted(persistKey, {
+        past: pastRef.current,
+        future: futureRef.current,
+        baseline: lastSnapshotRef.current,
+      });
+    };
+    window.addEventListener("pagehide", flush);
+    window.addEventListener("beforeunload", flush);
+    return () => {
+      window.removeEventListener("pagehide", flush);
+      window.removeEventListener("beforeunload", flush);
+      flush();
+    };
+  }, [persistKey]);
 
   const undo = useCallback(() => {
     if (pastRef.current.length === 0) return false;
@@ -95,9 +180,10 @@ export function useEditorHistory({ current, enabled, onApply }: Options) {
     applyingRef.current = true;
     lastSnapshotRef.current = prev;
     onApply(prev);
+    schedulePersist();
     rerender();
     return true;
-  }, [current, onApply, rerender]);
+  }, [current, onApply, rerender, schedulePersist]);
 
   const redo = useCallback(() => {
     if (futureRef.current.length === 0) return false;
@@ -107,9 +193,10 @@ export function useEditorHistory({ current, enabled, onApply }: Options) {
     applyingRef.current = true;
     lastSnapshotRef.current = next;
     onApply(next);
+    schedulePersist();
     rerender();
     return true;
-  }, [current, onApply, rerender]);
+  }, [current, onApply, rerender, schedulePersist]);
 
   return {
     undo,
