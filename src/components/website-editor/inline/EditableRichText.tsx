@@ -95,7 +95,16 @@ export default function EditableRichText({
 
   return (
     <div
-      ref={ref}
+      ref={(el) => {
+        ref.current = el;
+        // Initialize content via ref only — never via dangerouslySetInnerHTML
+        // in JSX, otherwise React re-renders would wipe inline formatting
+        // (Bold, headings, color) applied by InlineFormatToolbar before the
+        // debounced commit fires.
+        if (el && document.activeElement !== el && el.innerHTML !== (value || "")) {
+          el.innerHTML = value || "";
+        }
+      }}
       contentEditable
       suppressContentEditableWarning
       data-placeholder={placeholder}
@@ -114,7 +123,6 @@ export default function EditableRichText({
         className,
       )}
       style={style}
-      dangerouslySetInnerHTML={{ __html: value || "" }}
     />
   );
 }
