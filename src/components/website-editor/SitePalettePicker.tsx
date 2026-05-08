@@ -194,6 +194,18 @@ export function SitePaletteColorOptions({
             className="flex-1 h-8 rounded-md border border-border bg-background px-2 text-xs font-mono"
           />
         </div>
+        {showWheel && (
+          <div
+            className="rounded-md border border-border p-2 bg-background"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <HexColorPicker
+              color={hex.startsWith("#") ? hex : "#000000"}
+              onChange={(v) => apply(v)}
+              style={{ width: "100%", height: 140 }}
+            />
+          </div>
+        )}
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
