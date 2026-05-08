@@ -308,7 +308,7 @@ const Personalize = () => {
     if (data && !error) {
       setContractFields((prev) => prev.map((f) => f.id === editingFieldId ? data : f));
       resetContractFieldForm();
-      toast({ title: t.personalize.contractFieldUpdated ?? "Field updated" });
+      toast({ title: (t.personalize as any).contractFieldUpdated ?? "Field updated" });
     } else if (error) {
       toast({ title: error.message, variant: "destructive" });
     }
