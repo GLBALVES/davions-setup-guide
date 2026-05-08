@@ -234,6 +234,7 @@ function ReceivedPaymentsLog({
         photographer_id: photographerId,
         description: desc.trim(),
         amount: parseFloat(amount) || 0,
+        fee_amount: parseFloat(fee) || 0,
         payment_date: date,
       });
       if (error) throw error;
@@ -241,7 +242,7 @@ function ReceivedPaymentsLog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qKey });
       toast.success(L.added);
-      onToggleForm(); setDesc(""); setAmount(""); setDate(new Date().toISOString().slice(0, 10));
+      onToggleForm(); setDesc(""); setAmount(""); setFee(""); setDate(new Date().toISOString().slice(0, 10));
     },
     onError: (e: any) => toast.error(`${L.error}${e?.message ? `: ${e.message}` : ""}`),
   });
