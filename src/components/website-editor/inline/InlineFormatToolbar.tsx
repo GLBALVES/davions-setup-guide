@@ -8,14 +8,36 @@ import {
 import { FONT_PRESETS } from "@/components/website-editor/site-fonts";
 import { cn } from "@/lib/utils";
 import { SitePalettePicker } from "@/components/website-editor/SitePalettePicker";
+import { ELEMENT_GROUPS, type ElementKey } from "@/components/website-editor/font-templates";
 
-const BLOCK_PRESETS: { id: string; label: string; tag: string }[] = [
-  { id: "h1", label: "Heading 1", tag: "H1" },
-  { id: "h2", label: "Heading 2", tag: "H2" },
-  { id: "h3", label: "Heading 3", tag: "H3" },
-  { id: "p", label: "Body", tag: "P" },
-  { id: "blockquote", label: "Quote", tag: "BLOCKQUOTE" },
-];
+/**
+ * Map each design-system element key to the block tag we should produce via
+ * `formatBlock`. After the command runs we also tag the resulting block with
+ * `data-site-typo="<key>"` so the CSS injected by `useSiteTypography` (matching
+ * `[data-site-typo='paragraph_2']` etc.) applies the exact typography the
+ * photographer configured in the Design → Fonts panel.
+ */
+const ELEMENT_TO_TAG: Record<ElementKey, string> = {
+  banner_heading: "H1",
+  banner_subtitle: "P",
+  h1: "H1",
+  h2: "H2",
+  h3: "H3",
+  h4: "H4",
+  h5: "H5",
+  h6: "H6",
+  paragraph_1: "P",
+  paragraph_2: "P",
+  paragraph_3: "P",
+  logo_text: "P",
+  navigation: "P",
+  sub_navigation: "P",
+  overlay_navigation: "P",
+  overlay_sub_navigation: "P",
+  button: "P",
+  form_label: "P",
+  pullquote: "BLOCKQUOTE",
+};
 
 /**
  * Floating selection toolbar that lets users format the currently selected
@@ -35,6 +57,48 @@ const SIZE_PRESETS: { id: string; label: string; px: number }[] = [
   { id: "xl", label: "XL", px: 28 },
   { id: "2xl", label: "2XL", px: 40 },
 ];
+
+/** Site palette tokens reflected in the color picker. Read live from CSS vars
+ *  injected by `useSiteColors`. */
+const SITE_COLOR_TOKENS: { var: string; label: string }[] = [
+  { var: "--site-bg", label: "Background" },
+  { var: "--site-headings", label: "Headings" },
+  { var: "--site-paragraphs", label: "Paragraphs" },
+  { var: "--site-lines", label: "Lines" },
+  { var: "--site-secondary-bg", label: "Secondary BG" },
+  { var: "--site-secondary-headings", label: "Secondary H" },
+  { var: "--site-button-bg", label: "Button BG" },
+  { var: "--site-button-text", label: "Button Text" },
+];
+
+function cssToHex(value: string): string | null {
+  if (!value) return null;
+  if (value.startsWith("#") && (value.length === 7 || value.length === 4)) return value;
+  try {
+    const probe = document.createElement("div");
+    probe.style.color = value;
+    document.body.appendChild(probe);
+    const rgb = getComputedStyle(probe).color;
+    document.body.removeChild(probe);
+    const m = rgb.match(/rgba?\(([^)]+)\)/);
+    if (!m) return null;
+    const [r, g, b] = m[1].split(",").map((s) => parseInt(s.trim(), 10));
+    return "#" + [r, g, b].map((n) => Math.max(0, Math.min(255, n)).toString(16).padStart(2, "0")).join("");
+  } catch {
+    return null;
+  }
+}
+
+function readSitePaletteHexes(): { var: string; label: string; hex: string }[] {
+  const styles = getComputedStyle(document.documentElement);
+  return SITE_COLOR_TOKENS
+    .map((t) => {
+      const raw = styles.getPropertyValue(t.var).trim();
+      const hex = raw ? cssToHex(raw) : null;
+      return hex ? { ...t, hex } : null;
+    })
+    .filter(Boolean) as { var: string; label: string; hex: string }[];
+}
 
 interface ToolbarPosition {
   top: number;
@@ -199,9 +263,34 @@ export default function InlineFormatToolbar() {
     applyInlineStyle(host, { fontSize: `${px}px`, lineHeight: "1.2" });
     setShowSize(false);
   };
-  const onApplyBlock = (tag: string) => {
+  const onApplyBlock = (key: ElementKey) => {
+    const tag = ELEMENT_TO_TAG[key];
     // formatBlock expects "<H1>", "<P>", "<BLOCKQUOTE>" etc.
     execSimple(host, "formatBlock", `<${tag}>`);
+    // After the block conversion, find the resulting block element that
+    // contains the current selection and tag it with `data-site-typo` so the
+    // typography injected by the design system applies.
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      let n: Node | null = sel.anchorNode;
+      while (n && n.nodeType !== 1) n = n.parentNode;
+      let el = n as HTMLElement | null;
+      while (el && el !== host) {
+        if (el.tagName === tag) {
+          el.setAttribute("data-site-typo", key);
+          // Strip any inline font styles so the design-system rule wins.
+          el.style.removeProperty("font-family");
+          el.style.removeProperty("font-size");
+          el.style.removeProperty("font-weight");
+          el.style.removeProperty("line-height");
+          el.style.removeProperty("letter-spacing");
+          el.style.removeProperty("text-transform");
+          break;
+        }
+        el = el.parentElement;
+      }
+      fireInput(host);
+    }
     setShowBlock(false);
   };
   const onApplyLink = () => {
@@ -219,12 +308,25 @@ export default function InlineFormatToolbar() {
     while (n && n.nodeType !== 1) n = n.parentNode;
     let el = n as HTMLElement | null;
     while (el && el !== host) {
+      const typoKey = el.getAttribute?.("data-site-typo") as ElementKey | null;
+      if (typoKey) {
+        for (const g of ELEMENT_GROUPS) {
+          const item = g.items.find((i) => i.key === typoKey);
+          if (item) return item.label;
+        }
+      }
       const t = el.tagName;
-      const found = BLOCK_PRESETS.find((b) => b.tag === t);
-      if (found) return found.label;
+      if (t === "H1") return "Heading 1";
+      if (t === "H2") return "Heading 2";
+      if (t === "H3") return "Heading 3";
+      if (t === "H4") return "Heading 4";
+      if (t === "H5") return "Heading 5";
+      if (t === "H6") return "Heading 6";
+      if (t === "BLOCKQUOTE") return "Pullquote";
+      if (t === "P") return "Paragraph 1";
       el = el.parentElement;
     }
-    return "Body";
+    return "Paragraph 1";
   })();
 
   const node = (
@@ -260,25 +362,32 @@ export default function InlineFormatToolbar() {
           <ChevronDown className="h-3 w-3 opacity-60" />
         </button>
         {showBlock && (
-          <div className="absolute top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg py-1 min-w-[160px] z-[10000]">
-            {BLOCK_PRESETS.map((b) => {
-              const Icon =
-                b.id === "h1" ? Heading1 :
-                b.id === "h2" ? Heading2 :
-                b.id === "h3" ? Heading3 :
-                b.id === "blockquote" ? Quote : Type;
-              return (
-                <button
-                  key={b.id}
-                  type="button"
-                  onMouseDown={guard(() => onApplyBlock(b.tag))}
-                  className="w-full text-left px-3 py-1.5 hover:bg-muted text-foreground flex items-center gap-2"
-                >
-                  <Icon className="h-3.5 w-3.5 opacity-70" />
-                  <span>{b.label}</span>
-                </button>
-              );
-            })}
+          <div className="absolute top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg py-1 min-w-[200px] max-h-[340px] overflow-y-auto z-[10000]">
+            {ELEMENT_GROUPS.map((group) => (
+              <div key={group.key} className="py-1">
+                <div className="px-3 py-1 text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                  {group.label}
+                </div>
+                {group.items.map((item) => {
+                  const Icon =
+                    item.key === "h1" ? Heading1 :
+                    item.key === "h2" ? Heading2 :
+                    item.key === "h3" ? Heading3 :
+                    item.key === "pullquote" ? Quote : Type;
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onMouseDown={guard(() => onApplyBlock(item.key))}
+                      className="w-full text-left px-3 py-1.5 hover:bg-muted text-foreground flex items-center gap-2"
+                    >
+                      <Icon className="h-3.5 w-3.5 opacity-70" />
+                      <span data-site-typo={item.key}>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -424,24 +533,27 @@ export default function InlineFormatToolbar() {
           <Palette className="h-3.5 w-3.5" />
         </button>
         {showColor && (
-          <div className="absolute top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg p-2 min-w-[200px]">
-            <div className="grid grid-cols-7 gap-1 mb-2">
-              {[
-                "#000000",
-                "#374151",
-                "#6B7280",
-                "#9CA3AF",
-                "#D1D5DB",
-                "#FFFFFF",
-                "#EF4444",
-                "#F97316",
-                "#EAB308",
-                "#22C55E",
-                "#06B6D4",
-                "#3B82F6",
-                "#8B5CF6",
-                "#EC4899",
-              ].map((c) => (
+          <div className="absolute top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg p-2 min-w-[220px]">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">
+              Site palette
+            </p>
+            <div className="grid grid-cols-8 gap-1 mb-2">
+              {readSitePaletteHexes().map((c) => (
+                <button
+                  key={c.var}
+                  type="button"
+                  onMouseDown={guard(() => onApplyColor(c.hex))}
+                  className="w-6 h-6 rounded border border-border"
+                  style={{ background: c.hex }}
+                  title={`${c.label} · ${c.hex}`}
+                />
+              ))}
+            </div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">
+              Neutrals
+            </p>
+            <div className="grid grid-cols-8 gap-1 mb-2">
+              {["#000000", "#374151", "#6B7280", "#9CA3AF", "#D1D5DB", "#FFFFFF"].map((c) => (
                 <button
                   key={c}
                   type="button"
