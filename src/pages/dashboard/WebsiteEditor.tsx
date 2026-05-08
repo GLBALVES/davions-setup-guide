@@ -10,7 +10,9 @@ import {
   ChevronDown, ChevronRight, ArrowLeft, Search, ImagePlus, Shuffle,
   Image, Play, X, ArrowUp, ArrowDown, Settings2, GripVertical, Loader2,
   ArrowRightToLine, ExternalLink, Newspaper, LayoutTemplate, Files, PanelsTopLeft, ShoppingBag,
+  Undo2, Redo2,
 } from "lucide-react";
+import { useEditorHistory, diffSitePatch } from "@/components/website-editor/useEditorHistory";
 import { Button } from "@/components/ui/button";
 import { useDeployStatus } from "@/hooks/useDeployStatus";
 import { DeployStatusBadge } from "@/components/website-editor/DeployStatusIndicator";
