@@ -29,12 +29,13 @@ interface AvailabilityDetails {
   end_time: string;
 }
 
-type QuestionType = "short_text" | "long_text" | "multiple_choice" | "checkboxes" | "yes_no" | "multi_image";
+type QuestionType = "short_text" | "long_text" | "multiple_choice" | "checkboxes" | "yes_no" | "multi_image" | "date";
 
 interface BriefingQuestion {
   id: string;
   type: QuestionType;
   label: string;
+  description?: string;
   required: boolean;
   options: string[];
   max_select?: number | null;
