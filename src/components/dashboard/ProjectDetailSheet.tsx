@@ -190,18 +190,32 @@ function ReceivedPaymentsLog({
   photographerId,
   showForm,
   onToggleForm,
+  taxRate = 0,
 }: {
   projectId: string;
   photographerId: string;
   showForm: boolean;
   onToggleForm: () => void;
+  taxRate?: number;
 }) {
   const { lang } = useLanguage();
   const queryClient = useQueryClient();
   const [desc, setDesc] = useState("");
   const [amount, setAmount] = useState(""); // canonical "1500.50"
   const [fee, setFee] = useState(""); // canonical "10.00"
+  const [feeManual, setFeeManual] = useState(false);
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+
+  // Auto-compute fee from session tax rate unless the user edits it manually
+  useEffect(() => {
+    if (feeManual || !taxRate) return;
+    const amt = parseFloat(amount);
+    if (!isFinite(amt) || amt <= 0) {
+      setFee("");
+      return;
+    }
+    setFee((amt * taxRate / 100).toFixed(2));
+  }, [amount, taxRate, feeManual]);
 
   const currencyLang: CurrencyLang = lang === "pt" ? "pt" : lang === "es" ? "es" : "en";
 
@@ -242,7 +256,7 @@ function ReceivedPaymentsLog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qKey });
       toast.success(L.added);
-      onToggleForm(); setDesc(""); setAmount(""); setFee(""); setDate(new Date().toISOString().slice(0, 10));
+      onToggleForm(); setDesc(""); setAmount(""); setFee(""); setFeeManual(false); setDate(new Date().toISOString().slice(0, 10));
     },
     onError: (e: any) => toast.error(`${L.error}${e?.message ? `: ${e.message}` : ""}`),
   });
@@ -291,7 +305,7 @@ function ReceivedPaymentsLog({
               inputMode="decimal"
               placeholder={currencyPlaceholder(currencyLang)}
               value={formatCurrencyInput(fee, currencyLang)}
-              onChange={(e) => setFee(parseCurrencyInput(e.target.value, currencyLang))}
+              onChange={(e) => { setFeeManual(true); setFee(parseCurrencyInput(e.target.value, currencyLang)); }}
               className="h-7 text-xs"
             />
           </div>
@@ -301,7 +315,7 @@ function ReceivedPaymentsLog({
           </div>
           <div className="flex gap-2 justify-end">
             <Button variant="ghost" size="sm" className="h-7 text-xs"
-              onClick={() => { onToggleForm(); setDesc(""); setAmount(""); setFee(""); }}>
+              onClick={() => { onToggleForm(); setDesc(""); setAmount(""); setFee(""); setFeeManual(false); }}>
               {L.cancel}
             </Button>
             <Button size="sm" className="h-7 text-xs"
@@ -364,6 +378,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const [formDesc, setFormDesc]       = useState("");
   const [formAmount, setFormAmount]   = useState("");
   const [formFee, setFormFee]         = useState("");
+  const [formFeeManual, setFormFeeManual] = useState(false);
   const [formDue, setFormDue]         = useState("");
   const [formStatus, setFormStatus]   = useState<InvoiceStatus>("pending");
   const [formPaid, setFormPaid]       = useState("");
@@ -419,7 +434,18 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     enabled: !!project.booking_id,
   });
 
-  // Fetch manual project payments (shared cache with ReceivedPaymentsLog)
+  const sessionTaxRate = (bookingPayment?.sessions as any)?.tax_rate ?? 0;
+
+  // Auto-compute charge fee from session tax rate unless manually edited
+  useEffect(() => {
+    if (formFeeManual || !sessionTaxRate) return;
+    const amt = parseFloat(formAmount);
+    if (!isFinite(amt) || amt <= 0) {
+      setFormFee("");
+      return;
+    }
+    setFormFee((amt * sessionTaxRate / 100).toFixed(2));
+  }, [formAmount, sessionTaxRate, formFeeManual]);
   const { data: projectPayments = [] } = useQuery<ProjectPayment[]>({
     queryKey: ["project-payments", project.id],
     queryFn: async () => {
@@ -475,7 +501,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       queryClient.invalidateQueries({ queryKey: qKey });
       toast.success(tp.chargeAdded);
       setShowForm(false);
-      setFormDesc(""); setFormAmount(""); setFormFee(""); setFormDue(""); setFormStatus("pending"); setFormPaid("");
+      setFormDesc(""); setFormAmount(""); setFormFee(""); setFormFeeManual(false); setFormDue(""); setFormStatus("pending"); setFormPaid("");
     },
     onError: () => toast.error(tp.errorAddingCharge),
   });
@@ -691,13 +717,13 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
             <div className="flex flex-col gap-1">
               <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{(tp as any).chargeFee ?? "Valor da taxa"}</Label>
               <Input type="number" placeholder="0,00" min={0} value={formFee}
-                onChange={(e) => setFormFee(e.target.value)} className="h-7 text-xs" />
+                onChange={(e) => { setFormFeeManual(true); setFormFee(e.target.value); }} className="h-7 text-xs" />
             </div>
           </div>
 
           <div className="flex gap-2 justify-end pt-1">
             <Button variant="ghost" size="sm" className="h-7 text-xs"
-              onClick={() => { setShowForm(false); setFormDesc(""); setFormAmount(""); setFormFee(""); }}>
+              onClick={() => { setShowForm(false); setFormDesc(""); setFormAmount(""); setFormFee(""); setFormFeeManual(false); }}>
               {tp.chargeCancel}
             </Button>
             <Button size="sm" className="h-7 text-xs" onClick={() => addMutation.mutate()}
@@ -722,6 +748,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         photographerId={photographerId}
         showForm={showPaymentForm}
         onToggleForm={() => setShowPaymentForm((v) => !v)}
+        taxRate={(bookingPayment?.sessions as any)?.tax_rate ?? 0}
       />
 
       <div className="flex flex-col gap-2">
