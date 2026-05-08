@@ -454,8 +454,10 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const [showForm, setShowForm] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingInvoiceId, setEditingInvoiceId] = useState<string | null>(null);
 
   const addPaymentLabel = lang === "pt" ? "Adicionar pagamento" : lang === "es" ? "Agregar pago" : "Add payment";
+  const editLabel = lang === "pt" ? "Editar" : lang === "es" ? "Editar" : "Edit";
 
   // Form state
   const [formDesc, setFormDesc]       = useState("");
@@ -465,6 +467,14 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const [formDue, setFormDue]         = useState("");
   const [formStatus, setFormStatus]   = useState<InvoiceStatus>("pending");
   const [formPaid, setFormPaid]       = useState("");
+
+  // Edit form state
+  const [editDesc, setEditDesc] = useState("");
+  const [editAmount, setEditAmount] = useState("");
+  const [editFee, setEditFee] = useState("");
+  const [editDue, setEditDue] = useState("");
+  const [editPaid, setEditPaid] = useState("");
+  const [editStatus, setEditStatus] = useState<InvoiceStatus>("pending");
 
   const qKey = ["project-invoices", project.id];
 
