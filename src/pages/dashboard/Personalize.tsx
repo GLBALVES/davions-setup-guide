@@ -1219,6 +1219,14 @@ const Personalize = () => {
                                 onChange={(e) => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, label: e.target.value } : item))}
                                 placeholder="Type your question here…"
                                 className="text-sm font-light h-8" />
+
+                              {/* Question description (optional) */}
+                              <Textarea
+                                value={q.description ?? ""}
+                                onChange={(e) => setBriefingQuestions((prev) => prev.map((item, i) => i === idx ? { ...item, description: e.target.value } : item))}
+                                placeholder="Description / hint (optional)"
+                                rows={2}
+                                className="text-xs font-light min-h-[44px] resize-none" />
                           
 
                               {/* Options (for multiple_choice / checkboxes) */}
