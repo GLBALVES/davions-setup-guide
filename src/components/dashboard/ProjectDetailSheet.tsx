@@ -340,6 +340,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const tp = t.projects;
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Form state
