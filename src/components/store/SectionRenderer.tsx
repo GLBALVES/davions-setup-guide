@@ -534,7 +534,7 @@ function TextBlock({ title, subtitle, body, align = "center", ctx, blockSettings
   return (
     <section className={sectionPadClass}>
       <div
-        className={`mx-auto ${alignClass} ${contentMaxWidth ? "" : "max-w-3xl"}`}
+        className={`${positionClass} ${alignClass} ${contentMaxWidth ? "" : "max-w-3xl"}`}
         style={contentMaxWidth ? { maxWidth: `${contentMaxWidth}px` } : undefined}
       >
         <EditableRichText
