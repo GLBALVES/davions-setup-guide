@@ -196,14 +196,30 @@ export function SitePaletteColorOptions({
         </div>
         {showWheel && (
           <div
-            className="rounded-md border border-border p-2 bg-background"
+            className="rounded-md border border-border p-2 bg-background space-y-2 [&_.react-colorful]:w-full [&_.react-colorful]:h-[180px] [&_.react-colorful__saturation]:rounded-md [&_.react-colorful__hue]:h-3 [&_.react-colorful__hue]:rounded-full [&_.react-colorful__hue]:mt-2 [&_.react-colorful__pointer]:w-4 [&_.react-colorful__pointer]:h-4"
             onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
           >
             <HexColorPicker
               color={hex.startsWith("#") ? hex : "#000000"}
               onChange={(v) => apply(v)}
-              style={{ width: "100%", height: 140 }}
             />
+            {/* Preview chip + live hex below the hue slider */}
+            <div className="flex items-center gap-2 pt-1">
+              <div
+                className="h-7 w-10 rounded border border-border shrink-0"
+                style={{
+                  background:
+                    hex && hex !== "transparent"
+                      ? hex
+                      : "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 6px 6px",
+                }}
+                aria-label="Color preview"
+              />
+              <span className="text-[11px] font-mono text-muted-foreground uppercase">
+                {hex}
+              </span>
+            </div>
           </div>
         )}
         <button
