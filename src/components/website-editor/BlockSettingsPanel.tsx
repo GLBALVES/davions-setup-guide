@@ -32,6 +32,8 @@ export interface BlockSettings {
   paddingLeft?: number;
   paddingRight?: number;
   contentMaxWidth?: number;
+  textMaxWidth?: number;
+  imageMaxWidth?: number;
   colorScheme?: "light" | "dark" | "auto";
   animation?: "none" | "fade-up" | "fade-in" | "slide-left";
 }
