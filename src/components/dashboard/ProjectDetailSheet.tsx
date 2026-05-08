@@ -677,33 +677,15 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                 onChange={(e) => setFormAmount(e.target.value)} className="h-7 text-xs" />
             </div>
             <div className="flex flex-col gap-1">
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargeDueDate}</Label>
-              <Input type="date" value={formDue} onChange={(e) => setFormDue(e.target.value)} className="h-7 text-xs" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1">
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargeStatus}</Label>
-              <Select value={formStatus} onValueChange={(v) => setFormStatus(v as InvoiceStatus)}>
-                <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {(Object.keys(INVOICE_STATUS_STYLES) as InvoiceStatus[]).map((k) => (
-                    <SelectItem key={k} value={k} className="text-xs">{invoiceStatusLabels[k]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargePaidAmount}</Label>
-              <Input type="number" placeholder="0,00" min={0} value={formPaid}
-                onChange={(e) => setFormPaid(e.target.value)} className="h-7 text-xs" />
+              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{(tp as any).chargeFee ?? "Valor da taxa"}</Label>
+              <Input type="number" placeholder="0,00" min={0} value={formFee}
+                onChange={(e) => setFormFee(e.target.value)} className="h-7 text-xs" />
             </div>
           </div>
 
           <div className="flex gap-2 justify-end pt-1">
             <Button variant="ghost" size="sm" className="h-7 text-xs"
-              onClick={() => { setShowForm(false); setFormDesc(""); setFormAmount(""); setFormDue(""); setFormStatus("pending"); setFormPaid(""); }}>
+              onClick={() => { setShowForm(false); setFormDesc(""); setFormAmount(""); setFormFee(""); }}>
               {tp.chargeCancel}
             </Button>
             <Button size="sm" className="h-7 text-xs" onClick={() => addMutation.mutate()}
