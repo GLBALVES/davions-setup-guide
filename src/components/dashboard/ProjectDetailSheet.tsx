@@ -925,28 +925,12 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
       </div>
 
       {/* ── Briefings sub-section ────────────────────────────────────────── */}
-      <div className="flex flex-col gap-1.5">
-        <p className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">{tp.briefingsSubsection}</p>
-        {briefings.length === 0 ? (
-          <p className="text-[11px] text-muted-foreground/50 italic pl-1">{tp.noBriefings}</p>
-        ) : (
-          <div className="flex flex-col gap-1">
-            {briefings.map((b) => (
-              <a
-                key={b.id}
-                href={`/dashboard/sessions`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/20 px-3 py-2 hover:bg-muted/40 transition-colors group"
-              >
-                <FileText className="h-4 w-4 text-blue-500 shrink-0" />
-                <span className="flex-1 text-xs font-medium truncate">{b.name || "Untitled Briefing"}</span>
-                <span className="text-[10px] text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity">{tp.openInEditor}</span>
-              </a>
-            ))}
-          </div>
-        )}
-      </div>
+      <ProjectBriefingSubsection
+        bookingId={(project as any).booking_id ?? null}
+        photographerId={photographerId}
+        labelTitle={tp.briefingsSubsection}
+        emptyText={tp.noBriefings}
+      />
 
       {/* ── Galleries sub-section ────────────────────────────────────────── */}
       <GalleriesSubSection project={project} photographerId={photographerId} />
