@@ -1124,14 +1124,12 @@ const SessionForm = () => {
                           <TooltipTrigger asChild>
                             <button
                               onClick={() => {
-                                const bookingUrl = storeSlug
-                                  ? `${window.location.origin}/store/${storeSlug}/${slug || sessionId}`
-                                  : null;
+                                const bookingUrl = buildBookingUrl({ customDomain, storeSlug, sessionSlugOrId: slug || sessionId });
                                 if (bookingUrl) window.open(bookingUrl, "_blank");
                               }}
-                              disabled={!storeSlug}
+                              disabled={!storeSlug && !customDomain}
                               className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] tracking-widest uppercase border transition-colors ${
-                                storeSlug
+                                (storeSlug || customDomain)
                                   ? "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
                                   : "border-border/30 text-muted-foreground/30 cursor-not-allowed"
                               }`}
@@ -1141,23 +1139,21 @@ const SessionForm = () => {
                             </button>
                           </TooltipTrigger>
                           <TooltipContent side="bottom" className="text-xs">
-                            {storeSlug ? "Open booking page" : "Configure store slug in Settings first"}
+                            {(storeSlug || customDomain) ? "Open booking page" : "Configure store slug in Settings first"}
                           </TooltipContent>
                         </Tooltip>
                         {/* Share popover */}
                         {(() => {
-                          const bookingUrl = storeSlug
-                            ? `${window.location.origin}/store/${storeSlug}/${slug || sessionId}`
-                            : null;
+                          const bookingUrl = buildBookingUrl({ customDomain, storeSlug, sessionSlugOrId: slug || sessionId });
                           return (
                             <Popover>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <PopoverTrigger asChild>
                                     <button
-                                      disabled={!storeSlug}
+                                      disabled={!bookingUrl}
                                       className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] tracking-widest uppercase border transition-colors ${
-                                        storeSlug
+                                        bookingUrl
                                           ? "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
                                           : "border-border/30 text-muted-foreground/30 cursor-not-allowed"
                                       }`}
@@ -1168,7 +1164,7 @@ const SessionForm = () => {
                                   </PopoverTrigger>
                                 </TooltipTrigger>
                                 <TooltipContent side="bottom" className="text-xs">
-                                  {storeSlug ? "Share booking link" : "Configure store slug in Settings first"}
+                                  {bookingUrl ? "Share booking link" : "Configure store slug in Settings first"}
                                 </TooltipContent>
                               </Tooltip>
                               {bookingUrl && (
