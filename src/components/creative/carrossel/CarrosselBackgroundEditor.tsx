@@ -340,7 +340,7 @@ const CarrosselBackgroundEditor = ({ background, onChange, activeSlide }: Props)
               ))}
             </div>
             <div className="flex items-center gap-2">
-              <input type="color" value={effectiveColor} onChange={(e) => updateColor({ color: e.target.value })} className="w-8 h-8 rounded cursor-pointer border-0" />
+              <SitePalettePicker value={effectiveColor} onChange={(v) => updateColor({ color: v })} />
               <Input value={effectiveColor} onChange={(e) => updateColor({ color: e.target.value })} className="h-8 text-sm font-mono" placeholder="#000000" />
             </div>
           </TabsContent>
