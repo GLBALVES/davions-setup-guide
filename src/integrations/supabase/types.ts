@@ -3197,6 +3197,7 @@ export type Database = {
           amount: number
           created_at: string
           description: string
+          fee_amount: number
           id: string
           payment_date: string
           photographer_id: string
@@ -3207,6 +3208,7 @@ export type Database = {
           amount?: number
           created_at?: string
           description?: string
+          fee_amount?: number
           id?: string
           payment_date?: string
           photographer_id: string
@@ -3217,6 +3219,7 @@ export type Database = {
           amount?: number
           created_at?: string
           description?: string
+          fee_amount?: number
           id?: string
           payment_date?: string
           photographer_id?: string
