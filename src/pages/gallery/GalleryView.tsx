@@ -746,6 +746,19 @@ const GalleryView = () => {
       if (data?.free) {
         setPurchaseOpen(false);
         setPurchaseSuccess(true);
+        // Notify photographer (free selection)
+        try {
+          await supabase.functions.invoke("notify-gallery-checkout", {
+            body: {
+              gallery_id: gallery.id,
+              client_email: clientEmail.trim(),
+              client_name: clientName.trim() || undefined,
+              photo_count: favorites.size,
+              is_free: true,
+              dedupe_key: `${gallery.id}:${clientToken}:free`,
+            },
+          });
+        } catch (e) { console.error("notify-gallery-checkout failed", e); }
         // Dispatch workflow email — selection_completed
         try {
           await supabase.functions.invoke("send-workflow-email", {
