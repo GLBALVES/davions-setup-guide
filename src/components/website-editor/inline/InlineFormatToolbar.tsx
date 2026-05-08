@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { FONT_PRESETS } from "@/components/website-editor/site-fonts";
 import { cn } from "@/lib/utils";
-import { SitePalettePicker } from "@/components/website-editor/SitePalettePicker";
+import { SitePaletteColorOptions } from "@/components/website-editor/SitePalettePicker";
 import { ELEMENT_GROUPS, type ElementKey } from "@/components/website-editor/font-templates";
 
 /**
@@ -57,52 +57,6 @@ const SIZE_PRESETS: { id: string; label: string; px: number }[] = [
   { id: "xl", label: "XL", px: 28 },
   { id: "2xl", label: "2XL", px: 40 },
 ];
-
-/** Site palette tokens reflected in the color picker. Read live from CSS vars
- *  injected by `useSiteColors`. */
-const SITE_COLOR_TOKENS: { var: string; label: string }[] = [
-  { var: "--site-bg", label: "Background" },
-  { var: "--site-headings", label: "Headings" },
-  { var: "--site-paragraphs", label: "Paragraphs" },
-  { var: "--site-lines", label: "Lines" },
-  { var: "--site-secondary-bg", label: "Secondary BG" },
-  { var: "--site-secondary-headings", label: "Secondary H" },
-  { var: "--site-secondary-paragraphs", label: "Secondary P" },
-  { var: "--site-secondary-lines", label: "Secondary Lines" },
-  { var: "--site-button-bg", label: "Button BG" },
-  { var: "--site-button-text", label: "Button Text" },
-  { var: "--site-button-bg-hover", label: "Button BG Hover" },
-  { var: "--site-button-text-hover", label: "Button Text Hover" },
-];
-
-function cssToHex(value: string): string | null {
-  if (!value) return null;
-  if (value.startsWith("#") && (value.length === 7 || value.length === 4)) return value;
-  try {
-    const probe = document.createElement("div");
-    probe.style.color = value;
-    document.body.appendChild(probe);
-    const rgb = getComputedStyle(probe).color;
-    document.body.removeChild(probe);
-    const m = rgb.match(/rgba?\(([^)]+)\)/);
-    if (!m) return null;
-    const [r, g, b] = m[1].split(",").map((s) => parseInt(s.trim(), 10));
-    return "#" + [r, g, b].map((n) => Math.max(0, Math.min(255, n)).toString(16).padStart(2, "0")).join("");
-  } catch {
-    return null;
-  }
-}
-
-function readSitePaletteHexes(): { var: string; label: string; hex: string }[] {
-  const styles = getComputedStyle(document.documentElement);
-  return SITE_COLOR_TOKENS
-    .map((t) => {
-      const raw = styles.getPropertyValue(t.var).trim();
-      const hex = raw ? cssToHex(raw) : null;
-      return hex ? { ...t, hex } : null;
-    })
-    .filter(Boolean) as { var: string; label: string; hex: string }[];
-}
 
 interface ToolbarPosition {
   top: number;
