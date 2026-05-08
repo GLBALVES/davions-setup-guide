@@ -140,6 +140,21 @@ export default function InlineFormatToolbar() {
   const [showBlock, setShowBlock] = useState(false);
   const [customSize, setCustomSize] = useState<string>("");
   const toolbarRef = useRef<HTMLDivElement | null>(null);
+  // Snapshot of the user's selection range. Updated on every valid selection
+  // change so we can restore it before applying a format — important because
+  // clicking inside the toolbar (especially the native <input type="color">
+  // picker) can collapse or steal the selection from the editable host.
+  const savedRangeRef = useRef<Range | null>(null);
+
+  const restoreSelection = useCallback(() => {
+    const r = savedRangeRef.current;
+    if (!r) return false;
+    const sel = window.getSelection();
+    if (!sel) return false;
+    sel.removeAllRanges();
+    sel.addRange(r);
+    return true;
+  }, []);
 
   const updateFromSelection = useCallback(() => {
     const sel = window.getSelection();
@@ -166,6 +181,9 @@ export default function InlineFormatToolbar() {
       top: rect.top + window.scrollY - 48,
       left: rect.left + window.scrollX + rect.width / 2,
     });
+    // Snapshot for later restoration (the popovers / native pickers can steal
+    // focus and collapse the selection before our apply handler runs).
+    savedRangeRef.current = range.cloneRange();
   }, []);
 
   useEffect(() => {
@@ -207,17 +225,21 @@ export default function InlineFormatToolbar() {
   };
 
   const onApplyFont = (stack: string) => {
+    restoreSelection();
     applyInlineStyle(host, { fontFamily: stack });
     setShowFont(false);
   };
   const onApplyColor = (color: string) => {
+    restoreSelection();
+    // Re-focus the host so execCommand has a valid editable target even if
+    // a popup input (e.g. native color picker) had stolen focus.
+    host.focus();
+    restoreSelection();
     execSimple(host, "foreColor", color);
-    window.getSelection()?.removeAllRanges();
     setShowColor(false);
-    setPos(null);
-    setHost(null);
   };
   const onApplySize = (px: number) => {
+    restoreSelection();
     applyInlineStyle(host, { fontSize: `${px}px`, lineHeight: "1.2" });
     setShowSize(false);
   };
