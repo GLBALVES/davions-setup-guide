@@ -15,6 +15,7 @@ import { Plus, Camera, Clock, MapPin, Image as ImageIcon, Eye, Share2, Search, A
 import { EditOneSessionDialog } from "@/components/dashboard/EditOneSessionDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { buildBookingUrl } from "@/lib/booking-url";
 import { SessionsSkeleton } from "@/components/dashboard/skeletons/SessionsSkeleton";
 import {
   DndContext,
@@ -60,6 +61,7 @@ const Sessions = () => {
   const s = t.sessions;
   const [sessions, setSessions] = useState<Session[]>([]);
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
+  const [customDomain, setCustomDomain] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "active" | "draft" | "one_session">("all");
   const [search, setSearch] = useState("");
@@ -88,10 +90,11 @@ const Sessions = () => {
     setLoading(true);
     const [{ data: sessionsData }, { data: photoData }] = await Promise.all([
       supabase.from("sessions").select("*").eq("photographer_id", photographerId).order("sort_order", { ascending: true }),
-      supabase.from("photographers").select("store_slug").eq("id", photographerId).single(),
+      supabase.from("photographers").select("store_slug, custom_domain").eq("id", photographerId).single(),
     ]);
     setSessions(sessionsData ?? []);
     setStoreSlug(photoData?.store_slug ?? null);
+    setCustomDomain((photoData as any)?.custom_domain ?? null);
     setLoading(false);
   };
 
@@ -349,7 +352,7 @@ const Sessions = () => {
                         <SortableSessionCard
                           key={session.id}
                           session={session}
-                          storeSlug={storeSlug}
+                          storeSlug={storeSlug} customDomain={customDomain}
                           isManual={isManual}
                           onClick={() => navigate(`/dashboard/sessions/${session.id}`)}
                           onStatusChange={(id, status) =>
@@ -381,7 +384,7 @@ const Sessions = () => {
                         <SortableSessionRow
                           key={session.id}
                           session={session}
-                          storeSlug={storeSlug}
+                          storeSlug={storeSlug} customDomain={customDomain}
                           isManual={isManual}
                           onClick={() => navigate(`/dashboard/sessions/${session.id}`)}
                           onStatusChange={(id, status) =>
@@ -409,6 +412,7 @@ const Sessions = () => {
 function useSessionActions(
   session: Session,
   storeSlug: string | null,
+  customDomain: string | null,
   onDelete?: (id: string) => void
 ) {
   const { toast } = useToast();
@@ -419,9 +423,11 @@ function useSessionActions(
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const bookingUrl = storeSlug
-    ? `${window.location.origin}/store/${storeSlug}/${session.slug ?? session.id}`
-    : null;
+  const bookingUrl = buildBookingUrl({
+    customDomain,
+    storeSlug,
+    sessionSlugOrId: session.slug ?? session.id,
+  });
 
   const handleToggleStatus = async (e: React.MouseEvent, onStatusChange: (id: string, status: string) => void) => {
     e.stopPropagation();
@@ -524,13 +530,14 @@ function useSessionActions(
 function SortableSessionCard({
   session,
   storeSlug,
+  customDomain,
   isManual,
   onClick,
   onStatusChange,
   onDelete,
 }: {
   session: Session;
-  storeSlug: string | null;
+  storeSlug: string | null; customDomain: string | null;
   isManual: boolean;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
@@ -557,7 +564,7 @@ function SortableSessionCard({
     >
       <SessionCard
         session={session}
-        storeSlug={storeSlug}
+        storeSlug={storeSlug} customDomain={customDomain}
         isManual={isManual}
         onClick={onClick}
         onStatusChange={onStatusChange}
@@ -572,13 +579,14 @@ function SortableSessionCard({
 function SortableSessionRow({
   session,
   storeSlug,
+  customDomain,
   isManual,
   onClick,
   onStatusChange,
   onDelete,
 }: {
   session: Session;
-  storeSlug: string | null;
+  storeSlug: string | null; customDomain: string | null;
   isManual: boolean;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
@@ -604,7 +612,7 @@ function SortableSessionRow({
     >
       <SessionRow
         session={session}
-        storeSlug={storeSlug}
+        storeSlug={storeSlug} customDomain={customDomain}
         isManual={isManual}
         onClick={onClick}
         onStatusChange={onStatusChange}
@@ -619,13 +627,14 @@ function SortableSessionRow({
 function SessionCard({
   session,
   storeSlug,
+  customDomain,
   isManual,
   onClick,
   onStatusChange,
   onDelete,
 }: {
   session: Session;
-  storeSlug: string | null;
+  storeSlug: string | null; customDomain: string | null;
   isManual: boolean;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
@@ -633,7 +642,7 @@ function SessionCard({
 }) {
   const { t } = useLanguage();
   const s = t.sessions;
-  const { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail, openDeleteDialog, deleteDialogOpen, setDeleteDialogOpen, deleteLoading, handleConfirmDelete } = useSessionActions(session, storeSlug, onDelete);
+  const { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail, openDeleteDialog, deleteDialogOpen, setDeleteDialogOpen, deleteLoading, handleConfirmDelete } = useSessionActions(session, storeSlug, customDomain, onDelete);
 
   const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -840,13 +849,14 @@ function SessionCard({
 function SessionRow({
   session,
   storeSlug,
+  customDomain,
   isManual,
   onClick,
   onStatusChange,
   onDelete,
 }: {
   session: Session;
-  storeSlug: string | null;
+  storeSlug: string | null; customDomain: string | null;
   isManual: boolean;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
@@ -854,7 +864,7 @@ function SessionRow({
 }) {
   const { t } = useLanguage();
   const s = t.sessions;
-  const { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail, openDeleteDialog, deleteDialogOpen, setDeleteDialogOpen, deleteLoading, handleConfirmDelete } = useSessionActions(session, storeSlug, onDelete);
+  const { toggling, bookingUrl, handleToggleStatus, handlePreview, handleCopyLink, handleShareWhatsApp, handleShareEmail, openDeleteDialog, deleteDialogOpen, setDeleteDialogOpen, deleteLoading, handleConfirmDelete } = useSessionActions(session, storeSlug, customDomain, onDelete);
 
   const priceFormatted = new Intl.NumberFormat("en-US", {
     style: "currency",

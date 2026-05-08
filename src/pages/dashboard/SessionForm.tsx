@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { buildBookingUrl } from "@/lib/booking-url";
 import { formatCurrencyInput, parseCurrencyInput, displayMoney, currencyPlaceholder, type CurrencyLang } from "@/lib/currency-format";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -179,6 +180,7 @@ const SessionForm = () => {
   const [uploadingPortfolio, setUploadingPortfolio] = useState(false);
   const portfolioInputRef = useRef<HTMLInputElement>(null);
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
+  const [customDomain, setCustomDomain] = useState<string | null>(null);
 
   // ── Form fields ──
   const [title, setTitle] = useState("");
@@ -316,12 +318,13 @@ const SessionForm = () => {
       // Fetch store_slug (columns that actually exist on photographers table)
       supabase
         .from("photographers")
-        .select("store_slug, stripe_account_id, business_sales_tax")
+        .select("store_slug, custom_domain, stripe_account_id, business_sales_tax")
         .eq("id", user.id)
         .single()
         .then(({ data }) => {
           setStripeConfigured(Boolean(data?.stripe_account_id));
           setStoreSlug((data as any)?.store_slug ?? null);
+          setCustomDomain((data as any)?.custom_domain ?? null);
           // Always store the default business tax for toggle pre-fill
           const defaultTax = (data as any)?.business_sales_tax;
           if (defaultTax != null && Number(defaultTax) > 0) {
@@ -1122,14 +1125,12 @@ const SessionForm = () => {
                           <TooltipTrigger asChild>
                             <button
                               onClick={() => {
-                                const bookingUrl = storeSlug
-                                  ? `${window.location.origin}/store/${storeSlug}/${slug || sessionId}`
-                                  : null;
+                                const bookingUrl = buildBookingUrl({ customDomain, storeSlug, sessionSlugOrId: slug || sessionId });
                                 if (bookingUrl) window.open(bookingUrl, "_blank");
                               }}
-                              disabled={!storeSlug}
+                              disabled={!storeSlug && !customDomain}
                               className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] tracking-widest uppercase border transition-colors ${
-                                storeSlug
+                                (storeSlug || customDomain)
                                   ? "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
                                   : "border-border/30 text-muted-foreground/30 cursor-not-allowed"
                               }`}
@@ -1139,23 +1140,21 @@ const SessionForm = () => {
                             </button>
                           </TooltipTrigger>
                           <TooltipContent side="bottom" className="text-xs">
-                            {storeSlug ? "Open booking page" : "Configure store slug in Settings first"}
+                            {(storeSlug || customDomain) ? "Open booking page" : "Configure store slug in Settings first"}
                           </TooltipContent>
                         </Tooltip>
                         {/* Share popover */}
                         {(() => {
-                          const bookingUrl = storeSlug
-                            ? `${window.location.origin}/store/${storeSlug}/${slug || sessionId}`
-                            : null;
+                          const bookingUrl = buildBookingUrl({ customDomain, storeSlug, sessionSlugOrId: slug || sessionId });
                           return (
                             <Popover>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <PopoverTrigger asChild>
                                     <button
-                                      disabled={!storeSlug}
+                                      disabled={!bookingUrl}
                                       className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] tracking-widest uppercase border transition-colors ${
-                                        storeSlug
+                                        bookingUrl
                                           ? "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
                                           : "border-border/30 text-muted-foreground/30 cursor-not-allowed"
                                       }`}
@@ -1166,7 +1165,7 @@ const SessionForm = () => {
                                   </PopoverTrigger>
                                 </TooltipTrigger>
                                 <TooltipContent side="bottom" className="text-xs">
-                                  {storeSlug ? "Share booking link" : "Configure store slug in Settings first"}
+                                  {bookingUrl ? "Share booking link" : "Configure store slug in Settings first"}
                                 </TooltipContent>
                               </Tooltip>
                               {bookingUrl && (
