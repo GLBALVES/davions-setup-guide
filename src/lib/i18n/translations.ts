@@ -1899,6 +1899,7 @@ export const translations = {
       eventPaymentFailed: "Payment Failed",
       eventNewChat: "New Chat Message",
       eventNewBug: "New Bug Report",
+      eventBriefingResponse: "Briefing Answered",
       inApp: "In-App",
       email: "Email",
       browserPush: "Browser Push",
