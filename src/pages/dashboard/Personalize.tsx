@@ -1068,18 +1068,32 @@ const Personalize = () => {
                           </div>
                         )}
 
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="self-start gap-1.5 text-xs tracking-wider uppercase font-light"
-                          disabled={!newFieldLabel.trim() || addingField || (newFieldSource === "mapped" && !newFieldMappedKey)}
-                          onClick={handleAddContractField}>
-                          {addingField ?
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
-                            <Plus className="h-3.5 w-3.5" />
-                          }
-                          {t.personalize.newContractField}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 text-xs tracking-wider uppercase font-light"
+                            disabled={!newFieldLabel.trim() || addingField || (newFieldSource === "mapped" && !newFieldMappedKey)}
+                            onClick={editingFieldId ? handleUpdateContractField : handleAddContractField}>
+                            {addingField ?
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
+                              editingFieldId ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />
+                            }
+                            {editingFieldId
+                              ? ((t.personalize as any).saveContractField ?? "Save changes")
+                              : t.personalize.newContractField}
+                          </Button>
+                          {editingFieldId && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="gap-1.5 text-xs tracking-wider uppercase font-light"
+                              onClick={resetContractFieldForm}>
+                              <X className="h-3.5 w-3.5" />
+                              {(t.personalize as any).cancel ?? "Cancel"}
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </section>
 
