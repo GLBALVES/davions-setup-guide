@@ -459,6 +459,22 @@ const BookingConfirm = () => {
     if (!booking || !session) return;
     setPaymentLoading(true);
     try {
+      // Always persist the resolved contract snapshot before payment, so it
+      // survives even if the accept-checkbox handler didn't fire (or fired
+      // before resolvedContractHtml was ready).
+      if (session.contract_text && resolvedContractHtml) {
+        try {
+          await supabase.functions.invoke("register-contract-acceptance", {
+            body: {
+              booking_id: booking.id,
+              contract_html: resolvedContractHtml,
+              client_tax_id: clientInfo.tax_id?.trim() || null,
+            },
+          });
+        } catch (snapErr) {
+          console.error("Pre-payment contract snapshot error:", snapErr);
+        }
+      }
       const { data, error } = await supabase.functions.invoke("create-session-checkout", {
         body: {
           bookingId: booking.id,
