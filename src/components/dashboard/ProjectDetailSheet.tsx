@@ -200,15 +200,16 @@ function ReceivedPaymentsLog({
   const queryClient = useQueryClient();
   const [desc, setDesc] = useState("");
   const [amount, setAmount] = useState(""); // canonical "1500.50"
+  const [fee, setFee] = useState(""); // canonical "10.00"
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   const currencyLang: CurrencyLang = lang === "pt" ? "pt" : lang === "es" ? "es" : "en";
 
   const L = {
-    en: { title: "Received Payments", add: "Add payment", date: "Date", amount: "Amount", desc: "Description", descPh: "e.g. Bank transfer", save: "Save", cancel: "Cancel", empty: "No payments recorded", added: "Payment added", removed: "Payment removed", error: "Error saving payment", total: "Total received" },
-    pt: { title: "Pagamentos Recebidos", add: "Adicionar pagamento", date: "Data", amount: "Valor", desc: "Descrição", descPh: "ex.: Transferência bancária", save: "Salvar", cancel: "Cancelar", empty: "Nenhum pagamento registrado", added: "Pagamento adicionado", removed: "Pagamento removido", error: "Erro ao salvar pagamento", total: "Total recebido" },
-    es: { title: "Pagos Recibidos", add: "Agregar pago", date: "Fecha", amount: "Monto", desc: "Descripción", descPh: "ej.: Transferencia bancaria", save: "Guardar", cancel: "Cancelar", empty: "Sin pagos registrados", added: "Pago agregado", removed: "Pago eliminado", error: "Error al guardar pago", total: "Total recibido" },
-  }[lang as "en" | "pt" | "es"] ?? { title: "Received Payments", add: "Add payment", date: "Date", amount: "Amount", desc: "Description", descPh: "", save: "Save", cancel: "Cancel", empty: "No payments recorded", added: "Payment added", removed: "Payment removed", error: "Error saving payment", total: "Total received" };
+    en: { title: "Received Payments", add: "Add payment", date: "Date", amount: "Amount", fee: "Fee amount", desc: "Description", descPh: "e.g. Bank transfer", save: "Save", cancel: "Cancel", empty: "No payments recorded", added: "Payment added", removed: "Payment removed", error: "Error saving payment", total: "Total received" },
+    pt: { title: "Pagamentos Recebidos", add: "Adicionar pagamento", date: "Data", amount: "Valor", fee: "Valor da taxa", desc: "Descrição", descPh: "ex.: Transferência bancária", save: "Salvar", cancel: "Cancelar", empty: "Nenhum pagamento registrado", added: "Pagamento adicionado", removed: "Pagamento removido", error: "Erro ao salvar pagamento", total: "Total recebido" },
+    es: { title: "Pagos Recibidos", add: "Agregar pago", date: "Fecha", amount: "Monto", fee: "Valor de la tarifa", desc: "Descripción", descPh: "ej.: Transferencia bancaria", save: "Guardar", cancel: "Cancelar", empty: "Sin pagos registrados", added: "Pago agregado", removed: "Pago eliminado", error: "Error al guardar pago", total: "Total recibido" },
+  }[lang as "en" | "pt" | "es"] ?? { title: "Received Payments", add: "Add payment", date: "Date", amount: "Amount", fee: "Fee amount", desc: "Description", descPh: "", save: "Save", cancel: "Cancel", empty: "No payments recorded", added: "Payment added", removed: "Payment removed", error: "Error saving payment", total: "Total received" };
 
   const qKey = ["project-payments", projectId];
 
@@ -233,6 +234,7 @@ function ReceivedPaymentsLog({
         photographer_id: photographerId,
         description: desc.trim(),
         amount: parseFloat(amount) || 0,
+        fee_amount: parseFloat(fee) || 0,
         payment_date: date,
       });
       if (error) throw error;
@@ -240,7 +242,7 @@ function ReceivedPaymentsLog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qKey });
       toast.success(L.added);
-      onToggleForm(); setDesc(""); setAmount(""); setDate(new Date().toISOString().slice(0, 10));
+      onToggleForm(); setDesc(""); setAmount(""); setFee(""); setDate(new Date().toISOString().slice(0, 10));
     },
     onError: (e: any) => toast.error(`${L.error}${e?.message ? `: ${e.message}` : ""}`),
   });
@@ -284,12 +286,22 @@ function ReceivedPaymentsLog({
             </div>
           </div>
           <div className="flex flex-col gap-1">
+            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{L.fee}</Label>
+            <Input
+              inputMode="decimal"
+              placeholder={currencyPlaceholder(currencyLang)}
+              value={formatCurrencyInput(fee, currencyLang)}
+              onChange={(e) => setFee(parseCurrencyInput(e.target.value, currencyLang))}
+              className="h-7 text-xs"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
             <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{L.desc}</Label>
             <Input placeholder={L.descPh} value={desc} onChange={(e) => setDesc(e.target.value)} className="h-7 text-xs" />
           </div>
           <div className="flex gap-2 justify-end">
             <Button variant="ghost" size="sm" className="h-7 text-xs"
-              onClick={() => { onToggleForm(); setDesc(""); setAmount(""); }}>
+              onClick={() => { onToggleForm(); setDesc(""); setAmount(""); setFee(""); }}>
               {L.cancel}
             </Button>
             <Button size="sm" className="h-7 text-xs"

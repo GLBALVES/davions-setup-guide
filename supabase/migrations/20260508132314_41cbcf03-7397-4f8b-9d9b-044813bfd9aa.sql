@@ -1,0 +1,1 @@
+ALTER TABLE public.project_payments ADD COLUMN IF NOT EXISTS fee_amount numeric(10, 2) NOT NULL DEFAULT 0;
