@@ -179,6 +179,7 @@ const SessionForm = () => {
   const [uploadingPortfolio, setUploadingPortfolio] = useState(false);
   const portfolioInputRef = useRef<HTMLInputElement>(null);
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
+  const [customDomain, setCustomDomain] = useState<string | null>(null);
 
   // ── Form fields ──
   const [title, setTitle] = useState("");
