@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
+import { HexColorPicker } from "react-colorful";
 
 /**
  * Color picker that surfaces the **active site palette** (read from CSS vars
