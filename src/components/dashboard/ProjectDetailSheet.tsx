@@ -174,6 +174,157 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ── Received payments log component ──
+interface ProjectPayment {
+  id: string;
+  project_id: string;
+  description: string;
+  amount: number;
+  payment_date: string;
+  created_at: string;
+}
+
+function ReceivedPaymentsLog({ projectId, photographerId }: { projectId: string; photographerId: string }) {
+  const { lang } = useLanguage();
+  const queryClient = useQueryClient();
+  const [showForm, setShowForm] = useState(false);
+  const [desc, setDesc] = useState("");
+  const [amount, setAmount] = useState("");
+  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+
+  const L = {
+    en: { title: "Received Payments", add: "Add payment", date: "Date", amount: "Amount", desc: "Description", descPh: "e.g. Bank transfer", save: "Save", cancel: "Cancel", empty: "No payments recorded", added: "Payment added", removed: "Payment removed", error: "Error saving payment", total: "Total received" },
+    pt: { title: "Pagamentos Recebidos", add: "Adicionar pagamento", date: "Data", amount: "Valor", desc: "Descrição", descPh: "ex.: Transferência bancária", save: "Salvar", cancel: "Cancelar", empty: "Nenhum pagamento registrado", added: "Pagamento adicionado", removed: "Pagamento removido", error: "Erro ao salvar pagamento", total: "Total recebido" },
+    es: { title: "Pagos Recibidos", add: "Agregar pago", date: "Fecha", amount: "Monto", desc: "Descripción", descPh: "ej.: Transferencia bancaria", save: "Guardar", cancel: "Cancelar", empty: "Sin pagos registrados", added: "Pago agregado", removed: "Pago eliminado", error: "Error al guardar pago", total: "Total recibido" },
+  }[lang as "en" | "pt" | "es"] ?? { title: "Received Payments", add: "Add payment", date: "Date", amount: "Amount", desc: "Description", descPh: "", save: "Save", cancel: "Cancel", empty: "No payments recorded", added: "Payment added", removed: "Payment removed", error: "Error saving payment", total: "Total received" };
+
+  const qKey = ["project-payments", projectId];
+
+  const { data: payments = [] } = useQuery<ProjectPayment[]>({
+    queryKey: qKey,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("project_payments")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("payment_date", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as ProjectPayment[];
+    },
+    enabled: !!projectId,
+  });
+
+  const addMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase as any).from("project_payments").insert({
+        project_id: projectId,
+        photographer_id: photographerId,
+        description: desc.trim(),
+        amount: parseFloat(amount) || 0,
+        payment_date: date,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qKey });
+      toast.success(L.added);
+      setShowForm(false); setDesc(""); setAmount(""); setDate(new Date().toISOString().slice(0, 10));
+    },
+    onError: () => toast.error(L.error),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).from("project_payments").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qKey });
+      toast.success(L.removed);
+    },
+  });
+
+  const fmt = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
+  const total = payments.reduce((s, p) => s + Number(p.amount), 0);
+
+  return (
+    <div className="flex flex-col gap-2 rounded-md border border-border/50 bg-muted/10 p-3">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{L.title}</span>
+        <button
+          onClick={() => setShowForm((v) => !v)}
+          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Plus className="h-3 w-3" /> {L.add}
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="rounded-md border border-border/60 bg-background p-2.5 flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{L.date}</Label>
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-7 text-xs" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{L.amount}</Label>
+              <Input type="number" min={0} step="0.01" placeholder="0,00" value={amount} onChange={(e) => setAmount(e.target.value)} className="h-7 text-xs" />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{L.desc}</Label>
+            <Input placeholder={L.descPh} value={desc} onChange={(e) => setDesc(e.target.value)} className="h-7 text-xs" />
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button variant="ghost" size="sm" className="h-7 text-xs"
+              onClick={() => { setShowForm(false); setDesc(""); setAmount(""); }}>
+              {L.cancel}
+            </Button>
+            <Button size="sm" className="h-7 text-xs"
+              onClick={() => addMutation.mutate()}
+              disabled={addMutation.isPending || !amount || !date}>
+              {L.save}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {payments.length === 0 && !showForm && (
+        <p className="text-[11px] text-muted-foreground/60 text-center py-2">{L.empty}</p>
+      )}
+
+      {payments.length > 0 && (
+        <div className="flex flex-col gap-1">
+          {payments.map((p) => (
+            <div key={p.id} className="flex items-center gap-2 px-2 py-1.5 rounded-sm bg-background border border-border/40">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium truncate leading-tight">
+                  {p.description || L.desc}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  {format(parseISO(p.payment_date), "d MMM yyyy")}
+                </p>
+              </div>
+              <span className="text-xs font-semibold tabular-nums text-emerald-600 shrink-0">{fmt(Number(p.amount))}</span>
+              <button
+                onClick={() => deleteMutation.mutate(p.id)}
+                className="text-muted-foreground/50 hover:text-destructive transition-colors shrink-0"
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+          <div className="flex items-center justify-between pt-1.5 mt-0.5 border-t border-border/40">
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{L.total}</span>
+            <span className="text-xs font-semibold tabular-nums text-emerald-600">{fmt(total)}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Payments section component ──
 function PaymentsSection({ project, photographerId }: { project: ProjectSheetData; photographerId: string }) {
   const { t } = useLanguage();
@@ -505,6 +656,9 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
           <p className="text-xs text-muted-foreground/50">{tp.noChargesRecorded}</p>
         </div>
       )}
+
+      {/* ── Received payments log ───────────────────────────────────────── */}
+      <ReceivedPaymentsLog projectId={project.id} photographerId={photographerId} />
 
       <div className="flex flex-col gap-2">
         {invoices.map((inv) => {
