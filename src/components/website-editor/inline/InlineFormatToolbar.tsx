@@ -239,12 +239,24 @@ export default function InlineFormatToolbar() {
     setShowFont(false);
   };
   const onApplyColor = (color: string, closePicker = true) => {
-    restoreSelection();
-    // Re-focus the host so execCommand has a valid editable target even if
-    // a popup input (e.g. native color picker) had stolen focus.
-    host.focus();
-    restoreSelection();
+    // On macOS (Safari/Chrome) clicking inside the popover steals focus and
+    // collapses the host's selection. We must (1) focus the host BEFORE
+    // restoring the selection, and (2) refresh our saved range AFTER each
+    // apply because execCommand("foreColor") mutates the DOM (wraps the
+    // selection in a <span>/<font>) — leaving the previous Range stale and
+    // making subsequent drag ticks paint the wrong nodes (or nothing).
+    host.focus({ preventScroll: true } as FocusOptions);
+    if (!restoreSelection()) return;
     execSimple(host, "foreColor", color);
+    // Re-snapshot the (now possibly re-wrapped) selection so the next drag
+    // tick from react-colorful keeps painting the same text range.
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const r = sel.getRangeAt(0);
+      if (!r.collapsed && host.contains(r.commonAncestorContainer)) {
+        savedRangeRef.current = r.cloneRange();
+      }
+    }
     if (closePicker) setShowColor(false);
   };
   const onApplySize = (px: number) => {
