@@ -263,12 +263,6 @@ function ReceivedPaymentsLog({
     <div className="flex flex-col gap-2 rounded-md border border-border/50 bg-muted/10 p-3">
       <div className="flex items-center justify-between">
         <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{L.title}</span>
-        <button
-          onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Plus className="h-3 w-3" /> {L.add}
-        </button>
       </div>
 
       {showForm && (
