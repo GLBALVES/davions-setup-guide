@@ -942,17 +942,26 @@ const Personalize = () => {
                                   }
                                 </div>
                               </div>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-7 w-7 text-destructive hover:text-destructive shrink-0"
-                                disabled={deletingFieldId === f.id}
-                                onClick={() => handleDeleteContractField(f.id)}>
-                                {deletingFieldId === f.id ?
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                }
-                              </Button>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7"
+                                  onClick={() => startEditContractField(f)}>
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7 text-destructive hover:text-destructive"
+                                  disabled={deletingFieldId === f.id}
+                                  onClick={() => handleDeleteContractField(f.id)}>
+                                  {deletingFieldId === f.id ?
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  }
+                                </Button>
+                              </div>
                             </div>
                             );
                           })}
