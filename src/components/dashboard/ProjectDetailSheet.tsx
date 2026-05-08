@@ -1027,6 +1027,7 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
 
   // Fetch the signed contract snapshot from the booking linked to this project
   const bookingId = (project as any).booking_id ?? null;
+  const [contractOpen, setContractOpen] = useState(false);
   const { data: contractSnapshot } = useQuery<{ html: string | null } | null>({
     queryKey: ["project-contract-snapshot", bookingId],
     queryFn: async () => {
