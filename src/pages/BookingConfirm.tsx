@@ -596,12 +596,28 @@ const BookingConfirm = () => {
             booking_id: booking.id,
             contract_html: resolvedContractHtml,
             client_tax_id: clientInfo.tax_id?.trim() || null,
+            signature_data: signatureData,
           },
         });
       } catch (err) {
         console.error("Save contract snapshot error:", err);
       }
     }
+  };
+
+  const handleSignatureEnd = () => {
+    try {
+      const dataUrl = signatureRef.current?.getCanvas()?.toDataURL("image/png") ?? null;
+      setSignatureData(dataUrl);
+    } catch (e) {
+      console.error("signature capture error:", e);
+    }
+  };
+
+  const handleSignatureClear = () => {
+    signatureRef.current?.clear();
+    setSignatureData(null);
+    if (contractAccepted) setContractAccepted(false);
   };
 
   /* ── Build steps dynamically ── */
