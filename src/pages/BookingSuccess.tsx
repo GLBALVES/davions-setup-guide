@@ -409,6 +409,35 @@ const BookingSuccess = () => {
                 <CheckCircle className="h-8 w-8 text-primary" strokeWidth={1.5} />
                 <p className="text-sm font-light">Thank you! Your answers have been received.</p>
               </div>
+            ) : briefingChoice === "pending" ? (
+              <div className="p-5 flex flex-col gap-3">
+                <p className="text-sm font-light text-center">{tr.prompt}</p>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button
+                    onClick={() => setBriefingChoice("now")}
+                    className="flex-1 text-xs tracking-wider uppercase font-light"
+                  >
+                    {tr.answerNow}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setBriefingChoice("later")}
+                    className="flex-1 text-xs tracking-wider uppercase font-light"
+                  >
+                    {tr.answerLater}
+                  </Button>
+                </div>
+              </div>
+            ) : briefingChoice === "later" ? (
+              <div className="p-5 flex flex-col items-center gap-3 text-center">
+                <p className="text-[11px] text-muted-foreground">{tr.laterNotice}</p>
+                <button
+                  onClick={() => setBriefingChoice("now")}
+                  className="text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground underline"
+                >
+                  {tr.changeMind}
+                </button>
+              </div>
             ) : (
               <div className="p-5 flex flex-col gap-5">
                 {briefing.questions.map((q) => {
