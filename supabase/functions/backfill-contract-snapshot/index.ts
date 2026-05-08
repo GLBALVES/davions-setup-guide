@@ -208,18 +208,25 @@ serve(async (req) => {
     };
 
     const html = resolveContract((session as any).contract_text, data, (customFields as any) ?? [], customValues);
-    const signedAt = (booking as any).contract_signed_at ?? new Date().toISOString();
+    const existingSignedAt = (booking as any).contract_signed_at ?? null;
 
-    await supabase.from("bookings").update({
+    // Only restore HTML; do NOT set signed_at or lock if not already signed
+    // (so the client can still draw a signature in a fresh flow).
+    const bookingUpdate: Record<string, unknown> = {
       contract_html_snapshot: html,
-      contract_signed_at: signedAt,
-      contract_locked: true,
-    }).eq("id", booking_id);
+    };
+    if (existingSignedAt) {
+      bookingUpdate.contract_locked = true;
+    }
+    await supabase.from("bookings").update(bookingUpdate).eq("id", booking_id);
 
-    await supabase.from("client_projects").update({
+    const projectUpdate: Record<string, unknown> = {
       signed_contract_html: html,
-      contract_signed_at: signedAt,
-    }).eq("booking_id", booking_id);
+    };
+    if (existingSignedAt) {
+      projectUpdate.contract_signed_at = existingSignedAt;
+    }
+    await supabase.from("client_projects").update(projectUpdate).eq("booking_id", booking_id);
 
     return new Response(JSON.stringify({ ok: true, length: html.length }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
