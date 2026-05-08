@@ -1135,7 +1135,7 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
               <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
                 {tp.contractsSubsection}
               </span>
-              <span className="ml-auto text-[10px] text-muted-foreground/60">{tp.readOnly ?? "Read-only"}</span>
+              <span className="ml-auto text-[10px] text-muted-foreground/60">{(tp as any).readOnly ?? "Read-only"}</span>
             </div>
             <div
               className="prose prose-sm max-w-none px-4 py-3 text-xs select-text pointer-events-none"
