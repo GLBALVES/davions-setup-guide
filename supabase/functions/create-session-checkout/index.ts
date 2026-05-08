@@ -93,24 +93,50 @@ serve(async (req) => {
     // ── Create or reuse booking (service role bypasses RLS) ──
     let bookingId = existingBookingId as string | undefined;
     if (!bookingId) {
+      const insertPayload: Record<string, unknown> = {
+        session_id: sessionId,
+        availability_id: slotId,
+        photographer_id: sessionData.photographer_id,
+        client_name: clientName,
+        client_email: clientEmail,
+        status: "pending",
+        payment_status: "pending",
+        booked_date: bookedDate,
+      };
+      if (typeof contractHtml === "string" && contractHtml.length > 0) {
+        insertPayload.contract_html_snapshot = contractHtml;
+      }
+      if (typeof signatureData === "string" && signatureData.startsWith("data:image")) {
+        insertPayload.contract_signature_data = signatureData;
+      }
+      if (typeof clientTaxId === "string" && clientTaxId.trim().length > 0) {
+        insertPayload.client_tax_id = clientTaxId.trim();
+      }
       const { data: newBooking, error: bookingError } = await supabase
         .from("bookings")
-        .insert({
-          session_id: sessionId,
-          availability_id: slotId,
-          photographer_id: sessionData.photographer_id,
-          client_name: clientName,
-          client_email: clientEmail,
-          status: "pending",
-          payment_status: "pending",
-          booked_date: bookedDate,
-        })
+        .insert(insertPayload)
         .select("id")
         .single();
       if (bookingError || !newBooking) {
         throw new Error(bookingError?.message ?? "Failed to create booking");
       }
       bookingId = newBooking.id;
+    } else if (
+      (typeof contractHtml === "string" && contractHtml.length > 0) ||
+      (typeof signatureData === "string" && signatureData.startsWith("data:image"))
+    ) {
+      // Existing booking — update contract data if provided
+      const updatePayload: Record<string, unknown> = {};
+      if (typeof contractHtml === "string" && contractHtml.length > 0) {
+        updatePayload.contract_html_snapshot = contractHtml;
+      }
+      if (typeof signatureData === "string" && signatureData.startsWith("data:image")) {
+        updatePayload.contract_signature_data = signatureData;
+      }
+      if (typeof clientTaxId === "string" && clientTaxId.trim().length > 0) {
+        updatePayload.client_tax_id = clientTaxId.trim();
+      }
+      await supabase.from("bookings").update(updatePayload).eq("id", bookingId);
     }
 
     // ── Free booking: no payment required ──
