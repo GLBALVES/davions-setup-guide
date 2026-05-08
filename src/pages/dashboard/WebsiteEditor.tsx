@@ -10,7 +10,9 @@ import {
   ChevronDown, ChevronRight, ArrowLeft, Search, ImagePlus, Shuffle,
   Image, Play, X, ArrowUp, ArrowDown, Settings2, GripVertical, Loader2,
   ArrowRightToLine, ExternalLink, Newspaper, LayoutTemplate, Files, PanelsTopLeft, ShoppingBag,
+  Undo2, Redo2,
 } from "lucide-react";
+import { useEditorHistory, diffSitePatch } from "@/components/website-editor/useEditorHistory";
 import { Button } from "@/components/ui/button";
 import { useDeployStatus } from "@/hooks/useDeployStatus";
 import { DeployStatusBadge } from "@/components/website-editor/DeployStatusIndicator";
@@ -4849,6 +4851,74 @@ const WebsiteEditor = () => {
     pageActions.setSections(next);
   }, [pageActions]);
 
+  // ── Undo / Redo ──────────────────────────────────────────────────────────
+  // Snapshots `{ site, sections, pageId }` whenever the user edits anything.
+  // History resets when switching pages, so undo always replays the current
+  // page's timeline. Re-applies a snapshot via the existing auto-save pipeline:
+  //   - site → diffed into a snake_case patch fed back through updateSite()
+  //   - sections → pushed through pageActions.setSections() (PagesPanel persists)
+  const historyEnabled = !!site && !!activePageInfo.id && !!pageActions;
+  const historyApply = useCallback((snap: { site: PreviewSiteConfig | null; sections: PageSection[]; pageId: string | null }) => {
+    // Restore site fields via diff patch (only changed snake_case keys).
+    const sitePatch = diffSitePatch(site as Record<string, unknown>, snap.site as Record<string, unknown>);
+    if (Object.keys(sitePatch).length > 0) updateSite(sitePatch);
+    // Restore sections on the active page.
+    if (pageActions && snap.pageId === activePageInfo.id) {
+      pageActions.setSections(snap.sections);
+    }
+    setSelectedBlockIndex(null);
+  }, [site, updateSite, pageActions, activePageInfo.id]);
+
+  const { undo, redo, canUndo, canRedo } = useEditorHistory({
+    current: { site, sections: activePageSections, pageId: activePageInfo.id },
+    enabled: historyEnabled,
+    onApply: historyApply,
+  });
+
+  const undoLabel = lang === "pt" ? "Desfazer" : lang === "es" ? "Deshacer" : "Undo";
+  const redoLabel = lang === "pt" ? "Refazer" : lang === "es" ? "Rehacer" : "Redo";
+  const undoneToast = lang === "pt" ? "Desfeito" : lang === "es" ? "Deshecho" : "Undone";
+  const redoneToast = lang === "pt" ? "Refeito" : lang === "es" ? "Rehecho" : "Redone";
+  const nothingToUndo = lang === "pt" ? "Nada para desfazer" : lang === "es" ? "Nada que deshacer" : "Nothing to undo";
+  const nothingToRedo = lang === "pt" ? "Nada para refazer" : lang === "es" ? "Nada que rehacer" : "Nothing to redo";
+
+  const handleUndoClick = useCallback(() => {
+    if (undo()) toast.success(undoneToast);
+    else toast(nothingToUndo);
+  }, [undo, undoneToast, nothingToUndo]);
+  const handleRedoClick = useCallback(() => {
+    if (redo()) toast.success(redoneToast);
+    else toast(nothingToRedo);
+  }, [redo, redoneToast, nothingToRedo]);
+
+  // Keyboard shortcuts: Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, Ctrl+Y.
+  // Skip when focus is inside a text input / contentEditable so the browser's
+  // native undo on the typing buffer keeps working — our handler picks up after.
+  useEffect(() => {
+    const isEditableTarget = (el: EventTarget | null): boolean => {
+      const node = el as HTMLElement | null;
+      if (!node) return false;
+      const tag = node.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+      if (node.isContentEditable) return true;
+      return false;
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod) return;
+      const key = e.key.toLowerCase();
+      const isUndo = key === "z" && !e.shiftKey;
+      const isRedo = (key === "z" && e.shiftKey) || key === "y";
+      if (!isUndo && !isRedo) return;
+      if (isEditableTarget(e.target)) return;
+      e.preventDefault();
+      if (isUndo) handleUndoClick();
+      else handleRedoClick();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [handleUndoClick, handleRedoClick]);
+
   const [saving, setSaving] = useState(false);
 
   const labels = {
@@ -5146,7 +5216,37 @@ const WebsiteEditor = () => {
             </div>
           ))}
         </div>
-        <div className="border-t border-border p-2 flex gap-1 shrink-0 bg-card">
+        <div className="border-t border-border p-2 flex items-center gap-1 shrink-0 bg-card">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 shrink-0"
+                onClick={handleUndoClick}
+                disabled={!canUndo}
+                aria-label={undoLabel}
+              >
+                <Undo2 className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">{undoLabel} (Ctrl+Z)</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 shrink-0"
+                onClick={handleRedoClick}
+                disabled={!canRedo}
+                aria-label={redoLabel}
+              >
+                <Redo2 className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">{redoLabel} (Ctrl+Shift+Z)</TooltipContent>
+          </Tooltip>
           <Button
             size="sm"
             variant="outline"
@@ -5240,7 +5340,29 @@ const WebsiteEditor = () => {
           liveHost={liveHostForDeploy}
         />
       </div>
-      <div className="border-t border-border p-2 flex gap-1 shrink-0 bg-card">
+      <div className="border-t border-border p-2 flex items-center gap-1 shrink-0 bg-card">
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 w-8 p-0 shrink-0"
+          onClick={handleUndoClick}
+          disabled={!canUndo}
+          aria-label={undoLabel}
+          title={undoLabel}
+        >
+          <Undo2 className="h-3.5 w-3.5" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 w-8 p-0 shrink-0"
+          onClick={handleRedoClick}
+          disabled={!canRedo}
+          aria-label={redoLabel}
+          title={redoLabel}
+        >
+          <Redo2 className="h-3.5 w-3.5" />
+        </Button>
         <Button
           size="sm"
           variant="outline"
