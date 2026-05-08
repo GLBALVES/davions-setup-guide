@@ -197,11 +197,8 @@ export function SitePaletteColorOptions({
         {showWheel && (
           <div
             className="rounded-md border border-border p-2 bg-background space-y-2"
-            // IMPORTANT: do NOT stopPropagation on pointer events here —
-            // react-colorful needs the full pointer flow (pointerdown +
-            // document pointermove/up) to track drag. Stopping propagation
-            // can cancel the drag entirely on Firefox/Safari.
-            onMouseDown={(e) => e.preventDefault()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
           >
             <HexColorPicker
               color={hex.startsWith("#") ? hex : "#000000"}

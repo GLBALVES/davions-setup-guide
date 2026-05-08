@@ -238,14 +238,14 @@ export default function InlineFormatToolbar() {
     applyInlineStyle(host, { fontFamily: stack });
     setShowFont(false);
   };
-  const onApplyColor = (color: string) => {
+  const onApplyColor = (color: string, closePicker = true) => {
     restoreSelection();
     // Re-focus the host so execCommand has a valid editable target even if
     // a popup input (e.g. native color picker) had stolen focus.
     host.focus();
     restoreSelection();
     execSimple(host, "foreColor", color);
-    setShowColor(false);
+    if (closePicker) setShowColor(false);
   };
   const onApplySize = (px: number) => {
     restoreSelection();
@@ -546,10 +546,14 @@ export default function InlineFormatToolbar() {
           <Palette className="h-3.5 w-3.5" />
         </button>
         {showColor && (
-          <div className="absolute top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg p-2 w-64">
+          <div
+            className="absolute top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg p-2 w-64"
+            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
             <SitePaletteColorOptions
               value="#000000"
-              onChange={(v) => onApplyColor(v)}
+              onChange={(v) => onApplyColor(v, false)}
             />
           </div>
         )}
