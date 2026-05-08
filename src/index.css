@@ -118,6 +118,20 @@
 .block-anim-fade-up { animation: block-fade-up 0.7s ease-out both; }
 .block-anim-slide-left { animation: block-slide-left 0.7s ease-out both; }
 
+/* When the user sets a custom padding on a block via Block Settings,
+   neutralize the hardcoded Tailwind padding on the inner <section> so the
+   user's value (including 0) is respected exactly. */
+.block-pad-y-custom > section,
+.block-pad-y-custom > div > section {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+.block-pad-x-custom > section,
+.block-pad-x-custom > div > section {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
 
 /* ─── Site Buttons (Style → Buttons → Variants) ──────────────────────────── */
 .site-btn {
