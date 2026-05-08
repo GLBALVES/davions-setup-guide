@@ -616,8 +616,29 @@ const BookingConfirm = () => {
 
   const handleSignatureEnd = () => {
     try {
-      const dataUrl = signatureRef.current?.getCanvas()?.toDataURL("image/png") ?? null;
-      setSignatureData(dataUrl);
+      const ref: any = signatureRef.current;
+      if (!ref) return;
+      // react-signature-canvas exposes toDataURL() directly; fall back to canvas
+      const dataUrl =
+        (typeof ref.toDataURL === "function" && ref.toDataURL("image/png")) ||
+        ref.getCanvas?.()?.toDataURL("image/png") ||
+        null;
+      if (dataUrl && typeof dataUrl === "string" && dataUrl.startsWith("data:image")) {
+        setSignatureData(dataUrl);
+        // Persist immediately so it survives even if user abandons before payment
+        if (booking?.id && resolvedContractHtml) {
+          supabase.functions
+            .invoke("register-contract-acceptance", {
+              body: {
+                booking_id: booking.id,
+                contract_html: resolvedContractHtml,
+                client_tax_id: clientInfo.tax_id?.trim() || null,
+                signature_data: dataUrl,
+              },
+            })
+            .catch((e) => console.error("signature persist error:", e));
+        }
+      }
     } catch (e) {
       console.error("signature capture error:", e);
     }
