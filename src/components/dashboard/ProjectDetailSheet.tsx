@@ -400,6 +400,46 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     enabled: !!project.booking_id,
   });
 
+  // Fetch manual project payments (shared cache with ReceivedPaymentsLog)
+  const { data: projectPayments = [] } = useQuery<ProjectPayment[]>({
+    queryKey: ["project-payments", project.id],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("project_payments")
+        .select("*")
+        .eq("project_id", project.id)
+        .order("payment_date", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as ProjectPayment[];
+    },
+    enabled: !!project.id,
+  });
+
+  // Compute booking financial breakdown (in major units / currency)
+  const bookingFinancials = (() => {
+    if (!bookingPayment) return { grandTotal: 0, paid: 0 };
+    const ps = bookingPayment.payment_status;
+    const isFullPaid = ps === "paid";
+    const isDepositPaid = ps === "deposit_paid";
+    const sess = bookingPayment.sessions as any;
+    const sessionPrice = sess?.price ?? 0;
+    const taxRate = sess?.tax_rate ?? 0;
+    const depositEnabled = sess?.deposit_enabled ?? false;
+    const depositAmount = sess?.deposit_amount ?? 0;
+    const depositType = sess?.deposit_type ?? "fixed";
+    const extrasTotal = bookingPayment.extras_total ?? 0;
+    const subtotal = sessionPrice + extrasTotal;
+    const taxAmount = Math.round(subtotal * taxRate / 100);
+    const grandTotalCents = subtotal + taxAmount;
+    const isPercentDeposit = depositType === "percent" || depositType === "percentage";
+    const depositValue = depositEnabled
+      ? (isPercentDeposit ? Math.round(grandTotalCents * depositAmount / 100) : depositAmount)
+      : 0;
+    const depositPaid = isDepositPaid || isFullPaid ? depositValue : 0;
+    const paidCents = isFullPaid ? grandTotalCents : depositPaid;
+    return { grandTotal: grandTotalCents / 100, paid: paidCents / 100 };
+  })();
+
   const addMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("project_invoices" as any).insert({
@@ -446,9 +486,13 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     },
   });
 
-  const totalAmount  = invoices.reduce((s, i) => s + Number(i.amount), 0);
-  const totalPaid    = invoices.reduce((s, i) => s + Number(i.paid_amount), 0);
-  const totalBalance = totalAmount - totalPaid;
+  const invoicesTotal     = invoices.reduce((s, i) => s + Number(i.amount), 0);
+  const invoicesPaid      = invoices.reduce((s, i) => s + Number(i.paid_amount), 0);
+  const manualPaymentsSum = projectPayments.reduce((s, p) => s + Number(p.amount), 0);
+
+  const summaryTotal    = bookingFinancials.grandTotal + invoicesTotal;
+  const summaryReceived = bookingFinancials.paid + invoicesPaid + manualPaymentsSum;
+  const summaryBalance  = summaryTotal - summaryReceived;
 
   const fmt = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
 
@@ -588,12 +632,12 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       })()}
 
 
-      {invoices.length > 0 && (
+      {(summaryTotal > 0 || summaryReceived > 0) && (
         <div className="grid grid-cols-3 gap-2">
           {[
-            { label: tp.chargeTotal,    value: totalAmount,  color: "text-foreground" },
-            { label: tp.chargeReceived, value: totalPaid,    color: "text-emerald-600" },
-            { label: tp.chargeBalance,  value: totalBalance, color: totalBalance > 0 ? "text-amber-600" : "text-muted-foreground" },
+            { label: tp.chargeTotal,    value: summaryTotal,    color: "text-foreground" },
+            { label: tp.chargeReceived, value: summaryReceived, color: "text-emerald-600" },
+            { label: tp.chargeBalance,  value: summaryBalance,  color: summaryBalance > 0 ? "text-amber-600" : "text-muted-foreground" },
           ].map((s) => (
             <div key={s.label} className="flex flex-col items-center rounded-md border border-border/50 bg-muted/20 py-2 px-1">
               <span className="text-[9px] uppercase tracking-widest text-muted-foreground">{s.label}</span>
