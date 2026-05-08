@@ -2469,6 +2469,7 @@ export const translations = {
       chargeRemoved: "Cobrança removida",
       errorAddingCharge: "Erro ao adicionar cobrança",
       chargeDescription: "Descrição",
+      chargeDescriptionPlaceholder: "ex.: Adicional de cenário",
       chargeAmount: "Valor (R$)",
       chargeDueDate: "Vencimento",
       chargeStatus: "Status",
