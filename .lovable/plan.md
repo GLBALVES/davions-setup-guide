@@ -1,81 +1,105 @@
-# Conectar valor aos Custom Fields do contrato
+# Vincular contrato assinado ao projeto após confirmação
 
-Hoje cada custom field tem apenas um `default_value` global. Vamos passar a permitir 3 origens de valor por campo, escolhidas no editor de contratos. A resolução continua automática (sem revisão manual).
+## Objetivo
 
-## 1. Modelo de dados
+Sempre que a sessão tiver contrato, garantir que após o pagamento confirmado o contrato fique:
+- congelado (imutável) em `bookings`
+- replicado em `client_projects` (acesso direto sem join)
+- com metadados legais de assinatura (timestamp, IP, user-agent)
 
-Migration em `contract_custom_fields`:
-- `value_source TEXT NOT NULL DEFAULT 'static'` — `'static' | 'mapped' | 'client_input'`
-- `mapped_key TEXT` — quando `value_source = 'mapped'`, guarda a chave de uma variável built-in (ex: `client_tax_id`, `client_address`, `session_title`, etc.)
-- `client_prompt TEXT` — quando `value_source = 'client_input'`, é o rótulo da pergunta ao cliente
-- `client_input_type TEXT DEFAULT 'text'` — `'text' | 'textarea' | 'date' | 'number'`
-- `required BOOLEAN DEFAULT false`
+## 1. Banco de dados (migration)
 
-(`default_value` continua existindo como fallback.)
+**Tabela `bookings`** — adicionar:
+- `contract_signed_at TIMESTAMPTZ`
+- `contract_signed_ip TEXT`
+- `contract_signed_user_agent TEXT`
+- `contract_locked BOOLEAN NOT NULL DEFAULT false`
 
-Nova tabela `booking_custom_field_values` para guardar respostas do cliente:
-- `booking_id UUID` (FK lógica)
-- `field_key TEXT`
-- `value TEXT`
-- PK: (booking_id, field_key)
-- RLS: fotógrafo dono via `bookings.photographer_id`; insert público via service_role no fluxo de booking.
+**Tabela `client_projects`** — adicionar:
+- `signed_contract_html TEXT`
+- `contract_signed_at TIMESTAMPTZ`
+- `contract_signed_ip TEXT`
+- `contract_signed_user_agent TEXT`
 
-## 2. Editor de contratos (`ContractEditor.tsx`)
+Sem alteração de RLS (herdam regras existentes filtradas por `photographer_id`).
 
-No bloco de "adicionar custom field", trocar o input único por um pequeno form:
-- Label
-- Select **Origem do valor**: `Texto fixo` / `Mapear a campo existente` / `Perguntar ao cliente`
-- Se `mapped`: Select com a lista de `CONTRACT_VARIABLES` (client_name, client_email, client_phone, client_tax_id, client_address, session_*, photographer_*, studio_*, etc.)
-- Se `client_input`: campo com o texto da pergunta + tipo (text/textarea/date/number) + checkbox obrigatório
-- Se `static`: input de valor padrão (comportamento atual)
+## 2. Captura do aceite (BookingConfirm.tsx)
 
-Listagem dos custom fields mostra um badge com a origem (Mapeado / Cliente / Fixo).
+No `handleAcceptContract`, além de gravar `contract_html_snapshot`, capturar **IP e user-agent via edge function** (não confiáveis no client). Criar nova edge function `register-contract-acceptance`:
 
-## 3. Booking — coleta dos valores do cliente
+- Recebe `{ booking_id, contract_html, accepted: true }`
+- Lê IP do header `x-forwarded-for` e UA de `user-agent`
+- Faz UPDATE em `bookings`:
+  - `contract_html_snapshot = contract_html` (apenas se `contract_locked = false`)
+  - `contract_signed_ip`, `contract_signed_user_agent` (somente registra; `contract_signed_at` fica vazio até o pagamento confirmar)
+- Retorna OK
 
-No wizard de agendamento (mesma tela do `Your Info` / briefing — `BookingConfirm` / componente do passo de dados do cliente):
-- Buscar os `contract_custom_fields` do fotógrafo onde `value_source = 'client_input'` E que apareçam no `contract_text` da sessão (regex `[[key]]` ou `data-variable="key"`).
-- Renderizar uma seção **"Informações para o contrato"** com cada pergunta como input do tipo configurado.
-- Validar `required` antes de avançar.
-- No submit do booking, gravar em `booking_custom_field_values`.
+A UI continua chamando essa função em vez do UPDATE direto. O snapshot pode ser sobrescrito enquanto `contract_locked = false` (caso o cliente recarregue e refaça).
 
-## 4. Resolução em `resolveContractVariables`
+## 3. Trava + cópia para projeto (após pagamento)
 
-Atualizar a função para aceitar um terceiro parâmetro `customFieldValues?: Record<string, string>` e mudar a precedência:
+Em **`confirm-booking/index.ts`** e **`session-booking-webhook/index.ts`**, após marcar `status='confirmed'`:
+
+```text
+1. Buscar booking (contract_html_snapshot, contract_signed_ip, contract_signed_user_agent, session_id)
+2. Buscar session.contract_text/contract_id — só prossegue se a sessão TEM contrato
+3. UPDATE bookings SET contract_signed_at = now(), contract_locked = true WHERE id = booking_id
+4. Buscar client_projects WHERE booking_id = booking_id
+   - Se existir: UPDATE com signed_contract_html + signed_at + ip + ua
+   - Se não existir ainda: ignorar (projeto é criado depois pelo fotógrafo; ver passo 4)
 ```
-valor final = customFieldValues[key]                          // resposta do cliente
-            ?? data[mapped_key] (se value_source = 'mapped')   // valor mapeado
-            ?? data[key]                                       // override por sessão (futuro)
-            ?? default_value                                   // fallback
-            ?? ""
-```
 
-Pontos de chamada a atualizar:
-- `BookingConfirm.tsx` — carregar `booking_custom_field_values` do booking atual e passar à função.
-- `SessionDetailPage.tsx` (preview no painel) — carregar valores se já existir booking; senão, usar mapped/default.
-- `session-booking-webhook` (edge) e qualquer lugar que congele HTML do contrato no booking — resolver com os valores antes de gravar `bookings.contract_html_snapshot`.
+Idempotente: se `contract_locked` já for true, pular.
 
-## 5. i18n
+## 4. Criação tardia de projeto (Projects.tsx)
 
-Adicionar strings PT/EN/ES em `LanguageContext` para: "Origem do valor", "Texto fixo", "Mapear a campo existente", "Perguntar ao cliente", "Pergunta ao cliente", "Tipo do campo", "Obrigatório", "Informações para o contrato".
+Quando o fotógrafo cria um `client_projects` a partir de um booking (linha 1549 de `Projects.tsx`), copiar também os campos de contrato do booking, se já estiverem assinados. Garante que projetos criados após o pagamento já nasçam com o contrato vinculado.
 
-## 6. Memória
+## 5. Leitura no ProjectDetailSheet
 
-Atualizar `mem://features/contracts-custom-fields` descrevendo as 3 origens e a tabela de respostas.
+Atualizar a query `project-contract-snapshot`:
+- Preferir `client_projects.signed_contract_html` se existir
+- Fallback para `bookings.contract_html_snapshot` (compatibilidade com bookings antigos)
+- Mostrar badge "Assinado em DD/MM/AAAA HH:mm" usando `contract_signed_at`
+- Manter modo somente-leitura no Dialog
+
+## 6. Edge functions afetadas
+
+- **NEW** `supabase/functions/register-contract-acceptance/index.ts` — captura IP/UA e grava snapshot pré-pagamento
+- **EDIT** `supabase/functions/confirm-booking/index.ts` — trava + copia para projeto
+- **EDIT** `supabase/functions/session-booking-webhook/index.ts` — mesmo trecho de trava/cópia (caminho do webhook Stripe)
+
+`config.toml`: adicionar bloco `verify_jwt = false` para `register-contract-acceptance` (chamada anônima do wizard público).
+
+## 7. i18n
+
+Adicionar em `LanguageContext` (PT/EN/ES):
+- "Assinado em" / "Signed on" / "Firmado el"
+- "Contrato assinado e travado" / "Signed & locked"
+
+## 8. Memória
+
+Atualizar `mem://features/contracts-management`:
+- snapshot grava em bookings no aceite (sem signed_at)
+- pagamento confirmado: trava (`contract_locked=true`), grava `signed_at` e replica HTML+metadados em `client_projects`
+- ProjectDetailSheet lê de `client_projects` com fallback para `bookings`
 
 ## Detalhes técnicos
 
-- Lista de `mapped_key` permitidas = `CONTRACT_VARIABLES` exportado de `ContractEditor.tsx` (já existe).
-- `value_source = 'client_input'` com campo não usado no contrato da sessão NÃO deve ser perguntado (filtra pelo HTML do contrato).
-- Manter compatibilidade: registros antigos ficam com `value_source = 'static'` (default da migration), comportamento idêntico ao atual.
-- Sem realtime; sem alterar fluxo de assinatura.
+- Não criar trigger: a confirmação já passa por edge function; manter lógica explícita.
+- Apenas sessões com `contract_text` (após resolver `contract_id`) entram no fluxo de cópia.
+- `contract_locked=true` impede sobrescrita do snapshot; tentativas posteriores de re-aceite são ignoradas server-side.
+- `client_projects` pode existir antes (criado manualmente) ou depois (criado quando fotógrafo abre o booking) — cobrir os dois caminhos (passos 3 e 4).
+- Sem realtime; sem alteração no fluxo de Stripe.
 
 ## Arquivos afetados
 
-- migration nova (schema + tabela + RLS)
-- `src/pages/dashboard/ContractEditor.tsx` (UI + tipos + resolveContractVariables)
-- `src/pages/store/SessionDetailPage.tsx` (preview)
-- `src/pages/BookingConfirm.tsx` (coleta + persistência + resolução)
-- componente do passo "Your Info" do wizard (renderizar perguntas)
-- `supabase/functions/session-booking-webhook/index.ts` (snapshot do contrato)
+- migration nova (4 colunas em bookings + 4 em client_projects)
+- `supabase/functions/register-contract-acceptance/index.ts` (novo)
+- `supabase/functions/confirm-booking/index.ts`
+- `supabase/functions/session-booking-webhook/index.ts`
+- `supabase/config.toml` (bloco da nova função)
+- `src/pages/BookingConfirm.tsx` (chama edge function em vez de UPDATE direto)
+- `src/pages/dashboard/Projects.tsx` (copia campos ao criar projeto a partir de booking)
+- `src/components/dashboard/ProjectDetailSheet.tsx` (lê do projeto + badge de data)
 - `src/contexts/LanguageContext.tsx` (i18n)

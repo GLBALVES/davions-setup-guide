@@ -57,7 +57,46 @@ serve(async (req) => {
       }
     }
 
-    // Insert in-app notification for the photographer
+    // Lock contract snapshot + propagate to client_projects (if session has a contract)
+    if (bookingId && paymentKind !== "balance_due") {
+      try {
+        const { data: bkContract } = await supabase
+          .from("bookings")
+          .select("contract_html_snapshot, contract_signed_ip, contract_signed_user_agent, contract_locked, session_id")
+          .eq("id", bookingId)
+          .maybeSingle();
+
+        if (bkContract && !(bkContract as any).contract_locked && (bkContract as any).contract_html_snapshot) {
+          const { data: sess } = await supabase
+            .from("sessions")
+            .select("contract_text, contract_id")
+            .eq("id", (bkContract as any).session_id)
+            .maybeSingle();
+
+          const hasContract = !!(sess?.contract_text || sess?.contract_id);
+          if (hasContract) {
+            const signedAt = new Date().toISOString();
+            await supabase
+              .from("bookings")
+              .update({ contract_signed_at: signedAt, contract_locked: true })
+              .eq("id", bookingId);
+
+            await supabase
+              .from("client_projects")
+              .update({
+                signed_contract_html: (bkContract as any).contract_html_snapshot,
+                contract_signed_at: signedAt,
+                contract_signed_ip: (bkContract as any).contract_signed_ip,
+                contract_signed_user_agent: (bkContract as any).contract_signed_user_agent,
+              })
+              .eq("booking_id", bookingId);
+          }
+        }
+      } catch (lockErr) {
+        console.error("Contract lock/copy failed:", lockErr);
+      }
+    }
+
     if (bookingId) {
       const { data: bk } = await supabase
         .from("bookings")

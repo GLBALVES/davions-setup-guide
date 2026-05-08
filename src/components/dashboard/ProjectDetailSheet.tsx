@@ -1028,19 +1028,34 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
   // Fetch the signed contract snapshot from the booking linked to this project
   const bookingId = (project as any).booking_id ?? null;
   const [contractOpen, setContractOpen] = useState(false);
-  const { data: contractSnapshot } = useQuery<{ html: string | null } | null>({
-    queryKey: ["project-contract-snapshot", bookingId],
+  const projectId = project.id;
+  const { data: contractSnapshot } = useQuery<{ html: string | null; signedAt: string | null } | null>({
+    queryKey: ["project-contract-snapshot", projectId, bookingId],
     queryFn: async () => {
+      // Prefer the signed copy stored on the project itself
+      const { data: proj } = await supabase
+        .from("client_projects" as any)
+        .select("signed_contract_html, contract_signed_at")
+        .eq("id", projectId)
+        .maybeSingle();
+      const projHtml = (proj as any)?.signed_contract_html ?? null;
+      const projSignedAt = (proj as any)?.contract_signed_at ?? null;
+      if (projHtml) return { html: projHtml, signedAt: projSignedAt };
+
+      // Fallback: read from the linked booking (legacy / pre-payment snapshots)
       if (!bookingId) return null;
       const { data, error } = await supabase
         .from("bookings")
-        .select("contract_html_snapshot")
+        .select("contract_html_snapshot, contract_signed_at")
         .eq("id", bookingId)
         .maybeSingle();
       if (error) throw error;
-      return { html: (data as any)?.contract_html_snapshot ?? null };
+      return {
+        html: (data as any)?.contract_html_snapshot ?? null,
+        signedAt: (data as any)?.contract_signed_at ?? null,
+      };
     },
-    enabled: !!bookingId,
+    enabled: !!projectId,
   });
 
   // Fetch briefings
@@ -1145,10 +1160,15 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
       <Dialog open={contractOpen} onOpenChange={setContractOpen}>
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 flex-wrap">
               <FileTextIcon className="h-4 w-4 text-purple-500" />
               {tp.contractsSubsection}
               <span className="ml-2 text-[10px] font-normal text-muted-foreground/60 uppercase tracking-widest">{(tp as any).readOnly ?? "Read-only"}</span>
+              {contractSnapshot?.signedAt && (
+                <span className="text-[10px] font-normal text-muted-foreground/60">
+                  · {(tp as any).signedOn ?? "Signed on"} {new Date(contractSnapshot.signedAt).toLocaleString()}
+                </span>
+              )}
             </DialogTitle>
           </DialogHeader>
           <ScrollArea className="flex-1 pr-4">

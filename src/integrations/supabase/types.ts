@@ -699,6 +699,10 @@ export type Database = {
           client_tax_id: string | null
           consent_given_at: string | null
           contract_html_snapshot: string | null
+          contract_locked: boolean
+          contract_signed_at: string | null
+          contract_signed_ip: string | null
+          contract_signed_user_agent: string | null
           created_at: string
           extras_total: number
           id: string
@@ -717,6 +721,10 @@ export type Database = {
           client_tax_id?: string | null
           consent_given_at?: string | null
           contract_html_snapshot?: string | null
+          contract_locked?: boolean
+          contract_signed_at?: string | null
+          contract_signed_ip?: string | null
+          contract_signed_user_agent?: string | null
           created_at?: string
           extras_total?: number
           id?: string
@@ -735,6 +743,10 @@ export type Database = {
           client_tax_id?: string | null
           consent_given_at?: string | null
           contract_html_snapshot?: string | null
+          contract_locked?: boolean
+          contract_signed_at?: string | null
+          contract_signed_ip?: string | null
+          contract_signed_user_agent?: string | null
           created_at?: string
           extras_total?: number
           id?: string
@@ -1017,6 +1029,9 @@ export type Database = {
           client_name: string
           client_phone: string | null
           color: string | null
+          contract_signed_at: string | null
+          contract_signed_ip: string | null
+          contract_signed_user_agent: string | null
           created_at: string
           description: string | null
           gallery_deadline: string | null
@@ -1029,6 +1044,7 @@ export type Database = {
           session_type: string | null
           shoot_date: string | null
           shoot_time: string | null
+          signed_contract_html: string | null
           stage: string
           title: string
           updated_at: string
@@ -1039,6 +1055,9 @@ export type Database = {
           client_name?: string
           client_phone?: string | null
           color?: string | null
+          contract_signed_at?: string | null
+          contract_signed_ip?: string | null
+          contract_signed_user_agent?: string | null
           created_at?: string
           description?: string | null
           gallery_deadline?: string | null
@@ -1051,6 +1070,7 @@ export type Database = {
           session_type?: string | null
           shoot_date?: string | null
           shoot_time?: string | null
+          signed_contract_html?: string | null
           stage?: string
           title?: string
           updated_at?: string
@@ -1061,6 +1081,9 @@ export type Database = {
           client_name?: string
           client_phone?: string | null
           color?: string | null
+          contract_signed_at?: string | null
+          contract_signed_ip?: string | null
+          contract_signed_user_agent?: string | null
           created_at?: string
           description?: string | null
           gallery_deadline?: string | null
@@ -1073,6 +1096,7 @@ export type Database = {
           session_type?: string | null
           shoot_date?: string | null
           shoot_time?: string | null
+          signed_contract_html?: string | null
           stage?: string
           title?: string
           updated_at?: string
