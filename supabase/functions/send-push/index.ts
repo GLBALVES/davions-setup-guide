@@ -234,7 +234,8 @@ serve(async (req) => {
 
     const payloadJson = JSON.stringify({
       title: title || "Davions",
-      body: body || "",
+      // Safari/iOS silently drops notifications with empty body — always send something
+      body: (body && String(body).trim().length > 0) ? body : " ",
       url: url || "/dashboard",
     });
     const payloadBytes = new TextEncoder().encode(payloadJson);
