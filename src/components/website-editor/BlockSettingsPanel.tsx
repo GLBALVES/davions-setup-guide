@@ -935,33 +935,9 @@ export const BlockSettingsPanel = ({
         <div className="px-4 pb-4 space-y-3">
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">Color</label>
-            <div className="grid grid-cols-8 gap-1.5">
-              {PRESET_COLORS.map((c) => (
-                <button
-                  key={c.value || "none"}
-                  type="button"
-                  onClick={() => update({ backgroundColor: c.value })}
-                  className={cn(
-                    "w-7 h-7 rounded-md border transition-all relative",
-                    s.backgroundColor === c.value
-                      ? "ring-2 ring-primary ring-offset-1"
-                      : "border-border hover:border-foreground/30",
-                    !c.value && "bg-[conic-gradient(from_0deg,#fff,#eee,#fff)]"
-                  )}
-                  style={c.value ? { backgroundColor: c.value } : undefined}
-                  title={c.label}
-                >
-                  {!c.value && <span className="absolute inset-0 flex items-center justify-center text-[8px] text-muted-foreground">∅</span>}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Custom (HEX)</label>
             <div className="flex items-center gap-2">
               <SitePalettePicker
-                value={isHexColor(s.backgroundColor || "") ? (s.backgroundColor as string) : "#ffffff"}
+                value={s.backgroundColor || "#ffffff"}
                 onChange={(v) => update({ backgroundColor: v })}
               />
               <Input
