@@ -1129,21 +1129,35 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
         {!contractSnapshot?.html ? (
           <p className="text-[11px] text-muted-foreground/50 italic pl-1">{tp.noContracts}</p>
         ) : (
-          <div className="rounded-md border border-border/50 bg-muted/10">
-            <div className="flex items-center gap-2 px-3 py-2 border-b border-border/40">
-              <FileTextIcon className="h-3.5 w-3.5 text-purple-500 shrink-0" />
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                {tp.contractsSubsection}
-              </span>
-              <span className="ml-auto text-[10px] text-muted-foreground/60">{(tp as any).readOnly ?? "Read-only"}</span>
-            </div>
-            <div
-              className="prose prose-sm max-w-none px-4 py-3 text-xs select-text pointer-events-none"
-              dangerouslySetInnerHTML={{ __html: contractSnapshot.html }}
-            />
-          </div>
+          <button
+            type="button"
+            onClick={() => setContractOpen(true)}
+            className="flex items-center gap-2 px-3 py-2 rounded-md border border-border/50 bg-muted/10 hover:bg-muted/30 transition text-left"
+          >
+            <FileTextIcon className="h-3.5 w-3.5 text-purple-500 shrink-0" />
+            <span className="text-xs flex-1 truncate">{tp.contractsSubsection}</span>
+            <span className="text-[10px] text-muted-foreground/60">{(tp as any).readOnly ?? "Read-only"}</span>
+          </button>
         )}
       </div>
+
+      <Dialog open={contractOpen} onOpenChange={setContractOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileTextIcon className="h-4 w-4 text-purple-500" />
+              {tp.contractsSubsection}
+              <span className="ml-2 text-[10px] font-normal text-muted-foreground/60 uppercase tracking-widest">{(tp as any).readOnly ?? "Read-only"}</span>
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="flex-1 pr-4">
+            <div
+              className="prose prose-sm max-w-none text-sm select-text"
+              dangerouslySetInnerHTML={{ __html: contractSnapshot?.html ?? "" }}
+            />
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Briefings sub-section ────────────────────────────────────────── */}
       <ProjectBriefingSubsection
