@@ -28,13 +28,17 @@ export function formatCurrencyInput(raw: string | number | null | undefined, lan
   const decimalChar = isCommaDecimal(lang) ? "," : ".";
   const thousandChar = isCommaDecimal(lang) ? "." : ",";
 
-  // Normalize: keep digits and any decimal/thousand chars, then collapse to a single decimal.
-  // Strategy: strip thousand char, then convert the locale decimal char (if any) to "."
   s = s.replace(/\s/g, "");
 
-  if (isCommaDecimal(lang)) {
+  // Detect canonical form ("123" or "123.45") — always uses "." as decimal separator,
+  // never has thousand separators. This avoids treating "8.25" as "825" in pt/es mode.
+  const isCanonical = /^-?\d+(\.\d{1,2})?$/.test(s);
+
+  if (isCanonical) {
+    // Already canonical — just normalize to "." decimal for the rest of the pipeline.
+    // (no-op transformation)
+  } else if (isCommaDecimal(lang)) {
     // PT/ES: dot is thousand, comma is decimal.
-    // Remove dots used as thousand separators, swap commas to dot for parsing.
     s = s.replace(/\./g, "").replace(/,/g, ".");
   } else {
     // EN: comma is thousand, dot is decimal.
