@@ -320,21 +320,10 @@ export function WatermarkEditor({ initial, onSaved, onCancel }: WatermarkEditorP
                         wm.text_color === "#000000" ? "border-foreground" : "border-border"
                       )}
                     />
-                    <div className="relative flex items-center">
-                      <input
-                        type="color"
-                        value={wm.text_color}
-                        onChange={(e) => set("text_color", e.target.value)}
-                        className="sr-only absolute"
-                        id="text-color-picker"
-                      />
-                      <label
-                        htmlFor="text-color-picker"
-                        className="w-6 h-6 border-2 border-border rounded-sm cursor-pointer flex items-center justify-center"
-                        style={{ background: wm.text_color }}
-                        title="Custom color"
-                      />
-                    </div>
+                    <SitePalettePicker
+                      value={wm.text_color}
+                      onChange={(v) => set("text_color", v)}
+                    />
                     <span className="text-[10px] font-mono text-muted-foreground">{wm.text_color}</span>
                   </div>
                 </div>
