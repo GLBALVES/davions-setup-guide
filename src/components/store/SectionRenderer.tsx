@@ -1167,8 +1167,18 @@ function TimelineBlock({ events = [], accentColor, ctx }: any) {
 
 // ─── Testimonials ───────────────────────────────────────────────────────────
 
-function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
+function TestimonialsBlock({ items = [], variant = "cards", title = "Testimonials", ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
+  const Title = ({ className }: any) => (
+    <EditableText
+      as="h2"
+      editMode={c.editMode}
+      value={title || ""}
+      placeholder="Testimonials"
+      onChange={(v) => c.set("title", v)}
+      className={className}
+    />
+  );
   const displayItems = items.length > 0 ? items : [
     { quote: "An incredible experience from start to finish.", author: "Client", role: "", image: "" },
     { quote: "The photos exceeded all our expectations.", author: "Client", role: "", image: "" },
@@ -1277,7 +1287,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+          <Title className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground block" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {displayItems.map((item: any, i: number) => (
               <div key={i} className="flex flex-col">
@@ -1304,7 +1314,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6 bg-muted/10">
         <div className="max-w-5xl mx-auto">
-          <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+          <Title className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground block" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-center">
             {displayItems.map((item: any, i: number) => (
               <div key={i} className="flex flex-col items-center">
@@ -1331,7 +1341,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
     return (
       <section className="py-12 sm:py-16 px-5 sm:px-6 bg-muted/10">
         <div className="max-w-5xl mx-auto">
-          <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+          <Title className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground block" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {displayItems.map((item: any, i: number) => (
               <blockquote key={i} className="border-l-2 border-border pl-6">
@@ -1376,7 +1386,7 @@ function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
   return (
     <section className="py-12 sm:py-16 px-5 sm:px-6 bg-muted/10">
       <div className="max-w-5xl mx-auto">
-        <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground">Testimonials</h2>
+        <Title className="site-h2 text-2xl font-extralight tracking-wide text-center mb-10 text-foreground block" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {displayItems.map((item: any, i: number) => (
             <blockquote key={i} className="border-l-2 border-border pl-6">
