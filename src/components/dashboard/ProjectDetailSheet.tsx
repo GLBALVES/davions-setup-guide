@@ -289,7 +289,7 @@ function ReceivedPaymentsLog({
           </div>
           <div className="flex gap-2 justify-end">
             <Button variant="ghost" size="sm" className="h-7 text-xs"
-              onClick={() => { setShowForm(false); setDesc(""); setAmount(""); }}>
+              onClick={() => { onToggleForm(); setDesc(""); setAmount(""); }}>
               {L.cancel}
             </Button>
             <Button size="sm" className="h-7 text-xs"
