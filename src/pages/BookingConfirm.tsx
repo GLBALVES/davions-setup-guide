@@ -192,6 +192,8 @@ const BookingConfirm = () => {
 
   // Contract state
   const [contractAccepted, setContractAccepted] = useState(false);
+  const [signatureData, setSignatureData] = useState<string | null>(null);
+  const signatureRef = useRef<any>(null);
   const [contractPreviewOpen, setContractPreviewOpen] = useState(false);
   const [contractCustomFields, setContractCustomFields] = useState<Array<{ id: string; field_key: string; field_label: string; default_value: string; value_source?: string | null; mapped_key?: string | null; client_prompt?: string | null; client_input_type?: string | null; required?: boolean | null }>>([]);
   const [customFieldAnswers, setCustomFieldAnswers] = useState<Record<string, string>>({});
