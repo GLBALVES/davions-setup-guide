@@ -33,7 +33,7 @@ async function createVapidAuth(endpoint: string, vapidPub: Uint8Array, vapidPriv
       JSON.stringify({
         aud: audience,
         exp: now + 43200,
-        sub: "mailto:noreply@davions.app",
+        sub: "mailto:noreply@davions.com",
       })
     )
   );
@@ -234,7 +234,8 @@ serve(async (req) => {
 
     const payloadJson = JSON.stringify({
       title: title || "Davions",
-      body: body || "",
+      // Safari/iOS silently drops notifications with empty body — always send something
+      body: (body && String(body).trim().length > 0) ? body : " ",
       url: url || "/dashboard",
     });
     const payloadBytes = new TextEncoder().encode(payloadJson);
