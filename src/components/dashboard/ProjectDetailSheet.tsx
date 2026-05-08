@@ -724,7 +724,12 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       )}
 
       {/* ── Received payments log ───────────────────────────────────────── */}
-      <ReceivedPaymentsLog projectId={project.id} photographerId={photographerId} />
+      <ReceivedPaymentsLog
+        projectId={project.id}
+        photographerId={photographerId}
+        showForm={showPaymentForm}
+        onToggleForm={() => setShowPaymentForm((v) => !v)}
+      />
 
       <div className="flex flex-col gap-2">
         {invoices.map((inv) => {
