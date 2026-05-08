@@ -181,6 +181,9 @@ export default function InlineFormatToolbar() {
       top: rect.top + window.scrollY - 48,
       left: rect.left + window.scrollX + rect.width / 2,
     });
+    // Snapshot for later restoration (the popovers / native pickers can steal
+    // focus and collapse the selection before our apply handler runs).
+    savedRangeRef.current = range.cloneRange();
   }, []);
 
   useEffect(() => {
