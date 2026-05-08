@@ -6183,6 +6183,7 @@ export const translations = {
       eventNewChat: "Nuevo Mensaje de Chat",
       eventNewBug: "Nuevo Reporte de Bug",
       eventBriefingResponse: "Briefing Respondido",
+      eventGalleryCheckout: "Checkout de Galería",
       inApp: "En la App",
       email: "Email",
       browserPush: "Push del Navegador",
