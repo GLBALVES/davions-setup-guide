@@ -8,14 +8,36 @@ import {
 import { FONT_PRESETS } from "@/components/website-editor/site-fonts";
 import { cn } from "@/lib/utils";
 import { SitePalettePicker } from "@/components/website-editor/SitePalettePicker";
+import { ELEMENT_GROUPS, type ElementKey } from "@/components/website-editor/font-templates";
 
-const BLOCK_PRESETS: { id: string; label: string; tag: string }[] = [
-  { id: "h1", label: "Heading 1", tag: "H1" },
-  { id: "h2", label: "Heading 2", tag: "H2" },
-  { id: "h3", label: "Heading 3", tag: "H3" },
-  { id: "p", label: "Body", tag: "P" },
-  { id: "blockquote", label: "Quote", tag: "BLOCKQUOTE" },
-];
+/**
+ * Map each design-system element key to the block tag we should produce via
+ * `formatBlock`. After the command runs we also tag the resulting block with
+ * `data-site-typo="<key>"` so the CSS injected by `useSiteTypography` (matching
+ * `[data-site-typo='paragraph_2']` etc.) applies the exact typography the
+ * photographer configured in the Design → Fonts panel.
+ */
+const ELEMENT_TO_TAG: Record<ElementKey, string> = {
+  banner_heading: "H1",
+  banner_subtitle: "P",
+  h1: "H1",
+  h2: "H2",
+  h3: "H3",
+  h4: "H4",
+  h5: "H5",
+  h6: "H6",
+  paragraph_1: "P",
+  paragraph_2: "P",
+  paragraph_3: "P",
+  logo_text: "P",
+  navigation: "P",
+  sub_navigation: "P",
+  overlay_navigation: "P",
+  overlay_sub_navigation: "P",
+  button: "P",
+  form_label: "P",
+  pullquote: "BLOCKQUOTE",
+};
 
 /**
  * Floating selection toolbar that lets users format the currently selected
