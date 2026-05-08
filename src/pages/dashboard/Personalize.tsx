@@ -263,6 +263,57 @@ const Personalize = () => {
   const [newFieldRequired, setNewFieldRequired] = useState(false);
   const [addingField, setAddingField] = useState(false);
   const [deletingFieldId, setDeletingFieldId] = useState<string | null>(null);
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+
+  const startEditContractField = (f: ContractField) => {
+    setEditingFieldId(f.id);
+    setNewFieldLabel(f.field_label);
+    setNewFieldDefault(f.default_value || "");
+    setNewFieldSource((f.value_source as any) || "static");
+    setNewFieldMappedKey(f.mapped_key || "");
+    setNewFieldClientPrompt(f.client_prompt || "");
+    setNewFieldInputType((f.client_input_type as any) || "text");
+    setNewFieldRequired(!!f.required);
+  };
+
+  const resetContractFieldForm = () => {
+    setEditingFieldId(null);
+    setNewFieldLabel("");
+    setNewFieldDefault("");
+    setNewFieldSource("static");
+    setNewFieldMappedKey("");
+    setNewFieldClientPrompt("");
+    setNewFieldInputType("text");
+    setNewFieldRequired(false);
+  };
+
+  const handleUpdateContractField = async () => {
+    if (!editingFieldId || !newFieldLabel.trim()) return;
+    setAddingField(true);
+    const updatePayload: any = {
+      field_label: newFieldLabel.trim(),
+      default_value: newFieldSource === "static" ? newFieldDefault.trim() : "",
+      value_source: newFieldSource,
+      mapped_key: newFieldSource === "mapped" ? (newFieldMappedKey || null) : null,
+      client_prompt: newFieldSource === "client_input" ? (newFieldClientPrompt.trim() || newFieldLabel.trim()) : null,
+      client_input_type: newFieldSource === "client_input" ? newFieldInputType : "text",
+      required: newFieldSource === "client_input" ? newFieldRequired : false,
+    };
+    const { data, error } = await (supabase as any)
+      .from("contract_custom_fields")
+      .update(updatePayload)
+      .eq("id", editingFieldId)
+      .select("id, field_key, field_label, default_value, value_source, mapped_key, client_prompt, client_input_type, required")
+      .single();
+    if (data && !error) {
+      setContractFields((prev) => prev.map((f) => f.id === editingFieldId ? data : f));
+      resetContractFieldForm();
+      toast({ title: t.personalize.contractFieldUpdated ?? "Field updated" });
+    } else if (error) {
+      toast({ title: error.message, variant: "destructive" });
+    }
+    setAddingField(false);
+  };
 
   // ── Briefings ────────────────────────────────────────────────────────────────
   const [briefings, setBriefings] = useState<Briefing[]>([]);
