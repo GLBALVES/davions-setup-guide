@@ -257,7 +257,7 @@ export function SitePalettePicker({
         />
       </PopoverTrigger>
       <PopoverContent
-        side="bottom"
+        side="top"
         align="start"
         className="w-64 p-3 z-[60]"
         onOpenAutoFocus={(e) => e.preventDefault()}
