@@ -15,6 +15,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { Upload, Loader2, X, Type, Image } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SitePalettePicker } from "@/components/website-editor/SitePalettePicker";
 
 type Position =
   | "top-left"
