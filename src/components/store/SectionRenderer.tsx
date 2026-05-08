@@ -1167,8 +1167,18 @@ function TimelineBlock({ events = [], accentColor, ctx }: any) {
 
 // ─── Testimonials ───────────────────────────────────────────────────────────
 
-function TestimonialsBlock({ items = [], variant = "cards", ctx }: any) {
+function TestimonialsBlock({ items = [], variant = "cards", title = "Testimonials", ctx }: any) {
   const c: Ctx = ctx || { editMode: false, set: () => {} };
+  const Title = ({ className }: any) => (
+    <EditableText
+      as="h2"
+      editMode={c.editMode}
+      value={title || ""}
+      placeholder="Testimonials"
+      onChange={(v) => c.set("title", v)}
+      className={className}
+    />
+  );
   const displayItems = items.length > 0 ? items : [
     { quote: "An incredible experience from start to finish.", author: "Client", role: "", image: "" },
     { quote: "The photos exceeded all our expectations.", author: "Client", role: "", image: "" },
