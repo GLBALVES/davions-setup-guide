@@ -1094,6 +1094,24 @@ export const BlockSettingsPanel = ({
             <label className="text-xs font-medium text-muted-foreground">Right: {s.paddingRight ?? 0}px</label>
             <Slider value={[s.paddingRight ?? 0]} min={0} max={200} step={8} onValueChange={([v]) => update({ paddingRight: v })} />
           </div>
+
+          {section.type === "text" && (
+            <div className="space-y-1.5 pt-2 border-t border-border/60">
+              <label className="text-xs font-medium text-muted-foreground">
+                Content Width: {s.contentMaxWidth ?? 768}px
+              </label>
+              <Slider
+                value={[s.contentMaxWidth ?? 768]}
+                min={320}
+                max={1600}
+                step={8}
+                onValueChange={([v]) => update({ contentMaxWidth: v })}
+              />
+              <p className="text-[10px] text-muted-foreground/80 leading-relaxed">
+                Maximum width of the text content within this block.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="border-t border-border" />
