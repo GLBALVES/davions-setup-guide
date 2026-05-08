@@ -656,7 +656,7 @@ const BookingConfirm = () => {
       return false;
     }
     if (activeStep.key === "contract") {
-      return contractAccepted;
+      return contractAccepted && !!signatureData;
     }
     return true;
   };
