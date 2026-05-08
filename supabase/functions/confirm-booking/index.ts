@@ -128,18 +128,16 @@ serve(async (req) => {
           .eq("id", (bkContract as any).session_id)
           .maybeSingle();
 
-        let snapshotHtml = (bkContract as any).contract_html_snapshot as string | null;
-        if (!snapshotHtml && sess?.contract_text) {
-          snapshotHtml = sess.contract_text;
-        }
-
+        // Use ONLY the resolved snapshot saved at signing time. Never fall
+        // back to the raw template — must match what the client saw/signed.
+        const snapshotHtml = (bkContract as any).contract_html_snapshot as string | null;
         const hasContract = !!(sess?.contract_text || sess?.contract_id);
+
         if (hasContract && snapshotHtml) {
           const signedAt = new Date().toISOString();
           await supabase
             .from("bookings")
             .update({
-              contract_html_snapshot: snapshotHtml,
               contract_signed_at: signedAt,
               contract_locked: true,
             })
@@ -154,6 +152,8 @@ serve(async (req) => {
               contract_signed_user_agent: (bkContract as any).contract_signed_user_agent,
             })
             .eq("booking_id", bookingId);
+        } else if (hasContract && !snapshotHtml) {
+          console.warn("Contract present on session but no signed snapshot for booking", bookingId);
         }
       }
     } catch (lockErr) {
