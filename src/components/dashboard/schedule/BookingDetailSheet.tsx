@@ -86,33 +86,38 @@ export function BriefingDialog({
   const [loading, setLoading] = useState(true);
   const [hasResponse, setHasResponse] = useState(false);
 
-  const load = async () => {
-    setLoading(true);
-    const [{ data: briefingData }, { data: responseData }] = await Promise.all([
-      (supabase as any).from("briefings").select("name, questions").eq("id", briefingId).single(),
-      (supabase as any)
-        .from("booking_briefing_responses")
-        .select("answers")
-        .eq("booking_id", bookingId)
-        .eq("briefing_id", briefingId)
-        .maybeSingle(),
-    ]);
-    if (briefingData) {
-      setBriefingName(briefingData.name ?? "Briefing");
-      setQuestions(
-        Array.isArray(briefingData.questions) ? (briefingData.questions as BriefingQuestion[]) : []
-      );
-    }
-    if (responseData?.answers) {
-      setAnswers(responseData.answers as Record<string, string | string[]>);
-      setHasResponse(true);
-    } else {
-      setHasResponse(false);
-    }
-    setLoading(false);
-  };
-
-  if (open && loading && questions.length === 0) load();
+  useEffect(() => {
+    if (!open || !bookingId || !briefingId) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const [{ data: briefingData }, { data: responseData }] = await Promise.all([
+        (supabase as any).from("briefings").select("name, questions").eq("id", briefingId).single(),
+        (supabase as any)
+          .from("booking_briefing_responses")
+          .select("answers")
+          .eq("booking_id", bookingId)
+          .eq("briefing_id", briefingId)
+          .maybeSingle(),
+      ]);
+      if (cancelled) return;
+      if (briefingData) {
+        setBriefingName(briefingData.name ?? "Briefing");
+        setQuestions(
+          Array.isArray(briefingData.questions) ? (briefingData.questions as BriefingQuestion[]) : []
+        );
+      }
+      if (responseData?.answers) {
+        setAnswers(responseData.answers as Record<string, string | string[]>);
+        setHasResponse(true);
+      } else {
+        setAnswers({});
+        setHasResponse(false);
+      }
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [open, bookingId, briefingId]);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
