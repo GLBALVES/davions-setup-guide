@@ -185,10 +185,19 @@ interface ProjectPayment {
   created_at: string;
 }
 
-function ReceivedPaymentsLog({ projectId, photographerId }: { projectId: string; photographerId: string }) {
+function ReceivedPaymentsLog({
+  projectId,
+  photographerId,
+  showForm,
+  onToggleForm,
+}: {
+  projectId: string;
+  photographerId: string;
+  showForm: boolean;
+  onToggleForm: () => void;
+}) {
   const { lang } = useLanguage();
   const queryClient = useQueryClient();
-  const [showForm, setShowForm] = useState(false);
   const [desc, setDesc] = useState("");
   const [amount, setAmount] = useState(""); // canonical "1500.50"
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
