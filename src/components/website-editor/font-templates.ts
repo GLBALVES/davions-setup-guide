@@ -284,29 +284,33 @@ export function collectFontIds(templateId: string | null | undefined, overrides:
   return Array.from(ids).filter((id) => FONT_PRESETS.some((f) => f.id === id));
 }
 
-const ELEMENT_TO_SELECTORS: Record<ElementKey, string> = {
-  banner_heading: ".site-banner-heading, [data-site-typo='banner_heading']",
-  banner_subtitle: ".site-banner-subtitle, [data-site-typo='banner_subtitle']",
-  // Headings: also match raw tags inside any .site-rich-text container so
-  // text written via the inline rich-text editor (Text block, columns) gets
-  // the chosen template typography automatically.
-  h1: ".site-h1, [data-site-typo='h1'], .site-rich-text h1:not([data-site-typo])",
-  h2: ".site-h2, [data-site-typo='h2'], .site-rich-text h2:not([data-site-typo])",
-  h3: ".site-h3, [data-site-typo='h3'], .site-rich-text h3:not([data-site-typo])",
-  h4: ".site-h4, [data-site-typo='h4'], .site-rich-text h4:not([data-site-typo])",
-  h5: ".site-h5, [data-site-typo='h5'], .site-rich-text h5:not([data-site-typo])",
-  h6: ".site-h6, [data-site-typo='h6'], .site-rich-text h6:not([data-site-typo])",
-  paragraph_1: ".site-paragraph-1, [data-site-typo='paragraph_1'], .site-rich-text p:not([data-site-typo])",
-  paragraph_2: ".site-paragraph-2, [data-site-typo='paragraph_2']",
-  paragraph_3: ".site-paragraph-3, [data-site-typo='paragraph_3']",
-  logo_text: ".site-logo-text, [data-site-typo='logo_text']",
-  navigation: ".site-nav, [data-site-typo='navigation']",
-  sub_navigation: ".site-subnav, [data-site-typo='sub_navigation']",
-  overlay_navigation: ".site-overlay-nav, [data-site-typo='overlay_navigation']",
-  overlay_sub_navigation: ".site-overlay-subnav, [data-site-typo='overlay_sub_navigation']",
-  button: ".site-button, [data-site-typo='button']",
-  form_label: ".site-form-label, [data-site-typo='form_label']",
-  pullquote: ".site-pullquote, [data-site-typo='pullquote'], .site-rich-text blockquote:not([data-site-typo])",
+// Each element has TWO selectors:
+// - A "class" selector (e.g. .site-h2) — base styling for design-system markup.
+// - A "typo" selector using a duplicated attribute ([data-site-typo='X'][data-site-typo])
+//   so its specificity (0,2,0) beats any single .site-* class (0,1,0). This ensures
+//   that when the inline toolbar re-tags an element to a different element kind
+//   (e.g. wrapping a .site-h2 child in <span data-site-typo="paragraph_2">),
+//   the chosen typography always wins.
+const ELEMENT_TO_CLASS_SELECTOR: Record<ElementKey, string> = {
+  banner_heading: ".site-banner-heading",
+  banner_subtitle: ".site-banner-subtitle",
+  h1: ".site-h1, .site-rich-text h1:not([data-site-typo])",
+  h2: ".site-h2, .site-rich-text h2:not([data-site-typo])",
+  h3: ".site-h3, .site-rich-text h3:not([data-site-typo])",
+  h4: ".site-h4, .site-rich-text h4:not([data-site-typo])",
+  h5: ".site-h5, .site-rich-text h5:not([data-site-typo])",
+  h6: ".site-h6, .site-rich-text h6:not([data-site-typo])",
+  paragraph_1: ".site-paragraph-1, .site-rich-text p:not([data-site-typo])",
+  paragraph_2: ".site-paragraph-2",
+  paragraph_3: ".site-paragraph-3",
+  logo_text: ".site-logo-text",
+  navigation: ".site-nav",
+  sub_navigation: ".site-subnav",
+  overlay_navigation: ".site-overlay-nav",
+  overlay_sub_navigation: ".site-overlay-subnav",
+  button: ".site-button",
+  form_label: ".site-form-label",
+  pullquote: ".site-pullquote, .site-rich-text blockquote:not([data-site-typo])",
 };
 
 /** Build a CSS string targeting all element classes/data-attrs. */
@@ -316,16 +320,20 @@ export function buildTypographyCss(templateId: string | null | undefined, overri
   (Object.keys(tpl.elements) as ElementKey[]).forEach((key) => {
     const el = resolveElement(templateId, overrides, key, scale);
     const stack = FONT_PRESETS.find((f) => f.id === el.fontFamily)?.stack ?? "inherit";
-    const selector = ELEMENT_TO_SELECTORS[key];
-    lines.push(`${selector} {`);
-    lines.push(`  font-family: ${stack};`);
-    lines.push(`  font-weight: ${el.weight};`);
-    lines.push(`  font-style: ${el.style};`);
-    lines.push(`  font-size: ${el.fontSize}px;`);
-    lines.push(`  line-height: ${el.lineHeight};`);
-    lines.push(`  letter-spacing: ${el.letterSpacing}em;`);
-    lines.push(`  text-transform: ${el.textTransform};`);
-    lines.push(`}`);
+    const classSel = ELEMENT_TO_CLASS_SELECTOR[key];
+    // Doubled attribute selector → specificity (0,2,0) beats any single class.
+    const typoSel = `[data-site-typo='${key}'][data-site-typo]`;
+    const declarations = [
+      `  font-family: ${stack};`,
+      `  font-weight: ${el.weight};`,
+      `  font-style: ${el.style};`,
+      `  font-size: ${el.fontSize}px;`,
+      `  line-height: ${el.lineHeight};`,
+      `  letter-spacing: ${el.letterSpacing}em;`,
+      `  text-transform: ${el.textTransform};`,
+    ].join("\n");
+    lines.push(`${classSel} {\n${declarations}\n}`);
+    lines.push(`${typoSel} {\n${declarations}\n}`);
   });
   return lines.join("\n");
 }
