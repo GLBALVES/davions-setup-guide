@@ -5216,7 +5216,37 @@ const WebsiteEditor = () => {
             </div>
           ))}
         </div>
-        <div className="border-t border-border p-2 flex gap-1 shrink-0 bg-card">
+        <div className="border-t border-border p-2 flex items-center gap-1 shrink-0 bg-card">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 shrink-0"
+                onClick={handleUndoClick}
+                disabled={!canUndo}
+                aria-label={undoLabel}
+              >
+                <Undo2 className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">{undoLabel} (Ctrl+Z)</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 shrink-0"
+                onClick={handleRedoClick}
+                disabled={!canRedo}
+                aria-label={redoLabel}
+              >
+                <Redo2 className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">{redoLabel} (Ctrl+Shift+Z)</TooltipContent>
+          </Tooltip>
           <Button
             size="sm"
             variant="outline"
