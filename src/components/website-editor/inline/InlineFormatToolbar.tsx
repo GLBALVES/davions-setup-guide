@@ -491,24 +491,27 @@ export default function InlineFormatToolbar() {
           <Palette className="h-3.5 w-3.5" />
         </button>
         {showColor && (
-          <div className="absolute top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg p-2 min-w-[200px]">
-            <div className="grid grid-cols-7 gap-1 mb-2">
-              {[
-                "#000000",
-                "#374151",
-                "#6B7280",
-                "#9CA3AF",
-                "#D1D5DB",
-                "#FFFFFF",
-                "#EF4444",
-                "#F97316",
-                "#EAB308",
-                "#22C55E",
-                "#06B6D4",
-                "#3B82F6",
-                "#8B5CF6",
-                "#EC4899",
-              ].map((c) => (
+          <div className="absolute top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg p-2 min-w-[220px]">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">
+              Site palette
+            </p>
+            <div className="grid grid-cols-8 gap-1 mb-2">
+              {readSitePaletteHexes().map((c) => (
+                <button
+                  key={c.var}
+                  type="button"
+                  onMouseDown={guard(() => onApplyColor(c.hex))}
+                  className="w-6 h-6 rounded border border-border"
+                  style={{ background: c.hex }}
+                  title={`${c.label} · ${c.hex}`}
+                />
+              ))}
+            </div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">
+              Neutrals
+            </p>
+            <div className="grid grid-cols-8 gap-1 mb-2">
+              {["#000000", "#374151", "#6B7280", "#9CA3AF", "#D1D5DB", "#FFFFFF"].map((c) => (
                 <button
                   key={c}
                   type="button"
