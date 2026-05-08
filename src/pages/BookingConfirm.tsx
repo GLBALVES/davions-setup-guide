@@ -1224,13 +1224,44 @@ const BookingConfirm = () => {
               />
             </div>
 
-            <div className="p-5 flex flex-col gap-3">
+            <div className="p-5 flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground">
+                    Sign here
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleSignatureClear}
+                    className="text-[10px] tracking-wider uppercase text-muted-foreground hover:text-foreground transition"
+                  >
+                    Clear
+                  </button>
+                </div>
+                <div className="border border-border bg-background relative">
+                  <SignatureCanvas
+                    ref={signatureRef}
+                    penColor="hsl(var(--foreground))"
+                    onEnd={handleSignatureEnd}
+                    canvasProps={{
+                      className: "w-full h-32 cursor-crosshair",
+                    }}
+                  />
+                </div>
+                {!signatureData && (
+                  <p className="text-[10px] font-light text-muted-foreground/70">
+                    Draw your signature above to confirm acceptance.
+                  </p>
+                )}
+              </div>
+
               <label className="flex items-start gap-2.5 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={contractAccepted}
                   onChange={(e) => handleAcceptContract(e.target.checked)}
-                  className="h-4 w-4 accent-foreground mt-0.5"
+                  disabled={!signatureData}
+                  className="h-4 w-4 accent-foreground mt-0.5 disabled:opacity-40"
                 />
                 <span className="text-xs font-light text-muted-foreground">
                   I have read and agree to the terms of this service agreement.
