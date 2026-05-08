@@ -196,13 +196,17 @@ export function SitePaletteColorOptions({
         </div>
         {showWheel && (
           <div
-            className="rounded-md border border-border p-2 bg-background space-y-2 [&_.react-colorful]:w-full [&_.react-colorful]:h-[180px] [&_.react-colorful__saturation]:rounded-md [&_.react-colorful__hue]:h-3 [&_.react-colorful__hue]:rounded-full [&_.react-colorful__hue]:mt-2 [&_.react-colorful__pointer]:w-4 [&_.react-colorful__pointer]:h-4"
-            onMouseDown={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
+            className="rounded-md border border-border p-2 bg-background space-y-2"
+            // IMPORTANT: do NOT stopPropagation on pointer events here —
+            // react-colorful needs the full pointer flow (pointerdown +
+            // document pointermove/up) to track drag. Stopping propagation
+            // can cancel the drag entirely on Firefox/Safari.
+            onMouseDown={(e) => e.preventDefault()}
           >
             <HexColorPicker
               color={hex.startsWith("#") ? hex : "#000000"}
               onChange={(v) => apply(v)}
+              style={{ width: "100%", height: 200 }}
             />
             {/* Preview chip + live hex below the hue slider */}
             <div className="flex items-center gap-2 pt-1">
