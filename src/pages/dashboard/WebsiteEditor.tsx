@@ -4450,6 +4450,12 @@ const WebsiteEditor = () => {
   // to the slide being edited.
   const [editorActiveSlideId, setEditorActiveSlideId] = useState<string | null>(null);
   const [activePageSections, setActivePageSections] = useState<PageSection[]>([]);
+  // Ref kept in sync with activePageSections so callbacks fired in quick
+  // succession (e.g. inline rich-text formatting that calls c.set twice for
+  // body+title within the same render cycle) always read the latest sections
+  // and don't clobber each other via a stale closure.
+  const activePageSectionsRef = useRef<PageSection[]>([]);
+  useEffect(() => { activePageSectionsRef.current = activePageSections; }, [activePageSections]);
   const [selectedBlockIndex, setSelectedBlockIndex] = useState<number | null>(null);
   const [navLinks, setNavLinks] = useState<PreviewNavLink[]>([]);
   const [activePageInfo, setActivePageInfo] = useState<{ id: string | null; showHeaderFooter: boolean; headerConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null }>({ id: null, showHeaderFooter: true, headerConfig: null });
