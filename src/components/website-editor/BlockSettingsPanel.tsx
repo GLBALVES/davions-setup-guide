@@ -15,7 +15,7 @@ import { RichTextField } from "./RichTextField";
 import { FocalPointPicker } from "./FocalPointPicker";
 import type { PageSection, SectionType } from "./page-templates";
 import { BLOCK_VARIANTS } from "./block-variants";
-import { SitePalettePicker } from "./SitePalettePicker";
+import { SitePalettePicker, SitePaletteInlineSwatches } from "./SitePalettePicker";
 
 // ── Block Settings ────────────────────────────────────────────────────────────
 
@@ -933,6 +933,10 @@ export const BlockSettingsPanel = ({
           <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">Background</p>
         </div>
         <div className="px-4 pb-4 space-y-3">
+          <SitePaletteInlineSwatches
+            value={s.backgroundColor || ""}
+            onChange={(v) => update({ backgroundColor: v })}
+          />
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">Color</label>
             <div className="flex items-center gap-2">
