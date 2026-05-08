@@ -278,6 +278,13 @@ const BookingSuccess = () => {
       briefing_id: briefing.id,
       answers,
     });
+    try {
+      await supabase.functions.invoke("notify-briefing-response", {
+        body: { booking_id: bookingId },
+      });
+    } catch (e) {
+      console.error("notify-briefing-response failed", e);
+    }
     setSubmittingBriefing(false);
     setBriefingSubmitted(true);
   };
