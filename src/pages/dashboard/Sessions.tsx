@@ -351,7 +351,7 @@ const Sessions = () => {
                         <SortableSessionCard
                           key={session.id}
                           session={session}
-                          storeSlug={storeSlug}
+                          storeSlug={storeSlug} customDomain={customDomain}
                           isManual={isManual}
                           onClick={() => navigate(`/dashboard/sessions/${session.id}`)}
                           onStatusChange={(id, status) =>
@@ -383,7 +383,7 @@ const Sessions = () => {
                         <SortableSessionRow
                           key={session.id}
                           session={session}
-                          storeSlug={storeSlug}
+                          storeSlug={storeSlug} customDomain={customDomain}
                           isManual={isManual}
                           onClick={() => navigate(`/dashboard/sessions/${session.id}`)}
                           onStatusChange={(id, status) =>
@@ -532,7 +532,7 @@ function SortableSessionCard({
   onDelete,
 }: {
   session: Session;
-  storeSlug: string | null;
+  storeSlug: string | null; customDomain: string | null;
   isManual: boolean;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
@@ -559,7 +559,7 @@ function SortableSessionCard({
     >
       <SessionCard
         session={session}
-        storeSlug={storeSlug}
+        storeSlug={storeSlug} customDomain={customDomain}
         isManual={isManual}
         onClick={onClick}
         onStatusChange={onStatusChange}
@@ -580,7 +580,7 @@ function SortableSessionRow({
   onDelete,
 }: {
   session: Session;
-  storeSlug: string | null;
+  storeSlug: string | null; customDomain: string | null;
   isManual: boolean;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
@@ -606,7 +606,7 @@ function SortableSessionRow({
     >
       <SessionRow
         session={session}
-        storeSlug={storeSlug}
+        storeSlug={storeSlug} customDomain={customDomain}
         isManual={isManual}
         onClick={onClick}
         onStatusChange={onStatusChange}
@@ -627,7 +627,7 @@ function SessionCard({
   onDelete,
 }: {
   session: Session;
-  storeSlug: string | null;
+  storeSlug: string | null; customDomain: string | null;
   isManual: boolean;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
@@ -848,7 +848,7 @@ function SessionRow({
   onDelete,
 }: {
   session: Session;
-  storeSlug: string | null;
+  storeSlug: string | null; customDomain: string | null;
   isManual: boolean;
   onClick: () => void;
   onStatusChange: (id: string, status: string) => void;
