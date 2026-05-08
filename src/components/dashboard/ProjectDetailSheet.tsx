@@ -717,7 +717,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
             <div className="flex flex-col gap-1">
               <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{(tp as any).chargeFee ?? "Valor da taxa"}</Label>
               <Input type="number" placeholder="0,00" min={0} value={formFee}
-                onChange={(e) => setFormFee(e.target.value)} className="h-7 text-xs" />
+                onChange={(e) => { setFormFeeManual(true); setFormFee(e.target.value); }} className="h-7 text-xs" />
             </div>
           </div>
 
