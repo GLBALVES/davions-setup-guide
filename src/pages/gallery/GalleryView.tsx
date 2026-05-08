@@ -364,8 +364,23 @@ const GalleryView = () => {
   }, []);
 
   useEffect(() => {
-    if (searchParams.get("purchased") === "true") setPurchaseSuccess(true);
-  }, [searchParams]);
+    if (searchParams.get("purchased") !== "true") return;
+    setPurchaseSuccess(true);
+    if (!gallery?.id) return;
+    const sessionId = searchParams.get("session_id") || "stripe";
+    try {
+      supabase.functions.invoke("notify-gallery-checkout", {
+        body: {
+          gallery_id: gallery.id,
+          client_email: clientEmail?.trim() || undefined,
+          client_name: clientName?.trim() || undefined,
+          photo_count: favorites.size,
+          is_free: false,
+          dedupe_key: `${gallery.id}:${sessionId}`,
+        },
+      });
+    } catch (e) { console.error("notify-gallery-checkout failed", e); }
+  }, [searchParams, gallery?.id]);
 
   // ── Fetch renewal settings when gallery is expired ───────────────────────
   useEffect(() => {
