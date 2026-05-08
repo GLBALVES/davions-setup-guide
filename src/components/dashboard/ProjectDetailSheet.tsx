@@ -1219,8 +1219,8 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
       </div>
 
       <Dialog open={contractOpen} onOpenChange={setContractOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
-          <DialogHeader>
+        <DialogContent className="max-w-3xl h-[85vh] p-0 gap-0 flex flex-col overflow-hidden">
+          <DialogHeader className="px-6 pt-5 pb-3 border-b border-border shrink-0">
             <DialogTitle className="flex items-center gap-2 flex-wrap">
               <FileTextIcon className="h-4 w-4 text-purple-500" />
               {tp.contractsSubsection}
@@ -1232,12 +1232,29 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
               )}
             </DialogTitle>
           </DialogHeader>
-          <ScrollArea className="flex-1 pr-4">
+          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5">
             <div
               className="prose prose-sm max-w-none text-sm select-text"
               dangerouslySetInnerHTML={{ __html: contractSnapshot?.html ?? "" }}
             />
-          </ScrollArea>
+            {contractSnapshot?.signature && (
+              <div className="mt-8 pt-6 border-t border-border">
+                <p className="text-[10px] tracking-[0.2em] uppercase font-light text-muted-foreground mb-2">
+                  Client signature
+                </p>
+                <img
+                  src={contractSnapshot.signature}
+                  alt="Client signature"
+                  className="h-24 object-contain object-left bg-white border border-border p-2"
+                />
+                {contractSnapshot.signedAt && (
+                  <p className="text-[10px] font-light text-muted-foreground/60 mt-2">
+                    Signed on {new Date(contractSnapshot.signedAt).toLocaleString()}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
