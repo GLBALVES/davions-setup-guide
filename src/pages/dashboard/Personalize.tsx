@@ -812,6 +812,31 @@ const Personalize = () => {
                                 <Button
                             size="icon"
                             variant="ghost"
+                            className="h-7 w-7"
+                            title={(t.personalize as any).duplicateContract ?? "Duplicate"}
+                            onClick={async () => {
+                              if (!user) return;
+                              const { data, error } = await (supabase as any)
+                                .from("contracts")
+                                .insert({
+                                  photographer_id: user.id,
+                                  name: `${c.name || t.personalize.untitled} (${(t.personalize as any).copySuffix ?? "copy"})`,
+                                  body: c.body ?? "",
+                                })
+                                .select()
+                                .single();
+                              if (error) {
+                                toast({ title: error.message, variant: "destructive" });
+                                return;
+                              }
+                              await fetchContracts();
+                              if (data?.id) navigate(`/dashboard/contracts/${data.id}/edit`);
+                            }}>
+                                  <Copy className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                            size="icon"
+                            variant="ghost"
                             className="h-7 w-7 text-destructive hover:text-destructive"
                             disabled={deletingContractId === c.id}
                             onClick={async () => {
