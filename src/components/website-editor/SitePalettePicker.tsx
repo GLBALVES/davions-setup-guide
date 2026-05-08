@@ -196,14 +196,18 @@ export function SitePaletteColorOptions({
         </div>
         {showWheel && (
           <div
-            className="rounded-md border border-border p-2 bg-background space-y-2"
+            className="rounded-md border border-border p-2 bg-background space-y-2 [&_.react-colorful__saturation]:touch-none [&_.react-colorful__hue]:touch-none [&_.react-colorful__alpha]:touch-none [&_.react-colorful__interactive]:touch-none"
             onMouseDown={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+            style={{ touchAction: "none" }}
           >
             <HexColorPicker
               color={hex.startsWith("#") ? hex : "#000000"}
               onChange={(v) => apply(v)}
-              style={{ width: "100%", height: 200 }}
+              style={{ width: "100%", height: 200, touchAction: "none" }}
             />
             {/* Preview chip + live hex below the hue slider */}
             <div className="flex items-center gap-2 pt-1">
