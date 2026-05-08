@@ -3135,6 +3135,7 @@ export type Database = {
           created_at: string
           description: string
           due_date: string | null
+          fee_amount: number
           id: string
           notes: string | null
           paid_amount: number
@@ -3149,6 +3150,7 @@ export type Database = {
           created_at?: string
           description?: string
           due_date?: string | null
+          fee_amount?: number
           id?: string
           notes?: string | null
           paid_amount?: number
@@ -3163,6 +3165,7 @@ export type Database = {
           created_at?: string
           description?: string
           due_date?: string | null
+          fee_amount?: number
           id?: string
           notes?: string | null
           paid_amount?: number
