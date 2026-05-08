@@ -70,6 +70,165 @@ interface SitePalettePickerProps {
   disabled?: boolean;
 }
 
+interface SitePaletteColorOptionsProps {
+  value: string;
+  onChange: (hex: string) => void;
+  allowTransparent?: boolean;
+  onCommit?: () => void;
+}
+
+export function SitePaletteColorOptions({
+  value,
+  onChange,
+  allowTransparent = false,
+  onCommit,
+}: SitePaletteColorOptionsProps) {
+  const [showCustom, setShowCustom] = useState(false);
+  const [hex, setHex] = useState(value || "#000000");
+
+  useEffect(() => {
+    setHex(value || "#000000");
+  }, [value]);
+
+  const paletteSwatches = useMemo(() => {
+    const root = document.documentElement;
+    const styles = getComputedStyle(root);
+    return SITE_TOKENS.map((t) => {
+      const raw = styles.getPropertyValue(t.var).trim();
+      if (!raw) return null;
+      return { ...t, raw, hex: resolveCssColor(raw) };
+    }).filter(Boolean) as { var: string; label: string; raw: string; hex: string }[];
+  }, []);
+
+  const apply = (v: string) => {
+    onChange(v);
+    setHex(v);
+  };
+
+  return (
+    <div className="space-y-3">
+      {paletteSwatches.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+            Site palette
+          </p>
+          <div className="grid grid-cols-8 gap-1.5">
+            {paletteSwatches.map((sw) => {
+              const active = hex.toLowerCase() === sw.hex.toLowerCase();
+              return (
+                <button
+                  key={sw.var}
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => apply(sw.hex)}
+                  title={`${sw.label} · ${sw.hex}`}
+                  className={cn(
+                    "h-6 w-6 rounded border transition-all relative",
+                    active ? "ring-2 ring-foreground ring-offset-1" : "border-border hover:scale-110",
+                  )}
+                  style={{ background: sw.hex }}
+                >
+                  {active && (
+                    <Check className="h-3 w-3 absolute inset-0 m-auto" style={{ color: hex === "#ffffff" || hex === "#fff" ? "#000" : "#fff" }} />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {allowTransparent && (
+        <div className="space-y-1.5">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+            Transparent
+          </p>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => apply("transparent")}
+            title="transparent"
+            className={cn(
+              "h-6 w-6 rounded border transition-all",
+              hex === "transparent" ? "ring-2 ring-foreground ring-offset-1" : "border-border hover:scale-110",
+            )}
+            style={{ background: "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 6px 6px" }}
+          />
+        </div>
+      )}
+
+      <div className="space-y-1.5">
+        <button
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => setShowCustom((v) => !v)}
+          className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium hover:text-foreground transition-colors flex items-center gap-1"
+        >
+          Custom (HEX)
+          <span className="text-[8px]">{showCustom ? "▲" : "▼"}</span>
+        </button>
+        {showCustom && (
+          <>
+            <div className="space-y-1 mb-2">
+              {PRESET_ROWS.map((row, ri) => (
+                <div key={ri} className="grid grid-cols-8 gap-1">
+                  {row.map((c, ci) => {
+                    const isTransparent = c === "transparent";
+                    const active = hex.toLowerCase() === c.toLowerCase();
+                    return (
+                      <button
+                        key={`${ri}-${ci}`}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => apply(c)}
+                        title={c}
+                        className={cn(
+                          "h-6 w-6 rounded border transition-all",
+                          active ? "ring-2 ring-foreground ring-offset-1" : "border-border hover:scale-110",
+                        )}
+                        style={{
+                          background: isTransparent
+                            ? "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 6px 6px"
+                            : c,
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="color"
+                value={hex.startsWith("#") ? hex : "#000000"}
+                onMouseDown={(e) => e.stopPropagation()}
+                onChange={(e) => apply(e.target.value)}
+                className="h-8 w-8 rounded border border-border cursor-pointer p-0"
+              />
+              <input
+                type="text"
+                value={hex}
+                onMouseDown={(e) => e.stopPropagation()}
+                onChange={(e) => setHex(e.target.value)}
+                onBlur={() => apply(hex)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    apply(hex);
+                    onCommit?.();
+                  }
+                }}
+                placeholder="#000000"
+                className="flex-1 h-8 rounded-md border border-border bg-background px-2 text-xs font-mono"
+              />
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function SitePalettePicker({
   value,
   onChange,
@@ -78,29 +237,6 @@ export function SitePalettePicker({
   disabled = false,
 }: SitePalettePickerProps) {
   const [open, setOpen] = useState(false);
-  const [showCustom, setShowCustom] = useState(false);
-  const [hex, setHex] = useState(value || "#000000");
-
-  useEffect(() => {
-    setHex(value || "#000000");
-  }, [value]);
-
-  // Read live palette tokens whenever the popover opens.
-  const paletteSwatches = useMemo(() => {
-    if (!open) return [];
-    const root = document.documentElement;
-    const styles = getComputedStyle(root);
-    return SITE_TOKENS.map((t) => {
-      const raw = styles.getPropertyValue(t.var).trim();
-      if (!raw) return null;
-      return { ...t, raw, hex: resolveCssColor(raw) };
-    }).filter(Boolean) as { var: string; label: string; raw: string; hex: string }[];
-  }, [open]);
-
-  const apply = (v: string) => {
-    onChange(v);
-    setHex(v);
-  };
 
   const swatchBg = !value || value === "transparent"
     ? "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 8px 8px"
@@ -125,122 +261,12 @@ export function SitePalettePicker({
         className="w-64 p-3 z-[60]"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        {/* Site palette */}
-        {paletteSwatches.length > 0 && (
-          <div className="space-y-1.5 mb-3">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-              Site palette
-            </p>
-            <div className="grid grid-cols-8 gap-1.5">
-              {paletteSwatches.map((sw) => {
-                const active = hex.toLowerCase() === sw.hex.toLowerCase();
-                return (
-                  <button
-                    key={sw.var}
-                    type="button"
-                    onClick={() => apply(sw.hex)}
-                    title={`${sw.label} · ${sw.hex}`}
-                    className={cn(
-                      "h-6 w-6 rounded border transition-all relative",
-                      active ? "ring-2 ring-foreground ring-offset-1" : "border-border hover:scale-110",
-                    )}
-                    style={{ background: sw.hex }}
-                  >
-                    {active && (
-                      <Check className="h-3 w-3 absolute inset-0 m-auto" style={{ color: hex === "#ffffff" || hex === "#fff" ? "#000" : "#fff" }} />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Transparent (only when allowed) */}
-        {allowTransparent && (
-          <div className="space-y-1.5 mb-3">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-              Transparent
-            </p>
-            <button
-              type="button"
-              onClick={() => apply("transparent")}
-              title="transparent"
-              className={cn(
-                "h-6 w-6 rounded border transition-all",
-                hex === "transparent" ? "ring-2 ring-foreground ring-offset-1" : "border-border hover:scale-110",
-              )}
-              style={{ background: "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 6px 6px" }}
-            />
-          </div>
-        )}
-
-        {/* Custom (HEX) — collapsible */}
-        <div className="space-y-1.5">
-          <button
-            type="button"
-            onClick={() => setShowCustom((v) => !v)}
-            className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium hover:text-foreground transition-colors flex items-center gap-1"
-          >
-            Custom (HEX)
-            <span className="text-[8px]">{showCustom ? "▲" : "▼"}</span>
-          </button>
-          {showCustom && (
-            <>
-              {/* Preset rows */}
-              <div className="space-y-1 mb-2">
-                {PRESET_ROWS.map((row, ri) => (
-                  <div key={ri} className="grid grid-cols-8 gap-1">
-                    {row.map((c, ci) => {
-                      const isTransparent = c === "transparent";
-                      const active = hex.toLowerCase() === c.toLowerCase();
-                      return (
-                        <button
-                          key={`${ri}-${ci}`}
-                          type="button"
-                          onClick={() => apply(c)}
-                          title={c}
-                          className={cn(
-                            "h-6 w-6 rounded border transition-all",
-                            active ? "ring-2 ring-foreground ring-offset-1" : "border-border hover:scale-110",
-                          )}
-                          style={{
-                            background: isTransparent
-                              ? "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 6px 6px"
-                              : c,
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="color"
-                  value={hex.startsWith("#") ? hex : "#000000"}
-                  onChange={(e) => apply(e.target.value)}
-                  className="h-8 w-8 rounded border border-border cursor-pointer p-0"
-                />
-                <input
-                  type="text"
-                  value={hex}
-                  onChange={(e) => setHex(e.target.value)}
-                  onBlur={() => apply(hex)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      apply(hex);
-                      setOpen(false);
-                    }
-                  }}
-                  placeholder="#000000"
-                  className="flex-1 h-8 rounded-md border border-border bg-background px-2 text-xs font-mono"
-                />
-              </div>
-            </>
-          )}
-        </div>
+        <SitePaletteColorOptions
+          value={value}
+          onChange={onChange}
+          allowTransparent={allowTransparent}
+          onCommit={() => setOpen(false)}
+        />
       </PopoverContent>
     </Popover>
   );
