@@ -190,18 +190,32 @@ function ReceivedPaymentsLog({
   photographerId,
   showForm,
   onToggleForm,
+  taxRate = 0,
 }: {
   projectId: string;
   photographerId: string;
   showForm: boolean;
   onToggleForm: () => void;
+  taxRate?: number;
 }) {
   const { lang } = useLanguage();
   const queryClient = useQueryClient();
   const [desc, setDesc] = useState("");
   const [amount, setAmount] = useState(""); // canonical "1500.50"
   const [fee, setFee] = useState(""); // canonical "10.00"
+  const [feeManual, setFeeManual] = useState(false);
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+
+  // Auto-compute fee from session tax rate unless the user edits it manually
+  useEffect(() => {
+    if (feeManual || !taxRate) return;
+    const amt = parseFloat(amount);
+    if (!isFinite(amt) || amt <= 0) {
+      setFee("");
+      return;
+    }
+    setFee((amt * taxRate / 100).toFixed(2));
+  }, [amount, taxRate, feeManual]);
 
   const currencyLang: CurrencyLang = lang === "pt" ? "pt" : lang === "es" ? "es" : "en";
 
