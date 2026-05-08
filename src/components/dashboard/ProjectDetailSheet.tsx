@@ -1349,6 +1349,10 @@ export function ProjectDetailSheet({
   const [editItemQty, setEditItemQty] = useState("1");
   const [editItemPrice, setEditItemPrice] = useState("");
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [oneSessionDialogOpen, setOneSessionDialogOpen] = useState(false);
+  const [oneSessionId, setOneSessionId] = useState<string | null>(null);
+  const [creatingOneSession, setCreatingOneSession] = useState(false);
 
   // Fetch sessions for this photographer
   const { data: photographerSessions = [] } = useQuery({
