@@ -611,6 +611,37 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     onSuccess: () => queryClient.invalidateQueries({ queryKey: qKey }),
   });
 
+  const updateInvoiceMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("project_invoices" as any).update({
+        description: editDesc.trim() || tp.chargeDescription,
+        amount: parseFloat(editAmount) || 0,
+        fee_amount: parseFloat(editFee) || 0,
+        due_date: editDue || null,
+        status: editStatus,
+        paid_amount: parseFloat(editPaid) || 0,
+        paid_at: editStatus === "paid" ? new Date().toISOString() : null,
+      } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qKey });
+      setEditingInvoiceId(null);
+      toast.success(tp.chargeAdded);
+    },
+    onError: () => toast.error(tp.errorAddingCharge),
+  });
+
+  const startEditInvoice = (inv: ProjectInvoice) => {
+    setEditingInvoiceId(inv.id);
+    setEditDesc(inv.description ?? "");
+    setEditAmount(String(inv.amount ?? ""));
+    setEditFee(String((inv as any).fee_amount ?? ""));
+    setEditDue(inv.due_date ?? "");
+    setEditPaid(String(inv.paid_amount ?? ""));
+    setEditStatus(inv.status);
+  };
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("project_invoices" as any).delete().eq("id", id);
