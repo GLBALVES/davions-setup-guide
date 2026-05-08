@@ -60,6 +60,7 @@ const Sessions = () => {
   const s = t.sessions;
   const [sessions, setSessions] = useState<Session[]>([]);
   const [storeSlug, setStoreSlug] = useState<string | null>(null);
+  const [customDomain, setCustomDomain] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "active" | "draft" | "one_session">("all");
   const [search, setSearch] = useState("");
