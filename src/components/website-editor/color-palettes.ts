@@ -31,7 +31,8 @@ export interface ColorPalette {
   label: string;
   /** 5 swatches displayed as the palette preview (light → dark). */
   swatches: [string, string, string, string, string];
-  schemes: Record<SchemeId, ColorScheme>;
+  /** Custom palettes may have schemes removed by the user; presets always have all 5. */
+  schemes: Partial<Record<SchemeId, ColorScheme>> & { [k: string]: ColorScheme | undefined };
 }
 
 export const SCHEME_LABELS: Record<SchemeId, string> = {
@@ -237,9 +238,13 @@ export function resolveScheme(
 ): ColorScheme {
   const palette = getPalette(paletteId, customPalettes);
   const sk = (schemeId || DEFAULT_SCHEME_ID) as SchemeId;
-  const base = palette.schemes[sk] ?? palette.schemes.light;
+  const fallback =
+    palette.schemes[sk] ??
+    palette.schemes.light ??
+    SCHEME_ORDER.map((k) => palette.schemes[k]).find((s): s is ColorScheme => Boolean(s)) ??
+    COLOR_PALETTES[0].schemes.light!;
   const ov = (overrides ?? {})[`${palette.id}::${sk}`] ?? {};
-  return { ...base, ...ov };
+  return { ...fallback, ...ov };
 }
 
 /**
