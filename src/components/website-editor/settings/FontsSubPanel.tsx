@@ -208,18 +208,21 @@ function ElementEditor({ elementKey, templateId, overrides, customFonts, onChang
         <Select value={eff.fontFamily} onValueChange={(v) => onChange({ fontFamily: v })}>
           <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
           <SelectContent className="z-[60] max-h-72">
+            {customFonts.length > 0 && (
+              <>
+                <div className="px-2 py-1 text-[9px] uppercase tracking-widest text-muted-foreground">
+                  {lang === "en" ? "Custom" : "Personalizadas"}
+                </div>
+                {customFonts.map((f) => (
+                  <SelectItem key={f.id} value={f.id} style={{ fontFamily: `'${f.id}', sans-serif` }}>
+                    {f.label}
+                  </SelectItem>
+                ))}
+                <div className="border-t border-border my-1" />
+              </>
+            )}
             {FONT_PRESETS.map((f) => (
               <SelectItem key={f.id} value={f.id} style={{ fontFamily: f.stack }}>
-                {f.label}
-              </SelectItem>
-            ))}
-            {customFonts.length > 0 && (
-              <div className="px-2 py-1 text-[9px] uppercase tracking-widest text-muted-foreground border-t border-border mt-1">
-                {lang === "en" ? "Custom" : lang === "es" ? "Personalizadas" : "Personalizadas"}
-              </div>
-            )}
-            {customFonts.map((f) => (
-              <SelectItem key={f.id} value={f.id} style={{ fontFamily: `'${f.id}', sans-serif` }}>
                 {f.label}
               </SelectItem>
             ))}
