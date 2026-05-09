@@ -238,9 +238,13 @@ export function resolveScheme(
 ): ColorScheme {
   const palette = getPalette(paletteId, customPalettes);
   const sk = (schemeId || DEFAULT_SCHEME_ID) as SchemeId;
-  const base = palette.schemes[sk] ?? palette.schemes.light;
+  const fallback =
+    palette.schemes[sk] ??
+    palette.schemes.light ??
+    SCHEME_ORDER.map((k) => palette.schemes[k]).find((s): s is ColorScheme => Boolean(s)) ??
+    COLOR_PALETTES[0].schemes.light!;
   const ov = (overrides ?? {})[`${palette.id}::${sk}`] ?? {};
-  return { ...base, ...ov };
+  return { ...fallback, ...ov };
 }
 
 /**
