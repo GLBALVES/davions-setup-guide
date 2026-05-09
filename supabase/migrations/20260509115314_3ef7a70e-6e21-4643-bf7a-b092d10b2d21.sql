@@ -1,0 +1,1 @@
+ALTER TABLE public.photographer_site ADD COLUMN IF NOT EXISTS footer_logo_variant text;
