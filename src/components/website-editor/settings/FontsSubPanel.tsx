@@ -163,7 +163,7 @@ interface ElementEditorProps {
   elementKey: ElementKey;
   templateId: string;
   overrides: FontOverrides;
-  onChange: (patch: Partial<{ fontFamily: string; weight: number; style: FontStyle; fontSize: number; lineHeight: number; letterSpacing: number; textTransform: TextTransform }>) => void;
+  onChange: (patch: Partial<{ fontFamily: string; weight: number; style: FontStyle; fontSize: number; lineHeight: number; letterSpacing: number; textTransform: TextTransform; textDecoration: TextDecoration }>) => void;
   onReset: () => void;
 }
 
