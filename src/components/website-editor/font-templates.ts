@@ -74,6 +74,7 @@ const t = (
   lineHeight: opts.lineHeight ?? 1.3,
   letterSpacing: opts.letterSpacing ?? 0,
   textTransform: opts.textTransform ?? "none",
+  textDecoration: opts.textDecoration ?? "none",
 });
 
 // Build a default element map given a heading font + body font + overall vibe.
