@@ -1864,6 +1864,7 @@ export type Database = {
           final_published_at: string | null
           gallery_kind: string | null
           id: string
+          is_site_gallery: boolean
           last_download_at: string | null
           photographer_id: string
           price_per_photo: number
@@ -1888,6 +1889,7 @@ export type Database = {
           final_published_at?: string | null
           gallery_kind?: string | null
           id?: string
+          is_site_gallery?: boolean
           last_download_at?: string | null
           photographer_id: string
           price_per_photo?: number
@@ -1912,6 +1914,7 @@ export type Database = {
           final_published_at?: string | null
           gallery_kind?: string | null
           id?: string
+          is_site_gallery?: boolean
           last_download_at?: string | null
           photographer_id?: string
           price_per_photo?: number

@@ -3,6 +3,7 @@ import { Upload, X, Loader2, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import GalleryImagePicker from "./GalleryImagePicker";
 
 interface ImageUploadFieldProps {
   value?: string;
@@ -58,6 +59,11 @@ export function ImageUploadField({
 }: ImageUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Determine whether the picker can be used (needs allowing arbitrary images,
+  // i.e. no strict format/size validation that wouldn't apply to gallery photos)
+  const allowGalleryPicker = !allowedTypes && !requireSquare && !minWidth && !minHeight && !maxWidth && !maxHeight;
 
   /** Decode the file to get intrinsic pixel dimensions (skipped for SVG). */
   const readImageSize = (file: File): Promise<{ width: number; height: number } | null> =>
@@ -171,7 +177,7 @@ export function ImageUploadField({
           <div className="absolute inset-0 bg-foreground/40 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1.5">
             <button
               type="button"
-              onClick={() => inputRef.current?.click()}
+              onClick={() => allowGalleryPicker ? setPickerOpen(true) : inputRef.current?.click()}
               disabled={uploading}
               title="Replace"
               aria-label="Replace"
@@ -195,7 +201,7 @@ export function ImageUploadField({
       ) : (
         <button
           type="button"
-          onClick={() => inputRef.current?.click()}
+          onClick={() => allowGalleryPicker ? setPickerOpen(true) : inputRef.current?.click()}
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
           disabled={uploading}
@@ -224,6 +230,15 @@ export function ImageUploadField({
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
       />
+      {allowGalleryPicker && (
+        <GalleryImagePicker
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          photographerId={photographerId}
+          onSelect={(url) => onChange(url)}
+          uploadFolder={folder}
+        />
+      )}
     </div>
   );
 }

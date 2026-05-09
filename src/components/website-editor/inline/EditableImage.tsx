@@ -3,6 +3,7 @@ import { ImagePlus, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import GalleryImagePicker from "../GalleryImagePicker";
 
 interface EditableImageProps {
   value?: string | null;
@@ -37,6 +38,7 @@ export default function EditableImage({
 }: EditableImageProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const handleFiles = async (files: FileList | null) => {
     const file = files?.[0];
@@ -89,7 +91,7 @@ export default function EditableImage({
       >
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}
+          onClick={(e) => { e.stopPropagation(); setPickerOpen(true); }}
           disabled={uploading}
           className="pointer-events-auto px-2.5 py-1.5 rounded text-[11px] bg-background text-foreground hover:bg-background/90 transition-colors flex items-center gap-1.5 shadow-md"
         >
@@ -112,6 +114,13 @@ export default function EditableImage({
         accept="image/*"
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
+      />
+      <GalleryImagePicker
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        photographerId={photographerId}
+        onSelect={(url) => onChange(url)}
+        uploadFolder={folder}
       />
     </div>
   );
