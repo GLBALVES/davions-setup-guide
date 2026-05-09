@@ -3,6 +3,7 @@ import { ImagePlus, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import GalleryImagePicker from "../GalleryImagePicker";
 
 interface EditableImageProps {
   value?: string | null;
