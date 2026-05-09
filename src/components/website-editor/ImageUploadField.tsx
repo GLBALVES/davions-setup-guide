@@ -201,7 +201,7 @@ export function ImageUploadField({
       ) : (
         <button
           type="button"
-          onClick={() => inputRef.current?.click()}
+          onClick={() => allowGalleryPicker ? setPickerOpen(true) : inputRef.current?.click()}
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
           disabled={uploading}
