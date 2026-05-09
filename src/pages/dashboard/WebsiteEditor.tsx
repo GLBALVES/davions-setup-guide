@@ -4142,7 +4142,7 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
                 overrides={ov}
                 fontSize={currentSize}
                 customFonts={((site as any)?.customFonts ?? (site as any)?.custom_fonts ?? []) as any[]}
-                photographerId={user?.id ?? null}
+                photographerId={photographerId ?? null}
                 onTemplateChange={(id, tpl) => {
                   onSiteChange({
                     font_template_id: id,
