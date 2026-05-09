@@ -30,13 +30,23 @@ import {
   type TextTransform,
 } from "@/components/website-editor/font-templates";
 
+export interface CustomFontEntry {
+  id: string;
+  label: string;
+  url: string;
+  format?: string;
+}
+
 interface Props {
   templateId: string | null | undefined;
   overrides: FontOverrides | null | undefined;
   fontSize: FontSizeScale | null | undefined;
+  customFonts: CustomFontEntry[];
+  photographerId: string | null;
   onTemplateChange: (templateId: string, template: FontTemplate) => void;
   onOverridesChange: (next: FontOverrides) => void;
   onFontSizeChange: (size: FontSizeScale) => void;
+  onCustomFontsChange: (next: CustomFontEntry[]) => void;
 }
 
 type GroupKey = (typeof ELEMENT_GROUPS)[number]["key"];
@@ -45,9 +55,12 @@ export default function FontsSubPanel({
   templateId,
   overrides,
   fontSize,
+  customFonts,
+  photographerId,
   onTemplateChange: _onTemplateChange,
   onOverridesChange,
   onFontSizeChange,
+  onCustomFontsChange,
 }: Props) {
   const [groupKey, setGroupKey] = useState<GroupKey | null>(null);
   const [expandedItem, setExpandedItem] = useState<ElementKey | null>(null);
