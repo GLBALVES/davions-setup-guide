@@ -329,23 +329,16 @@ export default function ColorsSubPanel({
                     Color Schemes
                   </p>
                   <div className="space-y-px px-3 pb-3">
-                    {SCHEME_ORDER.map((sk) => {
-                      const sch = tpl.schemes[sk];
+                    {SCHEME_ORDER.filter((sk) => tpl.schemes[sk]).map((sk) => {
+                      const sch = tpl.schemes[sk]!;
                       const isActiveScheme = isActive && sk === activeSchemeId;
+                      const presentSchemes = SCHEME_ORDER.filter((k) => tpl.schemes[k]);
+                      const canDelete = isCustom && presentSchemes.length > 1;
                       return (
-                        <button
+                        <div
                           key={sk}
-                          type="button"
-                          onClick={() => {
-                            onPaletteChange(tpl.id, sk);
-                            onSchemeChange(sk);
-                          }}
-                          onDoubleClick={() => {
-                            setEditingScheme({ paletteId: tpl.id, schemeId: sk });
-                            setView("editScheme");
-                          }}
                           className={cn(
-                            "w-full flex items-center justify-between gap-3 px-3 py-2.5 border transition-colors",
+                            "group/scheme w-full flex items-center justify-between gap-3 px-3 py-2.5 border transition-colors cursor-pointer",
                             isActiveScheme
                               ? "border-foreground"
                               : "border-transparent hover:border-border",
@@ -353,6 +346,14 @@ export default function ColorsSubPanel({
                           style={{
                             backgroundColor: sch.background,
                             color: sch.headings,
+                          }}
+                          onClick={() => {
+                            onPaletteChange(tpl.id, sk);
+                            onSchemeChange(sk);
+                          }}
+                          onDoubleClick={() => {
+                            setEditingScheme({ paletteId: tpl.id, schemeId: sk });
+                            setView("editScheme");
                           }}
                         >
                           <span className="inline-flex items-center gap-2 text-xs">
@@ -363,17 +364,44 @@ export default function ColorsSubPanel({
                             <span style={{ fontFamily: "serif" }}>Aa</span>
                             <span>{SCHEME_LABELS[sk]}</span>
                           </span>
-                          <span
-                            className="text-[10px] tracking-widest uppercase opacity-60 hover:opacity-100"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingScheme({ paletteId: tpl.id, schemeId: sk });
-                              setView("editScheme");
-                            }}
-                          >
-                            Edit
+                          <span className="inline-flex items-center gap-2">
+                            <button
+                              type="button"
+                              className="text-[10px] tracking-widest uppercase opacity-60 hover:opacity-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingScheme({ paletteId: tpl.id, schemeId: sk });
+                                setView("editScheme");
+                              }}
+                            >
+                              Edit
+                            </button>
+                            {canDelete && (
+                              <button
+                                type="button"
+                                title="Remove scheme"
+                                className="opacity-0 group-hover/scheme:opacity-70 hover:!opacity-100 transition-opacity"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (!window.confirm(`Remove "${SCHEME_LABELS[sk]}" scheme?`)) return;
+                                  const next = customs.map((p) => {
+                                    if (p.id !== tpl.id) return p;
+                                    const ns = { ...p.schemes };
+                                    delete ns[sk];
+                                    return { ...p, schemes: ns };
+                                  });
+                                  onCustomPalettesChange(next);
+                                  if (isActiveScheme) {
+                                    const remaining = presentSchemes.filter((k) => k !== sk);
+                                    if (remaining[0]) onSchemeChange(remaining[0]);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            )}
                           </span>
-                        </button>
+                        </div>
                       );
                     })}
                   </div>
