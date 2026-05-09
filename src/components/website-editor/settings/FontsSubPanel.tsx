@@ -488,27 +488,40 @@ function CustomFontsSection({ customFonts, photographerId, onChange }: CustomFon
         </div>
       ) : (
         <div className="space-y-px border border-border">
-          {customFonts.map((f) => (
-            <div
-              key={f.id}
-              className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border last:border-b-0 group"
-            >
-              <span
-                className="text-sm text-foreground truncate"
-                style={{ fontFamily: `'${f.id}', sans-serif` }}
+          {customFonts.map((f) => {
+            const previewText =
+              lang === "en"
+                ? "The quick brown fox jumps over the lazy dog"
+                : lang === "es"
+                  ? "El veloz murciélago hindú comía feliz cardillo y kiwi"
+                  : "A rápida raposa marrom salta sobre o cão preguiçoso";
+            return (
+              <div
+                key={f.id}
+                className="flex items-start justify-between gap-2 px-3 py-2 border-b border-border last:border-b-0 group"
               >
-                {f.label}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleDelete(f.id)}
-                className="opacity-0 group-hover:opacity-70 hover:!opacity-100 transition-opacity"
-                aria-label="Remove font"
-              >
-                <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-              </button>
-            </div>
-          ))}
+                <div className="min-w-0 flex-1">
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground truncate">
+                    {f.label}
+                  </div>
+                  <div
+                    className="text-base text-foreground truncate mt-0.5"
+                    style={{ fontFamily: `'${f.id}', sans-serif` }}
+                  >
+                    {previewText}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(f.id)}
+                  className="opacity-0 group-hover:opacity-70 hover:!opacity-100 transition-opacity mt-1"
+                  aria-label="Remove font"
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 
