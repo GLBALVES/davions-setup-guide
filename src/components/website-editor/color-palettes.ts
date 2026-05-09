@@ -31,7 +31,8 @@ export interface ColorPalette {
   label: string;
   /** 5 swatches displayed as the palette preview (light → dark). */
   swatches: [string, string, string, string, string];
-  schemes: Record<SchemeId, ColorScheme>;
+  /** Custom palettes may have schemes removed by the user; presets always have all 5. */
+  schemes: Partial<Record<SchemeId, ColorScheme>> & { [k: string]: ColorScheme | undefined };
 }
 
 export const SCHEME_LABELS: Record<SchemeId, string> = {
