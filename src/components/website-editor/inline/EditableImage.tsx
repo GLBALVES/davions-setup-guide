@@ -115,6 +115,13 @@ export default function EditableImage({
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
       />
+      <GalleryImagePicker
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        photographerId={photographerId}
+        onSelect={(url) => onChange(url)}
+        uploadFolder={folder}
+      />
     </div>
   );
 }
