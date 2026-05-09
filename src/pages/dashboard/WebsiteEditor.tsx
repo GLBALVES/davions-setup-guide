@@ -3204,12 +3204,26 @@ const FooterSubPanel = ({
           />
         </div>
         {showLogo && (
-          <div className="space-y-2">
-            <p className="text-[11px] text-muted-foreground">Logo position</p>
-            <div className="flex gap-2">
-              <SegBtn value="left" current={logoPosition} onClick={() => onSiteChange({ footer_logo_position: "left" })} label="Left" />
-              <SegBtn value="center" current={logoPosition} onClick={() => onSiteChange({ footer_logo_position: "center" })} label="Center" />
-              <SegBtn value="right" current={logoPosition} onClick={() => onSiteChange({ footer_logo_position: "right" })} label="Right" />
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <p className="text-[11px] text-muted-foreground">Logo variant</p>
+              <div className="flex gap-2">
+                <SegBtn value="primary" current={logoVariant} onClick={() => onSiteChange({ footer_logo_variant: "primary" })} label="Primary" />
+                <SegBtn value="alternative" current={logoVariant} onClick={() => hasAltLogo && onSiteChange({ footer_logo_variant: "alternative" })} label="Alternative" />
+              </div>
+              {!hasAltLogo && (
+                <p className="text-[11px] text-muted-foreground">
+                  Upload an alternative logo in Branding to use this option.
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <p className="text-[11px] text-muted-foreground">Logo position</p>
+              <div className="flex gap-2">
+                <SegBtn value="left" current={logoPosition} onClick={() => onSiteChange({ footer_logo_position: "left" })} label="Left" />
+                <SegBtn value="center" current={logoPosition} onClick={() => onSiteChange({ footer_logo_position: "center" })} label="Center" />
+                <SegBtn value="right" current={logoPosition} onClick={() => onSiteChange({ footer_logo_position: "right" })} label="Right" />
+              </div>
             </div>
           </div>
         )}
