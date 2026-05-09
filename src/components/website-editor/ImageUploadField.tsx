@@ -177,7 +177,7 @@ export function ImageUploadField({
           <div className="absolute inset-0 bg-foreground/40 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1.5">
             <button
               type="button"
-              onClick={() => inputRef.current?.click()}
+              onClick={() => allowGalleryPicker ? setPickerOpen(true) : inputRef.current?.click()}
               disabled={uploading}
               title="Replace"
               aria-label="Replace"
