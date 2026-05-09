@@ -186,11 +186,12 @@ interface ElementEditorProps {
   elementKey: ElementKey;
   templateId: string;
   overrides: FontOverrides;
+  customFonts: CustomFontEntry[];
   onChange: (patch: Partial<{ fontFamily: string; weight: number; style: FontStyle; fontSize: number; lineHeight: number; letterSpacing: number; textTransform: TextTransform; textDecoration: TextDecoration }>) => void;
   onReset: () => void;
 }
 
-function ElementEditor({ elementKey, templateId, overrides, onChange, onReset }: ElementEditorProps) {
+function ElementEditor({ elementKey, templateId, overrides, customFonts, onChange, onReset }: ElementEditorProps) {
   const { lang } = useLanguage();
   const eff = resolveElement(templateId, overrides, elementKey, 1);
   const hasOverride = Boolean(overrides[elementKey] && Object.keys(overrides[elementKey]!).length > 0);
@@ -209,6 +210,16 @@ function ElementEditor({ elementKey, templateId, overrides, onChange, onReset }:
           <SelectContent className="z-[60] max-h-72">
             {FONT_PRESETS.map((f) => (
               <SelectItem key={f.id} value={f.id} style={{ fontFamily: f.stack }}>
+                {f.label}
+              </SelectItem>
+            ))}
+            {customFonts.length > 0 && (
+              <div className="px-2 py-1 text-[9px] uppercase tracking-widest text-muted-foreground border-t border-border mt-1">
+                {lang === "en" ? "Custom" : lang === "es" ? "Personalizadas" : "Personalizadas"}
+              </div>
+            )}
+            {customFonts.map((f) => (
+              <SelectItem key={f.id} value={f.id} style={{ fontFamily: `'${f.id}', sans-serif` }}>
                 {f.label}
               </SelectItem>
             ))}
