@@ -207,9 +207,9 @@ function ElementEditor({ elementKey, templateId, overrides, onChange, onReset }:
       <Row label="Style">
         <div className="flex items-center gap-1">
           {([
-            { key: "bold", label: "B", active: eff.weight >= 600, onClick: () => onChange({ weight: eff.weight >= 600 ? 400 : 700 }), className: "font-bold" },
-            { key: "italic", label: "I", active: eff.style === "italic", onClick: () => onChange({ style: eff.style === "italic" ? "normal" : "italic" }), className: "italic font-serif" },
-            { key: "normal", label: "N", active: eff.weight < 600 && eff.style === "normal", onClick: () => onChange({ weight: 400, style: "normal" }), className: "" },
+            { key: "bold", label: biuLabels.bold, active: eff.weight >= 600, onClick: () => onChange({ weight: eff.weight >= 600 ? 400 : 700 }), className: "font-bold" },
+            { key: "italic", label: biuLabels.italic, active: eff.style === "italic", onClick: () => onChange({ style: eff.style === "italic" ? "normal" : "italic" }), className: "italic font-serif" },
+            { key: "underline", label: biuLabels.underline, active: eff.textDecoration === "underline", onClick: () => onChange({ textDecoration: eff.textDecoration === "underline" ? "none" : "underline" }), className: "underline" },
           ] as const).map((b) => (
             <button
               key={b.key}
