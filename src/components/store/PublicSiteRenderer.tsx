@@ -2255,6 +2255,7 @@ export default function PublicSiteRenderer(props: Props) {
     site?.font_template_id ?? null,
     fontOverrides,
     (fontOverrides._meta?.fontSize as FontSizeScale | undefined) ?? "regular",
+    ((site as any)?.custom_fonts ?? []) as any,
   );
 
   // Apply the studio's color palette + scheme.
