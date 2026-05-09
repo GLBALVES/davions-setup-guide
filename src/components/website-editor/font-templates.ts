@@ -30,6 +30,7 @@ export type ElementKey =
 
 export type TextTransform = "none" | "uppercase" | "lowercase" | "capitalize";
 export type FontStyle = "normal" | "italic";
+export type TextDecoration = "none" | "underline";
 
 export interface ElementTypography {
   fontFamily: string; // FONT_PRESETS id
@@ -39,6 +40,7 @@ export interface ElementTypography {
   lineHeight: number; // em (unitless multiplier)
   letterSpacing: number; // em
   textTransform: TextTransform;
+  textDecoration: TextDecoration;
 }
 
 export type ElementOverrides = Partial<ElementTypography>;
