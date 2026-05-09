@@ -230,6 +230,15 @@ export function ImageUploadField({
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
       />
+      {allowGalleryPicker && (
+        <GalleryImagePicker
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          photographerId={photographerId}
+          onSelect={(url) => onChange(url)}
+          uploadFolder={folder}
+        />
+      )}
     </div>
   );
 }
