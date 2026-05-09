@@ -197,13 +197,28 @@ function ElementEditor({ elementKey, templateId, overrides, onChange, onReset }:
       </Row>
 
       <Row label="Style">
-        <Select value={eff.style} onValueChange={(v) => onChange({ style: v as FontStyle })}>
-          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-          <SelectContent className="z-[60]">
-            <SelectItem value="normal">Normal</SelectItem>
-            <SelectItem value="italic">Italic</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-1">
+          {([
+            { key: "bold", label: "B", active: eff.weight >= 600, onClick: () => onChange({ weight: eff.weight >= 600 ? 400 : 700 }), className: "font-bold" },
+            { key: "italic", label: "I", active: eff.style === "italic", onClick: () => onChange({ style: eff.style === "italic" ? "normal" : "italic" }), className: "italic font-serif" },
+            { key: "normal", label: "N", active: eff.weight < 600 && eff.style === "normal", onClick: () => onChange({ weight: 400, style: "normal" }), className: "" },
+          ] as const).map((b) => (
+            <button
+              key={b.key}
+              type="button"
+              onClick={b.onClick}
+              className={cn(
+                "h-8 w-8 flex items-center justify-center text-xs border transition-colors",
+                b.className,
+                b.active
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border text-foreground hover:bg-muted/40",
+              )}
+            >
+              {b.label}
+            </button>
+          ))}
+        </div>
       </Row>
 
       <SliderRow
