@@ -168,8 +168,14 @@ interface ElementEditorProps {
 }
 
 function ElementEditor({ elementKey, templateId, overrides, onChange, onReset }: ElementEditorProps) {
+  const { lang } = useLanguage();
   const eff = resolveElement(templateId, overrides, elementKey, 1);
   const hasOverride = Boolean(overrides[elementKey] && Object.keys(overrides[elementKey]!).length > 0);
+
+  // Localized BIU letters: EN uses B/I/U; PT/ES use N/I/S (Negrito/Itálico/Sublinhado).
+  const biuLabels = lang === "en"
+    ? { bold: "B", italic: "I", underline: "U" }
+    : { bold: "N", italic: "I", underline: "S" };
 
   return (
     <div className="space-y-3 pb-4">
