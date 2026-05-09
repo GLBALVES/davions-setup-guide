@@ -38,6 +38,7 @@ export default function EditableImage({
 }: EditableImageProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const handleFiles = async (files: FileList | null) => {
     const file = files?.[0];
