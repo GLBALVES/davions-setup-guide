@@ -100,6 +100,7 @@ export default function FontsSubPanel({
                     lineHeight: eff.lineHeight,
                     letterSpacing: `${eff.letterSpacing}em`,
                     textTransform: eff.textTransform,
+                    textDecoration: eff.textDecoration,
                   }}
                 >
                   Share your story
