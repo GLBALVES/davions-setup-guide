@@ -91,7 +91,7 @@ export default function EditableImage({
       >
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}
+          onClick={(e) => { e.stopPropagation(); setPickerOpen(true); }}
           disabled={uploading}
           className="pointer-events-auto px-2.5 py-1.5 rounded text-[11px] bg-background text-foreground hover:bg-background/90 transition-colors flex items-center gap-1.5 shadow-md"
         >
