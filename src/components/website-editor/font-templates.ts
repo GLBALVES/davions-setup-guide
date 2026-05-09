@@ -334,6 +334,7 @@ export function buildTypographyCss(templateId: string | null | undefined, overri
       `  line-height: ${el.lineHeight};`,
       `  letter-spacing: ${el.letterSpacing}em;`,
       `  text-transform: ${el.textTransform};`,
+      `  text-decoration: ${el.textDecoration};`,
     ].join("\n");
     lines.push(`${classSel} {\n${declarations}\n}`);
     lines.push(`${typoSel} {\n${declarations}\n}`);
