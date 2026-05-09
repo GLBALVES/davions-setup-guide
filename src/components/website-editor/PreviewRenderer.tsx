@@ -389,10 +389,15 @@ function PreviewFooter({
     : footerLogoSize === "large" ? "text-sm sm:text-lg font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap"
     : "text-xs sm:text-sm font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap";
 
+  const footerLogoVariant: string = (s?.footer_logo_variant as string) || "primary";
+  const footerAltLogoUrl: string | null = (s?.logoAltUrl as string) || (s?.logo_alt_url as string) || null;
+  const footerLogoUrl: string | null =
+    footerLogoVariant === "alternative" && footerAltLogoUrl ? footerAltLogoUrl : (s?.logoUrl as string) || null;
+
   const logoBlock = showLogo ? (
     <div className={`flex ${logoPosCls}`}>
-      {s?.logoUrl ? (
-        <img src={s.logoUrl} alt={s?.displayName || "Studio"} className={footerLogoImgClass} />
+      {footerLogoUrl ? (
+        <img src={footerLogoUrl} alt={s?.displayName || "Studio"} className={footerLogoImgClass} />
       ) : (
         <span className={footerLogoTextClass} style={{ color: fg }}>
           {s?.displayName || "Studio"}
