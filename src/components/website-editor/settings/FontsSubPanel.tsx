@@ -171,6 +171,12 @@ export default function FontsSubPanel({
           </button>
         ))}
       </div>
+
+      <CustomFontsSection
+        customFonts={customFonts}
+        photographerId={photographerId}
+        onChange={onCustomFontsChange}
+      />
     </div>
   );
 }
