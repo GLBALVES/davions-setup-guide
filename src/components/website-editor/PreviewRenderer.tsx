@@ -800,6 +800,12 @@ export default function PreviewRenderer({
   browserFaviconUrl = null,
   browserTitle = null,
   saveStatus = "idle",
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
+  undoLabel = "Undo",
+  redoLabel = "Redo",
 }: PreviewRendererProps) {
   const [viewport, setViewport] = useState<Viewport>("desktop");
 
