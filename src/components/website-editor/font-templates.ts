@@ -317,12 +317,20 @@ const ELEMENT_TO_CLASS_SELECTOR: Record<ElementKey, string> = {
 };
 
 /** Build a CSS string targeting all element classes/data-attrs. */
-export function buildTypographyCss(templateId: string | null | undefined, overrides: FontOverrides | null | undefined, scale: number = 1): string {
+export function buildTypographyCss(
+  templateId: string | null | undefined,
+  overrides: FontOverrides | null | undefined,
+  scale: number = 1,
+  customFonts: { id: string; label?: string }[] = [],
+): string {
   const tpl = getFontTemplate(templateId);
   const lines: string[] = [];
   (Object.keys(tpl.elements) as ElementKey[]).forEach((key) => {
     const el = resolveElement(templateId, overrides, key, scale);
-    const stack = FONT_PRESETS.find((f) => f.id === el.fontFamily)?.stack ?? "inherit";
+    const isCustom = el.fontFamily?.startsWith("custom-") || customFonts.some((c) => c.id === el.fontFamily);
+    const stack = isCustom
+      ? `'${el.fontFamily}', system-ui, sans-serif`
+      : FONT_PRESETS.find((f) => f.id === el.fontFamily)?.stack ?? "inherit";
     const classSel = ELEMENT_TO_CLASS_SELECTOR[key];
     // Doubled attribute selector → specificity (0,2,0) beats any single class.
     const typoSel = `[data-site-typo='${key}'][data-site-typo]`;
