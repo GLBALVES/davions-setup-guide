@@ -125,6 +125,7 @@ export default function FontsSubPanel({
                     elementKey={item.key}
                     overrides={ov}
                     templateId={activeId}
+                    customFonts={customFonts}
                     onChange={(patch) => {
                       const next: FontOverrides = {
                         ...ov,
