@@ -5495,6 +5495,12 @@ const WebsiteEditor = () => {
             browserFaviconUrl={(site as any)?.faviconUrl ?? (site as any)?.logoUrl ?? null}
             browserTitle={(site as any)?.logoText || site?.displayName || "Studio"}
             saveStatus={saveStatus}
+            onUndo={handleUndoClick}
+            onRedo={handleRedoClick}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            undoLabel={undoLabel}
+            redoLabel={redoLabel}
           />
         </div>
       </div>
