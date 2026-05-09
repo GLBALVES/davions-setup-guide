@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
+import { useRef, useState } from "react";
+import { ArrowLeft, ChevronDown, ChevronRight, Loader2, Plus, Trash2, Upload } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Select,
