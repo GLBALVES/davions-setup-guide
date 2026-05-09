@@ -108,6 +108,13 @@ interface PreviewRendererProps {
   browserTitle?: string | null;
   /** Auto-save status pill rendered next to the browser-tab indicator */
   saveStatus?: "idle" | "saving" | "saved" | "error";
+  /** Undo/Redo controls rendered next to the viewport switcher */
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  undoLabel?: string;
+  redoLabel?: string;
 }
 
 // ── Inline preview Nav (mimics public site SharedNav lightly) ────────────────
