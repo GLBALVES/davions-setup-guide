@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import SectionRenderer, { type PageSection, type EditContext } from "@/components/store/SectionRenderer";
-import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2, Plus, GripVertical, Eye, EyeOff, Link as LinkIcon, Instagram, Facebook, Youtube, Linkedin, Loader2, LayoutGrid } from "lucide-react";
+import { Monitor, Tablet, Smartphone, ArrowUp, ArrowDown, Copy, Trash2, Settings2, Plus, GripVertical, Eye, EyeOff, Link as LinkIcon, Instagram, Facebook, Youtube, Linkedin, Loader2, LayoutGrid, Undo2, Redo2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { BLOCK_VARIANTS } from "@/components/website-editor/block-variants";
 import type { SectionType } from "@/components/website-editor/page-templates";
@@ -108,6 +108,13 @@ interface PreviewRendererProps {
   browserTitle?: string | null;
   /** Auto-save status pill rendered next to the browser-tab indicator */
   saveStatus?: "idle" | "saving" | "saved" | "error";
+  /** Undo/Redo controls rendered next to the viewport switcher */
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  undoLabel?: string;
+  redoLabel?: string;
 }
 
 // ── Inline preview Nav (mimics public site SharedNav lightly) ────────────────
@@ -793,6 +800,12 @@ export default function PreviewRenderer({
   browserFaviconUrl = null,
   browserTitle = null,
   saveStatus = "idle",
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
+  undoLabel = "Undo",
+  redoLabel = "Redo",
 }: PreviewRendererProps) {
   const [viewport, setViewport] = useState<Viewport>("desktop");
 
@@ -883,7 +896,7 @@ export default function PreviewRenderer({
           )}
         </div>
 
-        {/* Center: viewport switcher */}
+        {/* Center: viewport switcher + undo/redo */}
         <div className="flex items-center gap-1">
           {([
             { id: "desktop" as Viewport, Icon: Monitor, label: "Desktop" },
@@ -904,6 +917,41 @@ export default function PreviewRenderer({
               <Icon className="h-4 w-4" />
             </button>
           ))}
+          {(onUndo || onRedo) && (
+            <>
+              <div className="mx-1 h-4 w-px bg-border" />
+              <button
+                type="button"
+                onClick={onUndo}
+                disabled={!canUndo}
+                title={`${undoLabel} (Ctrl+Z)`}
+                aria-label={undoLabel}
+                className={cn(
+                  "p-1.5 rounded transition-colors",
+                  canUndo
+                    ? "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    : "text-muted-foreground/40 cursor-not-allowed"
+                )}
+              >
+                <Undo2 className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={onRedo}
+                disabled={!canRedo}
+                title={`${redoLabel} (Ctrl+Shift+Z)`}
+                aria-label={redoLabel}
+                className={cn(
+                  "p-1.5 rounded transition-colors",
+                  canRedo
+                    ? "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    : "text-muted-foreground/40 cursor-not-allowed"
+                )}
+              >
+                <Redo2 className="h-4 w-4" />
+              </button>
+            </>
+          )}
         </div>
 
         {/* Right: auto-save indicator */}
