@@ -59,6 +59,11 @@ export function ImageUploadField({
 }: ImageUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Determine whether the picker can be used (needs allowing arbitrary images,
+  // i.e. no strict format/size validation that wouldn't apply to gallery photos)
+  const allowGalleryPicker = !allowedTypes && !requireSquare && !minWidth && !minHeight && !maxWidth && !maxHeight;
 
   /** Decode the file to get intrinsic pixel dimensions (skipped for SVG). */
   const readImageSize = (file: File): Promise<{ width: number; height: number } | null> =>
