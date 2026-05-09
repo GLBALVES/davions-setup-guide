@@ -446,7 +446,7 @@ function CustomFontsSection({ customFonts, photographerId, onChange }: CustomFon
     try {
       const baseName = file.name.replace(/\.[^.]+$/, "");
       const slug = slugify(baseName);
-      const path = `fonts/${photographerId}/${Date.now()}-${slug}.${file.name.split(".").pop()}`;
+      const path = `${photographerId}/fonts/${Date.now()}-${slug}.${file.name.split(".").pop()}`;
       const { error: upErr } = await supabase.storage
         .from("site-assets")
         .upload(path, file, { upsert: false, contentType: file.type || undefined });
