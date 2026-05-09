@@ -3078,6 +3078,8 @@ const FooterSubPanel = ({
 }) => {
   const s = site as any;
   const showLogo: boolean = s?.footer_show_logo ?? false;
+  const logoVariant: "primary" | "alternative" = (s?.footer_logo_variant as any) === "alternative" ? "alternative" : "primary";
+  const hasAltLogo = !!(s?.logoAltUrl || s?.logo_alt_url);
   const showSocials: boolean = s?.footer_show_socials ?? true;
   const visibleSocials: string[] = Array.isArray(s?.footer_visible_socials)
     ? s.footer_visible_socials
