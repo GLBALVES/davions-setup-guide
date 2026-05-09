@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { FONT_PRESETS, getFontStack } from "@/components/website-editor/site-fonts";
 import {
   DEFAULT_FONT_TEMPLATE_ID,
@@ -23,6 +24,7 @@ import {
   type FontSizeScale,
   type FontStyle,
   type FontTemplate,
+  type TextDecoration,
   type TextTransform,
 } from "@/components/website-editor/font-templates";
 
@@ -98,6 +100,7 @@ export default function FontsSubPanel({
                     lineHeight: eff.lineHeight,
                     letterSpacing: `${eff.letterSpacing}em`,
                     textTransform: eff.textTransform,
+                    textDecoration: eff.textDecoration,
                   }}
                 >
                   Share your story
@@ -161,13 +164,19 @@ interface ElementEditorProps {
   elementKey: ElementKey;
   templateId: string;
   overrides: FontOverrides;
-  onChange: (patch: Partial<{ fontFamily: string; weight: number; style: FontStyle; fontSize: number; lineHeight: number; letterSpacing: number; textTransform: TextTransform }>) => void;
+  onChange: (patch: Partial<{ fontFamily: string; weight: number; style: FontStyle; fontSize: number; lineHeight: number; letterSpacing: number; textTransform: TextTransform; textDecoration: TextDecoration }>) => void;
   onReset: () => void;
 }
 
 function ElementEditor({ elementKey, templateId, overrides, onChange, onReset }: ElementEditorProps) {
+  const { lang } = useLanguage();
   const eff = resolveElement(templateId, overrides, elementKey, 1);
   const hasOverride = Boolean(overrides[elementKey] && Object.keys(overrides[elementKey]!).length > 0);
+
+  // Localized BIU letters: EN uses B/I/U; PT/ES use N/I/S (Negrito/Itálico/Sublinhado).
+  const biuLabels = lang === "en"
+    ? { bold: "B", italic: "I", underline: "U" }
+    : { bold: "N", italic: "I", underline: "S" };
 
   return (
     <div className="space-y-3 pb-4">
@@ -199,9 +208,9 @@ function ElementEditor({ elementKey, templateId, overrides, onChange, onReset }:
       <Row label="Style">
         <div className="flex items-center gap-1">
           {([
-            { key: "bold", label: "B", active: eff.weight >= 600, onClick: () => onChange({ weight: eff.weight >= 600 ? 400 : 700 }), className: "font-bold" },
-            { key: "italic", label: "I", active: eff.style === "italic", onClick: () => onChange({ style: eff.style === "italic" ? "normal" : "italic" }), className: "italic font-serif" },
-            { key: "normal", label: "N", active: eff.weight < 600 && eff.style === "normal", onClick: () => onChange({ weight: 400, style: "normal" }), className: "" },
+            { key: "bold", label: biuLabels.bold, active: eff.weight >= 600, onClick: () => onChange({ weight: eff.weight >= 600 ? 400 : 700 }), className: "font-bold" },
+            { key: "italic", label: biuLabels.italic, active: eff.style === "italic", onClick: () => onChange({ style: eff.style === "italic" ? "normal" : "italic" }), className: "italic font-serif" },
+            { key: "underline", label: biuLabels.underline, active: eff.textDecoration === "underline", onClick: () => onChange({ textDecoration: eff.textDecoration === "underline" ? "none" : "underline" }), className: "underline" },
           ] as const).map((b) => (
             <button
               key={b.key}

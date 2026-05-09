@@ -30,6 +30,7 @@ export type ElementKey =
 
 export type TextTransform = "none" | "uppercase" | "lowercase" | "capitalize";
 export type FontStyle = "normal" | "italic";
+export type TextDecoration = "none" | "underline";
 
 export interface ElementTypography {
   fontFamily: string; // FONT_PRESETS id
@@ -39,6 +40,7 @@ export interface ElementTypography {
   lineHeight: number; // em (unitless multiplier)
   letterSpacing: number; // em
   textTransform: TextTransform;
+  textDecoration: TextDecoration;
 }
 
 export type ElementOverrides = Partial<ElementTypography>;
@@ -72,6 +74,7 @@ const t = (
   lineHeight: opts.lineHeight ?? 1.3,
   letterSpacing: opts.letterSpacing ?? 0,
   textTransform: opts.textTransform ?? "none",
+  textDecoration: opts.textDecoration ?? "none",
 });
 
 // Build a default element map given a heading font + body font + overall vibe.
@@ -331,6 +334,7 @@ export function buildTypographyCss(templateId: string | null | undefined, overri
       `  line-height: ${el.lineHeight};`,
       `  letter-spacing: ${el.letterSpacing}em;`,
       `  text-transform: ${el.textTransform};`,
+      `  text-decoration: ${el.textDecoration};`,
     ].join("\n");
     lines.push(`${classSel} {\n${declarations}\n}`);
     lines.push(`${typoSel} {\n${declarations}\n}`);
