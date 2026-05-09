@@ -134,12 +134,12 @@ export default function ColorsSubPanel({
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="z-[60]">
-              {SCHEME_ORDER.map((sk) => (
+              {SCHEME_ORDER.filter((sk) => palette.schemes[sk]).map((sk) => (
                 <SelectItem key={sk} value={sk}>
                   <span className="inline-flex items-center gap-2">
                     <span
                       className="inline-block h-3 w-3 rounded-sm border border-border"
-                      style={{ backgroundColor: palette.schemes[sk].background }}
+                      style={{ backgroundColor: palette.schemes[sk]!.background }}
                     />
                     {SCHEME_LABELS[sk]}
                   </span>
