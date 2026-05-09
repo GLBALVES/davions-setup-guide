@@ -896,7 +896,7 @@ export default function PreviewRenderer({
           )}
         </div>
 
-        {/* Center: viewport switcher */}
+        {/* Center: viewport switcher + undo/redo */}
         <div className="flex items-center gap-1">
           {([
             { id: "desktop" as Viewport, Icon: Monitor, label: "Desktop" },
@@ -917,6 +917,41 @@ export default function PreviewRenderer({
               <Icon className="h-4 w-4" />
             </button>
           ))}
+          {(onUndo || onRedo) && (
+            <>
+              <div className="mx-1 h-4 w-px bg-border" />
+              <button
+                type="button"
+                onClick={onUndo}
+                disabled={!canUndo}
+                title={`${undoLabel} (Ctrl+Z)`}
+                aria-label={undoLabel}
+                className={cn(
+                  "p-1.5 rounded transition-colors",
+                  canUndo
+                    ? "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    : "text-muted-foreground/40 cursor-not-allowed"
+                )}
+              >
+                <Undo2 className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={onRedo}
+                disabled={!canRedo}
+                title={`${redoLabel} (Ctrl+Shift+Z)`}
+                aria-label={redoLabel}
+                className={cn(
+                  "p-1.5 rounded transition-colors",
+                  canRedo
+                    ? "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    : "text-muted-foreground/40 cursor-not-allowed"
+                )}
+              >
+                <Redo2 className="h-4 w-4" />
+              </button>
+            </>
+          )}
         </div>
 
         {/* Right: auto-save indicator */}
