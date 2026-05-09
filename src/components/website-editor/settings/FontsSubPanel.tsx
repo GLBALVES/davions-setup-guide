@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { FONT_PRESETS, getFontStack } from "@/components/website-editor/site-fonts";
 import {
   DEFAULT_FONT_TEMPLATE_ID,
@@ -23,6 +24,7 @@ import {
   type FontSizeScale,
   type FontStyle,
   type FontTemplate,
+  type TextDecoration,
   type TextTransform,
 } from "@/components/website-editor/font-templates";
 
