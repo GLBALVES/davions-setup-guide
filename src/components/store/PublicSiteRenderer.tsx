@@ -748,10 +748,14 @@ function SharedFooter({
     : footerLogoSize === "large" ? "text-sm sm:text-lg font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap"
     : "text-xs sm:text-sm font-light tracking-[0.25em] sm:tracking-[0.35em] uppercase whitespace-nowrap";
 
+  const footerLogoVariant = (site as any)?.footer_logo_variant === "alternative" ? "alternative" : "primary";
+  const footerAltLogoUrl = (site as any)?.logo_alt_url ?? null;
+  const footerResolvedLogo = footerLogoVariant === "alternative" && footerAltLogoUrl ? footerAltLogoUrl : logoUrl;
+
   const logoBlock = showLogo ? (
     <div className={`flex ${logoPosCls}`}>
-      {logoUrl ? (
-        <img src={logoUrl} alt={displayName} className={footerLogoImgClass} style={textColor ? { filter: "none" } : undefined} />
+      {footerResolvedLogo ? (
+        <img src={footerResolvedLogo} alt={displayName} className={footerLogoImgClass} style={textColor ? { filter: "none" } : undefined} />
       ) : (
         <span className={footerLogoTextClass} style={textStyle}>
           {displayName}

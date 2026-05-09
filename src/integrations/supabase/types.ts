@@ -2627,6 +2627,7 @@ export type Database = {
           footer_columns: Json | null
           footer_layout: string | null
           footer_logo_position: string | null
+          footer_logo_variant: string | null
           footer_preset: string | null
           footer_show_contact_info: boolean | null
           footer_show_logo: boolean | null
@@ -2743,6 +2744,7 @@ export type Database = {
           footer_columns?: Json | null
           footer_layout?: string | null
           footer_logo_position?: string | null
+          footer_logo_variant?: string | null
           footer_preset?: string | null
           footer_show_contact_info?: boolean | null
           footer_show_logo?: boolean | null
@@ -2859,6 +2861,7 @@ export type Database = {
           footer_columns?: Json | null
           footer_layout?: string | null
           footer_logo_position?: string | null
+          footer_logo_variant?: string | null
           footer_preset?: string | null
           footer_show_contact_info?: boolean | null
           footer_show_logo?: boolean | null
