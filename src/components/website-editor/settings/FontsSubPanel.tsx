@@ -139,23 +139,6 @@ export default function FontsSubPanel({
         </p>
       </div>
 
-      <div className="flex items-center justify-between gap-3 border border-border px-4 py-3">
-        <span className="text-[11px] text-muted-foreground">Font Size</span>
-        <Select
-          value={fontSize ?? "regular"}
-          onValueChange={(v) => onFontSizeChange(v as FontSizeScale)}
-        >
-          <SelectTrigger className="h-8 w-[140px] text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="z-[60]">
-            <SelectItem value="compact">Compact</SelectItem>
-            <SelectItem value="regular">Regular</SelectItem>
-            <SelectItem value="comfortable">Comfortable</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       <div className="space-y-px border border-border">
         {ELEMENT_GROUPS.map((g) => (
           <button
