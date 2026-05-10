@@ -546,6 +546,9 @@ export function createSection(type: SectionType): PageSection {
     case "social-links": return socialLinks();
     case "embed": return embed();
     case "logo-strip": return logoStrip();
+    case "image-links": return imageLinks();
+    case "text-links": return textLinks();
+    case "image-grid-links": return imageGridLinks();
     default: return text("Content", "");
   }
 }
