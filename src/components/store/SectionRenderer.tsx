@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import EditableText from "@/components/website-editor/inline/EditableText";
 import EditableRichText from "@/components/website-editor/inline/EditableRichText";
 import EditableImage from "@/components/website-editor/inline/EditableImage";
+import { ImageLinksBlock, TextLinksBlock, ImageGridLinksBlock } from "@/components/store/blocks/LinksBlocks";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
