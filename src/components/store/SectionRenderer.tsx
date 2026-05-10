@@ -295,6 +295,12 @@ function SectionBlock({
         return <ShopBlock {...p} photographerId={photographerId ?? edit?.photographerId ?? null} />;
       case "map":
         return <MapBlock {...p} />;
+      case "image-links":
+        return <ImageLinksBlock {...(p as any)} />;
+      case "text-links":
+        return <TextLinksBlock {...(p as any)} />;
+      case "image-grid-links":
+        return <ImageGridLinksBlock {...(p as any)} />;
       default:
         return (
           <section className="py-12 px-6">
