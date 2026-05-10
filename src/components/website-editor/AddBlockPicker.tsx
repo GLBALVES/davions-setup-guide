@@ -5,7 +5,7 @@ import {
   FileText, Columns2, Columns3, Minus, Video,
   DollarSign, HelpCircle, Quote, BarChart3, Users, Clock,
   Mail, Map, Instagram, Share2, Code, Award,
-  Search, Sparkles, X, Store, ShoppingBag,
+  Search, Sparkles, X, Store, ShoppingBag, Link2, Link, Grid3x3,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -104,6 +104,17 @@ const CATEGORIES: BlockCategory[] = [
     icon: ShoppingBag,
     blocks: [
       { type: "shop", label: "Shop", description: "Sessions & galleries grid", icon: Store },
+    ],
+  },
+  {
+    id: "links",
+    label: "Links",
+    emoji: "🔗",
+    icon: Link2,
+    blocks: [
+      { type: "image-links", label: "Image Links", description: "Image cards with overlay text + link", icon: Link },
+      { type: "image-grid-links", label: "Image Grid Links", description: "Multi-image clickable grid", icon: Grid3x3 },
+      { type: "text-links", label: "Text Links", description: "Text-only link rows, vendors, sponsors", icon: Link2 },
     ],
   },
 ];

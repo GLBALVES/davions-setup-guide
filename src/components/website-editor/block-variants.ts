@@ -92,6 +92,27 @@ export const BLOCK_VARIANTS: Partial<Record<SectionType, BlockVariant[]>> = {
     { id: "grid-2-feature", label: "Featured", icon: "▭" },
     { id: "carousel", label: "Carousel", icon: "⟷" },
   ],
+  "image-links": [
+    { id: "overlay-bottom-left", label: "Overlay Left", icon: "◧" },
+    { id: "overlay-center", label: "Overlay Center", icon: "◎" },
+    { id: "side-by-side", label: "Side by Side", icon: "▭" },
+    { id: "row-3", label: "Row of 3", icon: "⊞" },
+    { id: "grid-3-portrait", label: "3 Portraits", icon: "⊡" },
+  ],
+  "text-links": [
+    { id: "centered-3", label: "Centered Row", icon: "☰" },
+    { id: "boxed-3", label: "Boxed Row", icon: "▭" },
+    { id: "underlined-3", label: "Underlined", icon: "▬" },
+    { id: "featured-in", label: "As Featured In", icon: "★" },
+    { id: "vendors-2col", label: "Vendors", icon: "▥" },
+    { id: "sponsors-stack", label: "Sponsors", icon: "≡" },
+  ],
+  "image-grid-links": [
+    { id: "feature-plus-2", label: "Feature + 2", icon: "▣" },
+    { id: "2-up", label: "2 Up", icon: "▥" },
+    { id: "3-up", label: "3 Up", icon: "⊞" },
+    { id: "1-feature", label: "1 Feature", icon: "⬜" },
+  ],
 };
 
 /** Get the default variant for a section type */

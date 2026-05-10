@@ -1,63 +1,65 @@
-# Undo / Redo no Editor de Site
+## Goal
 
-## Objetivo
-Permitir desfazer e refazer ações no editor (`/dashboard/website/editor`) — edição de textos, blocos, cores, fontes, espaçamento, navegação, imagens e qualquer outro campo do site — usando atalhos de teclado e botões na barra superior.
+Add a new "Links" category to the **Add Block** picker (Pixieset-style), allowing users to insert link sections with multiple visual presets — image overlay links, image grid links, text links, "as featured in", "vendors", "sponsors", and client galleries.
 
-## Escopo
-- **Atinge:** todos os campos editáveis do site mantidos em `WebsiteSettings.tsx` (logo, tagline, cores, fontes, hero, sobre, sociais, navegação, blocos, SEO, footer, etc.).
-- **Não atinge:** ações irreversíveis (publicar, apagar definitivo do Trash, upload em curso, troca de domínio, slug, ações de billing).
+## New Block Types
 
-## Como vai funcionar (UX)
-1. Atalhos globais dentro do editor:
-   - **Ctrl/Cmd + Z** → desfazer
-   - **Ctrl/Cmd + Shift + Z** (e **Ctrl + Y**) → refazer
-2. Dois botões discretos na `PreviewHeader` (ícones Undo/Redo da lucide), desabilitados quando a pilha estiver vazia, com tooltip mostrando o atalho.
-3. Toast curto ao desfazer/refazer ("Desfeito" / "Refeito").
-4. As alterações desfeitas/refeitas refletem **imediatamente** no preview; o salvamento no backend continua acontecendo pelo botão "Save" existente (não auto-save por undo) — ou seja, undo/redo só mexe no estado local até o usuário salvar.
+Three new `SectionType`s, each with multiple variants (visual presets):
 
-## Abordagem técnica
+1. **`image-links`** — One or more cards combining image + clickable label/link
+   - Variants: `overlay-bottom-left`, `overlay-center`, `side-by-side`, `row-3`, `grid-3-portrait`
+2. **`text-links`** — Text-only link rows, no images
+   - Variants: `centered-3`, `boxed-3`, `underlined-3`, `featured-in`, `vendors-2col`, `sponsors-stack`
+3. **`image-grid-links`** — Multi-image clickable grid (1+1, 1+2, 3-up)
+   - Variants: `feature-plus-2`, `2-up`, `3-up`, `1-feature`
 
-### 1. Consolidar estado editável em um snapshot
-Criar um helper `useEditorHistory` em `src/components/website-editor/useEditorHistory.ts` que:
-- Recebe um objeto serializável (snapshot) com todos os campos editáveis e seus setters agrupados.
-- Mantém duas pilhas em `useRef`: `past[]` e `future[]` (limite ~50 entradas para não estourar memória).
-- Expõe: `pushSnapshot()`, `undo()`, `redo()`, `canUndo`, `canRedo`, `reset(initial)`.
-
-### 2. Snapshot serializável
-Em `WebsiteSettings.tsx`, agrupar os ~60 `useState` editáveis em um único objeto derivado `currentSnapshot` (memo) e um aplicador `applySnapshot(snap)` que chama todos os setters correspondentes. Os estados de UI puros (modais abertos, "copiado", "loading", "uploading*") **não entram** no snapshot.
-
-### 3. Captura de snapshots
-Estratégia debounced para evitar uma entrada por tecla:
-- Hook `useDebouncedSnapshot(currentSnapshot, 400ms)` empurra para `past[]` quando o snapshot estabiliza (diff via `JSON.stringify` rápido).
-- Entrada inicial gravada no `useEffect` de carregamento.
-- Limpa `future[]` a cada nova mutação do usuário (comportamento padrão de editores).
-
-### 4. Atalhos e botões
-- Hook `useUndoRedoShortcuts({ undo, redo, canUndo, canRedo })` com listener `keydown` no `window`, ignorando quando o foco está em campos `contentEditable` que já tratam undo nativo do navegador (deixar o navegador resolver o undo de digitação dentro do mesmo campo) — quando o evento não é cancelado pelo navegador, nosso handler assume.
-- Adicionar dois `Button` (variant ghost) em `PreviewHeader.tsx` antes do botão Save.
-
-### 5. Persistência
-- Por padrão, history vive **apenas em memória** (resetado ao recarregar a página) — comportamento esperado para editores web.
-- Opcional (não incluído nesta entrega): salvar a última pilha em `sessionStorage` para sobreviver a refresh.
-
-## Arquivos a criar/editar
-
-```text
-src/components/website-editor/useEditorHistory.ts      [novo]
-src/components/website-editor/useUndoRedoShortcuts.ts  [novo]
-src/components/website-editor/PreviewHeader.tsx        [+ 2 botões]
-src/pages/dashboard/WebsiteSettings.tsx                [agrupar snapshot + applySnapshot + integração]
-src/lib/i18n/translations.ts                           [strings: Desfazer, Refazer, Desfeito, Refeito]
+Each block stores its data as:
+```ts
+{ variant: string, links: Array<{ image?: string; label: string; sublabel?: string; href: string }> }
 ```
 
-## Riscos & cuidados
-- **Tamanho do snapshot:** o site editável é leve (campos string + arrays curtos), 50 snapshots ≈ <2MB — aceitável.
-- **Inputs `contentEditable` (RichText, EditableText):** deixar o undo nativo do browser primeiro; nosso handler atua quando o foco não está em um editor de texto ativo, evitando conflito.
-- **Uploads/IDs assíncronos:** snapshot é tirado após o setState de URL final; nada a fazer.
-- **Idiomas:** strings em EN/PT-BR/ES (memo de i18n).
+## Files to change
 
-## Critério de aceite
-- Editar um texto, mudar cor, mover bloco → Ctrl+Z reverte uma ação por vez na ordem inversa; Ctrl+Shift+Z refaz.
-- Botões Undo/Redo na header habilitam/desabilitam corretamente.
-- Funciona em Mac (Cmd) e Windows/Linux (Ctrl).
-- Save continua salvando o estado atual visível.
+**Schema / factory**
+- `src/components/website-editor/page-templates.ts`
+  - Add `"image-links" | "text-links" | "image-grid-links"` to `SectionType` union
+  - Add factories `imageLinks()`, `textLinks()`, `imageGridLinks()` with sensible default link arrays
+  - Wire them into `createSection()`
+
+**Variants**
+- `src/components/website-editor/block-variants.ts`
+  - Register variant arrays for the 3 new types
+
+**Picker UI**
+- `src/components/website-editor/AddBlockPicker.tsx`
+  - Add a new category `Links` (icon `Link2`, emoji 🔗) listing the 3 new blocks
+
+**Thumbnails**
+- `src/components/website-editor/BlockThumbnail.tsx`
+  - Add SVG wireframe cases for the 3 new types
+
+**Public renderer**
+- `src/components/store/SectionRenderer.tsx`
+  - Add `renderImageLinks`, `renderTextLinks`, `renderImageGridLinks` honoring `variant`
+  - Use semantic design tokens, responsive layout, hover states
+
+**Settings panel (editor)**
+- `src/components/website-editor/BlockSettingsPanel.tsx`
+  - Add editors for the 3 new types: variant selector + list editor for `links` (image upload via `ImageUploadField`, label, sublabel, href)
+  - Reuse existing `ItemListEditor` patterns where possible
+
+**i18n**
+- All UI labels (category name "Links", block labels, settings labels) added in EN / PT-BR / ES via the existing labeling pattern in the picker (the picker currently uses English literals — keep consistent with surrounding code; no LanguageContext keys needed for picker labels since other categories are also English).
+
+## Out of scope
+
+- No DB migration (sections are stored as JSON in the existing `photographer_site_pages` rows)
+- No changes to navigation, routing, or auth
+- No new shared components beyond the renderer + settings editor
+
+## Acceptance
+
+- "Links" appears as a new category in Add Block with the 3 presets
+- Selecting a preset inserts a working block with placeholder links
+- Each block can switch variant in the right panel
+- Links render correctly on the published public site with hover and proper navigation (internal anchors and external URLs)
