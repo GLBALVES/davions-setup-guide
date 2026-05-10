@@ -845,8 +845,72 @@ function getContentEditor(type: string, props: any, onChange: (p: any) => void, 
     case "map": return <MapContentEditor props={props} onChange={onChange} />;
     case "divider": return <DividerContentEditor props={props} onChange={onChange} />;
     case "instagram-feed": return <InstagramFeedContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
+    case "image-links":
+    case "image-grid-links": return <LinksContentEditor props={props} onChange={onChange} photographerId={photographerId} withImage />;
+    case "text-links": return <LinksContentEditor props={props} onChange={onChange} photographerId={photographerId} withImage={false} withTitle />;
     default: return null;
   }
+}
+
+function LinksContentEditor({
+  props,
+  onChange,
+  photographerId,
+  withImage,
+  withTitle,
+}: {
+  props: any;
+  onChange: (p: any) => void;
+  photographerId?: string | null;
+  withImage: boolean;
+  withTitle?: boolean;
+}) {
+  const links: { image?: string; label: string; sublabel?: string; href: string }[] = props.links || [];
+  return (
+    <div className="space-y-3">
+      {withTitle && (
+        <Field label="Title (optional)">
+          <RichTextField value={props.title || ""} onChange={(v) => onChange({ ...props, title: v })} placeholder="As Featured In" />
+        </Field>
+      )}
+      <ItemListEditor
+        items={links}
+        onChange={(next) => onChange({ ...props, links: next })}
+        itemLabel="Link"
+        addLabel="Add Link"
+        newItem={() => ({ image: "", label: "Link", sublabel: "", href: "#" })}
+        renderLabel={(it) => it.label || it.href || "Link"}
+        renderDetail={(item, update) => (
+          <div className="space-y-2">
+            {withImage && (
+              <Field label="Image">
+                <ImageUploadField
+                  value={item.image || ""}
+                  onChange={(url) => update({ image: url })}
+                  photographerId={photographerId}
+                  folder="links"
+                />
+              </Field>
+            )}
+            <Field label="Label">
+              <RichTextField value={item.label} onChange={(v) => update({ label: v })} placeholder="Link text" />
+            </Field>
+            <Field label="Sub-label (optional)">
+              <RichTextField value={item.sublabel || ""} onChange={(v) => update({ sublabel: v })} placeholder="LOREM IPSUM" />
+            </Field>
+            <Field label="URL">
+              <Input
+                value={item.href || ""}
+                onChange={(e) => update({ href: e.target.value })}
+                className="h-8 text-xs"
+                placeholder="https:// or #section"
+              />
+            </Field>
+          </div>
+        )}
+      />
+    </div>
+  );
 }
 
 // ── Main panel ────────────────────────────────────────────────────────────────
