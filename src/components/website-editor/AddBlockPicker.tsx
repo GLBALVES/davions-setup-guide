@@ -5,7 +5,7 @@ import {
   FileText, Columns2, Columns3, Minus, Video,
   DollarSign, HelpCircle, Quote, BarChart3, Users, Clock,
   Mail, Map, Instagram, Share2, Code, Award,
-  Search, Sparkles, X, Store, ShoppingBag,
+  Search, Sparkles, X, Store, ShoppingBag, Link2, Link, Grid3x3,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
