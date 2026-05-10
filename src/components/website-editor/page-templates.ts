@@ -28,7 +28,10 @@ export type SectionType =
   | "social-links"
   | "embed"
   | "logo-strip"
-  | "shop";
+  | "shop"
+  | "image-links"
+  | "text-links"
+  | "image-grid-links";
 
 export interface PageSection {
   id: string;
