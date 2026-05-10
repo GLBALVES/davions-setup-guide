@@ -106,6 +106,17 @@ const CATEGORIES: BlockCategory[] = [
       { type: "shop", label: "Shop", description: "Sessions & galleries grid", icon: Store },
     ],
   },
+  {
+    id: "links",
+    label: "Links",
+    emoji: "🔗",
+    icon: Link2,
+    blocks: [
+      { type: "image-links", label: "Image Links", description: "Image cards with overlay text + link", icon: Link },
+      { type: "image-grid-links", label: "Image Grid Links", description: "Multi-image clickable grid", icon: Grid3x3 },
+      { type: "text-links", label: "Text Links", description: "Text-only link rows, vendors, sponsors", icon: Link2 },
+    ],
+  },
 ];
 
 // ── Add Block Picker ──────────────────────────────────────────────────────────
