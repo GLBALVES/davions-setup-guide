@@ -367,6 +367,37 @@ export default function BlockThumbnail({ type, className }: BlockThumbnailProps)
         </Frame>
       );
 
+    case "image-links":
+      return wrapper(
+        <Frame>
+          <rect x="6" y="10" width="88" height="40" fill="hsl(var(--muted))" stroke={FG} opacity={0.7} />
+          <rect x="10" y="36" width="22" height="3" fill={FG} opacity={0.6} stroke="none" />
+          <rect x="10" y="42" width="14" height="2" fill={FG} opacity={0.35} stroke="none" />
+        </Frame>
+      );
+
+    case "image-grid-links":
+      return wrapper(
+        <Frame>
+          <rect x="6" y="8" width="42" height="44" fill="hsl(var(--muted))" stroke={FG} opacity={0.7} />
+          <rect x="52" y="8" width="42" height="20" fill="hsl(var(--muted))" stroke={FG} opacity={0.7} />
+          <rect x="52" y="32" width="42" height="20" fill="hsl(var(--muted))" stroke={FG} opacity={0.7} />
+        </Frame>
+      );
+
+    case "text-links":
+      return wrapper(
+        <Frame>
+          {[0, 1, 2].map((c) => (
+            <g key={c}>
+              <rect x={14 + c * 26} y="26" width="18" height="3" fill={FG} opacity={0.6} stroke="none" />
+              <rect x={16 + c * 26} y="32" width="14" height="2" fill={FG} opacity={0.3} stroke="none" />
+              <line x1={20 + c * 26} y1="38" x2={26 + c * 26} y2="38" stroke={FG} opacity={0.5} />
+            </g>
+          ))}
+        </Frame>
+      );
+
     default:
       return wrapper(
         <Frame>
