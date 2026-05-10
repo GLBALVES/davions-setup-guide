@@ -258,6 +258,49 @@ const logoStrip = (): PageSection => ({
   props: { title: "As Seen On", logos: [] },
 });
 
+const imageLinks = (): PageSection => ({
+  id: uid(),
+  type: "image-links",
+  label: "Image Links",
+  props: {
+    variant: "overlay-bottom-left",
+    links: [
+      { image: "", label: "Image Link", sublabel: "LOREM IPSUM DOLOR", href: "#" },
+      { image: "", label: "Image Link", sublabel: "LOREM IPSUM DOLOR", href: "#" },
+      { image: "", label: "Image Link", sublabel: "LOREM IPSUM DOLOR", href: "#" },
+    ],
+  },
+});
+
+const textLinks = (): PageSection => ({
+  id: uid(),
+  type: "text-links",
+  label: "Text Links",
+  props: {
+    variant: "centered-3",
+    title: "",
+    links: [
+      { label: "LINK 1", sublabel: "LOREM IPSUM", href: "#" },
+      { label: "LINK 2", sublabel: "LOREM IPSUM", href: "#" },
+      { label: "LINK 3", sublabel: "LOREM IPSUM", href: "#" },
+    ],
+  },
+});
+
+const imageGridLinks = (): PageSection => ({
+  id: uid(),
+  type: "image-grid-links",
+  label: "Image Grid Links",
+  props: {
+    variant: "feature-plus-2",
+    links: [
+      { image: "", label: "Story 1", sublabel: "LOREM IPSUM DOLOR", href: "#" },
+      { image: "", label: "Story 2", sublabel: "LOREM IPSUM DOLOR", href: "#" },
+      { image: "", label: "Story 3", sublabel: "LOREM IPSUM DOLOR", href: "#" },
+    ],
+  },
+});
+
 // ── Template Definitions ─────────────────────────────────────────────────────
 
 
