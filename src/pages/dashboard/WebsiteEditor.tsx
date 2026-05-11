@@ -4146,6 +4146,7 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
                 overrides={ov}
                 fontSize={currentSize}
                 customFonts={((site as any)?.customFonts ?? (site as any)?.custom_fonts ?? []) as any[]}
+                customFontCss={((site as any)?.customFontCss ?? (site as any)?.custom_font_css ?? "") as string}
                 photographerId={photographerId ?? null}
                 onTemplateChange={(id, tpl) => {
                   onSiteChange({
@@ -4160,6 +4161,7 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
                   onSiteChange({ font_overrides: next as any });
                 }}
                 onCustomFontsChange={(next) => onSiteChange({ custom_fonts: next as any })}
+                onCustomFontCssChange={(next) => onSiteChange({ custom_font_css: next as any })}
               />
             );
           })()}
