@@ -191,6 +191,12 @@ export default function FontsSubPanel({
         value={customFontCss ?? ""}
         onChange={onCustomFontCssChange}
       />
+
+      <ExternalFontFamiliesSection
+        externalFonts={externalFonts}
+        customFontCss={customFontCss ?? ""}
+        onChange={onExternalFontsChange}
+      />
     </div>
   );
 }
