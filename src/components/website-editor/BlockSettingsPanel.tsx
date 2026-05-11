@@ -58,6 +58,10 @@ export interface BlockSettings {
     | "skew-in"
     | "tilt-3d"
     | "split-reveal";
+  /** 50–200 (%). Default 100. Scales the magnitude of the active scroll effect. */
+  scrollEffectIntensity?: number;
+  /** 50–200 (%). Default 100. Scales how fast the effect completes / its loop. */
+  scrollEffectSpeed?: number;
 }
 
 // Reusable overlay controls (color + opacity slider) for background images
