@@ -138,7 +138,7 @@ export function AddonReviewModal({
           )}
           {alreadyPaid > 0 && (
             <div className="flex justify-between text-emerald-600">
-              <span>{tp.alreadyPaid || "Already paid"}</span>
+              <span>{(tp as any).alreadyPaid || "Already paid"}</span>
               <span className="font-medium tabular-nums">-{fmt(alreadyPaid)}</span>
             </div>
           )}
