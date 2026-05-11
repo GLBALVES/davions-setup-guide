@@ -5400,6 +5400,7 @@ const WebsiteEditor = () => {
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
       <MotionScrubber />
+      <PerfModeToggle />
       {!isMobile && sidebarPanel}
 
       {isMobile && (
