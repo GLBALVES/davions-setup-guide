@@ -173,12 +173,17 @@ export function useScrollEffects() {
   useEffect(() => {
     const active = new Set<HTMLElement>();
 
+    const SELECTOR =
+      "[data-scroll-effect],[data-text-effect],[data-image-effect],[data-buttons-effect]";
+
     const collect = () =>
-      Array.from(
-        document.querySelectorAll<HTMLElement>("[data-scroll-effect]"),
-      ).filter((el) => {
-        const v = el.getAttribute("data-scroll-effect");
-        return v && v !== "none";
+      Array.from(document.querySelectorAll<HTMLElement>(SELECTOR)).filter((el) => {
+        const any =
+          el.getAttribute("data-scroll-effect") ||
+          el.getAttribute("data-text-effect") ||
+          el.getAttribute("data-image-effect") ||
+          el.getAttribute("data-buttons-effect");
+        return any && any !== "none";
       });
 
     let raf = 0;
