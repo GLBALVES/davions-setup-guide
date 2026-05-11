@@ -733,8 +733,17 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         const depositValue = depositEnabled
           ? (isPercentDeposit ? Math.round(grandTotal * depositAmount / 100) : depositAmount)
           : 0;
-        const depositPaid = isDepositPaid || isFullPaid ? depositValue : 0;
-        const totalPaidAmount = isFullPaid ? grandTotal : depositPaid;
+        // Honor the actual amounts captured at payment time (locked once paid),
+        // so editing the session price later does not retroactively change the
+        // displayed deposit / total paid.
+        const lockedDeposit = bookingPayment.deposit_paid_amount;
+        const lockedTotalPaid = bookingPayment.total_paid_amount;
+        const depositPaid = isDepositPaid || isFullPaid
+          ? (lockedDeposit ?? depositValue)
+          : 0;
+        const totalPaidAmount = isFullPaid
+          ? (lockedTotalPaid ?? grandTotal)
+          : depositPaid;
         const balanceDue = grandTotal - totalPaidAmount;
 
         return (
