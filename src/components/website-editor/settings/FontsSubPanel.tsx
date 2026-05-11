@@ -192,16 +192,13 @@ export default function FontsSubPanel({
         onChange={onCustomFontCssChange}
       />
 
-      <ExternalFontFamiliesSection
-        externalFonts={externalFonts}
-        customFontCss={customFontCss ?? ""}
-        onChange={onExternalFontsChange}
-      />
     </div>
   );
 }
 
 // ── Per-element editor (font family/weight/style/size/etc.) ────────────────
+import type { ExternalFontEntry } from "@/components/website-editor/site-fonts";
+
 interface ElementEditorProps {
   elementKey: ElementKey;
   templateId: string;
