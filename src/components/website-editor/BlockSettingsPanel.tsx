@@ -40,6 +40,15 @@ export interface BlockSettings {
   blockPosition?: "left" | "center" | "right";
   colorScheme?: "light" | "dark" | "auto";
   animation?: "none" | "fade-up" | "fade-in" | "slide-left";
+  scrollEffect?:
+    | "none"
+    | "parallax"
+    | "reveal"
+    | "zoom-on-scroll"
+    | "fade-on-scroll"
+    | "fly-in-left"
+    | "fly-in-right"
+    | "fly-in-up";
 }
 
 // Reusable overlay controls (color + opacity slider) for background images
@@ -103,6 +112,17 @@ const ANIMATIONS = [
   { id: "fade-up", label: "Fade Up" },
   { id: "fade-in", label: "Fade In" },
   { id: "slide-left", label: "Slide Left" },
+];
+
+const SCROLL_EFFECTS: { id: NonNullable<BlockSettings["scrollEffect"]>; label: string; hint?: string }[] = [
+  { id: "none", label: "None" },
+  { id: "parallax", label: "Parallax", hint: "Image moves slower than scroll" },
+  { id: "reveal", label: "Reveal", hint: "Curtain opens on scroll" },
+  { id: "zoom-on-scroll", label: "Zoom", hint: "Image scales as you scroll" },
+  { id: "fade-on-scroll", label: "Fade", hint: "Fades in & out with scroll" },
+  { id: "fly-in-left", label: "Fly In Left" },
+  { id: "fly-in-right", label: "Fly In Right" },
+  { id: "fly-in-up", label: "Fly In Up" },
 ];
 
 interface BlockSettingsPanelProps {
