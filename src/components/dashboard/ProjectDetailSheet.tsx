@@ -2216,6 +2216,8 @@ export function ProjectDetailSheet({
           shootDate,
           shootTime,
           endTime,
+          undefined,
+          project.id,
         );
 
         if (conflictResult.hasConflict) {
