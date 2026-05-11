@@ -18,20 +18,28 @@ const PRESET_ROWS: string[][] = [
   ["#5a3a8a", "#c47a5a", "#d4a878", "#a88858", "#8a6a4a", "#5a3a2a", "#3a2a1a", "#2a1a0a"],
 ];
 
-const SITE_TOKENS: { var: string; label: string }[] = [
-  { var: "--site-bg", label: "Background" },
-  { var: "--site-headings", label: "Headings" },
-  { var: "--site-paragraphs", label: "Paragraphs" },
-  { var: "--site-lines", label: "Lines" },
-  { var: "--site-secondary-bg", label: "Secondary BG" },
-  { var: "--site-secondary-headings", label: "Secondary H" },
-  { var: "--site-secondary-paragraphs", label: "Secondary P" },
-  { var: "--site-secondary-lines", label: "Secondary Lines" },
-  { var: "--site-button-bg", label: "Button BG" },
-  { var: "--site-button-text", label: "Button Text" },
-  { var: "--site-button-bg-hover", label: "Button BG Hover" },
-  { var: "--site-button-text-hover", label: "Button Text Hover" },
-];
+/** Read user-defined site palette colors injected by useSiteColors. */
+function readSiteColors(): string[] {
+  try {
+    const raw = document.documentElement.dataset.siteColors;
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.filter((c) => typeof c === "string" && c.trim()) : [];
+  } catch {
+    return [];
+  }
+}
+
+function useSiteColorsList(): string[] {
+  const [list, setList] = useState<string[]>(() => readSiteColors());
+  useEffect(() => {
+    const handler = () => setList(readSiteColors());
+    window.addEventListener("site-colors-changed", handler);
+    return () => window.removeEventListener("site-colors-changed", handler);
+  }, []);
+  return list;
+}
+
 
 
 
