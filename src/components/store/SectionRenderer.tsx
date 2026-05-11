@@ -327,8 +327,18 @@ function SectionBlock({
     paddingRight?: number;
     colorScheme?: "light" | "dark" | "auto";
     animation?: "none" | "fade-up" | "fade-in" | "slide-left";
+    scrollEffect?:
+      | "none"
+      | "parallax"
+      | "reveal"
+      | "zoom-on-scroll"
+      | "fade-on-scroll"
+      | "fly-in-left"
+      | "fly-in-right"
+      | "fly-in-up";
   };
 
+  const hasScrollEffect = bs.scrollEffect && bs.scrollEffect !== "none";
   const hasAny =
     bs.backgroundColor ||
     bs.backgroundImage ||
@@ -337,7 +347,8 @@ function SectionBlock({
     bs.paddingLeft !== undefined ||
     bs.paddingRight !== undefined ||
     (bs.colorScheme && bs.colorScheme !== "auto") ||
-    (bs.animation && bs.animation !== "none");
+    (bs.animation && bs.animation !== "none") ||
+    hasScrollEffect;
 
   if (!hasAny) return inner;
 
