@@ -2135,7 +2135,16 @@ export function ProjectDetailSheet({
     const dateChanged = "shoot_date" in pendingChanges || "shoot_time" in pendingChanges;
     if (dateChanged) {
       const shootDate = pendingChanges.shoot_date ?? project.shoot_date;
-      const shootTime = pendingChanges.shoot_time ?? project.shoot_time ?? "09:00";
+      const rawShootTime = pendingChanges.shoot_time ?? project.shoot_time ?? null;
+      const shootTime = rawShootTime ?? "09:00";
+
+      if (rawShootTime && !shootDate) {
+        const msg = "Selecione uma data antes de salvar o horário.";
+        setConflictWarning(msg);
+        toast.error(msg);
+        setSaving(false);
+        return;
+      }
 
       if (shootDate && project.booking_id) {
         const { data: bookingData } = await (supabase as any)
