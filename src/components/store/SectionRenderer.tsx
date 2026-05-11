@@ -2182,22 +2182,47 @@ function CarouselBlock({ images = [], itemsVisible = 3, autoplay = false, interv
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const [paused, setPaused] = useState(false);
 
+  // Seamless infinite loop: render the slides twice. When the user (or autoplay)
+  // scrolls past the first set, snap back by exactly one set's width — without
+  // animation — so it visually keeps going forever.
+  const canLoop = slides.length > itemsVisible;
+  const rendered = canLoop ? [...slides, ...slides] : slides;
+
+  // Keep scroll within the first half. Wait for the smooth scroll to settle
+  // (debounced) before snapping, so the user never sees the jump mid-animation.
   useEffect(() => {
-    if (!autoplay || paused || slides.length <= itemsVisible) return;
+    if (!canLoop) return;
+    const el = scrollerRef.current;
+    if (!el) return;
+    let timer: number | null = null;
+    const onScroll = () => {
+      if (timer) window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        const half = el.scrollWidth / 2;
+        if (el.scrollLeft >= half) {
+          el.scrollLeft = el.scrollLeft - half;
+        } else if (el.scrollLeft <= 0) {
+          el.scrollLeft = el.scrollLeft + half;
+        }
+      }, 120);
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [canLoop, slides.length]);
+
+  useEffect(() => {
+    if (!autoplay || paused || !canLoop) return;
     const el = scrollerRef.current;
     if (!el) return;
     const t = window.setInterval(() => {
-      const itemWidth = el.scrollWidth / Math.max(1, slides.length);
-      const maxScroll = el.scrollWidth - el.clientWidth - 1;
-      const next = el.scrollLeft + itemWidth;
-      if (next >= maxScroll) {
-        el.scrollTo({ left: 0, behavior: "smooth" });
-      } else {
-        el.scrollBy({ left: itemWidth, behavior: "smooth" });
-      }
+      const itemWidth = el.scrollWidth / Math.max(1, rendered.length);
+      el.scrollBy({ left: itemWidth, behavior: "smooth" });
     }, Math.max(1500, Number(interval) || 5000));
     return () => window.clearInterval(t);
-  }, [autoplay, paused, interval, slides.length, itemsVisible]);
+  }, [autoplay, paused, interval, canLoop, rendered.length]);
 
   if (slides.length === 0) {
     return (
@@ -2221,7 +2246,7 @@ function CarouselBlock({ images = [], itemsVisible = 3, autoplay = false, interv
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        {slides.map((slide, i) => {
+        {rendered.map((slide, i) => {
           const inner = (
             <div className="relative w-full aspect-square overflow-hidden rounded group">
               <img src={slide.image} alt={slide.title || ""} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
