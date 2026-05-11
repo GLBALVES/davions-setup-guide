@@ -31,13 +31,14 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   items: AddonItem[];
   newSession: SessionInfo;
-  depositAlreadyPaid: boolean;
+  /** Total amount already paid by the client, in cents. Honored regardless of new session deposit config. */
+  amountAlreadyPaid: number;
   onConfirm: (keptItems: AddonItem[]) => void;
   confirming?: boolean;
 }
 
 export function AddonReviewModal({
-  open, onOpenChange, items: initialItems, newSession, depositAlreadyPaid, onConfirm, confirming,
+  open, onOpenChange, items: initialItems, newSession, amountAlreadyPaid, onConfirm, confirming,
 }: Props) {
   const { t } = useLanguage();
   const tp = t.projects;
@@ -56,13 +57,9 @@ export function AddonReviewModal({
   const taxAmount = Math.round(subtotal * newSession.tax_rate / 100);
   const total = subtotal + taxAmount;
 
-  const depositValue = useMemo(() => {
-    if (!newSession.deposit_enabled) return 0;
-    if (newSession.deposit_type === "percentage") return Math.round(total * newSession.deposit_amount / 100);
-    return newSession.deposit_amount; // fixed, in cents
-  }, [newSession, total]);
-
-  const balance = depositAlreadyPaid ? total - depositValue : total;
+  // Honor what the client has actually paid; ignore the new session's deposit config.
+  const alreadyPaid = Math.max(0, amountAlreadyPaid);
+  const balance = Math.max(0, total - alreadyPaid);
 
   const fmt = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
@@ -139,10 +136,10 @@ export function AddonReviewModal({
               <span className="font-medium tabular-nums">{fmt(taxAmount)}</span>
             </div>
           )}
-          {depositAlreadyPaid && depositValue > 0 && (
+          {alreadyPaid > 0 && (
             <div className="flex justify-between text-emerald-600">
-              <span>{tp.depositAmount || "Deposit paid"}</span>
-              <span className="font-medium tabular-nums">-{fmt(depositValue)}</span>
+              <span>{(tp as any).alreadyPaid || "Already paid"}</span>
+              <span className="font-medium tabular-nums">-{fmt(alreadyPaid)}</span>
             </div>
           )}
           <Separator className="my-1" />

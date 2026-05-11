@@ -1891,19 +1891,59 @@ export function ProjectDetailSheet({
     enabled: !!photographerId && open,
   });
 
-  // Get current booking's session_id
+  // Get current booking's session_id + full payment context (for change-session calculations)
   const { data: bookingData } = useQuery({
     queryKey: ["project-booking-session", project?.booking_id],
     queryFn: async () => {
       if (!project?.booking_id) return null;
       const { data } = await (supabase as any)
         .from("bookings")
-        .select("session_id, payment_status, extras_total")
+        .select("session_id, payment_status, extras_total, sessions ( price, tax_rate, deposit_enabled, deposit_amount, deposit_type )")
         .eq("id", project.booking_id)
         .single();
-      return data as { session_id: string; payment_status: string; extras_total: number } | null;
+      return data as {
+        session_id: string;
+        payment_status: string;
+        extras_total: number;
+        sessions: { price: number; tax_rate: number; deposit_enabled: boolean; deposit_amount: number; deposit_type: string } | null;
+      } | null;
     },
     enabled: !!project?.booking_id && open,
+  });
+
+  // Compute total amount already paid by client (in cents) — based on CURRENT session,
+  // plus manual project payments and paid invoices. Used to honor paid amounts when
+  // changing session, ignoring the new session's deposit configuration.
+  const { data: amountAlreadyPaidCents = 0 } = useQuery({
+    queryKey: ["project-amount-paid", project?.id, project?.booking_id, bookingData?.payment_status, bookingData?.extras_total],
+    queryFn: async () => {
+      let bookingPaid = 0;
+      if (bookingData?.sessions) {
+        const sess = bookingData.sessions;
+        const sessionPrice = sess.price ?? 0;
+        const taxRate = sess.tax_rate ?? 0;
+        const extrasTotal = bookingData.extras_total ?? 0;
+        const subtotal = sessionPrice + extrasTotal;
+        const taxAmount = Math.round(subtotal * taxRate / 100);
+        const grandTotal = subtotal + taxAmount;
+        const isPercent = sess.deposit_type === "percent" || sess.deposit_type === "percentage";
+        const depositValue = sess.deposit_enabled
+          ? (isPercent ? Math.round(grandTotal * sess.deposit_amount / 100) : sess.deposit_amount)
+          : 0;
+        const ps = bookingData.payment_status;
+        if (ps === "paid") bookingPaid = grandTotal;
+        else if (ps === "deposit_paid") bookingPaid = depositValue;
+      }
+      const [{ data: pays }, { data: invs }] = await Promise.all([
+        (supabase as any).from("project_payments").select("amount").eq("project_id", project!.id),
+        (supabase as any).from("project_invoices").select("paid_amount").eq("project_id", project!.id),
+      ]);
+      const manualSum = (pays ?? []).reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+      const invoicePaidSum = (invs ?? []).reduce((s: number, i: any) => s + Number(i.paid_amount || 0), 0);
+      // project_payments.amount and project_invoices.paid_amount are in major units → convert to cents
+      return bookingPaid + Math.round((manualSum + invoicePaidSum) * 100);
+    },
+    enabled: !!project?.id && !!project?.booking_id && open,
   });
 
   // Fetch session bonuses/includes for the current booking session
@@ -2833,7 +2873,7 @@ export function ProjectDetailSheet({
           onOpenChange={(v) => { if (!v) { setAddonReviewOpen(false); setPendingNewSession(null); } }}
           items={addonItems}
           newSession={pendingNewSession}
-          depositAlreadyPaid={bookingData?.payment_status === "deposit_paid" || bookingData?.payment_status === "paid"}
+          amountAlreadyPaid={amountAlreadyPaidCents}
           onConfirm={(keptItems) => applySessionChange(pendingNewSession, keptItems)}
           confirming={changingSession}
         />
