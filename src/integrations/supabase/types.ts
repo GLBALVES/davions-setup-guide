@@ -2628,6 +2628,7 @@ export type Database = {
           experience_text: string | null
           experience_text_color: string | null
           experience_title: string | null
+          external_font_families: Json
           facebook_pixel_id: string | null
           facebook_url: string | null
           favicon_url: string | null
@@ -2747,6 +2748,7 @@ export type Database = {
           experience_text?: string | null
           experience_text_color?: string | null
           experience_title?: string | null
+          external_font_families?: Json
           facebook_pixel_id?: string | null
           facebook_url?: string | null
           favicon_url?: string | null
@@ -2866,6 +2868,7 @@ export type Database = {
           experience_text?: string | null
           experience_text_color?: string | null
           experience_title?: string | null
+          external_font_families?: Json
           facebook_pixel_id?: string | null
           facebook_url?: string | null
           favicon_url?: string | null
