@@ -1,0 +1,1 @@
+ALTER TABLE public.photographer_site ADD COLUMN IF NOT EXISTS custom_font_css TEXT NOT NULL DEFAULT '';
