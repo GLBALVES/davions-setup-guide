@@ -44,14 +44,12 @@ interface Props {
   fontSize: FontSizeScale | null | undefined;
   customFonts: CustomFontEntry[];
   customFontCss: string | null | undefined;
-  externalFonts: ExternalFontEntry[];
   photographerId: string | null;
   onTemplateChange: (templateId: string, template: FontTemplate) => void;
   onOverridesChange: (next: FontOverrides) => void;
   onFontSizeChange: (size: FontSizeScale) => void;
   onCustomFontsChange: (next: CustomFontEntry[]) => void;
   onCustomFontCssChange: (next: string) => void;
-  onExternalFontsChange: (next: ExternalFontEntry[]) => void;
 }
 
 type GroupKey = (typeof ELEMENT_GROUPS)[number]["key"];
@@ -62,17 +60,18 @@ export default function FontsSubPanel({
   fontSize,
   customFonts,
   customFontCss,
-  externalFonts,
   photographerId,
   onTemplateChange: _onTemplateChange,
   onOverridesChange,
   onFontSizeChange,
   onCustomFontsChange,
   onCustomFontCssChange,
-  onExternalFontsChange,
 }: Props) {
   const [groupKey, setGroupKey] = useState<GroupKey | null>(null);
   const [expandedItem, setExpandedItem] = useState<ElementKey | null>(null);
+  // Auto-derive external families from the Custom Font CSS (inline @font-face
+  // declarations + @import / <link> stylesheets fetched on the fly).
+  const externalFonts = useExternalFonts(customFontCss);
 
   const activeId = templateId || DEFAULT_FONT_TEMPLATE_ID;
   const ov = overrides ?? {};
