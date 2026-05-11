@@ -38,6 +38,8 @@ export async function checkBookingConflict(
   excludeBookingId?: string,
 ): Promise<ConflictResult> {
   const noConflict: ConflictResult = { hasConflict: false, conflictType: null, conflictDetails: null };
+  const normalizedStart = startTime.slice(0, 5);
+  const normalizedEnd = endTime.slice(0, 5);
 
   // 1. Check blocked_times
   const { data: blockedTimes } = await (supabase as any)
@@ -57,7 +59,7 @@ export async function checkBookingConflict(
       }
       const bStart = bt.start_time.slice(0, 5);
       const bEnd = bt.end_time.slice(0, 5);
-      if (timesOverlap(startTime, endTime, bStart, bEnd)) {
+      if (timesOverlap(normalizedStart, normalizedEnd, bStart, bEnd)) {
         return {
           hasConflict: true,
           conflictType: "blocked",
@@ -96,7 +98,7 @@ export async function checkBookingConflict(
           if (!avail) continue;
           const bStart = avail.start_time.slice(0, 5);
           const bEnd = avail.end_time.slice(0, 5);
-          if (timesOverlap(startTime, endTime, bStart, bEnd)) {
+          if (timesOverlap(normalizedStart, normalizedEnd, bStart, bEnd)) {
             return {
               hasConflict: true,
               conflictType: "booking",
