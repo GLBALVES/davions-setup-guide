@@ -43,12 +43,14 @@ interface Props {
   fontSize: FontSizeScale | null | undefined;
   customFonts: CustomFontEntry[];
   customFontCss: string | null | undefined;
+  externalFonts: ExternalFontEntry[];
   photographerId: string | null;
   onTemplateChange: (templateId: string, template: FontTemplate) => void;
   onOverridesChange: (next: FontOverrides) => void;
   onFontSizeChange: (size: FontSizeScale) => void;
   onCustomFontsChange: (next: CustomFontEntry[]) => void;
   onCustomFontCssChange: (next: string) => void;
+  onExternalFontsChange: (next: ExternalFontEntry[]) => void;
 }
 
 type GroupKey = (typeof ELEMENT_GROUPS)[number]["key"];
@@ -59,12 +61,14 @@ export default function FontsSubPanel({
   fontSize,
   customFonts,
   customFontCss,
+  externalFonts,
   photographerId,
   onTemplateChange: _onTemplateChange,
   onOverridesChange,
   onFontSizeChange,
   onCustomFontsChange,
   onCustomFontCssChange,
+  onExternalFontsChange,
 }: Props) {
   const [groupKey, setGroupKey] = useState<GroupKey | null>(null);
   const [expandedItem, setExpandedItem] = useState<ElementKey | null>(null);
