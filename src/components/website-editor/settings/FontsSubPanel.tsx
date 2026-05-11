@@ -58,11 +58,13 @@ export default function FontsSubPanel({
   overrides,
   fontSize,
   customFonts,
+  customFontCss,
   photographerId,
   onTemplateChange: _onTemplateChange,
   onOverridesChange,
   onFontSizeChange,
   onCustomFontsChange,
+  onCustomFontCssChange,
 }: Props) {
   const [groupKey, setGroupKey] = useState<GroupKey | null>(null);
   const [expandedItem, setExpandedItem] = useState<ElementKey | null>(null);
