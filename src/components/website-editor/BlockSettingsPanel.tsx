@@ -62,7 +62,23 @@ export interface BlockSettings {
   scrollEffectIntensity?: number;
   /** 50–200 (%). Default 100. Scales how fast the effect completes / its loop. */
   scrollEffectSpeed?: number;
+  /** Per-element scroll effects applied independently of the section-level one. */
+  textScrollEffect?: ChildScrollEffect;
+  imageScrollEffect?: ChildScrollEffect;
+  buttonsScrollEffect?: ChildScrollEffect;
 }
+
+/** Subset of effects that make sense to apply to inner text / image / buttons. */
+export type ChildScrollEffect =
+  | "none"
+  | "fade-on-scroll"
+  | "fly-in-left"
+  | "fly-in-right"
+  | "fly-in-up"
+  | "blur-in"
+  | "rotate-in"
+  | "zoom-on-scroll"
+  | "reveal";
 
 // Reusable overlay controls (color + opacity slider) for background images
 function OverlayControls({
