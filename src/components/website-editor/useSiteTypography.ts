@@ -24,6 +24,7 @@ export function useSiteTypography(
   overrides: FontOverrides | null | undefined,
   fontSize: FontSizeScale | null | undefined = "regular",
   customFonts: CustomFont[] | null | undefined = [],
+  customFontCss: string | null | undefined = "",
 ) {
   // Inject <link> for Google Font families used by the active template + overrides.
   useEffect(() => {
