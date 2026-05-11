@@ -130,7 +130,7 @@ export function SitePaletteColorOptions({
                   key={sw.key}
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => apply(sw.hex)}
+                  onClick={() => { apply(sw.hex); onCommit?.(); }}
                   title={sw.label}
                   className={cn(
                     "h-6 w-6 rounded border transition-all relative",
@@ -157,7 +157,7 @@ export function SitePaletteColorOptions({
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
-            onClick={() => apply("transparent")}
+            onClick={() => { apply("transparent"); onCommit?.(); }}
             title="transparent"
             className={cn(
               "h-6 w-6 rounded border transition-all",
@@ -257,7 +257,7 @@ export function SitePaletteColorOptions({
                       key={`${ri}-${ci}`}
                       type="button"
                       onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => apply(c)}
+                      onClick={() => { apply(c); onCommit?.(); }}
                       title={c}
                       className={cn(
                         "h-6 w-6 rounded border transition-all",

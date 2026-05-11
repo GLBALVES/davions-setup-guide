@@ -566,6 +566,7 @@ export default function InlineFormatToolbar() {
             <SitePaletteColorOptions
               value="#000000"
               onChange={(v) => onApplyColor(v, false)}
+              onCommit={() => setShowColor(false)}
             />
           </div>
         )}
