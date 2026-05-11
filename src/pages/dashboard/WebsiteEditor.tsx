@@ -4169,22 +4169,8 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
 
           {sub === "colors" && (
             <ColorsSubPanel
-              paletteId={(site as any)?.colorPaletteId ?? (site as any)?.color_palette_id ?? null}
-              schemeId={
-                ((site as any)?.colorSchemeId ?? (site as any)?.color_scheme_id ?? null) as SchemeId | null
-              }
-              overrides={
-                ((site as any)?.colorOverrides ?? (site as any)?.color_overrides ?? {}) as ColorOverrides
-              }
-              customPalettes={
-                ((site as any)?.customColorPalettes ?? (site as any)?.custom_color_palettes ?? []) as CustomColorPalette[]
-              }
-              onPaletteChange={(id, sk) =>
-                onSiteChange({ color_palette_id: id, color_scheme_id: sk })
-              }
-              onSchemeChange={(sk) => onSiteChange({ color_scheme_id: sk })}
-              onOverridesChange={(next) => onSiteChange({ color_overrides: next as any })}
-              onCustomPalettesChange={(next) => onSiteChange({ custom_color_palettes: next as any })}
+              siteColors={((site as any)?.siteColors ?? (site as any)?.site_colors ?? []) as string[]}
+              onSiteColorsChange={(next) => onSiteChange({ site_colors: next as any })}
             />
           )}
 
