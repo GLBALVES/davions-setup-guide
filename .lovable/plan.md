@@ -1,65 +1,32 @@
-## Goal
+# Conflito de agendamento entre projetos
 
-Add a new "Links" category to the **Add Block** picker (Pixieset-style), allowing users to insert link sections with multiple visual presets — image overlay links, image grid links, text links, "as featured in", "vendors", "sponsors", and client galleries.
+## Causa raiz
 
-## New Block Types
+Não é específico do macOS — é uma lacuna na validação. A função `checkBookingConflict` (`src/lib/booking-conflict.ts`) só consulta as tabelas `blocked_times` e `bookings`. Ela **nunca consulta `client_projects`**.
 
-Three new `SectionType`s, each with multiple variants (visual presets):
+Resultado: ao alterar um projeto cujo horário coincide com outro projeto (especialmente projetos sem `booking_id` vinculado, ou dois projetos virtuais no mesmo slot), nenhum conflito é detectado e o save passa.
 
-1. **`image-links`** — One or more cards combining image + clickable label/link
-   - Variants: `overlay-bottom-left`, `overlay-center`, `side-by-side`, `row-3`, `grid-3-portrait`
-2. **`text-links`** — Text-only link rows, no images
-   - Variants: `centered-3`, `boxed-3`, `underlined-3`, `featured-in`, `vendors-2col`, `sponsors-stack`
-3. **`image-grid-links`** — Multi-image clickable grid (1+1, 1+2, 3-up)
-   - Variants: `feature-plus-2`, `2-up`, `3-up`, `1-feature`
+## Mudanças
 
-Each block stores its data as:
-```ts
-{ variant: string, links: Array<{ image?: string; label: string; sublabel?: string; href: string }> }
-```
+### 1. `src/lib/booking-conflict.ts`
 
-## Files to change
+- Adicionar parâmetro opcional `excludeProjectId?: string` em `checkBookingConflict`.
+- Após checar `blocked_times` e `bookings`, fazer uma terceira consulta em `client_projects`:
+  - filtrar por `photographer_id`, `shoot_date = date`, `shoot_time IS NOT NULL`, `stage != 'archived'`, e `id != excludeProjectId`.
+  - para cada projeto encontrado, calcular `end_time` a partir da `duration_minutes` da `session` vinculada (via `session_type` → `sessions.title`) ou fallback 60min.
+  - se `timesOverlap` → retornar `{ hasConflict: true, conflictType: "booking", conflictDetails: "Conflicts with project '<title>' (HH:mm–HH:mm)" }`.
 
-**Schema / factory**
-- `src/components/website-editor/page-templates.ts`
-  - Add `"image-links" | "text-links" | "image-grid-links"` to `SectionType` union
-  - Add factories `imageLinks()`, `textLinks()`, `imageGridLinks()` with sensible default link arrays
-  - Wire them into `createSection()`
+### 2. `src/components/dashboard/ProjectDetailSheet.tsx` (`commitSave`)
 
-**Variants**
-- `src/components/website-editor/block-variants.ts`
-  - Register variant arrays for the 3 new types
+- Passar `project.id` como `excludeProjectId` nas duas chamadas de `checkBookingConflict` (com e sem `booking_id`), para o projeto não conflitar consigo mesmo.
 
-**Picker UI**
-- `src/components/website-editor/AddBlockPicker.tsx`
-  - Add a new category `Links` (icon `Link2`, emoji 🔗) listing the 3 new blocks
+### 3. `src/pages/dashboard/Projects.tsx` (`handleSave`)
 
-**Thumbnails**
-- `src/components/website-editor/BlockThumbnail.tsx`
-  - Add SVG wireframe cases for the 3 new types
+- Quando estiver editando (id existente), passar o `id` do projeto como `excludeProjectId`.
+- Em criação, sem id, deixar `undefined`.
 
-**Public renderer**
-- `src/components/store/SectionRenderer.tsx`
-  - Add `renderImageLinks`, `renderTextLinks`, `renderImageGridLinks` honoring `variant`
-  - Use semantic design tokens, responsive layout, hover states
+## Notas
 
-**Settings panel (editor)**
-- `src/components/website-editor/BlockSettingsPanel.tsx`
-  - Add editors for the 3 new types: variant selector + list editor for `links` (image upload via `ImageUploadField`, label, sublabel, href)
-  - Reuse existing `ItemListEditor` patterns where possible
-
-**i18n**
-- All UI labels (category name "Links", block labels, settings labels) added in EN / PT-BR / ES via the existing labeling pattern in the picker (the picker currently uses English literals — keep consistent with surrounding code; no LanguageContext keys needed for picker labels since other categories are also English).
-
-## Out of scope
-
-- No DB migration (sections are stored as JSON in the existing `photographer_site_pages` rows)
-- No changes to navigation, routing, or auth
-- No new shared components beyond the renderer + settings editor
-
-## Acceptance
-
-- "Links" appears as a new category in Add Block with the 3 presets
-- Selecting a preset inserts a working block with placeholder links
-- Each block can switch variant in the right panel
-- Links render correctly on the published public site with hover and proper navigation (internal anchors and external URLs)
+- Não tocar em UI nem em outras regras.
+- Mensagem de toast de conflito já existe; reusa o mesmo fluxo.
+- One-session continua tendo seu fluxo de aviso/permissão próprio — não alterado.

@@ -36,6 +36,7 @@ export async function checkBookingConflict(
   startTime: string,
   endTime: string,
   excludeBookingId?: string,
+  excludeProjectId?: string,
 ): Promise<ConflictResult> {
   const noConflict: ConflictResult = { hasConflict: false, conflictType: null, conflictDetails: null };
   const normalizedStart = startTime.slice(0, 5);
