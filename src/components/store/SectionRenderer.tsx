@@ -827,11 +827,11 @@ function GalleryMasonryBlock({ images = [], label, speed = 60 }: any) {
         className="group relative overflow-hidden"
         style={{ ['--masonry-duration' as any]: `${Math.max(30, columns.length * 5)}s` }}
       >
-        <div className="flex gap-2 w-max animate-[masonry-scroll_var(--masonry-duration)_linear_infinite] group-hover:[animation-play-state:paused]">
+        <div className="flex gap-1 w-max animate-[masonry-scroll_var(--masonry-duration)_linear_infinite] group-hover:[animation-play-state:paused]">
           {loop.map((col, idx) => (
             <div
               key={idx}
-              className="shrink-0 flex flex-col gap-2 h-[320px] sm:h-[420px] md:h-[520px]"
+              className="shrink-0 flex flex-col gap-1 h-[320px] sm:h-[420px] md:h-[520px]"
             >
               {col.kind === "tall" ? (
                 <div className="h-full">
@@ -874,7 +874,7 @@ function MasonryFigure({ item }: { item: GalleryItem }) {
       )}
     </>
   );
-  const cls = "relative h-full overflow-hidden rounded group/item";
+  const cls = "relative h-full overflow-hidden group/item";
   if (item.link) {
     return (
       <a href={item.link} target="_blank" rel="noopener noreferrer" className={cls}>
