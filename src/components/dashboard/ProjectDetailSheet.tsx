@@ -2170,6 +2170,7 @@ export function ProjectDetailSheet({
             shootTime,
             endTime,
             project.booking_id,
+            project.id,
           );
 
           if (conflictResult.hasConflict) {
@@ -2215,6 +2216,8 @@ export function ProjectDetailSheet({
           shootDate,
           shootTime,
           endTime,
+          undefined,
+          project.id,
         );
 
         if (conflictResult.hasConflict) {

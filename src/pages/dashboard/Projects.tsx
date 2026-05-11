@@ -1963,6 +1963,7 @@ const Projects = () => {
         targetTime,
         endTime,
         editing?.booking_id ?? undefined,
+        editing?.id ?? undefined,
       );
       if (conflict.hasConflict) {
         toast.error(conflict.conflictDetails || "Time conflict detected");
