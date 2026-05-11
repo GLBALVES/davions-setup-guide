@@ -682,7 +682,17 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const invoicesPaid      = invoices.reduce((s, i) => s + Number(i.paid_amount), 0);
   const manualPaymentsSum = projectPayments.reduce((s, p) => s + Number(p.amount), 0);
 
-  const summaryTotal    = bookingFinancials.grandTotal + invoicesTotal;
+  // For projects without a booking, derive a virtual total from the selected
+  // session so the payments summary still shows Total / Received / Balance.
+  const projectSessionTotal = (() => {
+    if (bookingPayment || !projectSession) return 0;
+    const price = projectSession.price ?? 0;
+    const taxRate = projectSession.tax_rate ?? 0;
+    const taxAmount = Math.round(price * taxRate / 100);
+    return (price + taxAmount) / 100;
+  })();
+
+  const summaryTotal    = bookingFinancials.grandTotal + projectSessionTotal + invoicesTotal;
   const summaryReceived = bookingFinancials.paid + invoicesPaid + manualPaymentsSum;
   const summaryBalance  = summaryTotal - summaryReceived;
 
