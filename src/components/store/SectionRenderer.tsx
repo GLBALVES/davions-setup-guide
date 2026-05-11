@@ -353,6 +353,10 @@ function SectionBlock({
   };
 
   const hasScrollEffect = bs.scrollEffect && bs.scrollEffect !== "none";
+  const hasTextEffect = bs.textScrollEffect && bs.textScrollEffect !== "none";
+  const hasImageEffect = bs.imageScrollEffect && bs.imageScrollEffect !== "none";
+  const hasButtonsEffect = bs.buttonsScrollEffect && bs.buttonsScrollEffect !== "none";
+  const hasAnyChildEffect = hasTextEffect || hasImageEffect || hasButtonsEffect;
   const hasAny =
     bs.backgroundColor ||
     bs.backgroundImage ||
@@ -362,7 +366,8 @@ function SectionBlock({
     bs.paddingRight !== undefined ||
     (bs.colorScheme && bs.colorScheme !== "auto") ||
     (bs.animation && bs.animation !== "none") ||
-    hasScrollEffect;
+    hasScrollEffect ||
+    hasAnyChildEffect;
 
   if (!hasAny) return inner;
 
