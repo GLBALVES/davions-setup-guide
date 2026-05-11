@@ -181,6 +181,11 @@ export default function FontsSubPanel({
         photographerId={photographerId}
         onChange={onCustomFontsChange}
       />
+
+      <CustomFontCssSection
+        value={customFontCss ?? ""}
+        onChange={onCustomFontCssChange}
+      />
     </div>
   );
 }
