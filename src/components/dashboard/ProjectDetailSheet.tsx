@@ -2348,7 +2348,15 @@ export function ProjectDetailSheet({
     }
   };
 
-  const isOverdue = project.shoot_date && new Date(project.shoot_date + "T00:00:00") < new Date() && !isArchived;
+  const isOverdue = (() => {
+    if (!project.shoot_date || isArchived) return false;
+    // Combine date + time so a session scheduled later today isn't flagged
+    // as overdue at midnight.
+    const time = project.shoot_time && /^\d{2}:\d{2}/.test(project.shoot_time)
+      ? project.shoot_time.slice(0, 5)
+      : "23:59";
+    return new Date(`${project.shoot_date}T${time}:00`) < new Date();
+  })();
 
   const renderDeadlineSection = () => {
     if (project.stage !== "shot" && project.stage !== "post_production") return null;
