@@ -370,6 +370,10 @@ function SectionBlock({
     paddingLeft: bs.paddingLeft !== undefined ? `${bs.paddingLeft}px` : undefined,
     paddingRight: bs.paddingRight !== undefined ? `${bs.paddingRight}px` : undefined,
     position: "relative",
+    ...(hasScrollEffect && {
+      ["--se-intensity" as any]: ((bs.scrollEffectIntensity ?? 100) / 100).toString(),
+      ["--se-speed" as any]: ((bs.scrollEffectSpeed ?? 100) / 100).toString(),
+    }),
   };
 
   const schemeClass =
