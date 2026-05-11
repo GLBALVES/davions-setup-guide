@@ -705,6 +705,7 @@ export type Database = {
           contract_signed_ip: string | null
           contract_signed_user_agent: string | null
           created_at: string
+          deposit_paid_amount: number | null
           extras_total: number
           id: string
           payment_status: string
@@ -713,6 +714,7 @@ export type Database = {
           status: string
           stripe_checkout_session_id: string | null
           stripe_payment_intent_id: string | null
+          total_paid_amount: number | null
         }
         Insert: {
           availability_id: string
@@ -728,6 +730,7 @@ export type Database = {
           contract_signed_ip?: string | null
           contract_signed_user_agent?: string | null
           created_at?: string
+          deposit_paid_amount?: number | null
           extras_total?: number
           id?: string
           payment_status?: string
@@ -736,6 +739,7 @@ export type Database = {
           status?: string
           stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null
+          total_paid_amount?: number | null
         }
         Update: {
           availability_id?: string
@@ -751,6 +755,7 @@ export type Database = {
           contract_signed_ip?: string | null
           contract_signed_user_agent?: string | null
           created_at?: string
+          deposit_paid_amount?: number | null
           extras_total?: number
           id?: string
           payment_status?: string
@@ -759,6 +764,7 @@ export type Database = {
           status?: string
           stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null
+          total_paid_amount?: number | null
         }
         Relationships: [
           {

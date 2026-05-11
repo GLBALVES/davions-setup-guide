@@ -508,6 +508,8 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     extras_total: number;
     booked_date: string | null;
     created_at: string;
+    deposit_paid_amount: number | null;
+    total_paid_amount: number | null;
     sessions: { title: string; price?: number; tax_rate?: number; deposit_enabled?: boolean; deposit_amount?: number; deposit_type?: string } | null;
     session_availability: { start_time: string; end_time: string; date: string } | null;
   }
@@ -518,7 +520,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       if (!project.booking_id) return null;
       const { data, error } = await (supabase as any)
         .from("bookings")
-        .select("id, client_name, payment_status, extras_total, booked_date, created_at, sessions ( title, price, tax_rate, deposit_enabled, deposit_amount, deposit_type ), session_availability ( start_time, end_time, date )")
+        .select("id, client_name, payment_status, extras_total, booked_date, created_at, deposit_paid_amount, total_paid_amount, sessions ( title, price, tax_rate, deposit_enabled, deposit_amount, deposit_type ), session_availability ( start_time, end_time, date )")
         .eq("id", project.booking_id)
         .single();
       if (error) return null;
@@ -570,11 +572,15 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     const taxAmount = Math.round(subtotal * taxRate / 100);
     const grandTotalCents = subtotal + taxAmount;
     const isPercentDeposit = depositType === "percent" || depositType === "percentage";
-    const depositValue = depositEnabled
+    const computedDeposit = depositEnabled
       ? (isPercentDeposit ? Math.round(grandTotalCents * depositAmount / 100) : depositAmount)
       : 0;
-    const depositPaid = isDepositPaid || isFullPaid ? depositValue : 0;
-    const paidCents = isFullPaid ? grandTotalCents : depositPaid;
+    // Prefer the actual amounts captured at payment time so they don't shift if
+    // the photographer later edits the session price.
+    const depositPaidCents = bookingPayment.deposit_paid_amount ?? computedDeposit;
+    const paidCents = isFullPaid
+      ? (bookingPayment.total_paid_amount ?? grandTotalCents)
+      : (isDepositPaid ? depositPaidCents : 0);
     return { grandTotal: grandTotalCents / 100, paid: paidCents / 100 };
   })();
 
@@ -727,8 +733,17 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         const depositValue = depositEnabled
           ? (isPercentDeposit ? Math.round(grandTotal * depositAmount / 100) : depositAmount)
           : 0;
-        const depositPaid = isDepositPaid || isFullPaid ? depositValue : 0;
-        const totalPaidAmount = isFullPaid ? grandTotal : depositPaid;
+        // Honor the actual amounts captured at payment time (locked once paid),
+        // so editing the session price later does not retroactively change the
+        // displayed deposit / total paid.
+        const lockedDeposit = bookingPayment.deposit_paid_amount;
+        const lockedTotalPaid = bookingPayment.total_paid_amount;
+        const depositPaid = isDepositPaid || isFullPaid
+          ? (lockedDeposit ?? depositValue)
+          : 0;
+        const totalPaidAmount = isFullPaid
+          ? (lockedTotalPaid ?? grandTotal)
+          : depositPaid;
         const balanceDue = grandTotal - totalPaidAmount;
 
         return (
@@ -1898,13 +1913,15 @@ export function ProjectDetailSheet({
       if (!project?.booking_id) return null;
       const { data } = await (supabase as any)
         .from("bookings")
-        .select("session_id, payment_status, extras_total, sessions ( price, tax_rate, deposit_enabled, deposit_amount, deposit_type )")
+        .select("session_id, payment_status, extras_total, deposit_paid_amount, total_paid_amount, sessions ( price, tax_rate, deposit_enabled, deposit_amount, deposit_type )")
         .eq("id", project.booking_id)
         .single();
       return data as {
         session_id: string;
         payment_status: string;
         extras_total: number;
+        deposit_paid_amount: number | null;
+        total_paid_amount: number | null;
         sessions: { price: number; tax_rate: number; deposit_enabled: boolean; deposit_amount: number; deposit_type: string } | null;
       } | null;
     },
@@ -1915,7 +1932,7 @@ export function ProjectDetailSheet({
   // plus manual project payments and paid invoices. Used to honor paid amounts when
   // changing session, ignoring the new session's deposit configuration.
   const { data: amountAlreadyPaidCents = 0 } = useQuery({
-    queryKey: ["project-amount-paid", project?.id, project?.booking_id, bookingData?.payment_status, bookingData?.extras_total],
+    queryKey: ["project-amount-paid", project?.id, project?.booking_id, bookingData?.payment_status, bookingData?.extras_total, bookingData?.deposit_paid_amount, bookingData?.total_paid_amount],
     queryFn: async () => {
       let bookingPaid = 0;
       if (bookingData?.sessions) {
@@ -1931,8 +1948,9 @@ export function ProjectDetailSheet({
           ? (isPercent ? Math.round(grandTotal * sess.deposit_amount / 100) : sess.deposit_amount)
           : 0;
         const ps = bookingData.payment_status;
-        if (ps === "paid") bookingPaid = grandTotal;
-        else if (ps === "deposit_paid") bookingPaid = depositValue;
+        // Prefer locked-at-payment values so price edits don't shift what was paid.
+        if (ps === "paid") bookingPaid = bookingData.total_paid_amount ?? grandTotal;
+        else if (ps === "deposit_paid") bookingPaid = bookingData.deposit_paid_amount ?? depositValue;
       }
       const [{ data: pays }, { data: invs }] = await Promise.all([
         (supabase as any).from("project_payments").select("amount").eq("project_id", project!.id),

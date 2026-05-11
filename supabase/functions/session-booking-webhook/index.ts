@@ -39,11 +39,22 @@ serve(async (req) => {
     const wasDeposit = session.metadata?.is_deposit === "true";
     const paymentKind = session.metadata?.payment_kind;
 
+    // Actual amount captured by Stripe (cents). Locked at payment time so future
+    // session price changes don't retroactively shift what the client "paid".
+    const amountPaidCents = (session.amount_total ?? 0) as number;
+
     if (bookingId) {
       if (paymentKind === "balance_due") {
+        // Read prior deposit to compute the new total paid value
+        const { data: prior } = await supabase
+          .from("bookings")
+          .select("deposit_paid_amount")
+          .eq("id", bookingId)
+          .maybeSingle();
+        const newTotalPaid = (prior?.deposit_paid_amount ?? 0) + amountPaidCents;
         await supabase
           .from("bookings")
-          .update({ payment_status: "paid" })
+          .update({ payment_status: "paid", total_paid_amount: newTotalPaid })
           .eq("id", bookingId);
       } else {
         await supabase
@@ -52,6 +63,8 @@ serve(async (req) => {
             status: "confirmed",
             payment_status: wasDeposit ? "deposit_paid" : "paid",
             stripe_payment_intent_id: session.payment_intent as string,
+            deposit_paid_amount: wasDeposit ? amountPaidCents : null,
+            total_paid_amount: wasDeposit ? null : amountPaidCents,
           })
           .eq("id", bookingId);
       }
