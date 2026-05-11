@@ -134,6 +134,11 @@ export function ItemListEditor<T>({
             <span className="text-[10px] text-muted-foreground font-medium shrink-0">
               {idx + 1}.
             </span>
+            {renderThumb && (
+              <span className="shrink-0 h-8 w-8 rounded overflow-hidden border border-border bg-muted/30 flex items-center justify-center">
+                {renderThumb(item, idx)}
+              </span>
+            )}
             <span className="text-xs text-foreground flex-1 truncate">
               {renderLabel(item, idx) || `${itemLabel} ${idx + 1}`}
             </span>
