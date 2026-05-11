@@ -2873,7 +2873,7 @@ export function ProjectDetailSheet({
           onOpenChange={(v) => { if (!v) { setAddonReviewOpen(false); setPendingNewSession(null); } }}
           items={addonItems}
           newSession={pendingNewSession}
-          depositAlreadyPaid={bookingData?.payment_status === "deposit_paid" || bookingData?.payment_status === "paid"}
+          amountAlreadyPaid={amountAlreadyPaidCents}
           onConfirm={(keptItems) => applySessionChange(pendingNewSession, keptItems)}
           confirming={changingSession}
         />
