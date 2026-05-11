@@ -52,7 +52,9 @@ import NavigationSubPanel, { type NavMenuStyle } from "@/components/website-edit
 import AnimationsSubPanel, { type AnimationStyle } from "@/components/website-editor/settings/AnimationsSubPanel";
 import { useSiteAnimations } from "@/components/website-editor/useSiteAnimations";
 import { useScrollEffects } from "@/components/website-editor/useScrollEffects";
+import { usePerformanceMode } from "@/components/website-editor/usePerformanceMode";
 import MotionScrubber from "@/components/website-editor/MotionScrubber";
+import PerfModeToggle from "@/components/website-editor/PerfModeToggle";
 import SpacingSubPanel, { SPACING_DEFAULTS } from "@/components/website-editor/settings/SpacingSubPanel";
 import { useSiteSpacing } from "@/components/website-editor/useSiteSpacing";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
