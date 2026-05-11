@@ -333,6 +333,14 @@ function normalizeGalleryItems(raw: any[]): GalleryItem[] {
 
 function GalleryContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
   const items: GalleryItem[] = normalizeGalleryItems(props.images || []);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const addImagesFromUrls = (urls: string[]) => {
+    if (!urls.length) return;
+    const extras: GalleryItem[] = urls.map((u) => ({ image: u, title: "", caption: "", link: "" }));
+    onChange({ ...props, images: [...items, ...extras] });
+  };
+
   return (
     <div className="space-y-3">
       <Field label="Columns">
@@ -352,19 +360,15 @@ function GalleryContentEditor({ props, onChange, photographerId }: { props: any;
           itemLabel="Image"
           addLabel="Add Image"
           newItem={() => ({ image: "", title: "", caption: "", link: "" })}
+          onAddOverride={() => setPickerOpen(true)}
           renderLabel={(it) => it.title || (it.image ? it.image.split("/").pop() || it.image : "Empty image")}
-          renderDetail={(item, update, ctx) => (
+          renderDetail={(item, update) => (
             <div className="space-y-3">
               <ImageUploadField
                 value={item.image}
                 onChange={(url) => update({ image: url ?? "" })}
                 photographerId={photographerId}
                 folder="gallery"
-                onAddMore={(extraUrls) => {
-                  if (!extraUrls.length) return;
-                  const extras: GalleryItem[] = extraUrls.map((u) => ({ image: u, title: "", caption: "", link: "" }));
-                  ctx?.appendItems(extras as any);
-                }}
               />
               <Field label="Title (optional)">
                 <RichTextField value={item.title || ""} onChange={(v) => update({ title: v })} placeholder="Image title" />
@@ -377,6 +381,15 @@ function GalleryContentEditor({ props, onChange, photographerId }: { props: any;
               </Field>
             </div>
           )}
+        />
+        <GalleryImagePicker
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          photographerId={photographerId}
+          multiple
+          onSelect={(url) => addImagesFromUrls([url])}
+          onSelectMany={(urls) => addImagesFromUrls(urls)}
+          uploadFolder="gallery"
         />
       </Field>
     </div>
