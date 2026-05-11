@@ -9,6 +9,9 @@ import {
   ArrowLeftFromLine,
   ZoomIn,
   Waves,
+  Droplet,
+  RotateCw,
+  FlipHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +25,10 @@ export type AnimationStyle =
   | "fly-in-left"
   | "fly-in-right"
   | "zoom-in"
-  | "parallax-soft";
+  | "parallax-soft"
+  | "blur-in"
+  | "rotate-in"
+  | "flip-in";
 
 const OPTIONS: { id: AnimationStyle; label: string; icon: React.ReactNode }[] = [
   { id: "none", label: "None", icon: <Ban className="h-4 w-4" /> },
@@ -34,6 +40,9 @@ const OPTIONS: { id: AnimationStyle; label: string; icon: React.ReactNode }[] = 
   { id: "fly-in-left", label: "Fly In Left", icon: <ArrowRightFromLine className="h-4 w-4" /> },
   { id: "fly-in-right", label: "Fly In Right", icon: <ArrowLeftFromLine className="h-4 w-4" /> },
   { id: "zoom-in", label: "Pop / Zoom", icon: <ZoomIn className="h-4 w-4" /> },
+  { id: "blur-in", label: "Blur In", icon: <Droplet className="h-4 w-4" /> },
+  { id: "rotate-in", label: "Rotate In", icon: <RotateCw className="h-4 w-4" /> },
+  { id: "flip-in", label: "Flip In", icon: <FlipHorizontal className="h-4 w-4" /> },
   { id: "parallax-soft", label: "Parallax", icon: <Waves className="h-4 w-4" /> },
 ];
 

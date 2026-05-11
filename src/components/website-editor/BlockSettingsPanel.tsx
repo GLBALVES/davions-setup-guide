@@ -49,7 +49,15 @@ export interface BlockSettings {
     | "fade-on-scroll"
     | "fly-in-left"
     | "fly-in-right"
-    | "fly-in-up";
+    | "fly-in-up"
+    | "ken-burns"
+    | "bg-zoom-out"
+    | "bg-blur-scroll"
+    | "blur-in"
+    | "rotate-in"
+    | "skew-in"
+    | "tilt-3d"
+    | "split-reveal";
 }
 
 // Reusable overlay controls (color + opacity slider) for background images
@@ -119,9 +127,17 @@ const SCROLL_EFFECTS: { id: NonNullable<BlockSettings["scrollEffect"]>; label: s
   { id: "none", label: "None" },
   { id: "parallax", label: "Parallax", hint: "Image moves slower than scroll" },
   { id: "fixed-bg", label: "Fixed", hint: "Image stays still, section scrolls over it" },
+  { id: "ken-burns", label: "Ken Burns", hint: "Cinematic slow zoom + pan on background" },
+  { id: "bg-zoom-out", label: "BG Zoom Out", hint: "Background starts zoomed in, zooms out" },
+  { id: "bg-blur-scroll", label: "BG Blur", hint: "Background sharpens as section centers" },
   { id: "reveal", label: "Reveal", hint: "Curtain opens on scroll" },
+  { id: "split-reveal", label: "Split Reveal", hint: "Opens from center outward" },
   { id: "zoom-on-scroll", label: "Zoom", hint: "Image scales as you scroll" },
   { id: "fade-on-scroll", label: "Fade", hint: "Fades in & out with scroll" },
+  { id: "blur-in", label: "Blur In", hint: "Section unblurs as it enters" },
+  { id: "rotate-in", label: "Rotate In", hint: "Slight rotation entrance" },
+  { id: "skew-in", label: "Skew In", hint: "Skew straightens on entry" },
+  { id: "tilt-3d", label: "3D Tilt", hint: "Perspective tilt tied to scroll" },
   { id: "fly-in-left", label: "Fly In Left" },
   { id: "fly-in-right", label: "Fly In Right" },
   { id: "fly-in-up", label: "Fly In Up" },

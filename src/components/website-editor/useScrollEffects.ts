@@ -43,6 +43,10 @@ export function useScrollEffects() {
         clip-path: inset(0 0 calc((1 - min(var(--se-progress) * 1.6, 1)) * 100%) 0);
         will-change: clip-path;
       }
+      [data-scroll-effect="split-reveal"] {
+        clip-path: inset(0 calc((1 - min(var(--se-progress) * 1.6, 1)) * 50%) 0 calc((1 - min(var(--se-progress) * 1.6, 1)) * 50%));
+        will-change: clip-path;
+      }
       [data-scroll-effect="zoom-on-scroll"] img,
       [data-scroll-effect="zoom-on-scroll"] [data-bg-image] {
         transform: scale(calc(1 + var(--se-progress) * 0.18));
@@ -69,18 +73,92 @@ export function useScrollEffects() {
         will-change: transform, opacity;
       }
 
+      /* Ken Burns: continuous slow zoom + pan, independent of scroll progress */
+      [data-scroll-effect="ken-burns"] { overflow: hidden; }
+      [data-scroll-effect="ken-burns"] [data-bg-image],
+      [data-scroll-effect="ken-burns"] img {
+        animation: lov-ken-burns 20s ease-in-out infinite alternate;
+        transform-origin: center;
+        will-change: transform;
+      }
+      @keyframes lov-ken-burns {
+        0%   { transform: scale(1.05) translate3d(-1.5%, -1%, 0); }
+        100% { transform: scale(1.18) translate3d(2%, 1.5%, 0); }
+      }
+
+      /* BG Zoom Out: starts zoomed in, eases to natural scale as section centers */
+      [data-scroll-effect="bg-zoom-out"] { overflow: hidden; }
+      [data-scroll-effect="bg-zoom-out"] [data-bg-image],
+      [data-scroll-effect="bg-zoom-out"] img {
+        transform: scale(calc(1.4 - var(--se-progress) * 0.4));
+        transform-origin: center;
+        will-change: transform;
+      }
+
+      /* BG Blur on Scroll: blurry at edges, sharp at center */
+      [data-scroll-effect="bg-blur-scroll"] [data-bg-image],
+      [data-scroll-effect="bg-blur-scroll"] img {
+        filter: blur(calc((0.5 - min(var(--se-progress), 1 - var(--se-progress))) * 16px));
+        will-change: filter;
+      }
+
+      /* Blur In (whole wrapper) */
+      [data-scroll-effect="blur-in"] {
+        filter: blur(calc((1 - min(var(--se-progress) * 2, 1)) * 18px));
+        opacity: min(var(--se-progress) * 2, 1);
+        will-change: filter, opacity;
+      }
+
+      /* Rotate In */
+      [data-scroll-effect="rotate-in"] {
+        transform: rotate(calc((1 - min(var(--se-progress) * 2, 1)) * -8deg));
+        opacity: min(var(--se-progress) * 2, 1);
+        transform-origin: center;
+        will-change: transform, opacity;
+      }
+
+      /* Skew In */
+      [data-scroll-effect="skew-in"] {
+        transform: skewY(calc((1 - min(var(--se-progress) * 2, 1)) * 6deg));
+        opacity: min(var(--se-progress) * 2, 1);
+        will-change: transform, opacity;
+      }
+
+      /* 3D Tilt: perspective tilt that shifts as you scroll past */
+      [data-scroll-effect="tilt-3d"] {
+        perspective: 1200px;
+      }
+      [data-scroll-effect="tilt-3d"] > * {
+        transform: rotateX(calc((var(--se-progress) - 0.5) * -14deg));
+        transform-origin: center;
+        will-change: transform;
+      }
+
       @media (prefers-reduced-motion: reduce) {
         [data-scroll-effect] { --se-progress: 0.5 !important; }
         [data-scroll-effect="parallax"] img,
         [data-scroll-effect="zoom-on-scroll"] img,
+        [data-scroll-effect="bg-zoom-out"] img,
+        [data-scroll-effect="bg-zoom-out"] [data-bg-image],
+        [data-scroll-effect="bg-blur-scroll"] img,
+        [data-scroll-effect="bg-blur-scroll"] [data-bg-image],
+        [data-scroll-effect="ken-burns"] img,
+        [data-scroll-effect="ken-burns"] [data-bg-image],
         [data-scroll-effect="fly-in-left"],
         [data-scroll-effect="fly-in-right"],
         [data-scroll-effect="fly-in-up"],
         [data-scroll-effect="reveal"],
-        [data-scroll-effect="fade-on-scroll"] {
+        [data-scroll-effect="split-reveal"],
+        [data-scroll-effect="fade-on-scroll"],
+        [data-scroll-effect="blur-in"],
+        [data-scroll-effect="rotate-in"],
+        [data-scroll-effect="skew-in"],
+        [data-scroll-effect="tilt-3d"] > * {
           transform: none !important;
           opacity: 1 !important;
           clip-path: none !important;
+          filter: none !important;
+          animation: none !important;
         }
       }
     `;
