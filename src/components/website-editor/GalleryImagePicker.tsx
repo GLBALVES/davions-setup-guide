@@ -31,6 +31,10 @@ interface Props {
   onSelect: (url: string) => void;
   /** Folder for computer uploads (default: "blocks") */
   uploadFolder?: string;
+  /** When true, allow selecting multiple photos / uploading multiple files. */
+  multiple?: boolean;
+  /** Receives all selected URLs when `multiple` is true. */
+  onSelectMany?: (urls: string[]) => void;
 }
 
 const ASSETS_BUCKET = "site-assets";
