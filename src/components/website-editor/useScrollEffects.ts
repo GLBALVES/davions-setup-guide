@@ -291,12 +291,19 @@ export function useScrollEffects() {
     let raf = 0;
     const update = () => {
       raf = 0;
+      const w = window as any;
+      // Editor "scrub" mode: force every tracked element to a fixed progress.
+      if (w.__lovScrubActive) {
+        const sp = typeof w.__lovScrubProgress === "number" ? w.__lovScrubProgress : 0.5;
+        const fixed = Math.max(0, Math.min(1, sp)).toFixed(4);
+        document
+          .querySelectorAll<HTMLElement>(SELECTOR)
+          .forEach((el) => el.style.setProperty("--se-progress", fixed));
+        return;
+      }
       const vh = window.innerHeight || 1;
       active.forEach((el) => {
         const r = el.getBoundingClientRect();
-        // Window over which we measure progress: from "bottom of viewport"
-        // (entering) to "top of viewport" (exiting).
-        // Progress 0 at entry, 1 at exit.
         const total = vh + r.height;
         const passed = vh - r.top;
         let p = passed / total;
@@ -309,6 +316,8 @@ export function useScrollEffects() {
       if (raf) return;
       raf = requestAnimationFrame(update);
     };
+    const onScrub = () => onScroll();
+    window.addEventListener("lov-scrub-change", onScrub);
 
     const io = new IntersectionObserver(
       (entries) => {
@@ -355,6 +364,7 @@ export function useScrollEffects() {
       if (raf) cancelAnimationFrame(raf);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
+      window.removeEventListener("lov-scrub-change", onScrub);
       io.disconnect();
       mo.disconnect();
     };
