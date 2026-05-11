@@ -13,7 +13,7 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { FONT_PRESETS, getFontStack } from "@/components/website-editor/site-fonts";
+import { FONT_PRESETS, getFontStack, type ExternalFontEntry } from "@/components/website-editor/site-fonts";
 import {
   DEFAULT_FONT_TEMPLATE_ID,
   ELEMENT_GROUPS,
