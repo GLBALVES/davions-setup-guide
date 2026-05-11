@@ -49,7 +49,15 @@ export interface BlockSettings {
     | "fade-on-scroll"
     | "fly-in-left"
     | "fly-in-right"
-    | "fly-in-up";
+    | "fly-in-up"
+    | "ken-burns"
+    | "bg-zoom-out"
+    | "bg-blur-scroll"
+    | "blur-in"
+    | "rotate-in"
+    | "skew-in"
+    | "tilt-3d"
+    | "split-reveal";
 }
 
 // Reusable overlay controls (color + opacity slider) for background images
