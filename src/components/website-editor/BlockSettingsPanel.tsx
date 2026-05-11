@@ -331,7 +331,7 @@ function normalizeGalleryItems(raw: any[]): GalleryItem[] {
   );
 }
 
-function GalleryContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
+function GalleryContentEditor({ props, onChange, photographerId, isMasonry }: { props: any; onChange: (p: any) => void; photographerId?: string | null; isMasonry?: boolean }) {
   const items: GalleryItem[] = normalizeGalleryItems(props.images || []);
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -343,6 +343,25 @@ function GalleryContentEditor({ props, onChange, photographerId }: { props: any;
 
   return (
     <div className="space-y-3">
+      {isMasonry && (
+        <>
+          <Field label="Title">
+            <Input
+              value={props.title || ""}
+              onChange={(e) => onChange({ ...props, title: e.target.value })}
+              className="h-9 text-sm"
+              placeholder="Gallery title"
+            />
+          </Field>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">Show title</span>
+            <Switch
+              checked={!props.hideTitle}
+              onCheckedChange={(checked) => onChange({ ...props, hideTitle: !checked })}
+            />
+          </div>
+        </>
+      )}
       <Field label="Columns">
         <Select value={String(props.columns || 3)} onValueChange={(v) => onChange({ ...props, columns: Number(v) })}>
           <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
