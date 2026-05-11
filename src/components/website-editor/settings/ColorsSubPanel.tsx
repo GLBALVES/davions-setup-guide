@@ -142,23 +142,34 @@ function ColorRow({ color, onChange, onBlur, onRemove }: ColorRowProps) {
 
   return (
     <div className="flex items-center gap-2 px-3 py-2 border-b border-border last:border-b-0 group">
-      <label className="relative h-7 w-7 shrink-0 border border-border cursor-pointer overflow-hidden">
-        <span
-          className="absolute inset-0"
-          style={{ backgroundColor: safeColor }}
-        />
-        <input
-          type="color"
-          value={safeColor.length === 9 ? safeColor.slice(0, 7) : safeColor.length === 5 ? `#${safeColor.slice(1, 4)}` : safeColor}
-          onChange={(e) => {
-            setLocal(e.target.value);
-            onChange(e.target.value);
-          }}
-          onBlur={(e) => onBlur(e.target.value)}
-          className="absolute inset-0 opacity-0 cursor-pointer"
-          aria-label="Pick color"
-        />
-      </label>
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="relative h-7 w-7 shrink-0 border border-border cursor-pointer overflow-hidden"
+            aria-label="Pick color"
+          >
+            <span className="absolute inset-0" style={{ backgroundColor: safeColor }} />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          side="right"
+          className="w-auto p-2 [&_.react-colorful__saturation]:touch-none [&_.react-colorful__hue]:touch-none [&_.react-colorful__interactive]:touch-none"
+        >
+          <HexColorPicker
+            color={safeColor.length > 7 ? safeColor.slice(0, 7) : safeColor}
+            onChange={(v) => {
+              setLocal(v);
+              onChange(v);
+            }}
+            style={{ width: 200, height: 180, touchAction: "none" }}
+          />
+          <div className="mt-2 text-[11px] font-mono text-muted-foreground uppercase text-center">
+            {local}
+          </div>
+        </PopoverContent>
+      </Popover>
       <input
         type="text"
         value={local}
