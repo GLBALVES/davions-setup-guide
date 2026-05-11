@@ -6,6 +6,7 @@ import SectionRenderer, { type PageSection } from "@/components/store/SectionRen
 import DavionsFloatingBadge from "@/components/store/DavionsFloatingBadge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
+import { useExternalFonts } from "@/components/website-editor/useExternalFonts";
 import { useSiteColors } from "@/components/website-editor/useSiteColors";
 import { useSiteAnimations } from "@/components/website-editor/useSiteAnimations";
 import { useScrollEffects } from "@/components/website-editor/useScrollEffects";
