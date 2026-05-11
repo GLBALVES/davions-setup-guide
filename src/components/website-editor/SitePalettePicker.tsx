@@ -157,7 +157,7 @@ export function SitePaletteColorOptions({
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
-            onClick={() => apply("transparent")}
+            onClick={() => { apply("transparent"); onCommit?.(); }}
             title="transparent"
             className={cn(
               "h-6 w-6 rounded border transition-all",
