@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { buildGoogleFontsHrefFromIds } from "@/components/website-editor/site-fonts";
+import { buildGoogleFontsHrefFromIds, type ExternalFontEntry } from "@/components/website-editor/site-fonts";
 import {
   buildTypographyCss,
   collectFontIds,
@@ -25,6 +25,7 @@ export function useSiteTypography(
   fontSize: FontSizeScale | null | undefined = "regular",
   customFonts: CustomFont[] | null | undefined = [],
   customFontCss: string | null | undefined = "",
+  externalFonts: ExternalFontEntry[] | null | undefined = [],
 ) {
   // Inject <link> for Google Font families used by the active template + overrides.
   useEffect(() => {
