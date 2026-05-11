@@ -327,23 +327,44 @@ export default function GalleryImagePicker({
                     </div>
                   ) : (
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 pt-2">
-                      {photos.map((p) => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => {
-                            onSelect(p.url);
-                            onOpenChange(false);
-                          }}
-                          className="group relative aspect-square rounded-md overflow-hidden border border-border bg-muted/20 hover:border-foreground/60 transition-colors"
-                        >
-                          <img src={p.url} alt={p.filename} className="w-full h-full object-cover" loading="lazy" />
-                          <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/20 transition-colors" />
-                        </button>
-                      ))}
+                      {photos.map((p) => {
+                        const isSelected = selectedUrls.includes(p.url);
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => {
+                              if (multiple) toggleSelected(p.url);
+                              else { onSelect(p.url); onOpenChange(false); }
+                            }}
+                            className={cn(
+                              "group relative aspect-square rounded-md overflow-hidden border bg-muted/20 transition-colors",
+                              isSelected ? "border-foreground ring-2 ring-foreground" : "border-border hover:border-foreground/60"
+                            )}
+                          >
+                            <img src={p.url} alt={p.filename} className="w-full h-full object-cover" loading="lazy" />
+                            <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/20 transition-colors" />
+                            {multiple && isSelected && (
+                              <div className="absolute top-1 right-1 h-5 w-5 rounded-full bg-foreground text-background flex items-center justify-center">
+                                <Check className="h-3 w-3" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </ScrollArea>
+                {multiple && selectedUrls.length > 0 && (
+                  <div className="px-5 py-3 border-t flex items-center justify-between gap-3">
+                    <div className="text-xs text-muted-foreground">
+                      {selectedUrls.length} {selectedUrls.length === 1 ? "selecionada" : "selecionadas"}
+                    </div>
+                    <Button size="sm" onClick={confirmSelection}>
+                      Usar {selectedUrls.length} {selectedUrls.length === 1 ? "imagem" : "imagens"}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </TabsContent>
