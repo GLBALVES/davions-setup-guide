@@ -768,43 +768,86 @@ function GalleryGridBlock({ columns = 3, images = [], label }: any) {
 
 // ─── Gallery Masonry ────────────────────────────────────────────────────────
 
-function GalleryMasonryBlock({ columns = 3, images = [], label }: any) {
-  const cols = Number(columns) || 3;
+function GalleryMasonryBlock({ images = [], label, speed = 60 }: any) {
   const items = normalizeGalleryItems(images);
 
   if (!items || items.length === 0) {
     return (
-      <section className="py-12 sm:py-16 px-5 sm:px-6">
-        <div className="max-w-6xl mx-auto">
+      <section className="py-12 sm:py-16">
+        <div className="max-w-6xl mx-auto px-5 sm:px-6">
           {label && <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
-          <div className="columns-2 md:columns-3 gap-3 space-y-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-muted/20 rounded flex items-center justify-center break-inside-avoid" style={{ height: `${150 + (i % 3) * 60}px` }}>
-                <Images className="h-6 w-6 text-muted-foreground/20" />
-              </div>
-            ))}
-          </div>
+        </div>
+        <div className="flex gap-3 overflow-hidden px-5 sm:px-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="shrink-0 bg-muted/20 rounded flex items-center justify-center"
+              style={{ height: 280, width: 200 + (i % 3) * 80 }}
+            >
+              <Images className="h-6 w-6 text-muted-foreground/20" />
+            </div>
+          ))}
         </div>
       </section>
     );
   }
 
-  const colsCls = cols === 2 ? "columns-1 sm:columns-2" : cols === 4 ? "columns-2 md:columns-4" : "columns-2 md:columns-3";
+  // Duplicate items for a seamless infinite loop
+  const loop = [...items, ...items];
+  // Speed: pixels per second-ish. Use total count to pick a duration.
+  const duration = Math.max(20, Math.round((items.length * 6000) / Number(speed || 60) / 100) * 1);
 
   return (
-    <section className="py-12 sm:py-16 px-5 sm:px-6">
-      <div className="max-w-6xl mx-auto">
-        {label && <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
-        <div className={`${colsCls} gap-3 space-y-3`}>
-          {items.map((it, i) => (
-            <div key={i} className="break-inside-avoid mb-3">
-              <GalleryItemFigure item={it} />
+    <section className="py-12 sm:py-16">
+      {label && (
+        <div className="max-w-6xl mx-auto px-5 sm:px-6">
+          <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>
+        </div>
+      )}
+      <div
+        className="group relative overflow-hidden"
+        style={{ ['--masonry-duration' as any]: `${Math.max(20, items.length * 4)}s` }}
+      >
+        <div className="flex gap-3 w-max animate-[masonry-scroll_var(--masonry-duration)_linear_infinite] group-hover:[animation-play-state:paused]">
+          {loop.map((it, i) => (
+            <div key={i} className="shrink-0 h-[260px] sm:h-[320px] md:h-[380px]">
+              <MasonryFigure item={it} />
             </div>
           ))}
         </div>
       </div>
+      <style>{`@keyframes masonry-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
     </section>
   );
+}
+
+function MasonryFigure({ item }: { item: GalleryItem }) {
+  const hasOverlay = !!(item.title || item.caption);
+  const inner = (
+    <>
+      <img
+        src={item.image}
+        alt={item.title || ""}
+        className="h-full w-auto object-cover block hover:scale-105 transition-transform duration-500"
+        draggable={false}
+      />
+      {hasOverlay && (
+        <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 via-black/30 to-transparent text-white pointer-events-none">
+          {item.title && <div className="text-sm font-medium leading-tight">{item.title}</div>}
+          {item.caption && <div className="text-xs opacity-90 mt-0.5 leading-snug">{item.caption}</div>}
+        </div>
+      )}
+    </>
+  );
+  const cls = "relative h-full overflow-hidden rounded group/item";
+  if (item.link) {
+    return (
+      <a href={item.link} target="_blank" rel="noopener noreferrer" className={cls}>
+        {inner}
+      </a>
+    );
+  }
+  return <div className={cls}>{inner}</div>;
 }
 
 // ─── Contact Form ───────────────────────────────────────────────────────────
