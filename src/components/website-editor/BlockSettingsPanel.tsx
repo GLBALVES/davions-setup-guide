@@ -118,6 +118,7 @@ const ANIMATIONS = [
 const SCROLL_EFFECTS: { id: NonNullable<BlockSettings["scrollEffect"]>; label: string; hint?: string }[] = [
   { id: "none", label: "None" },
   { id: "parallax", label: "Parallax", hint: "Image moves slower than scroll" },
+  { id: "fixed-bg", label: "Fixed", hint: "Image stays still, section scrolls over it" },
   { id: "reveal", label: "Reveal", hint: "Curtain opens on scroll" },
   { id: "zoom-on-scroll", label: "Zoom", hint: "Image scales as you scroll" },
   { id: "fade-on-scroll", label: "Fade", hint: "Fades in & out with scroll" },
