@@ -111,6 +111,47 @@ export async function checkBookingConflict(
     }
   }
 
+  // 3. Check other client_projects for overlapping shoot date/time
+  let projectsQuery = (supabase as any)
+    .from("client_projects")
+    .select("id, title, shoot_time, session_type")
+    .eq("photographer_id", photographerId)
+    .eq("shoot_date", date)
+    .not("shoot_time", "is", null)
+    .neq("stage", "archived");
+  if (excludeProjectId) projectsQuery = projectsQuery.neq("id", excludeProjectId);
+
+  const { data: projects } = await projectsQuery;
+
+  if (projects && projects.length > 0) {
+    // Fetch session durations in one shot
+    const titles = Array.from(new Set(projects.map((p: any) => p.session_type).filter(Boolean)));
+    const durationByTitle: Record<string, number> = {};
+    if (titles.length > 0) {
+      const { data: sess } = await (supabase as any)
+        .from("sessions")
+        .select("title, duration_minutes")
+        .eq("photographer_id", photographerId)
+        .in("title", titles);
+      (sess || []).forEach((s: any) => {
+        if (s?.title) durationByTitle[s.title] = s.duration_minutes ?? 60;
+      });
+    }
+
+    for (const p of projects) {
+      const pStart = String(p.shoot_time).slice(0, 5);
+      const dur = (p.session_type && durationByTitle[p.session_type]) || 60;
+      const pEnd = addMinutesToTime(pStart, dur);
+      if (timesOverlap(normalizedStart, normalizedEnd, pStart, pEnd)) {
+        return {
+          hasConflict: true,
+          conflictType: "booking",
+          conflictDetails: `Conflicts with project "${p.title}" (${pStart}–${pEnd})`,
+        };
+      }
+    }
+  }
+
   return noConflict;
 }
 
