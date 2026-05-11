@@ -18,20 +18,28 @@ const PRESET_ROWS: string[][] = [
   ["#5a3a8a", "#c47a5a", "#d4a878", "#a88858", "#8a6a4a", "#5a3a2a", "#3a2a1a", "#2a1a0a"],
 ];
 
-const SITE_TOKENS: { var: string; label: string }[] = [
-  { var: "--site-bg", label: "Background" },
-  { var: "--site-headings", label: "Headings" },
-  { var: "--site-paragraphs", label: "Paragraphs" },
-  { var: "--site-lines", label: "Lines" },
-  { var: "--site-secondary-bg", label: "Secondary BG" },
-  { var: "--site-secondary-headings", label: "Secondary H" },
-  { var: "--site-secondary-paragraphs", label: "Secondary P" },
-  { var: "--site-secondary-lines", label: "Secondary Lines" },
-  { var: "--site-button-bg", label: "Button BG" },
-  { var: "--site-button-text", label: "Button Text" },
-  { var: "--site-button-bg-hover", label: "Button BG Hover" },
-  { var: "--site-button-text-hover", label: "Button Text Hover" },
-];
+/** Read user-defined site palette colors injected by useSiteColors. */
+function readSiteColors(): string[] {
+  try {
+    const raw = document.documentElement.dataset.siteColors;
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.filter((c) => typeof c === "string" && c.trim()) : [];
+  } catch {
+    return [];
+  }
+}
+
+function useSiteColorsList(): string[] {
+  const [list, setList] = useState<string[]>(() => readSiteColors());
+  useEffect(() => {
+    const handler = () => setList(readSiteColors());
+    window.addEventListener("site-colors-changed", handler);
+    return () => window.removeEventListener("site-colors-changed", handler);
+  }, []);
+  return list;
+}
+
 
 
 
@@ -92,15 +100,15 @@ export function SitePaletteColorOptions({
     setHex(value || "#000000");
   }, [value]);
 
+  const siteColorList = useSiteColorsList();
   const paletteSwatches = useMemo(() => {
-    const root = document.documentElement;
-    const styles = getComputedStyle(root);
-    return SITE_TOKENS.map((t) => {
-      const raw = styles.getPropertyValue(t.var).trim();
-      if (!raw) return null;
-      return { ...t, raw, hex: resolveCssColor(raw) };
-    }).filter(Boolean) as { var: string; label: string; raw: string; hex: string }[];
-  }, []);
+    return siteColorList.map((c, i) => ({
+      key: `${i}-${c}`,
+      label: c,
+      hex: resolveCssColor(c),
+      raw: c,
+    }));
+  }, [siteColorList]);
 
   const apply = (v: string) => {
     onChange(v);
@@ -119,11 +127,11 @@ export function SitePaletteColorOptions({
               const active = hex.toLowerCase() === sw.hex.toLowerCase();
               return (
                 <button
-                  key={sw.var}
+                  key={sw.key}
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => apply(sw.hex)}
-                  title={`${sw.label} · ${sw.hex}`}
+                  title={sw.label}
                   className={cn(
                     "h-6 w-6 rounded border transition-all relative",
                     active ? "ring-2 ring-foreground ring-offset-1" : "border-border hover:scale-110",
@@ -139,6 +147,7 @@ export function SitePaletteColorOptions({
           </div>
         </div>
       )}
+
 
       {allowTransparent && (
         <div className="space-y-1.5">
@@ -279,14 +288,11 @@ export function SitePaletteInlineSwatches({
   value: string;
   onChange: (hex: string) => void;
 }) {
-  const swatches = useMemo(() => {
-    const styles = getComputedStyle(document.documentElement);
-    return SITE_TOKENS.map((t) => {
-      const raw = styles.getPropertyValue(t.var).trim();
-      if (!raw) return null;
-      return { ...t, hex: resolveCssColor(raw) };
-    }).filter(Boolean) as { var: string; label: string; hex: string }[];
-  }, []);
+  const list = useSiteColorsList();
+  const swatches = useMemo(
+    () => list.map((c, i) => ({ key: `${i}-${c}`, label: c, hex: resolveCssColor(c) })),
+    [list],
+  );
 
   if (swatches.length === 0) return null;
   const current = (value || "").toLowerCase();
@@ -297,10 +303,10 @@ export function SitePaletteInlineSwatches({
         const active = current === sw.hex.toLowerCase();
         return (
           <button
-            key={sw.var}
+            key={sw.key}
             type="button"
             onClick={() => onChange(sw.hex)}
-            title={`${sw.label} · ${sw.hex}`}
+            title={sw.label}
             className={cn(
               "h-6 w-6 rounded border transition-all relative",
               active ? "ring-2 ring-foreground ring-offset-1" : "border-border hover:scale-110",
@@ -319,6 +325,7 @@ export function SitePaletteInlineSwatches({
     </div>
   );
 }
+
 
 export function SitePalettePicker({
   value,

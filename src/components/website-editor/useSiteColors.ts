@@ -17,6 +17,7 @@ export function useSiteColors(
   schemeId: SchemeId | null | undefined,
   overrides: ColorOverrides | null | undefined,
   customPalettes?: CustomColorPalette[] | null,
+  siteColors?: string[] | null,
 ) {
   useEffect(() => {
     const css = buildColorCss(paletteId, schemeId, overrides, customPalettes);
@@ -29,4 +30,18 @@ export function useSiteColors(
     }
     if (el.textContent !== css) el.textContent = css;
   }, [paletteId, schemeId, overrides, customPalettes]);
+
+  // Expose user-defined site palette colors to color pickers across the editor
+  // (read by SitePalettePicker via document.documentElement.dataset.siteColors).
+  useEffect(() => {
+    const arr = Array.isArray(siteColors) ? siteColors.filter(Boolean) : [];
+    try {
+      document.documentElement.dataset.siteColors = JSON.stringify(arr);
+      // Notify any open pickers to refresh.
+      window.dispatchEvent(new CustomEvent("site-colors-changed"));
+    } catch {
+      /* noop */
+    }
+  }, [siteColors]);
 }
+

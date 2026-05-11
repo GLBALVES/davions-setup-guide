@@ -4575,6 +4575,7 @@ const WebsiteEditor = () => {
     ((site as any)?.colorSchemeId ?? (site as any)?.color_scheme_id) as SchemeId | null,
     ((site as any)?.colorOverrides ?? (site as any)?.color_overrides ?? {}) as ColorOverrides,
     ((site as any)?.customColorPalettes ?? (site as any)?.custom_color_palettes ?? []) as CustomColorPalette[],
+    ((site as any)?.siteColors ?? (site as any)?.site_colors ?? []) as string[],
   );
 
   // Apply scroll-triggered section animations.
