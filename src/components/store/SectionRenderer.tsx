@@ -347,6 +347,9 @@ function SectionBlock({
       | "split-reveal";
     scrollEffectIntensity?: number;
     scrollEffectSpeed?: number;
+    textScrollEffect?: string;
+    imageScrollEffect?: string;
+    buttonsScrollEffect?: string;
   };
 
   const hasScrollEffect = bs.scrollEffect && bs.scrollEffect !== "none";
