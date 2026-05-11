@@ -101,6 +101,11 @@ export function ItemListEditor<T>({
             </button>
           </div>
         </div>
+        {renderThumb && (
+          <div className="rounded-md overflow-hidden border border-border">
+            {renderThumb(item, activeIdx)}
+          </div>
+        )}
         {renderDetail(item, (patch) => update(activeIdx, patch), {
           appendItems: (extras) => onChange([...items, ...extras]),
         })}
