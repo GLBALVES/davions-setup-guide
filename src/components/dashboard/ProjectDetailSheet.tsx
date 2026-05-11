@@ -529,6 +529,25 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     enabled: !!project.booking_id,
   });
 
+  // For projects without a booking, look up the selected session by title
+  // to derive the expected total (price + tax) for the payments summary.
+  const projectSessionTitle = project.session_title ?? project.session_type;
+  const { data: projectSession } = useQuery<{ price: number; tax_rate: number; title: string } | null>({
+    queryKey: ["project-session-by-title", photographerId, projectSessionTitle],
+    queryFn: async () => {
+      if (!projectSessionTitle) return null;
+      const { data, error } = await (supabase as any)
+        .from("sessions")
+        .select("title, price, tax_rate")
+        .eq("photographer_id", photographerId)
+        .eq("title", projectSessionTitle)
+        .maybeSingle();
+      if (error) return null;
+      return data as any;
+    },
+    enabled: !project.booking_id && !!projectSessionTitle,
+  });
+
   const sessionTaxRate = (bookingPayment?.sessions as any)?.tax_rate ?? 0;
 
   // Auto-compute charge fee from session tax rate unless manually edited
@@ -663,7 +682,17 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const invoicesPaid      = invoices.reduce((s, i) => s + Number(i.paid_amount), 0);
   const manualPaymentsSum = projectPayments.reduce((s, p) => s + Number(p.amount), 0);
 
-  const summaryTotal    = bookingFinancials.grandTotal + invoicesTotal;
+  // For projects without a booking, derive a virtual total from the selected
+  // session so the payments summary still shows Total / Received / Balance.
+  const projectSessionTotal = (() => {
+    if (bookingPayment || !projectSession) return 0;
+    const price = projectSession.price ?? 0;
+    const taxRate = projectSession.tax_rate ?? 0;
+    const taxAmount = Math.round(price * taxRate / 100);
+    return (price + taxAmount) / 100;
+  })();
+
+  const summaryTotal    = bookingFinancials.grandTotal + projectSessionTotal + invoicesTotal;
   const summaryReceived = bookingFinancials.paid + invoicesPaid + manualPaymentsSum;
   const summaryBalance  = summaryTotal - summaryReceived;
 
