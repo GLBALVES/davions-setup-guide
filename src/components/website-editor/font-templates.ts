@@ -5,7 +5,7 @@
 // then override individual elements via the Fonts panel "Edit Font Template"
 // editor. Effective typography = merge(template.elements, font_overrides).
 
-import { FONT_PRESETS } from "./site-fonts";
+import { FONT_PRESETS, buildExternalStack, type ExternalFontEntry } from "./site-fonts";
 
 export type ElementKey =
   | "banner_heading"
@@ -322,15 +322,21 @@ export function buildTypographyCss(
   overrides: FontOverrides | null | undefined,
   scale: number = 1,
   customFonts: { id: string; label?: string }[] = [],
+  externalFonts: ExternalFontEntry[] = [],
 ): string {
   const tpl = getFontTemplate(templateId);
   const lines: string[] = [];
   (Object.keys(tpl.elements) as ElementKey[]).forEach((key) => {
     const el = resolveElement(templateId, overrides, key, scale);
-    const isCustom = el.fontFamily?.startsWith("custom-") || customFonts.some((c) => c.id === el.fontFamily);
-    const stack = isCustom
-      ? `'${el.fontFamily}', system-ui, sans-serif`
-      : FONT_PRESETS.find((f) => f.id === el.fontFamily)?.stack ?? "inherit";
+    let stack: string;
+    if (el.fontFamily?.startsWith("external:")) {
+      const ext = externalFonts.find((e) => `external:${e.id}` === el.fontFamily);
+      stack = ext ? buildExternalStack(ext) : "inherit";
+    } else if (el.fontFamily?.startsWith("custom-") || customFonts.some((c) => c.id === el.fontFamily)) {
+      stack = `'${el.fontFamily}', system-ui, sans-serif`;
+    } else {
+      stack = FONT_PRESETS.find((f) => f.id === el.fontFamily)?.stack ?? "inherit";
+    }
     const classSel = ELEMENT_TO_CLASS_SELECTOR[key];
     // Doubled attribute selector → specificity (0,2,0) beats any single class.
     const typoSel = `[data-site-typo='${key}'][data-site-typo]`;

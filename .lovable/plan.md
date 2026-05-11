@@ -1,88 +1,55 @@
-
 ## Objetivo
 
-Reproduzir os efeitos de movimento que o Wix oferece, observados nos vídeos enviados:
-- Imagens grandes com **parallax** (fundo se move mais devagar que o texto durante o scroll).
-- Cards/textos que **revelam, deslizam e dão zoom** conforme entram na tela.
-- Efeito contínuo amarrado ao scroll (scrub), não só uma animação de entrada de uma vez.
+Permitir que fontes carregadas pelo campo **Custom Font CSS** (ex.: Typekit/Adobe Fonts, Google Fonts via `@import`, `@font-face` próprio) apareçam no dropdown **Font Family** de cada elemento (H1, H2, Body, Botões, etc.) — para que possam ser aplicadas pontualmente, sem virarem fonte global.
 
-Hoje o projeto já tem `useSiteAnimations` com 5 estilos one-shot globais (None / Fade In / Slide Up / Scale Up / Scale Down / Reveal). Vamos **expandir esse sistema** para suportar efeitos contínuos de scroll, mantendo compatibilidade com o que já está salvo.
+## UX
 
-## Camadas do recurso
+No painel **Fontes**, abaixo do textarea "Custom Font CSS" que já existe, adicionar uma sub-seção **"External Font Families"** com:
 
-### 1) Camada global — "Scroll Motion" (todas as seções)
-Renomear o painel atual `Animations` para **Scroll Motion** e ampliar a lista de presets, agora cobrindo entrada + efeito contínuo:
+- Lista de famílias registradas (cada item: nome de exibição + nome da família CSS + botão remover).
+- Botão **"+ Add family"** que abre um mini-form com 2 campos:
+  - **Display name** (ex.: "Ivy Presto Display")
+  - **Font family name** (ex.: `ivypresto-display`) — texto exato que vai pro `font-family` do CSS.
+- Botão extra **"Auto-detect from CSS"** que faz parse do conteúdo do `custom_font_css` e sugere famílias detectadas em `@font-face { font-family: ... }` (com 1 clique para adicionar).
+- Texto auxiliar: "Add the family name from your CSS provider (Typekit, Google Fonts, etc.) to make it selectable in each element's Font Family dropdown."
 
-- None
-- Fade In *(existente)*
-- Slide Up *(existente)*
-- Scale Up *(existente)*
-- Scale Down *(existente)*
-- Reveal *(existente)*
-- **Fly In Left / Fly In Right** (nova — entra deslizando lateralmente)
-- **Pop / Zoom In** (nova — escala 0.85 → 1.0)
-- **Parallax (Soft)** (nova — translate Y contínuo amarrado ao scroll, em todas as seções; intensidade ~12%)
+No editor de cada elemento, o dropdown **Font Family** ganha um novo grupo **"External"** (separador, depois os itens registrados), em adição aos grupos já existentes ("Custom" para uploads e os presets do sistema).
 
-Compatível com os valores já salvos em `site.animation_style`.
+## Implementação técnica
 
-### 2) Camada por bloco — "Scroll Effect" em mídias
-Adicionar um campo opcional `scrollEffect` em `BlockSettings` para blocos de imagem/galeria (Hero, Image, Gallery Grid, Masonry, Carousel, Slideshow), com efeitos contínuos amarrados ao scroll (igual aos vídeos):
+### 1. Dados
+- Nova coluna `external_font_families JSONB NOT NULL DEFAULT '[]'::jsonb` em `photographer_site`.
+- Estrutura: `Array<{ id: string; label: string; family: string }>` — `id` é uuid v4 local, `family` é o valor literal usado em `font-family`.
 
-- None (padrão)
-- **Parallax** — imagem se move ~20% mais devagar que o container.
-- **Reveal** — máscara `clip-path` abre conforme entra (efeito "cortina"), igual ao mostrado no vídeo 1.
-- **Zoom on Scroll** — imagem escala de 1.0 → 1.1 enquanto a seção atravessa o viewport.
-- **Fade on Scroll** — opacidade interpolada conforme entra/sai da tela.
-- **Fly In** (Left/Right/Up) — translate amarrado ao progresso de entrada.
+### 2. Tipagem (`site-fonts.ts`)
+- Exportar `ExternalFontEntry = { id: string; label: string; family: string }`.
+- Atualizar `buildTypographyCss(...)` para receber `externalFonts` e, quando uma override de elemento referenciar `external:<id>`, resolver para o `family` correspondente (envolvido em aspas se contiver espaço/caractere especial).
+- Em `getFontStack(id)`, suportar prefixo `external:<id>` lendo de uma lista passada por contexto/parâmetro.
 
-A UI fica num novo subpainel **Scroll Effect** dentro do `BlockSettingsPanel`, ao lado de Animation/Padding existentes.
+### 3. Hook `useSiteTypography.ts`
+- Adicionar parâmetro `externalFonts: ExternalFontEntry[]` e propagar para `buildTypographyCss`.
+- Não precisa injetar CSS nenhum — o loading continua sendo responsabilidade do `customFontCss` (que já está implementado). Apenas mapeia ID → nome da família.
 
-### 3) Implementação técnica
+### 4. UI `FontsSubPanel.tsx`
+- Nova sub-seção `ExternalFontFamiliesSection` (similar à `CustomFontsSection`).
+- Função utilitária `parseFamiliesFromCss(css: string): string[]` — regex em `@font-face\s*{[^}]*font-family\s*:\s*['"]?([^;'"}]+)` (case-insensitive). Retorna nomes únicos.
+- Em `ElementEditor`, no `<Select>` de Font Family, adicionar grupo "External" listando `externalFonts` com `value="external:<id>"` e label = `entry.label`.
 
-Arquivo central novo: `src/components/website-editor/useScrollMotion.ts`
+### 5. Wiring (`WebsiteEditor.tsx` e `PublicSiteRenderer.tsx`)
+- Persistir `external_font_families` igual aos demais campos do site.
+- Passar `externalFontFamilies` para `<FontsSubPanel>` e para `useSiteTypography(...)` em ambos (editor e site público).
 
-- Um único `IntersectionObserver` decide quais elementos estão "ativos" (no viewport ± margem).
-- Para os ativos, um único listener `scroll` (rAF-throttled) calcula o **progresso** (0 → 1) de cada elemento conforme atravessa o viewport e aplica via CSS variables:
-  - `--motion-progress: 0..1`
-  - `--motion-y: <px>` para parallax
-  - `--motion-scale: <n>` para zoom
-  - `--motion-opacity: <n>` para fade
-  - `--motion-clip: <n%>` para reveal
-- O CSS (em `index.css`) traduz essas vars em `transform`/`opacity`/`clip-path` por tipo de efeito (`[data-motion="parallax"]`, etc.). Tudo via `transform`/`opacity` para manter 60fps.
-- Respeita `prefers-reduced-motion: reduce` (desativa tudo).
-- Sem libs externas (sem GSAP/Framer); puro CSS + rAF.
+### 6. Migração
 
-Markup:
-- Seções já têm `data-block-key`. O hook adiciona `data-motion="<effect>"` no nó alvo (`<img>` para parallax/zoom/reveal, no wrapper para fade/fly-in).
-- O mesmo hook é chamado tanto no editor (`WebsiteEditor.tsx`) quanto no site público (`PublicSiteRenderer.tsx`), substituindo `useSiteAnimations` (mantém retrocompatibilidade — chama internamente a parte one-shot quando o preset for um dos antigos).
+```sql
+ALTER TABLE public.photographer_site
+ADD COLUMN external_font_families JSONB NOT NULL DEFAULT '[]'::jsonb;
+```
 
-### 4) Persistência
+Filtrar essa propriedade no upsert do `photographer_site` se houver lista de campos permitidos (seguir o padrão registrado em mem://architecture/database-schema-constraints).
 
-- Global: já existe `site.animation_style` (string). Sem migração necessária; só novos valores possíveis.
-- Por bloco: adicionar `scrollEffect?: string` ao tipo `BlockSettings` no front. Salvo dentro do JSON do bloco (mesma coluna que já guarda `padding`, `animation`, etc.). Sem mudança de schema no banco.
+## Notas
 
-### 5) Multi-idioma
-
-Os rótulos do painel passam pelo `LanguageContext` (EN/PT-BR/ES) — mantém o padrão dos demais sub-painéis. Strings novas: "Scroll Motion", "Parallax", "Reveal", "Zoom on Scroll", "Fade on Scroll", "Fly In".
-
-## Arquivos afetados
-
-- **Novo** `src/components/website-editor/useScrollMotion.ts` — hook unificado (parallax + entrance).
-- **Novo** `src/components/website-editor/settings/ScrollEffectSubPanel.tsx` — UI por-bloco.
-- `src/components/website-editor/settings/AnimationsSubPanel.tsx` — adicionar novos presets.
-- `src/components/website-editor/BlockSettingsPanel.tsx` — registrar novo subpainel "Scroll Effect".
-- `src/index.css` — keyframes e classes `[data-motion="..."]` (transform/opacity/clip-path).
-- `src/pages/dashboard/WebsiteEditor.tsx` e `src/components/store/PublicSiteRenderer.tsx` — trocar `useSiteAnimations` por `useScrollMotion` (compatível).
-- `src/components/store/SectionRenderer.tsx` — propagar `scrollEffect` do `BlockSettings` para `data-motion` no nó certo (imagem/wrapper).
-
-## Fora de escopo
-
-- Não vamos adicionar dependência externa (GSAP, Framer Motion, Locomotive).
-- Não vamos refatorar a renderização das galerias, só inserir os atributos de motion.
-- Sem mudanças em backend / banco.
-
-## Resultado esperado
-
-- O efeito de "imagens com parallax e textos que se revelam suavemente" do vídeo 1 fica disponível por bloco (Parallax + Reveal nas imagens, Fly In nos cards).
-- O efeito de "tudo entra suavemente conforme scroll" do vídeo 2 fica disponível como preset global (Fade In / Slide Up / Pop / Parallax Soft).
-- Performance estável: um único observer + um único rAF, tudo via CSS transforms.
+- O Custom Font CSS continua sendo o único responsável por **carregar** as fontes (links Typekit, `@import`, `@font-face`). Esta nova lista só **expõe** nomes para seleção.
+- Adobe Fonts/Typekit nem sempre tem `@font-face` no CSS retornado (usa JS interno), por isso o "Auto-detect" é só um auxiliar — o caminho garantido é o usuário digitar o nome manualmente (que o Typekit mostra na página do kit).
+- i18n: novas strings em EN/PT-BR/ES (External Font Families / Famílias de fonte externas / Familias de fuente externas, etc.).

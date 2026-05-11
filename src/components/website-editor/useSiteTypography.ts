@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { buildGoogleFontsHrefFromIds } from "@/components/website-editor/site-fonts";
+import { buildGoogleFontsHrefFromIds, type ExternalFontEntry } from "@/components/website-editor/site-fonts";
 import {
   buildTypographyCss,
   collectFontIds,
@@ -25,6 +25,7 @@ export function useSiteTypography(
   fontSize: FontSizeScale | null | undefined = "regular",
   customFonts: CustomFont[] | null | undefined = [],
   customFontCss: string | null | undefined = "",
+  externalFonts: ExternalFontEntry[] | null | undefined = [],
 ) {
   // Inject <link> for Google Font families used by the active template + overrides.
   useEffect(() => {
@@ -72,7 +73,7 @@ export function useSiteTypography(
   // Inject the per-element CSS rules.
   useEffect(() => {
     const scale = FONT_SIZE_SCALES[fontSize ?? "regular"] ?? 1;
-    const css = buildTypographyCss(templateId, overrides, scale, customFonts ?? []);
+    const css = buildTypographyCss(templateId, overrides, scale, customFonts ?? [], externalFonts ?? []);
     const id = "lov-site-typography";
     let el = document.getElementById(id) as HTMLStyleElement | null;
     if (!el) {
@@ -81,7 +82,7 @@ export function useSiteTypography(
       document.head.appendChild(el);
     }
     if (el.textContent !== css) el.textContent = css;
-  }, [templateId, overrides, fontSize, customFonts]);
+  }, [templateId, overrides, fontSize, customFonts, externalFonts]);
 
   // Inject user-provided font CSS (e.g. Typekit/Adobe Fonts <link> tags or
   // raw @import / @font-face blocks pasted in the Fonts panel).
