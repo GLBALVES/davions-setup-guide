@@ -100,15 +100,15 @@ export function SitePaletteColorOptions({
     setHex(value || "#000000");
   }, [value]);
 
+  const siteColorList = useSiteColorsList();
   const paletteSwatches = useMemo(() => {
-    const root = document.documentElement;
-    const styles = getComputedStyle(root);
-    return SITE_TOKENS.map((t) => {
-      const raw = styles.getPropertyValue(t.var).trim();
-      if (!raw) return null;
-      return { ...t, raw, hex: resolveCssColor(raw) };
-    }).filter(Boolean) as { var: string; label: string; raw: string; hex: string }[];
-  }, []);
+    return siteColorList.map((c, i) => ({
+      key: `${i}-${c}`,
+      label: c,
+      hex: resolveCssColor(c),
+      raw: c,
+    }));
+  }, [siteColorList]);
 
   const apply = (v: string) => {
     onChange(v);
@@ -127,11 +127,11 @@ export function SitePaletteColorOptions({
               const active = hex.toLowerCase() === sw.hex.toLowerCase();
               return (
                 <button
-                  key={sw.var}
+                  key={sw.key}
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => apply(sw.hex)}
-                  title={`${sw.label} · ${sw.hex}`}
+                  title={sw.label}
                   className={cn(
                     "h-6 w-6 rounded border transition-all relative",
                     active ? "ring-2 ring-foreground ring-offset-1" : "border-border hover:scale-110",
@@ -147,6 +147,7 @@ export function SitePaletteColorOptions({
           </div>
         </div>
       )}
+
 
       {allowTransparent && (
         <div className="space-y-1.5">
