@@ -22,7 +22,7 @@ export function useSiteAnimations(style: AnimationStyle | string | null | undefi
     const el = document.createElement("style");
     el.id = id;
     el.textContent = `
-      [data-anim-pending="true"] { opacity: 0; will-change: opacity, transform; }
+      [data-anim-pending="true"] { opacity: 0; will-change: opacity, transform, filter; }
       [data-anim-pending="true"][data-anim-style="fade-in"] { transform: none; }
       [data-anim-pending="true"][data-anim-style="slide-up"] { transform: translateY(28px); }
       [data-anim-pending="true"][data-anim-style="scale-up"] { transform: scale(0.96); }
@@ -31,6 +31,9 @@ export function useSiteAnimations(style: AnimationStyle | string | null | undefi
       [data-anim-pending="true"][data-anim-style="fly-in-left"] { transform: translateX(-48px); }
       [data-anim-pending="true"][data-anim-style="fly-in-right"] { transform: translateX(48px); }
       [data-anim-pending="true"][data-anim-style="reveal"] { clip-path: inset(0 0 100% 0); opacity: 1; }
+      [data-anim-pending="true"][data-anim-style="blur-in"] { filter: blur(18px); transform: none; }
+      [data-anim-pending="true"][data-anim-style="rotate-in"] { transform: rotate(-6deg) scale(0.96); }
+      [data-anim-pending="true"][data-anim-style="flip-in"] { transform: perspective(1000px) rotateX(20deg); transform-origin: top center; }
 
       [data-anim-play="true"] {
         opacity: 1 !important;
