@@ -1075,9 +1075,6 @@ function ProjectModal({
       title: name,
       client_name: name,
       client_email: clientEmail.trim() || null,
-      session_type: sessionTypes.find((s) => s.id === sessionTypeId)?.name ?? null,
-      shoot_date: shootDate || null,
-      shoot_time: shootDate ? shootTime : null,
       stage: defaultStage ?? "upcoming",
     });
   };
@@ -1100,24 +1097,6 @@ function ProjectModal({
             <div className="flex flex-col gap-1">
               <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.email}</label>
               <Input value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="ana@email.com" type="email" />
-            </div>
-            <SessionTypeManager
-              photographerId={photographerId}
-              sessionTypes={sessionTypes}
-              selectedTypeId={sessionTypeId}
-              onSelect={setSessionTypeId}
-              onRefetch={onRefetchSessionTypes}
-              mode="select"
-            />
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.shootDate}</label>
-                <Input type="date" value={shootDate} onChange={(e) => setShootDate(e.target.value)} />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{(p_t as any).time ?? "Time"}</label>
-                <TimePickerInput value={shootTime} onChange={setShootTime} />
-              </div>
             </div>
           </div>
         ) : (
