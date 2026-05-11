@@ -9,6 +9,7 @@ import { useSiteTypography } from "@/components/website-editor/useSiteTypography
 import { useSiteColors } from "@/components/website-editor/useSiteColors";
 import { useSiteAnimations } from "@/components/website-editor/useSiteAnimations";
 import { useScrollEffects } from "@/components/website-editor/useScrollEffects";
+import { usePerformanceMode } from "@/components/website-editor/usePerformanceMode";
 import { useSiteSpacing } from "@/components/website-editor/useSiteSpacing";
 import type {
   ColorOverrides,
