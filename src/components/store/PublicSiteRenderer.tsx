@@ -2272,6 +2272,8 @@ export default function PublicSiteRenderer(props: Props) {
   useSiteAnimations((site as any)?.animation_style ?? "none");
   // Per-block continuous scroll effects.
   useScrollEffects();
+  // Auto-detect slow devices / high CPU and downgrade heavy effects.
+  usePerformanceMode();
 
   // Apply spacing settings (max page width + base block padding).
   useSiteSpacing(
