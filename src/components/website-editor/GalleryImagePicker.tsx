@@ -168,33 +168,46 @@ export default function GalleryImagePicker({
     }
   };
 
-  const handleUploadFile = async (file: File) => {
+  const uploadOne = async (file: File): Promise<string | null> => {
+    if (!file.type.startsWith("image/")) {
+      toast.error(`${file.name}: selecione uma imagem`);
+      return null;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error(`${file.name}: máximo 50MB`);
+      return null;
+    }
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    const path = `${photographerId}/${uploadFolder}/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage
+      .from(ASSETS_BUCKET)
+      .upload(path, file, { contentType: file.type, upsert: true });
+    if (error) {
+      toast.error(`${file.name}: ${error.message}`);
+      return null;
+    }
+    return supabase.storage.from(ASSETS_BUCKET).getPublicUrl(path).data.publicUrl;
+  };
+
+  const handleUploadFiles = async (files: FileList | File[]) => {
     if (!photographerId) {
       toast.error("Não autenticado");
       return;
     }
-    if (!file.type.startsWith("image/")) {
-      toast.error("Selecione uma imagem");
-      return;
-    }
-    if (file.size > 50 * 1024 * 1024) {
-      toast.error("A imagem deve ter no máximo 50MB");
-      return;
-    }
+    const list = Array.from(files);
+    if (list.length === 0) return;
     setUploading(true);
     try {
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-      const path = `${photographerId}/${uploadFolder}/${crypto.randomUUID()}.${ext}`;
-      const { error } = await supabase.storage
-        .from(ASSETS_BUCKET)
-        .upload(path, file, { contentType: file.type, upsert: true });
-      if (error) throw error;
-      const { data } = supabase.storage.from(ASSETS_BUCKET).getPublicUrl(path);
-      onSelect(data.publicUrl);
-      toast.success("Imagem enviada");
+      const urls: string[] = [];
+      for (const f of list) {
+        const url = await uploadOne(f);
+        if (url) urls.push(url);
+      }
+      if (urls.length === 0) return;
+      if (multiple && onSelectMany) onSelectMany(urls);
+      else onSelect(urls[0]);
+      toast.success(urls.length > 1 ? `${urls.length} imagens enviadas` : "Imagem enviada");
       onOpenChange(false);
-    } catch (e: any) {
-      toast.error(e.message || "Erro no upload");
     } finally {
       setUploading(false);
     }
