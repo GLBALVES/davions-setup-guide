@@ -51,6 +51,7 @@ import ColorsSubPanel from "@/components/website-editor/settings/ColorsSubPanel"
 import NavigationSubPanel, { type NavMenuStyle } from "@/components/website-editor/settings/NavigationSubPanel";
 import AnimationsSubPanel, { type AnimationStyle } from "@/components/website-editor/settings/AnimationsSubPanel";
 import { useSiteAnimations } from "@/components/website-editor/useSiteAnimations";
+import { useScrollEffects } from "@/components/website-editor/useScrollEffects";
 import SpacingSubPanel, { SPACING_DEFAULTS } from "@/components/website-editor/settings/SpacingSubPanel";
 import { useSiteSpacing } from "@/components/website-editor/useSiteSpacing";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
@@ -4582,6 +4583,8 @@ const WebsiteEditor = () => {
 
   // Apply scroll-triggered section animations.
   useSiteAnimations(((site as any)?.animation_style ?? "none") as AnimationStyle);
+  // Apply per-block continuous scroll effects (parallax / reveal / zoom / fly-in).
+  useScrollEffects();
 
   // Apply max-width + base block padding from the Spacing panel.
   useSiteSpacing(
