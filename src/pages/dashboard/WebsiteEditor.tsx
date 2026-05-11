@@ -52,7 +52,9 @@ import NavigationSubPanel, { type NavMenuStyle } from "@/components/website-edit
 import AnimationsSubPanel, { type AnimationStyle } from "@/components/website-editor/settings/AnimationsSubPanel";
 import { useSiteAnimations } from "@/components/website-editor/useSiteAnimations";
 import { useScrollEffects } from "@/components/website-editor/useScrollEffects";
+import { usePerformanceMode } from "@/components/website-editor/usePerformanceMode";
 import MotionScrubber from "@/components/website-editor/MotionScrubber";
+import PerfModeToggle from "@/components/website-editor/PerfModeToggle";
 import SpacingSubPanel, { SPACING_DEFAULTS } from "@/components/website-editor/settings/SpacingSubPanel";
 import { useSiteSpacing } from "@/components/website-editor/useSiteSpacing";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
@@ -4586,6 +4588,8 @@ const WebsiteEditor = () => {
   useSiteAnimations(((site as any)?.animation_style ?? "none") as AnimationStyle);
   // Apply per-block continuous scroll effects (parallax / reveal / zoom / fly-in).
   useScrollEffects();
+  // Auto-detect slow devices / high CPU and downgrade heavy effects.
+  usePerformanceMode();
 
   // Apply max-width + base block padding from the Spacing panel.
   useSiteSpacing(
@@ -5396,6 +5400,7 @@ const WebsiteEditor = () => {
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
       <MotionScrubber />
+      <PerfModeToggle />
       {!isMobile && sidebarPanel}
 
       {isMobile && (
