@@ -6,6 +6,7 @@ import SectionRenderer, { type PageSection } from "@/components/store/SectionRen
 import DavionsFloatingBadge from "@/components/store/DavionsFloatingBadge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
+import { useExternalFonts } from "@/components/website-editor/useExternalFonts";
 import { useSiteColors } from "@/components/website-editor/useSiteColors";
 import { useSiteAnimations } from "@/components/website-editor/useSiteAnimations";
 import { useScrollEffects } from "@/components/website-editor/useScrollEffects";
@@ -2253,13 +2254,15 @@ export default function PublicSiteRenderer(props: Props) {
 
   // Apply the studio's typography template (Pixieset-style fonts panel).
   const fontOverrides = (site?.font_overrides ?? {}) as FontOverrides;
+  const _publicCustomFontCss = ((site as any)?.custom_font_css ?? "") as string;
+  const _publicExternalFonts = useExternalFonts(_publicCustomFontCss);
   useSiteTypography(
     site?.font_template_id ?? null,
     fontOverrides,
     (fontOverrides._meta?.fontSize as FontSizeScale | undefined) ?? "regular",
     ((site as any)?.custom_fonts ?? []) as any,
-    ((site as any)?.custom_font_css ?? "") as string,
-    ((site as any)?.external_font_families ?? []) as any,
+    _publicCustomFontCss,
+    _publicExternalFonts,
   );
 
   // Apply the studio's color palette + scheme.

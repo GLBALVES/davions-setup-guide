@@ -14,6 +14,7 @@ import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { FONT_PRESETS, getFontStack, type ExternalFontEntry } from "@/components/website-editor/site-fonts";
+import { useExternalFonts } from "@/components/website-editor/useExternalFonts";
 import {
   DEFAULT_FONT_TEMPLATE_ID,
   ELEMENT_GROUPS,
@@ -43,14 +44,12 @@ interface Props {
   fontSize: FontSizeScale | null | undefined;
   customFonts: CustomFontEntry[];
   customFontCss: string | null | undefined;
-  externalFonts: ExternalFontEntry[];
   photographerId: string | null;
   onTemplateChange: (templateId: string, template: FontTemplate) => void;
   onOverridesChange: (next: FontOverrides) => void;
   onFontSizeChange: (size: FontSizeScale) => void;
   onCustomFontsChange: (next: CustomFontEntry[]) => void;
   onCustomFontCssChange: (next: string) => void;
-  onExternalFontsChange: (next: ExternalFontEntry[]) => void;
 }
 
 type GroupKey = (typeof ELEMENT_GROUPS)[number]["key"];
@@ -61,17 +60,18 @@ export default function FontsSubPanel({
   fontSize,
   customFonts,
   customFontCss,
-  externalFonts,
   photographerId,
   onTemplateChange: _onTemplateChange,
   onOverridesChange,
   onFontSizeChange,
   onCustomFontsChange,
   onCustomFontCssChange,
-  onExternalFontsChange,
 }: Props) {
   const [groupKey, setGroupKey] = useState<GroupKey | null>(null);
   const [expandedItem, setExpandedItem] = useState<ElementKey | null>(null);
+  // Auto-derive external families from the Custom Font CSS (inline @font-face
+  // declarations + @import / <link> stylesheets fetched on the fly).
+  const externalFonts = useExternalFonts(customFontCss);
 
   const activeId = templateId || DEFAULT_FONT_TEMPLATE_ID;
   const ov = overrides ?? {};
@@ -192,16 +192,12 @@ export default function FontsSubPanel({
         onChange={onCustomFontCssChange}
       />
 
-      <ExternalFontFamiliesSection
-        externalFonts={externalFonts}
-        customFontCss={customFontCss ?? ""}
-        onChange={onExternalFontsChange}
-      />
     </div>
   );
 }
 
 // ── Per-element editor (font family/weight/style/size/etc.) ────────────────
+
 interface ElementEditorProps {
   elementKey: ElementKey;
   templateId: string;
@@ -694,224 +690,3 @@ function CustomFontCssSection({
   );
 }
 
-// ── External Font Families (names from Custom Font CSS, exposed in dropdowns) ─
-function parseFamiliesFromCss(css: string): string[] {
-  if (!css) return [];
-  const found = new Set<string>();
-  // @font-face { ... font-family: '...' / "..." / bare ... }
-  const re = /@font-face\s*\{[^}]*?font-family\s*:\s*(?:"([^"]+)"|'([^']+)'|([^;'"}\s][^;}]*?))\s*[;}]/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(css))) {
-    const name = (m[1] || m[2] || m[3] || "").trim();
-    if (name) found.add(name);
-  }
-  return Array.from(found);
-}
-
-function uuid(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
-  return `ext-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-interface ExternalFontFamiliesSectionProps {
-  externalFonts: ExternalFontEntry[];
-  customFontCss: string;
-  onChange: (next: ExternalFontEntry[]) => void;
-}
-
-function ExternalFontFamiliesSection({ externalFonts, customFontCss, onChange }: ExternalFontFamiliesSectionProps) {
-  const { lang } = useLanguage();
-  const [adding, setAdding] = useState(false);
-  const [newLabel, setNewLabel] = useState("");
-  const [newFamily, setNewFamily] = useState("");
-
-  const t = {
-    title:
-      lang === "en"
-        ? "External Font Families"
-        : lang === "es"
-          ? "Familias de Fuente Externas"
-          : "Famílias de Fonte Externas",
-    desc:
-      lang === "en"
-        ? "Register names from your Custom Font CSS (Typekit, Google Fonts, etc.) to make them selectable in each element's Font Family dropdown."
-        : lang === "es"
-          ? "Registra nombres de tu CSS de fuentes (Typekit, Google Fonts, etc.) para poder seleccionarlos en el menú Font Family de cada elemento."
-          : "Registre nomes do seu CSS de fontes (Typekit, Google Fonts, etc.) para poder selecioná-los no menu Font Family de cada elemento.",
-    add: lang === "en" ? "Add family" : lang === "es" ? "Agregar familia" : "Adicionar família",
-    detect: lang === "en" ? "Auto-detect from CSS" : lang === "es" ? "Detectar desde CSS" : "Detectar do CSS",
-    labelPh: lang === "en" ? "Display name (e.g. Ivy Presto Display)" : lang === "es" ? "Nombre visible (ej. Ivy Presto Display)" : "Nome de exibição (ex.: Ivy Presto Display)",
-    familyPh: lang === "en" ? "font-family value (e.g. ivypresto-display)" : lang === "es" ? "valor font-family (ej. ivypresto-display)" : "valor font-family (ex.: ivypresto-display)",
-    save: lang === "en" ? "Save" : lang === "es" ? "Guardar" : "Salvar",
-    cancel: lang === "en" ? "Cancel" : lang === "es" ? "Cancelar" : "Cancelar",
-    empty:
-      lang === "en"
-        ? "No external families registered yet."
-        : lang === "es"
-          ? "Aún no hay familias externas registradas."
-          : "Nenhuma família externa registrada ainda.",
-    none:
-      lang === "en"
-        ? "No @font-face declarations detected in your CSS."
-        : lang === "es"
-          ? "No se detectaron declaraciones @font-face en tu CSS."
-          : "Nenhuma declaração @font-face detectada no seu CSS.",
-    added: lang === "en" ? "Added" : lang === "es" ? "Agregada" : "Adicionada",
-    detected:
-      lang === "en"
-        ? "Family detected"
-        : lang === "es"
-          ? "Familia detectada"
-          : "Família detectada",
-  };
-
-  const handleSave = () => {
-    const label = newLabel.trim();
-    const family = newFamily.trim();
-    if (!label || !family) return;
-    onChange([...externalFonts, { id: uuid(), label, family }]);
-    setNewLabel("");
-    setNewFamily("");
-    setAdding(false);
-  };
-
-  const handleDetect = () => {
-    const families = parseFamiliesFromCss(customFontCss);
-    if (families.length === 0) {
-      toast.info(t.none);
-      return;
-    }
-    const existing = new Set(externalFonts.map((f) => f.family.toLowerCase()));
-    const additions: ExternalFontEntry[] = families
-      .filter((f) => !existing.has(f.toLowerCase()))
-      .map((family) => ({ id: uuid(), label: family, family }));
-    if (additions.length === 0) {
-      toast.info(t.none);
-      return;
-    }
-    onChange([...externalFonts, ...additions]);
-    toast.success(`${additions.length} ${t.detected}`);
-  };
-
-  return (
-    <div className="space-y-2 pt-3 border-t border-border">
-      <div>
-        <h4 className="text-xs font-medium text-foreground">{t.title}</h4>
-        <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">{t.desc}</p>
-      </div>
-
-      {externalFonts.length === 0 ? (
-        <div className="text-[11px] text-muted-foreground py-3 text-center border border-dashed border-border">
-          {t.empty}
-        </div>
-      ) : (
-        <div className="space-y-px border border-border">
-          {externalFonts.map((f) => (
-            <div
-              key={f.id}
-              className="flex items-start justify-between gap-2 px-3 py-2 border-b border-border last:border-b-0 group"
-            >
-              <div className="min-w-0 flex-1">
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground truncate">
-                  {f.label}
-                </div>
-                <div
-                  className="text-base text-foreground truncate mt-0.5"
-                  style={{ fontFamily: `'${f.family}', system-ui, sans-serif` }}
-                >
-                  {f.family}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => onChange(externalFonts.filter((x) => x.id !== f.id))}
-                className="opacity-0 group-hover:opacity-70 hover:!opacity-100 transition-opacity mt-1"
-                aria-label="Remove"
-              >
-                <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {adding ? (
-        <div className="space-y-2 border border-border p-3">
-          <input
-            type="text"
-            value={newLabel}
-            onChange={(e) => setNewLabel(e.target.value)}
-            placeholder={t.labelPh}
-            className={cn(
-              "w-full px-2 py-1.5 text-[11px]",
-              "bg-background border border-border text-foreground",
-              "focus:outline-none focus:ring-1 focus:ring-foreground",
-              "placeholder:text-muted-foreground/60",
-            )}
-          />
-          <input
-            type="text"
-            value={newFamily}
-            onChange={(e) => setNewFamily(e.target.value)}
-            placeholder={t.familyPh}
-            spellCheck={false}
-            className={cn(
-              "w-full px-2 py-1.5 text-[11px] font-mono",
-              "bg-background border border-border text-foreground",
-              "focus:outline-none focus:ring-1 focus:ring-foreground",
-              "placeholder:text-muted-foreground/60",
-            )}
-          />
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              type="button"
-              onClick={() => {
-                setAdding(false);
-                setNewLabel("");
-                setNewFamily("");
-              }}
-              className="h-7 text-[10px]"
-            >
-              {t.cancel}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              type="button"
-              disabled={!newLabel.trim() || !newFamily.trim()}
-              onClick={handleSave}
-              className="h-7 text-[10px]"
-            >
-              {t.save}
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            type="button"
-            onClick={() => setAdding(true)}
-            className="flex-1 h-8 text-[11px] border border-dashed border-border"
-          >
-            + {t.add}
-          </Button>
-          {customFontCss.trim() && (
-            <Button
-              variant="ghost"
-              size="sm"
-              type="button"
-              onClick={handleDetect}
-              className="h-8 text-[11px] border border-dashed border-border"
-            >
-              {t.detect}
-            </Button>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}

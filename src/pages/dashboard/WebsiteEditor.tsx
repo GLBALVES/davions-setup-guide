@@ -58,6 +58,7 @@ import PerfModeToggle from "@/components/website-editor/PerfModeToggle";
 import SpacingSubPanel, { SPACING_DEFAULTS } from "@/components/website-editor/settings/SpacingSubPanel";
 import { useSiteSpacing } from "@/components/website-editor/useSiteSpacing";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
+import { useExternalFonts } from "@/components/website-editor/useExternalFonts";
 import { useSiteColors } from "@/components/website-editor/useSiteColors";
 import { getFontTemplate, type FontOverrides, type FontSizeScale } from "@/components/website-editor/font-templates";
 import type { ColorOverrides, CustomColorPalette, SchemeId } from "@/components/website-editor/color-palettes";
@@ -4147,7 +4148,6 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
                 fontSize={currentSize}
                 customFonts={((site as any)?.customFonts ?? (site as any)?.custom_fonts ?? []) as any[]}
                 customFontCss={((site as any)?.customFontCss ?? (site as any)?.custom_font_css ?? "") as string}
-                externalFonts={((site as any)?.externalFontFamilies ?? (site as any)?.external_font_families ?? []) as any[]}
                 photographerId={photographerId ?? null}
                 onTemplateChange={(id, tpl) => {
                   onSiteChange({
@@ -4163,7 +4163,6 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
                 }}
                 onCustomFontsChange={(next) => onSiteChange({ custom_fonts: next as any })}
                 onCustomFontCssChange={(next) => onSiteChange({ custom_font_css: next as any })}
-                onExternalFontsChange={(next) => onSiteChange({ external_font_families: next as any })}
               />
             );
           })()}
@@ -4573,13 +4572,15 @@ const WebsiteEditor = () => {
 
   // Inject the chosen Google Fonts + per-element typography CSS so the editor
   // preview matches the published site exactly.
+  const _siteCustomFontCss = ((site as any)?.customFontCss ?? (site as any)?.custom_font_css ?? "") as string;
+  const _siteExternalFonts = useExternalFonts(_siteCustomFontCss);
   useSiteTypography(
     (site as any)?.fontTemplateId,
     ((site as any)?.fontOverrides ?? {}) as FontOverrides,
     (((site as any)?.fontOverrides ?? {})._meta?.fontSize as FontSizeScale | undefined) ?? "regular",
     ((site as any)?.customFonts ?? (site as any)?.custom_fonts ?? []) as any,
-    ((site as any)?.customFontCss ?? (site as any)?.custom_font_css ?? "") as string,
-    ((site as any)?.externalFontFamilies ?? (site as any)?.external_font_families ?? []) as any,
+    _siteCustomFontCss,
+    _siteExternalFonts,
   );
 
   // Inject color palette CSS variables (--site-bg, --site-headings, …).
