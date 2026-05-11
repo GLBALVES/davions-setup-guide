@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
+import { HexColorPicker } from "react-colorful";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 
