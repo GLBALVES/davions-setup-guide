@@ -347,9 +347,16 @@ function SectionBlock({
       | "split-reveal";
     scrollEffectIntensity?: number;
     scrollEffectSpeed?: number;
+    textScrollEffect?: string;
+    imageScrollEffect?: string;
+    buttonsScrollEffect?: string;
   };
 
   const hasScrollEffect = bs.scrollEffect && bs.scrollEffect !== "none";
+  const hasTextEffect = bs.textScrollEffect && bs.textScrollEffect !== "none";
+  const hasImageEffect = bs.imageScrollEffect && bs.imageScrollEffect !== "none";
+  const hasButtonsEffect = bs.buttonsScrollEffect && bs.buttonsScrollEffect !== "none";
+  const hasAnyChildEffect = hasTextEffect || hasImageEffect || hasButtonsEffect;
   const hasAny =
     bs.backgroundColor ||
     bs.backgroundImage ||
@@ -359,7 +366,8 @@ function SectionBlock({
     bs.paddingRight !== undefined ||
     (bs.colorScheme && bs.colorScheme !== "auto") ||
     (bs.animation && bs.animation !== "none") ||
-    hasScrollEffect;
+    hasScrollEffect ||
+    hasAnyChildEffect;
 
   if (!hasAny) return inner;
 
@@ -370,7 +378,7 @@ function SectionBlock({
     paddingLeft: bs.paddingLeft !== undefined ? `${bs.paddingLeft}px` : undefined,
     paddingRight: bs.paddingRight !== undefined ? `${bs.paddingRight}px` : undefined,
     position: "relative",
-    ...(hasScrollEffect && {
+    ...((hasScrollEffect || hasAnyChildEffect) && {
       ["--se-intensity" as any]: ((bs.scrollEffectIntensity ?? 100) / 100).toString(),
       ["--se-speed" as any]: ((bs.scrollEffectSpeed ?? 100) / 100).toString(),
     }),
@@ -396,6 +404,9 @@ function SectionBlock({
     <div
       style={wrapperStyle}
       data-scroll-effect={hasScrollEffect ? bs.scrollEffect : undefined}
+      data-text-effect={hasTextEffect ? bs.textScrollEffect : undefined}
+      data-image-effect={hasImageEffect ? bs.imageScrollEffect : undefined}
+      data-buttons-effect={hasButtonsEffect ? bs.buttonsScrollEffect : undefined}
       className={[
         schemeClass,
         animClass,

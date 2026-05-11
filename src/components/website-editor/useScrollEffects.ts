@@ -138,26 +138,128 @@ export function useScrollEffects() {
         will-change: transform;
       }
 
+      /* ── Per-element effects ──
+         Wrappers carrying data-text-effect / data-image-effect / data-buttons-effect
+         get their own --se-progress from the same engine. The CSS below targets
+         common semantic descendants so the chosen effect plays just on that subset.
+      */
+      :where([data-text-effect], [data-image-effect], [data-buttons-effect]) {
+        --se-intensity: 1;
+        --se-speed: 1;
+      }
+
+      /* TEXT targets */
+      :where(
+        [data-text-effect] h1, [data-text-effect] h2, [data-text-effect] h3,
+        [data-text-effect] h4, [data-text-effect] p,
+        [data-text-effect] .site-banner-heading, [data-text-effect] .site-banner-subtitle,
+        [data-text-effect] [data-editable-text]
+      ) { will-change: transform, opacity, filter; }
+
+      [data-text-effect="fade-on-scroll"] :where(h1,h2,h3,h4,p,.site-banner-heading,.site-banner-subtitle) {
+        opacity: min(var(--se-progress) * 2.5 * var(--se-speed), 1);
+      }
+      [data-text-effect="fly-in-left"] :where(h1,h2,h3,h4,p,.site-banner-heading,.site-banner-subtitle) {
+        transform: translate3d(calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * -60px * var(--se-intensity)), 0, 0);
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
+      }
+      [data-text-effect="fly-in-right"] :where(h1,h2,h3,h4,p,.site-banner-heading,.site-banner-subtitle) {
+        transform: translate3d(calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * 60px * var(--se-intensity)), 0, 0);
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
+      }
+      [data-text-effect="fly-in-up"] :where(h1,h2,h3,h4,p,.site-banner-heading,.site-banner-subtitle) {
+        transform: translate3d(0, calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * 50px * var(--se-intensity)), 0);
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
+      }
+      [data-text-effect="blur-in"] :where(h1,h2,h3,h4,p,.site-banner-heading,.site-banner-subtitle) {
+        filter: blur(calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * 14px * var(--se-intensity)));
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
+      }
+      [data-text-effect="rotate-in"] :where(h1,h2,h3,h4,p,.site-banner-heading,.site-banner-subtitle) {
+        transform: rotate(calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * -6deg * var(--se-intensity)));
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
+        transform-origin: left center;
+      }
+      [data-text-effect="zoom-on-scroll"] :where(h1,h2,h3,h4,p,.site-banner-heading,.site-banner-subtitle) {
+        transform: scale(calc(1 + var(--se-progress) * 0.12 * var(--se-intensity)));
+      }
+      [data-text-effect="reveal"] :where(h1,h2,h3,h4,p,.site-banner-heading,.site-banner-subtitle) {
+        clip-path: inset(0 0 calc((1 - min(var(--se-progress) * 1.6 * var(--se-speed), 1)) * 100%) 0);
+      }
+
+      /* IMAGE targets (in-content images, not background images) */
+      [data-image-effect="fade-on-scroll"] :where(img:not([data-bg-image])) {
+        opacity: min(var(--se-progress) * 2.5 * var(--se-speed), 1);
+      }
+      [data-image-effect="fly-in-left"] :where(img:not([data-bg-image])) {
+        transform: translate3d(calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * -80px * var(--se-intensity)), 0, 0);
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
+      }
+      [data-image-effect="fly-in-right"] :where(img:not([data-bg-image])) {
+        transform: translate3d(calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * 80px * var(--se-intensity)), 0, 0);
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
+      }
+      [data-image-effect="fly-in-up"] :where(img:not([data-bg-image])) {
+        transform: translate3d(0, calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * 70px * var(--se-intensity)), 0);
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
+      }
+      [data-image-effect="zoom-on-scroll"] :where(img:not([data-bg-image])) {
+        transform: scale(calc(1 + var(--se-progress) * 0.18 * var(--se-intensity)));
+        transform-origin: center;
+      }
+      [data-image-effect="blur-in"] :where(img:not([data-bg-image])) {
+        filter: blur(calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * 18px * var(--se-intensity)));
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
+      }
+      [data-image-effect="rotate-in"] :where(img:not([data-bg-image])) {
+        transform: rotate(calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * -8deg * var(--se-intensity)));
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
+      }
+      [data-image-effect="reveal"] :where(img:not([data-bg-image])) {
+        clip-path: inset(0 0 calc((1 - min(var(--se-progress) * 1.6 * var(--se-speed), 1)) * 100%) 0);
+      }
+
+      /* BUTTONS targets */
+      [data-buttons-effect="fade-on-scroll"] :where(.site-btn, .site-button) {
+        opacity: min(var(--se-progress) * 2.5 * var(--se-speed), 1);
+      }
+      [data-buttons-effect="fly-in-left"] :where(.site-btn, .site-button) {
+        transform: translate3d(calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * -50px * var(--se-intensity)), 0, 0);
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
+      }
+      [data-buttons-effect="fly-in-right"] :where(.site-btn, .site-button) {
+        transform: translate3d(calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * 50px * var(--se-intensity)), 0, 0);
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
+      }
+      [data-buttons-effect="fly-in-up"] :where(.site-btn, .site-button) {
+        transform: translate3d(0, calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * 40px * var(--se-intensity)), 0);
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
+      }
+      [data-buttons-effect="zoom-on-scroll"] :where(.site-btn, .site-button) {
+        transform: scale(calc(0.85 + min(var(--se-progress) * 2 * var(--se-speed), 1) * 0.15 * var(--se-intensity)));
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
+      }
+      [data-buttons-effect="blur-in"] :where(.site-btn, .site-button) {
+        filter: blur(calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * 10px * var(--se-intensity)));
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
+      }
+      [data-buttons-effect="rotate-in"] :where(.site-btn, .site-button) {
+        transform: rotate(calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * -10deg * var(--se-intensity)));
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
+      }
+      [data-buttons-effect="reveal"] :where(.site-btn, .site-button) {
+        clip-path: inset(0 0 calc((1 - min(var(--se-progress) * 1.6 * var(--se-speed), 1)) * 100%) 0);
+      }
+
       @media (prefers-reduced-motion: reduce) {
-        [data-scroll-effect] { --se-progress: 0.5 !important; }
-        [data-scroll-effect="parallax"] img,
-        [data-scroll-effect="zoom-on-scroll"] img,
-        [data-scroll-effect="bg-zoom-out"] img,
-        [data-scroll-effect="bg-zoom-out"] [data-bg-image],
-        [data-scroll-effect="bg-blur-scroll"] img,
-        [data-scroll-effect="bg-blur-scroll"] [data-bg-image],
-        [data-scroll-effect="ken-burns"] img,
-        [data-scroll-effect="ken-burns"] [data-bg-image],
-        [data-scroll-effect="fly-in-left"],
-        [data-scroll-effect="fly-in-right"],
-        [data-scroll-effect="fly-in-up"],
-        [data-scroll-effect="reveal"],
-        [data-scroll-effect="split-reveal"],
-        [data-scroll-effect="fade-on-scroll"],
-        [data-scroll-effect="blur-in"],
-        [data-scroll-effect="rotate-in"],
-        [data-scroll-effect="skew-in"],
-        [data-scroll-effect="tilt-3d"] > * {
+        [data-scroll-effect],
+        [data-text-effect],
+        [data-image-effect],
+        [data-buttons-effect] { --se-progress: 0.5 !important; }
+        [data-scroll-effect] *,
+        [data-text-effect] *,
+        [data-image-effect] *,
+        [data-buttons-effect] * {
           transform: none !important;
           opacity: 1 !important;
           clip-path: none !important;
@@ -173,12 +275,17 @@ export function useScrollEffects() {
   useEffect(() => {
     const active = new Set<HTMLElement>();
 
+    const SELECTOR =
+      "[data-scroll-effect],[data-text-effect],[data-image-effect],[data-buttons-effect]";
+
     const collect = () =>
-      Array.from(
-        document.querySelectorAll<HTMLElement>("[data-scroll-effect]"),
-      ).filter((el) => {
-        const v = el.getAttribute("data-scroll-effect");
-        return v && v !== "none";
+      Array.from(document.querySelectorAll<HTMLElement>(SELECTOR)).filter((el) => {
+        const any =
+          el.getAttribute("data-scroll-effect") ||
+          el.getAttribute("data-text-effect") ||
+          el.getAttribute("data-image-effect") ||
+          el.getAttribute("data-buttons-effect");
+        return any && any !== "none";
       });
 
     let raf = 0;
@@ -236,7 +343,12 @@ export function useScrollEffects() {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ["data-scroll-effect"],
+      attributeFilter: [
+        "data-scroll-effect",
+        "data-text-effect",
+        "data-image-effect",
+        "data-buttons-effect",
+      ],
     });
 
     return () => {
