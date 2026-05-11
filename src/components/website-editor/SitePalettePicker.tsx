@@ -257,7 +257,7 @@ export function SitePaletteColorOptions({
                       key={`${ri}-${ci}`}
                       type="button"
                       onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => apply(c)}
+                      onClick={() => { apply(c); onCommit?.(); }}
                       title={c}
                       className={cn(
                         "h-6 w-6 rounded border transition-all",
