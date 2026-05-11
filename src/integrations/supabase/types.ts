@@ -2621,6 +2621,7 @@ export type Database = {
           custom_body_html: string | null
           custom_color_palettes: Json
           custom_css: string | null
+          custom_font_css: string
           custom_fonts: Json
           custom_head_html: string | null
           experience_bg_color: string | null
@@ -2739,6 +2740,7 @@ export type Database = {
           custom_body_html?: string | null
           custom_color_palettes?: Json
           custom_css?: string | null
+          custom_font_css?: string
           custom_fonts?: Json
           custom_head_html?: string | null
           experience_bg_color?: string | null
@@ -2857,6 +2859,7 @@ export type Database = {
           custom_body_html?: string | null
           custom_color_palettes?: Json
           custom_css?: string | null
+          custom_font_css?: string
           custom_fonts?: Json
           custom_head_html?: string | null
           experience_bg_color?: string | null

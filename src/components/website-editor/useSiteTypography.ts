@@ -24,6 +24,7 @@ export function useSiteTypography(
   overrides: FontOverrides | null | undefined,
   fontSize: FontSizeScale | null | undefined = "regular",
   customFonts: CustomFont[] | null | undefined = [],
+  customFontCss: string | null | undefined = "",
 ) {
   // Inject <link> for Google Font families used by the active template + overrides.
   useEffect(() => {
@@ -81,4 +82,40 @@ export function useSiteTypography(
     }
     if (el.textContent !== css) el.textContent = css;
   }, [templateId, overrides, fontSize, customFonts]);
+
+  // Inject user-provided font CSS (e.g. Typekit/Adobe Fonts <link> tags or
+  // raw @import / @font-face blocks pasted in the Fonts panel).
+  useEffect(() => {
+    const raw = (customFontCss ?? "").trim();
+    const containerId = "lov-site-custom-font-css";
+    document.querySelectorAll(`[data-lov-cfc="${containerId}"]`).forEach((n) => n.remove());
+    if (!raw) return;
+
+    // Extract <link ...> tags and inject them as real <link> elements so the
+    // browser fetches the stylesheet (Typekit, Google Fonts URL, etc.).
+    const linkRegex = /<link\b[^>]*>/gi;
+    const links = raw.match(linkRegex) ?? [];
+    let leftover = raw.replace(linkRegex, "");
+
+    // Strip <style>…</style> wrappers but keep their content as raw CSS.
+    leftover = leftover.replace(/<\/?style\b[^>]*>/gi, "");
+
+    const tmp = document.createElement("div");
+    tmp.innerHTML = links.join("\n");
+    Array.from(tmp.querySelectorAll("link")).forEach((linkEl) => {
+      const fresh = document.createElement("link");
+      Array.from(linkEl.attributes).forEach((a) => fresh.setAttribute(a.name, a.value));
+      if (!fresh.rel) fresh.rel = "stylesheet";
+      fresh.setAttribute("data-lov-cfc", containerId);
+      document.head.appendChild(fresh);
+    });
+
+    const css = leftover.trim();
+    if (css) {
+      const styleEl = document.createElement("style");
+      styleEl.setAttribute("data-lov-cfc", containerId);
+      styleEl.textContent = css;
+      document.head.appendChild(styleEl);
+    }
+  }, [customFontCss]);
 }
