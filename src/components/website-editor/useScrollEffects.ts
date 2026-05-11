@@ -241,7 +241,12 @@ export function useScrollEffects() {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ["data-scroll-effect"],
+      attributeFilter: [
+        "data-scroll-effect",
+        "data-text-effect",
+        "data-image-effect",
+        "data-buttons-effect",
+      ],
     });
 
     return () => {
