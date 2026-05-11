@@ -792,10 +792,29 @@ function GalleryMasonryBlock({ images = [], label, speed = 60 }: any) {
     );
   }
 
-  // Duplicate items for a seamless infinite loop
-  const loop = [...items, ...items];
-  // Speed: pixels per second-ish. Use total count to pick a duration.
-  const duration = Math.max(20, Math.round((items.length * 6000) / Number(speed || 60) / 100) * 1);
+  // ── Pack items into 2-row masonry columns ─────────────────────────────────
+  // Each column is either a single TALL item (spans both rows) or a STACK of
+  // two short items. We alternate to mimic the reference layout.
+  type Col =
+    | { kind: "tall"; item: GalleryItem }
+    | { kind: "stack"; top: GalleryItem; bottom: GalleryItem };
+  const columns: Col[] = [];
+  let i = 0;
+  let colIdx = 0;
+  while (i < items.length) {
+    // Pattern: tall, stack, stack, tall, stack, stack, ...
+    const wantTall = colIdx % 3 === 0;
+    if (wantTall || i === items.length - 1) {
+      columns.push({ kind: "tall", item: items[i]! });
+      i += 1;
+    } else {
+      columns.push({ kind: "stack", top: items[i]!, bottom: items[i + 1]! });
+      i += 2;
+    }
+    colIdx += 1;
+  }
+  // Duplicate columns for a seamless infinite loop
+  const loop = [...columns, ...columns];
 
   return (
     <section className="py-12 sm:py-16">
@@ -806,12 +825,28 @@ function GalleryMasonryBlock({ images = [], label, speed = 60 }: any) {
       )}
       <div
         className="group relative overflow-hidden"
-        style={{ ['--masonry-duration' as any]: `${Math.max(20, items.length * 4)}s` }}
+        style={{ ['--masonry-duration' as any]: `${Math.max(30, columns.length * 5)}s` }}
       >
-        <div className="flex gap-3 w-max animate-[masonry-scroll_var(--masonry-duration)_linear_infinite] group-hover:[animation-play-state:paused]">
-          {loop.map((it, i) => (
-            <div key={i} className="shrink-0 h-[260px] sm:h-[320px] md:h-[380px]">
-              <MasonryFigure item={it} />
+        <div className="flex gap-2 w-max animate-[masonry-scroll_var(--masonry-duration)_linear_infinite] group-hover:[animation-play-state:paused]">
+          {loop.map((col, idx) => (
+            <div
+              key={idx}
+              className="shrink-0 flex flex-col gap-2 h-[320px] sm:h-[420px] md:h-[520px]"
+            >
+              {col.kind === "tall" ? (
+                <div className="h-full">
+                  <MasonryFigure item={col.item} />
+                </div>
+              ) : (
+                <>
+                  <div className="h-1/2">
+                    <MasonryFigure item={col.top} />
+                  </div>
+                  <div className="h-1/2">
+                    <MasonryFigure item={col.bottom} />
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </div>
