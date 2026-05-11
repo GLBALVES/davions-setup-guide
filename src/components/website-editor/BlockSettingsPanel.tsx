@@ -58,6 +58,10 @@ export interface BlockSettings {
     | "skew-in"
     | "tilt-3d"
     | "split-reveal";
+  /** 50–200 (%). Default 100. Scales the magnitude of the active scroll effect. */
+  scrollEffectIntensity?: number;
+  /** 50–200 (%). Default 100. Scales how fast the effect completes / its loop. */
+  scrollEffectSpeed?: number;
 }
 
 // Reusable overlay controls (color + opacity slider) for background images
@@ -1369,6 +1373,47 @@ export const BlockSettingsPanel = ({
               </button>
             ))}
           </div>
+          {s.scrollEffect && s.scrollEffect !== "none" && s.scrollEffect !== "fixed-bg" && (
+            <div className="mt-4 space-y-4 rounded-md border border-border/60 p-3">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-muted-foreground flex justify-between">
+                  <span>Intensity</span>
+                  <span className="text-foreground tabular-nums">{s.scrollEffectIntensity ?? 100}%</span>
+                </label>
+                <Slider
+                  value={[s.scrollEffectIntensity ?? 100]}
+                  min={20}
+                  max={200}
+                  step={10}
+                  onValueChange={([v]) => update({ scrollEffectIntensity: v })}
+                />
+                <p className="text-[10px] text-muted-foreground/70">Strength of the motion (offset, blur, scale, tilt).</p>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-muted-foreground flex justify-between">
+                  <span>Speed</span>
+                  <span className="text-foreground tabular-nums">{s.scrollEffectSpeed ?? 100}%</span>
+                </label>
+                <Slider
+                  value={[s.scrollEffectSpeed ?? 100]}
+                  min={30}
+                  max={250}
+                  step={10}
+                  onValueChange={([v]) => update({ scrollEffectSpeed: v })}
+                />
+                <p className="text-[10px] text-muted-foreground/70">
+                  How fast the effect completes (or, for Ken Burns, how fast the loop runs).
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => update({ scrollEffectIntensity: 100, scrollEffectSpeed: 100 })}
+                className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2"
+              >
+                Reset to default
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -31,45 +31,49 @@ export function useScrollEffects() {
     const style = document.createElement("style");
     style.id = id;
     style.textContent = `
-      [data-scroll-effect] { --se-progress: 0; }
+      [data-scroll-effect] {
+        --se-progress: 0;
+        --se-intensity: 1;
+        --se-speed: 1;
+      }
       [data-scroll-effect="parallax"] { overflow: hidden; }
       [data-scroll-effect="parallax"] img,
       [data-scroll-effect="parallax"] [data-bg-image] {
-        transform: translate3d(0, calc((var(--se-progress) - 0.5) * -28%), 0) scale(1.2);
+        transform: translate3d(0, calc((var(--se-progress) - 0.5) * -28% * var(--se-intensity)), 0) scale(calc(1 + 0.2 * var(--se-intensity)));
         will-change: transform;
         transition: transform 60ms linear;
       }
       [data-scroll-effect="reveal"] {
-        clip-path: inset(0 0 calc((1 - min(var(--se-progress) * 1.6, 1)) * 100%) 0);
+        clip-path: inset(0 0 calc((1 - min(var(--se-progress) * 1.6 * var(--se-speed), 1)) * 100%) 0);
         will-change: clip-path;
       }
       [data-scroll-effect="split-reveal"] {
-        clip-path: inset(0 calc((1 - min(var(--se-progress) * 1.6, 1)) * 50%) 0 calc((1 - min(var(--se-progress) * 1.6, 1)) * 50%));
+        clip-path: inset(0 calc((1 - min(var(--se-progress) * 1.6 * var(--se-speed), 1)) * 50%) 0 calc((1 - min(var(--se-progress) * 1.6 * var(--se-speed), 1)) * 50%));
         will-change: clip-path;
       }
       [data-scroll-effect="zoom-on-scroll"] img,
       [data-scroll-effect="zoom-on-scroll"] [data-bg-image] {
-        transform: scale(calc(1 + var(--se-progress) * 0.18));
+        transform: scale(calc(1 + var(--se-progress) * 0.18 * var(--se-intensity)));
         transform-origin: center;
         will-change: transform;
       }
       [data-scroll-effect="fade-on-scroll"] {
-        opacity: min(calc(var(--se-progress) * 2.5), calc((1 - var(--se-progress)) * 2.5));
+        opacity: min(calc(var(--se-progress) * 2.5 * var(--se-speed)), calc((1 - var(--se-progress)) * 2.5 * var(--se-speed)));
         will-change: opacity;
       }
       [data-scroll-effect="fly-in-left"] {
-        transform: translate3d(calc((1 - min(var(--se-progress) * 2, 1)) * -80px), 0, 0);
-        opacity: min(var(--se-progress) * 2, 1);
+        transform: translate3d(calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * -80px * var(--se-intensity)), 0, 0);
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
         will-change: transform, opacity;
       }
       [data-scroll-effect="fly-in-right"] {
-        transform: translate3d(calc((1 - min(var(--se-progress) * 2, 1)) * 80px), 0, 0);
-        opacity: min(var(--se-progress) * 2, 1);
+        transform: translate3d(calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * 80px * var(--se-intensity)), 0, 0);
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
         will-change: transform, opacity;
       }
       [data-scroll-effect="fly-in-up"] {
-        transform: translate3d(0, calc((1 - min(var(--se-progress) * 2, 1)) * 80px), 0);
-        opacity: min(var(--se-progress) * 2, 1);
+        transform: translate3d(0, calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * 80px * var(--se-intensity)), 0);
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
         will-change: transform, opacity;
       }
 
@@ -77,20 +81,20 @@ export function useScrollEffects() {
       [data-scroll-effect="ken-burns"] { overflow: hidden; }
       [data-scroll-effect="ken-burns"] [data-bg-image],
       [data-scroll-effect="ken-burns"] img {
-        animation: lov-ken-burns 20s ease-in-out infinite alternate;
+        animation: lov-ken-burns calc(20s / var(--se-speed)) ease-in-out infinite alternate;
         transform-origin: center;
         will-change: transform;
       }
       @keyframes lov-ken-burns {
         0%   { transform: scale(1.05) translate3d(-1.5%, -1%, 0); }
-        100% { transform: scale(1.18) translate3d(2%, 1.5%, 0); }
+        100% { transform: scale(calc(1.05 + 0.13 * var(--se-intensity))) translate3d(calc(2% * var(--se-intensity)), calc(1.5% * var(--se-intensity)), 0); }
       }
 
       /* BG Zoom Out: starts zoomed in, eases to natural scale as section centers */
       [data-scroll-effect="bg-zoom-out"] { overflow: hidden; }
       [data-scroll-effect="bg-zoom-out"] [data-bg-image],
       [data-scroll-effect="bg-zoom-out"] img {
-        transform: scale(calc(1.4 - var(--se-progress) * 0.4));
+        transform: scale(calc(1 + (0.4 - var(--se-progress) * 0.4) * var(--se-intensity)));
         transform-origin: center;
         will-change: transform;
       }
@@ -98,29 +102,29 @@ export function useScrollEffects() {
       /* BG Blur on Scroll: blurry at edges, sharp at center */
       [data-scroll-effect="bg-blur-scroll"] [data-bg-image],
       [data-scroll-effect="bg-blur-scroll"] img {
-        filter: blur(calc((0.5 - min(var(--se-progress), 1 - var(--se-progress))) * 16px));
+        filter: blur(calc((0.5 - min(var(--se-progress), 1 - var(--se-progress))) * 16px * var(--se-intensity)));
         will-change: filter;
       }
 
       /* Blur In (whole wrapper) */
       [data-scroll-effect="blur-in"] {
-        filter: blur(calc((1 - min(var(--se-progress) * 2, 1)) * 18px));
-        opacity: min(var(--se-progress) * 2, 1);
+        filter: blur(calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * 18px * var(--se-intensity)));
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
         will-change: filter, opacity;
       }
 
       /* Rotate In */
       [data-scroll-effect="rotate-in"] {
-        transform: rotate(calc((1 - min(var(--se-progress) * 2, 1)) * -8deg));
-        opacity: min(var(--se-progress) * 2, 1);
+        transform: rotate(calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * -8deg * var(--se-intensity)));
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
         transform-origin: center;
         will-change: transform, opacity;
       }
 
       /* Skew In */
       [data-scroll-effect="skew-in"] {
-        transform: skewY(calc((1 - min(var(--se-progress) * 2, 1)) * 6deg));
-        opacity: min(var(--se-progress) * 2, 1);
+        transform: skewY(calc((1 - min(var(--se-progress) * 2 * var(--se-speed), 1)) * 6deg * var(--se-intensity)));
+        opacity: min(var(--se-progress) * 2 * var(--se-speed), 1);
         will-change: transform, opacity;
       }
 
@@ -129,7 +133,7 @@ export function useScrollEffects() {
         perspective: 1200px;
       }
       [data-scroll-effect="tilt-3d"] > * {
-        transform: rotateX(calc((var(--se-progress) - 0.5) * -14deg));
+        transform: rotateX(calc((var(--se-progress) - 0.5) * -14deg * var(--se-intensity)));
         transform-origin: center;
         will-change: transform;
       }
