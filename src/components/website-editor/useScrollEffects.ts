@@ -50,14 +50,8 @@ export function useScrollEffects() {
         will-change: transform;
       }
       [data-scroll-effect="fade-on-scroll"] {
-        opacity: calc(1 - abs(var(--se-progress) - 0.5) * 1.6);
+        opacity: min(calc(var(--se-progress) * 2.5), calc((1 - var(--se-progress)) * 2.5));
         will-change: opacity;
-      }
-      /* Fallback for browsers without abs(): a simpler eased fade. */
-      @supports not (opacity: calc(1 - abs(0.5))) {
-        [data-scroll-effect="fade-on-scroll"] {
-          opacity: min(var(--se-progress) * 2, max(0, 2 - var(--se-progress) * 2));
-        }
       }
       [data-scroll-effect="fly-in-left"] {
         transform: translate3d(calc((1 - min(var(--se-progress) * 2, 1)) * -80px), 0, 0);
