@@ -43,6 +43,7 @@ export interface BlockSettings {
   scrollEffect?:
     | "none"
     | "parallax"
+    | "fixed-bg"
     | "reveal"
     | "zoom-on-scroll"
     | "fade-on-scroll"
