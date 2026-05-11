@@ -572,11 +572,15 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     const taxAmount = Math.round(subtotal * taxRate / 100);
     const grandTotalCents = subtotal + taxAmount;
     const isPercentDeposit = depositType === "percent" || depositType === "percentage";
-    const depositValue = depositEnabled
+    const computedDeposit = depositEnabled
       ? (isPercentDeposit ? Math.round(grandTotalCents * depositAmount / 100) : depositAmount)
       : 0;
-    const depositPaid = isDepositPaid || isFullPaid ? depositValue : 0;
-    const paidCents = isFullPaid ? grandTotalCents : depositPaid;
+    // Prefer the actual amounts captured at payment time so they don't shift if
+    // the photographer later edits the session price.
+    const depositPaidCents = bookingPayment.deposit_paid_amount ?? computedDeposit;
+    const paidCents = isFullPaid
+      ? (bookingPayment.total_paid_amount ?? grandTotalCents)
+      : (isDepositPaid ? depositPaidCents : 0);
     return { grandTotal: grandTotalCents / 100, paid: paidCents / 100 };
   })();
 
