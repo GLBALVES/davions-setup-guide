@@ -22,6 +22,7 @@ export function ItemListEditor<T>({
   addLabel = "Add item",
   itemLabel = "Item",
   onAddOverride,
+  renderThumb,
 }: {
   items: T[];
   onChange: (next: T[]) => void;
@@ -32,6 +33,8 @@ export function ItemListEditor<T>({
   itemLabel?: string;
   /** When provided, the Add button calls this instead of creating a new empty item. */
   onAddOverride?: () => void;
+  /** Optional small thumbnail rendered in each row and in the detail header. */
+  renderThumb?: (item: T, idx: number) => React.ReactNode;
 }) {
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
 
