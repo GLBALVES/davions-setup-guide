@@ -91,8 +91,20 @@ export default function GalleryImagePicker({
       setPhotos([]);
       setSearch("");
       setTab("galleries");
+      setSelectedUrls([]);
     }
   }, [open]);
+
+  const toggleSelected = (url: string) => {
+    setSelectedUrls((prev) => prev.includes(url) ? prev.filter((u) => u !== url) : [...prev, url]);
+  };
+
+  const confirmSelection = () => {
+    if (selectedUrls.length === 0) return;
+    if (multiple && onSelectMany) onSelectMany(selectedUrls);
+    else onSelect(selectedUrls[0]);
+    onOpenChange(false);
+  };
 
   // Load photos for active gallery
   useEffect(() => {
