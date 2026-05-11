@@ -34,8 +34,43 @@ export const FONT_PRESETS: FontPreset[] = [
   { id: "libre-caslon", label: "Libre Caslon Text", stack: "'Libre Caslon Text', Georgia, serif", googleFont: "Libre+Caslon+Text:wght@400;700", category: "serif" },
 ];
 
-export function getFontStack(id?: string | null): string | undefined {
+/**
+ * A font family loaded externally (e.g. via Typekit/Adobe Fonts, Google Fonts
+ * @import, or a user-provided <link>/@font-face block in the "Custom Font CSS"
+ * field). It is NOT loaded by us — it just exposes a name so the user can
+ * select it in the per-element Font Family dropdown.
+ */
+export interface ExternalFontEntry {
+  /** Stable id (uuid). The select value uses `external:<id>`. */
+  id: string;
+  /** Display label shown in the dropdown (e.g. "Ivy Presto Display"). */
+  label: string;
+  /** Literal CSS font-family value (e.g. "ivypresto-display"). */
+  family: string;
+}
+
+/** Wrap a family name in quotes if it contains whitespace or special chars. */
+function quoteFamily(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return "";
+  if (/^['"].*['"]$/.test(trimmed)) return trimmed;
+  if (/[\s,'"]/.test(trimmed)) return `'${trimmed.replace(/'/g, "\\'")}'`;
+  return trimmed;
+}
+
+export function buildExternalStack(entry: ExternalFontEntry): string {
+  return `${quoteFamily(entry.family)}, system-ui, sans-serif`;
+}
+
+export function getFontStack(
+  id?: string | null,
+  externalFonts: ExternalFontEntry[] = [],
+): string | undefined {
   if (!id) return undefined;
+  if (id.startsWith("external:")) {
+    const ext = externalFonts.find((e) => `external:${e.id}` === id);
+    return ext ? buildExternalStack(ext) : undefined;
+  }
   return FONT_PRESETS.find((f) => f.id === id)?.stack;
 }
 
