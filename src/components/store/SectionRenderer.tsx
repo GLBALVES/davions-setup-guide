@@ -330,6 +330,7 @@ function SectionBlock({
     scrollEffect?:
       | "none"
       | "parallax"
+      | "fixed-bg"
       | "reveal"
       | "zoom-on-scroll"
       | "fade-on-scroll"
@@ -398,6 +399,7 @@ function SectionBlock({
             backgroundImage: `url(${bs.backgroundImage})`,
             backgroundSize: "cover",
             backgroundPosition: `${typeof bs.backgroundFocalX === "number" ? bs.backgroundFocalX : 50}% ${typeof bs.backgroundFocalY === "number" ? bs.backgroundFocalY : 50}%`,
+            backgroundAttachment: bs.scrollEffect === "fixed-bg" ? "fixed" : undefined,
             opacity: (bs.backgroundOpacity ?? 100) / 100,
             pointerEvents: "none",
             zIndex: 0,
