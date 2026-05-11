@@ -95,7 +95,9 @@ export function ItemListEditor<T>({
             </button>
           </div>
         </div>
-        {renderDetail(item, (patch) => update(activeIdx, patch))}
+        {renderDetail(item, (patch) => update(activeIdx, patch), {
+          appendItems: (extras) => onChange([...items, ...extras]),
+        })}
       </div>
     );
   }
