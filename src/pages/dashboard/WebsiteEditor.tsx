@@ -4572,13 +4572,15 @@ const WebsiteEditor = () => {
 
   // Inject the chosen Google Fonts + per-element typography CSS so the editor
   // preview matches the published site exactly.
+  const _siteCustomFontCss = ((site as any)?.customFontCss ?? (site as any)?.custom_font_css ?? "") as string;
+  const _siteExternalFonts = useExternalFonts(_siteCustomFontCss);
   useSiteTypography(
     (site as any)?.fontTemplateId,
     ((site as any)?.fontOverrides ?? {}) as FontOverrides,
     (((site as any)?.fontOverrides ?? {})._meta?.fontSize as FontSizeScale | undefined) ?? "regular",
     ((site as any)?.customFonts ?? (site as any)?.custom_fonts ?? []) as any,
-    ((site as any)?.customFontCss ?? (site as any)?.custom_font_css ?? "") as string,
-    ((site as any)?.externalFontFamilies ?? (site as any)?.external_font_families ?? []) as any,
+    _siteCustomFontCss,
+    _siteExternalFonts,
   );
 
   // Inject color palette CSS variables (--site-bg, --site-headings, …).
