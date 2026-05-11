@@ -4579,6 +4579,7 @@ const WebsiteEditor = () => {
     (((site as any)?.fontOverrides ?? {})._meta?.fontSize as FontSizeScale | undefined) ?? "regular",
     ((site as any)?.customFonts ?? (site as any)?.custom_fonts ?? []) as any,
     ((site as any)?.customFontCss ?? (site as any)?.custom_font_css ?? "") as string,
+    ((site as any)?.externalFontFamilies ?? (site as any)?.external_font_families ?? []) as any,
   );
 
   // Inject color palette CSS variables (--site-bg, --site-headings, …).
