@@ -100,7 +100,7 @@ export default function FontsSubPanel({
           {group.items.map((item) => {
             const expanded = expandedItem === item.key;
             const eff = resolveElement(activeId, ov, item.key, scale);
-            const stack = getFontStack(eff.fontFamily);
+            const stack = getFontStack(eff.fontFamily, externalFonts);
             return (
               <div key={item.key} className="border-b border-border">
                 <button
