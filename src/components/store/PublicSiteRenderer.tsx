@@ -2271,6 +2271,7 @@ export default function PublicSiteRenderer(props: Props) {
     ((site as any)?.color_scheme_id ?? null) as SchemeId | null,
     ((site as any)?.color_overrides ?? {}) as ColorOverrides,
     ((site as any)?.custom_color_palettes ?? []) as CustomColorPalette[],
+    ((site as any)?.site_colors ?? []) as string[],
   );
 
   // Apply scroll-triggered section animations on the live site.
