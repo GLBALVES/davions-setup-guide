@@ -37,6 +37,10 @@ export default function AdminLeads() {
   const [loading, setLoading] = useState(true);
   const [inviteTarget, setInviteTarget] = useState<Lead | null>(null);
   const [inviting, setInviting] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "invited" | "pending">("all");
+  const [countryFilter, setCountryFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "name-asc" | "name-desc">("newest");
 
   const fetchLeads = async () => {
     setLoading(true);
