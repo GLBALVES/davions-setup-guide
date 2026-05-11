@@ -14,10 +14,6 @@ interface ImageUploadFieldProps {
   className?: string;
   /** Aspect ratio class for the preview area */
   aspectClass?: string;
-  /**
-   * Validation options. All optional — when omitted, defaults preserve previous
-   * behavior (any image up to 50MB).
-   */
   /** Allowed MIME types, e.g. ["image/png","image/svg+xml","image/x-icon"] */
   allowedTypes?: string[];
   /** Friendly label for allowed formats shown in error toasts (e.g. "PNG, SVG, ICO") */
@@ -36,6 +32,12 @@ interface ImageUploadFieldProps {
   requireSquare?: boolean;
   /** Helper text shown under the upload area */
   helperText?: string;
+  /**
+   * When provided, the file picker / gallery picker allow multi-selection.
+   * The first selected URL is delivered via `onChange`; remaining URLs are
+   * delivered via `onAddMore` so the caller can append additional items.
+   */
+  onAddMore?: (extraUrls: string[]) => void;
 }
 
 const BUCKET = "site-assets";
