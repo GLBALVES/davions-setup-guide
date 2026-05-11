@@ -58,6 +58,7 @@ import PerfModeToggle from "@/components/website-editor/PerfModeToggle";
 import SpacingSubPanel, { SPACING_DEFAULTS } from "@/components/website-editor/settings/SpacingSubPanel";
 import { useSiteSpacing } from "@/components/website-editor/useSiteSpacing";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
+import { useExternalFonts } from "@/components/website-editor/useExternalFonts";
 import { useSiteColors } from "@/components/website-editor/useSiteColors";
 import { getFontTemplate, type FontOverrides, type FontSizeScale } from "@/components/website-editor/font-templates";
 import type { ColorOverrides, CustomColorPalette, SchemeId } from "@/components/website-editor/color-palettes";
