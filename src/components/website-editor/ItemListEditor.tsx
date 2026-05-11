@@ -21,6 +21,7 @@ export function ItemListEditor<T>({
   newItem,
   addLabel = "Add item",
   itemLabel = "Item",
+  onAddOverride,
 }: {
   items: T[];
   onChange: (next: T[]) => void;
@@ -29,6 +30,8 @@ export function ItemListEditor<T>({
   newItem: () => T;
   addLabel?: string;
   itemLabel?: string;
+  /** When provided, the Add button calls this instead of creating a new empty item. */
+  onAddOverride?: () => void;
 }) {
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
 
