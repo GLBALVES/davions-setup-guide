@@ -46,6 +46,8 @@ export default function GalleryImagePicker({
   photographerId,
   onSelect,
   uploadFolder = "blocks",
+  multiple = false,
+  onSelectMany,
 }: Props) {
   const [tab, setTab] = useState<"galleries" | "upload">("galleries");
   const [galleries, setGalleries] = useState<GalleryRow[]>([]);
@@ -56,6 +58,7 @@ export default function GalleryImagePicker({
   const [loadingPhotos, setLoadingPhotos] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [savingSite, setSavingSite] = useState<string | null>(null);
+  const [selectedUrls, setSelectedUrls] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Load galleries
