@@ -5,7 +5,7 @@
 // then override individual elements via the Fonts panel "Edit Font Template"
 // editor. Effective typography = merge(template.elements, font_overrides).
 
-import { FONT_PRESETS } from "./site-fonts";
+import { FONT_PRESETS, buildExternalStack, type ExternalFontEntry } from "./site-fonts";
 
 export type ElementKey =
   | "banner_heading"
