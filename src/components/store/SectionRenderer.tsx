@@ -345,6 +345,8 @@ function SectionBlock({
       | "skew-in"
       | "tilt-3d"
       | "split-reveal";
+    scrollEffectIntensity?: number;
+    scrollEffectSpeed?: number;
   };
 
   const hasScrollEffect = bs.scrollEffect && bs.scrollEffect !== "none";
