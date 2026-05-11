@@ -9,6 +9,10 @@ import { cn } from "@/lib/utils";
  * editor (rendered by the caller). Mirrors the Header Slider UX so users
  * can edit any item (FAQ, slide, member, plan, …) from the side panel.
  */
+export interface ItemListEditorContext<T> {
+  appendItems: (extras: T[]) => void;
+}
+
 export function ItemListEditor<T>({
   items,
   onChange,
@@ -21,7 +25,7 @@ export function ItemListEditor<T>({
   items: T[];
   onChange: (next: T[]) => void;
   renderLabel: (item: T, idx: number) => string;
-  renderDetail: (item: T, update: (patch: Partial<T>) => void) => React.ReactNode;
+  renderDetail: (item: T, update: (patch: Partial<T>) => void, ctx: ItemListEditorContext<T>) => React.ReactNode;
   newItem: () => T;
   addLabel?: string;
   itemLabel?: string;
