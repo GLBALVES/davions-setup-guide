@@ -42,11 +42,13 @@ interface Props {
   overrides: FontOverrides | null | undefined;
   fontSize: FontSizeScale | null | undefined;
   customFonts: CustomFontEntry[];
+  customFontCss: string | null | undefined;
   photographerId: string | null;
   onTemplateChange: (templateId: string, template: FontTemplate) => void;
   onOverridesChange: (next: FontOverrides) => void;
   onFontSizeChange: (size: FontSizeScale) => void;
   onCustomFontsChange: (next: CustomFontEntry[]) => void;
+  onCustomFontCssChange: (next: string) => void;
 }
 
 type GroupKey = (typeof ELEMENT_GROUPS)[number]["key"];
