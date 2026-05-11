@@ -2135,7 +2135,16 @@ export function ProjectDetailSheet({
     const dateChanged = "shoot_date" in pendingChanges || "shoot_time" in pendingChanges;
     if (dateChanged) {
       const shootDate = pendingChanges.shoot_date ?? project.shoot_date;
-      const shootTime = pendingChanges.shoot_time ?? project.shoot_time ?? "09:00";
+      const rawShootTime = pendingChanges.shoot_time ?? project.shoot_time ?? null;
+      const shootTime = rawShootTime ?? "09:00";
+
+      if (rawShootTime && !shootDate) {
+        const msg = "Selecione uma data antes de salvar o horário.";
+        setConflictWarning(msg);
+        toast.error(msg);
+        setSaving(false);
+        return;
+      }
 
       if (shootDate && project.booking_id) {
         const { data: bookingData } = await (supabase as any)
@@ -2230,7 +2239,16 @@ export function ProjectDetailSheet({
   const queueDateTime = (newDate: string | null | undefined, newTime: string | null | undefined) => {
     const updates: Partial<ProjectSheetData> = {};
     if (newDate !== undefined && newDate !== null) updates.shoot_date = newDate;
-    if (newTime !== undefined && newTime !== null) updates.shoot_time = newTime;
+    if (newTime !== undefined && newTime !== null) {
+      const effectiveDate = newDate ?? pendingChanges.shoot_date ?? project.shoot_date;
+      if (!effectiveDate) {
+        const msg = "Selecione uma data antes de definir o horário.";
+        setConflictWarning(msg);
+        toast.error(msg);
+        return;
+      }
+      updates.shoot_time = newTime;
+    }
     if (Object.keys(updates).length === 0) return;
     queueChange(updates);
     setConflictWarning(null);

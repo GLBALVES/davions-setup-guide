@@ -1038,6 +1038,7 @@ function ProjectModal({
   const [clientEmail, setClientEmail] = useState("");
   const [sessionTypeId, setSessionTypeId] = useState<string | null>(null);
   const [shootDate, setShootDate] = useState("");
+  const [shootTime, setShootTime] = useState("09:00");
   const [stage, setStage] = useState<Stage>("upcoming");
   const [notes, setNotes] = useState("");
 
@@ -1054,6 +1055,7 @@ function ProjectModal({
       const matched = sessionTypes.find((s) => s.name === initial?.session_type);
       setSessionTypeId(matched?.id ?? null);
       setShootDate(initial?.shoot_date ?? "");
+      setShootTime(initial?.shoot_time ?? "09:00");
       setStage(initial?.stage ?? defaultStage ?? "upcoming");
       setNotes(initial?.notes ?? "");
     }
@@ -1062,7 +1064,7 @@ function ProjectModal({
   const handleSave = () => {
     if (!title.trim()) { toast.error(p_t.titleRequired); return; }
     const resolvedName = sessionTypes.find((s) => s.id === sessionTypeId)?.name ?? null;
-    onSave({ title, client_name: clientName, client_email: clientEmail || null, session_type: resolvedName, shoot_date: shootDate || null, stage, notes: notes || null });
+    onSave({ title, client_name: clientName, client_email: clientEmail || null, session_type: resolvedName, shoot_date: shootDate || null, shoot_time: shootDate ? shootTime : null, stage, notes: notes || null });
   };
 
   const isCreate = !initial;
@@ -1073,6 +1075,9 @@ function ProjectModal({
       title: name,
       client_name: name,
       client_email: clientEmail.trim() || null,
+      session_type: sessionTypes.find((s) => s.id === sessionTypeId)?.name ?? null,
+      shoot_date: shootDate || null,
+      shoot_time: shootDate ? shootTime : null,
       stage: defaultStage ?? "upcoming",
     });
   };
@@ -1095,6 +1100,24 @@ function ProjectModal({
             <div className="flex flex-col gap-1">
               <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.email}</label>
               <Input value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="ana@email.com" type="email" />
+            </div>
+            <SessionTypeManager
+              photographerId={photographerId}
+              sessionTypes={sessionTypes}
+              selectedTypeId={sessionTypeId}
+              onSelect={setSessionTypeId}
+              onRefetch={onRefetchSessionTypes}
+              mode="select"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.shootDate}</label>
+                <Input type="date" value={shootDate} onChange={(e) => setShootDate(e.target.value)} />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{(p_t as any).time ?? "Time"}</label>
+                <TimePickerInput value={shootTime} onChange={setShootTime} />
+              </div>
             </div>
           </div>
         ) : (
@@ -1128,6 +1151,10 @@ function ProjectModal({
                 <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.shootDate}</label>
                 <Input type="date" value={shootDate} onChange={(e) => setShootDate(e.target.value)} />
               </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{(p_t as any).time ?? "Time"}</label>
+              <TimePickerInput value={shootTime} onChange={setShootTime} />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-[10px] tracking-widest uppercase text-muted-foreground">{p_t.stage}</label>
@@ -1557,7 +1584,7 @@ const Projects = () => {
     // 4. Reload after potential inserts — also fetch duration + availability start_time for auto-advance
     const { data: allProjects } = await supabase
       .from("client_projects" as any)
-      .select("*, bookings(sessions(title, duration_minutes), session_availability(start_time, end_time), client_name, client_email, booked_date)")
+        .select("*, bookings(sessions(title, duration_minutes), session_availability(start_time, end_time), client_name, client_email, booked_date, status)")
       .eq("photographer_id", photographerId)
       .order("position", { ascending: true });
 
@@ -1931,8 +1958,13 @@ const Projects = () => {
   const handleSave = async (data: Partial<ClientProject>) => {
     // Validate scheduling conflicts whenever a shoot date is set/changed.
     const targetDate = (data as any).shoot_date ?? editing?.shoot_date ?? null;
-    const targetTime = (data as any).shoot_time ?? editing?.shoot_time ?? "09:00";
+    const rawTargetTime = (data as any).shoot_time ?? editing?.shoot_time ?? null;
+    const targetTime = rawTargetTime ?? "09:00";
     const sessTitle = (data as any).session_type ?? editing?.session_type ?? null;
+    if (rawTargetTime && !targetDate) {
+      toast.error("Selecione uma data antes de salvar o horário.");
+      return;
+    }
     if (targetDate) {
       let duration = 60;
       if (sessTitle && user?.id) {
@@ -1956,6 +1988,21 @@ const Projects = () => {
       if (conflict.hasConflict) {
         toast.error(conflict.conflictDetails || "Time conflict detected");
         return;
+      }
+      if (!editing) {
+        const localConflict = projects.find((p) => {
+          if (p.stage === "archived" || !p.shoot_date || p.shoot_date !== targetDate) return false;
+          const existingTime = p.shoot_time?.slice(0, 5) ?? (p.booking_id ? (p as any).bookings?.session_availability?.start_time?.slice(0, 5) : null);
+          if (!existingTime) return false;
+          const existingDuration = Number((p as any).bookings?.sessions?.duration_minutes ?? 60);
+          const existingTotal = timeToMinutes(existingTime) + existingDuration;
+          const existingEnd = `${String(Math.floor(existingTotal / 60) % 24).padStart(2, "0")}:${String(existingTotal % 60).padStart(2, "0")}`;
+          return timeToMinutes(targetTime) < timeToMinutes(existingEnd) && totalMins > timeToMinutes(existingTime);
+        });
+        if (localConflict) {
+          toast.error(`Conflita com ${localConflict.client_name || localConflict.title} (${localConflict.shoot_time ?? "horário existente"})`);
+          return;
+        }
       }
     }
 
