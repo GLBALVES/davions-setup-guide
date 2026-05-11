@@ -432,6 +432,15 @@ function SlideshowContentEditor({ props, onChange, photographerId, isCarousel }:
   const slides: SlideItem[] = normalizeSlides(props.images || []);
   const autoplay = props.autoplay ?? !isCarousel; // slideshow defaults on, carousel off
   const interval = props.interval ?? 5000;
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const folder = isCarousel ? "carousel" : "slideshow";
+
+  const addImagesFromUrls = (urls: string[]) => {
+    if (!urls.length) return;
+    const extras: SlideItem[] = urls.map((u) => ({ image: u, title: "", caption: "", link: "" }));
+    onChange({ ...props, images: [...slides, ...extras] });
+  };
+
   return (
     <div className="space-y-3">
       {isCarousel && (
@@ -458,7 +467,13 @@ function SlideshowContentEditor({ props, onChange, photographerId, isCarousel }:
           itemLabel={isCarousel ? "Item" : "Slide"}
           addLabel={isCarousel ? "Add Item" : "Add Slide"}
           newItem={() => ({ image: "", title: "", caption: "", link: "" })}
+          onAddOverride={isCarousel ? () => setPickerOpen(true) : undefined}
           renderLabel={(it) => it.title || (it.image ? it.image.split("/").pop() || it.image : isCarousel ? "Empty item" : "Empty slide")}
+          renderThumb={(it) => it.image ? (
+            <img src={it.image} alt="" className="w-full h-full object-cover" loading="lazy" />
+          ) : (
+            <span className="text-[9px] text-muted-foreground">—</span>
+          )}
           renderDetail={(item, update) => (
             <div className="space-y-3">
               <Field label="Image">
@@ -481,6 +496,17 @@ function SlideshowContentEditor({ props, onChange, photographerId, isCarousel }:
             </div>
           )}
         />
+        {isCarousel && (
+          <GalleryImagePicker
+            open={pickerOpen}
+            onOpenChange={setPickerOpen}
+            photographerId={photographerId}
+            multiple
+            onSelect={(url) => addImagesFromUrls([url])}
+            onSelectMany={(urls) => addImagesFromUrls(urls)}
+            uploadFolder={folder}
+          />
+        )}
       </Field>
     </div>
   );
