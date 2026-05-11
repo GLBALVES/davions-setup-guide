@@ -4588,6 +4588,8 @@ const WebsiteEditor = () => {
   useSiteAnimations(((site as any)?.animation_style ?? "none") as AnimationStyle);
   // Apply per-block continuous scroll effects (parallax / reveal / zoom / fly-in).
   useScrollEffects();
+  // Auto-detect slow devices / high CPU and downgrade heavy effects.
+  usePerformanceMode();
 
   // Apply max-width + base block padding from the Spacing panel.
   useSiteSpacing(
