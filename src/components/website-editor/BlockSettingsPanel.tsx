@@ -496,6 +496,17 @@ function SlideshowContentEditor({ props, onChange, photographerId, isCarousel }:
             </div>
           )}
         />
+        {isCarousel && (
+          <GalleryImagePicker
+            open={pickerOpen}
+            onOpenChange={setPickerOpen}
+            photographerId={photographerId}
+            multiple
+            onSelect={(url) => addImagesFromUrls([url])}
+            onSelectMany={(urls) => addImagesFromUrls(urls)}
+            uploadFolder={folder}
+          />
+        )}
       </Field>
     </div>
   );
