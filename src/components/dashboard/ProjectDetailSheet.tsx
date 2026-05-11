@@ -1913,13 +1913,15 @@ export function ProjectDetailSheet({
       if (!project?.booking_id) return null;
       const { data } = await (supabase as any)
         .from("bookings")
-        .select("session_id, payment_status, extras_total, sessions ( price, tax_rate, deposit_enabled, deposit_amount, deposit_type )")
+        .select("session_id, payment_status, extras_total, deposit_paid_amount, total_paid_amount, sessions ( price, tax_rate, deposit_enabled, deposit_amount, deposit_type )")
         .eq("id", project.booking_id)
         .single();
       return data as {
         session_id: string;
         payment_status: string;
         extras_total: number;
+        deposit_paid_amount: number | null;
+        total_paid_amount: number | null;
         sessions: { price: number; tax_rate: number; deposit_enabled: boolean; deposit_amount: number; deposit_type: string } | null;
       } | null;
     },
@@ -1930,7 +1932,7 @@ export function ProjectDetailSheet({
   // plus manual project payments and paid invoices. Used to honor paid amounts when
   // changing session, ignoring the new session's deposit configuration.
   const { data: amountAlreadyPaidCents = 0 } = useQuery({
-    queryKey: ["project-amount-paid", project?.id, project?.booking_id, bookingData?.payment_status, bookingData?.extras_total],
+    queryKey: ["project-amount-paid", project?.id, project?.booking_id, bookingData?.payment_status, bookingData?.extras_total, bookingData?.deposit_paid_amount, bookingData?.total_paid_amount],
     queryFn: async () => {
       let bookingPaid = 0;
       if (bookingData?.sessions) {
@@ -1946,8 +1948,9 @@ export function ProjectDetailSheet({
           ? (isPercent ? Math.round(grandTotal * sess.deposit_amount / 100) : sess.deposit_amount)
           : 0;
         const ps = bookingData.payment_status;
-        if (ps === "paid") bookingPaid = grandTotal;
-        else if (ps === "deposit_paid") bookingPaid = depositValue;
+        // Prefer locked-at-payment values so price edits don't shift what was paid.
+        if (ps === "paid") bookingPaid = bookingData.total_paid_amount ?? grandTotal;
+        else if (ps === "deposit_paid") bookingPaid = bookingData.deposit_paid_amount ?? depositValue;
       }
       const [{ data: pays }, { data: invs }] = await Promise.all([
         (supabase as any).from("project_payments").select("amount").eq("project_id", project!.id),
