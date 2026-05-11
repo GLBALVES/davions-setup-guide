@@ -934,7 +934,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         photographerId={photographerId}
         showForm={showPaymentForm}
         onToggleForm={() => setShowPaymentForm((v) => !v)}
-        taxRate={(bookingPayment?.sessions as any)?.tax_rate ?? 0}
+        taxRate={sessionTaxRate}
       />
 
       <div className="flex flex-col gap-2">
