@@ -404,6 +404,9 @@ function SectionBlock({
     <div
       style={wrapperStyle}
       data-scroll-effect={hasScrollEffect ? bs.scrollEffect : undefined}
+      data-text-effect={hasTextEffect ? bs.textScrollEffect : undefined}
+      data-image-effect={hasImageEffect ? bs.imageScrollEffect : undefined}
+      data-buttons-effect={hasButtonsEffect ? bs.buttonsScrollEffect : undefined}
       className={[
         schemeClass,
         animClass,
