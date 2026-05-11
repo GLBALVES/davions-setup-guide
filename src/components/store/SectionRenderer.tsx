@@ -252,7 +252,7 @@ function SectionBlock({
       case "gallery-grid":
         return <GalleryGridBlock {...p} label={section.label} />;
       case "gallery-masonry":
-        return <GalleryMasonryBlock {...p} label={section.label} />;
+        return <GalleryMasonryBlock {...p} label={section.label} ctx={ctx} />;
       case "contact-form":
         return <ContactFormBlock {...p} accentColor={accentColor} ctx={ctx} />;
       case "cta":
