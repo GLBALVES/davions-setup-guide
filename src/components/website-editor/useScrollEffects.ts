@@ -252,25 +252,14 @@ export function useScrollEffects() {
       }
 
       @media (prefers-reduced-motion: reduce) {
-        [data-scroll-effect] { --se-progress: 0.5 !important; }
-        [data-scroll-effect="parallax"] img,
-        [data-scroll-effect="zoom-on-scroll"] img,
-        [data-scroll-effect="bg-zoom-out"] img,
-        [data-scroll-effect="bg-zoom-out"] [data-bg-image],
-        [data-scroll-effect="bg-blur-scroll"] img,
-        [data-scroll-effect="bg-blur-scroll"] [data-bg-image],
-        [data-scroll-effect="ken-burns"] img,
-        [data-scroll-effect="ken-burns"] [data-bg-image],
-        [data-scroll-effect="fly-in-left"],
-        [data-scroll-effect="fly-in-right"],
-        [data-scroll-effect="fly-in-up"],
-        [data-scroll-effect="reveal"],
-        [data-scroll-effect="split-reveal"],
-        [data-scroll-effect="fade-on-scroll"],
-        [data-scroll-effect="blur-in"],
-        [data-scroll-effect="rotate-in"],
-        [data-scroll-effect="skew-in"],
-        [data-scroll-effect="tilt-3d"] > * {
+        [data-scroll-effect],
+        [data-text-effect],
+        [data-image-effect],
+        [data-buttons-effect] { --se-progress: 0.5 !important; }
+        [data-scroll-effect] *,
+        [data-text-effect] *,
+        [data-image-effect] *,
+        [data-buttons-effect] * {
           transform: none !important;
           opacity: 1 !important;
           clip-path: none !important;
