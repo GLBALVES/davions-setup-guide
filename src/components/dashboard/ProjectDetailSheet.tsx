@@ -2218,6 +2218,27 @@ export function ProjectDetailSheet({
     }
   };
 
+  const getCurrentBookingPaymentSnapshot = () => {
+    if (!bookingData?.sessions) return {};
+    const sess = bookingData.sessions;
+    const extrasTotal = bookingData.extras_total ?? 0;
+    const subtotal = (sess.price ?? 0) + extrasTotal;
+    const taxAmount = Math.round(subtotal * ((sess.tax_rate ?? 0) / 100));
+    const grandTotal = subtotal + taxAmount;
+    const isPercent = sess.deposit_type === "percent" || sess.deposit_type === "percentage";
+    const computedDeposit = sess.deposit_enabled
+      ? (isPercent ? Math.round(grandTotal * ((sess.deposit_amount ?? 0) / 100)) : (sess.deposit_amount ?? 0))
+      : 0;
+
+    if (bookingData.payment_status === "deposit_paid" && bookingData.deposit_paid_amount == null) {
+      return { deposit_paid_amount: computedDeposit };
+    }
+    if (bookingData.payment_status === "paid" && bookingData.total_paid_amount == null) {
+      return { total_paid_amount: grandTotal };
+    }
+    return {};
+  };
+
   const applySessionChange = async (newSess: SessionInfo, keptItems: AddonItem[]) => {
     if (!project.booking_id) return;
     setChangingSession(true);
@@ -2246,10 +2267,12 @@ export function ProjectDetailSheet({
       // 3. Calculate new extras_total
       const newExtras = keptItems.reduce((s, i) => s + i.quantity * i.unit_price, 0);
 
-      // 4. Update booking session_id + extras_total
+      // 4. Update booking session_id + extras_total, preserving the payment
+      // amount captured before the session is swapped.
+      const paymentSnapshot = getCurrentBookingPaymentSnapshot();
       await (supabase as any)
         .from("bookings")
-        .update({ session_id: newSess.id, extras_total: newExtras })
+        .update({ session_id: newSess.id, extras_total: newExtras, ...paymentSnapshot })
         .eq("id", project.booking_id);
 
       // 5. Update session_availability session_id + duration
@@ -2284,6 +2307,7 @@ export function ProjectDetailSheet({
       // 7. Invalidate queries
       queryClient.invalidateQueries({ queryKey: ["project-booking-payment"] });
       queryClient.invalidateQueries({ queryKey: ["project-booking-session"] });
+      queryClient.invalidateQueries({ queryKey: ["project-amount-paid"] });
 
       toast.success(tp.projectUpdated || "Session updated");
     } catch (err) {

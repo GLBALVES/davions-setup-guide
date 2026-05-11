@@ -85,6 +85,7 @@ serve(async (req) => {
 
     // Detect deposit vs full payment from metadata
     const wasDeposit = session.metadata?.is_deposit === "true";
+    const amountPaidCents = (session.amount_total ?? 0) as number;
 
     // Update booking to confirmed
     const { error: updateError } = await supabase
@@ -93,6 +94,8 @@ serve(async (req) => {
         status: "confirmed",
         payment_status: wasDeposit ? "deposit_paid" : "paid",
         stripe_payment_intent_id: session.payment_intent as string,
+        deposit_paid_amount: wasDeposit ? amountPaidCents : null,
+        total_paid_amount: wasDeposit ? null : amountPaidCents,
       })
       .eq("id", bookingId);
 
