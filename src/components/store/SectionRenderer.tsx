@@ -768,16 +768,31 @@ function GalleryGridBlock({ columns = 3, images = [], label }: any) {
 
 // ─── Gallery Masonry ────────────────────────────────────────────────────────
 
-function GalleryMasonryBlock({ images = [], label, speed = 60 }: any) {
+function GalleryMasonryBlock({ images = [], label, speed = 60, hideTitle, title, ctx }: any) {
+  const c: Ctx = ctx || { editMode: false, set: () => {} };
   const items = normalizeGalleryItems(images);
+  const displayTitle = title ?? label ?? "";
+  const showTitle = !hideTitle && (c.editMode || !!displayTitle);
+
+  const TitleEl = (
+    <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">
+      <EditableText
+        as="span"
+        editMode={c.editMode}
+        value={displayTitle}
+        placeholder="Gallery Title"
+        onChange={(v) => c.set("title", v)}
+      />
+    </h2>
+  );
 
   if (!items || items.length === 0) {
     return (
       <section className="py-12 sm:py-16">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
-          {label && <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>}
+          {showTitle && TitleEl}
         </div>
-        <div className="flex gap-3 overflow-hidden px-5 sm:px-6">
+        <div className="flex gap-1 overflow-hidden px-5 sm:px-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
@@ -818,9 +833,9 @@ function GalleryMasonryBlock({ images = [], label, speed = 60 }: any) {
 
   return (
     <section className="py-12 sm:py-16">
-      {label && (
+      {showTitle && (
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
-          <h2 className="site-h2 text-2xl font-extralight tracking-wide text-center mb-8 text-foreground">{label}</h2>
+          {TitleEl}
         </div>
       )}
       <div
