@@ -548,9 +548,27 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     enabled: !project.booking_id && !!projectSessionTitle,
   });
 
-  const sessionTaxRate = (bookingPayment?.sessions as any)?.tax_rate ?? 0;
+  // Photographer business default tax rate (fallback when session has none)
+  const { data: businessTaxRate = 0 } = useQuery<number>({
+    queryKey: ["photographer-business-tax", photographerId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("photographers")
+        .select("business_sales_tax")
+        .eq("id", photographerId)
+        .maybeSingle();
+      if (error) return 0;
+      return Number(data?.business_sales_tax ?? 0) || 0;
+    },
+    enabled: !!photographerId,
+  });
 
-  // Auto-compute charge fee from session tax rate unless manually edited
+  const sessionTaxRate =
+    Number((bookingPayment?.sessions as any)?.tax_rate ?? 0) ||
+    Number((projectSession as any)?.tax_rate ?? 0) ||
+    businessTaxRate;
+
+  // Auto-compute charge fee from effective tax rate unless manually edited
   useEffect(() => {
     if (formFeeManual || !sessionTaxRate) return;
     const amt = parseFloat(formAmount);
@@ -916,7 +934,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         photographerId={photographerId}
         showForm={showPaymentForm}
         onToggleForm={() => setShowPaymentForm((v) => !v)}
-        taxRate={(bookingPayment?.sessions as any)?.tax_rate ?? 0}
+        taxRate={sessionTaxRate}
       />
 
       <div className="flex flex-col gap-2">
