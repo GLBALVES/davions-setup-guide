@@ -138,6 +138,7 @@ export function ItemListEditor<T>({
         size="sm"
         className="w-full text-xs gap-1"
         onClick={() => {
+          if (onAddOverride) { onAddOverride(); return; }
           onChange([...items, newItem()]);
           setActiveIdx(items.length);
         }}
