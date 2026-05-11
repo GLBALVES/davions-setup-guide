@@ -362,6 +362,11 @@ function GalleryContentEditor({ props, onChange, photographerId }: { props: any;
           newItem={() => ({ image: "", title: "", caption: "", link: "" })}
           onAddOverride={() => setPickerOpen(true)}
           renderLabel={(it) => it.title || (it.image ? it.image.split("/").pop() || it.image : "Empty image")}
+          renderThumb={(it) => it.image ? (
+            <img src={it.image} alt="" className="w-full h-full object-cover" loading="lazy" />
+          ) : (
+            <span className="text-[9px] text-muted-foreground">—</span>
+          )}
           renderDetail={(item, update) => (
             <div className="space-y-3">
               <ImageUploadField

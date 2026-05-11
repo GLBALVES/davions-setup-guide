@@ -22,6 +22,7 @@ export function ItemListEditor<T>({
   addLabel = "Add item",
   itemLabel = "Item",
   onAddOverride,
+  renderThumb,
 }: {
   items: T[];
   onChange: (next: T[]) => void;
@@ -32,6 +33,8 @@ export function ItemListEditor<T>({
   itemLabel?: string;
   /** When provided, the Add button calls this instead of creating a new empty item. */
   onAddOverride?: () => void;
+  /** Optional small thumbnail rendered in each row and in the detail header. */
+  renderThumb?: (item: T, idx: number) => React.ReactNode;
 }) {
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
 
@@ -98,6 +101,11 @@ export function ItemListEditor<T>({
             </button>
           </div>
         </div>
+        {renderThumb && (
+          <div className="rounded-md overflow-hidden border border-border">
+            {renderThumb(item, activeIdx)}
+          </div>
+        )}
         {renderDetail(item, (patch) => update(activeIdx, patch), {
           appendItems: (extras) => onChange([...items, ...extras]),
         })}
@@ -126,6 +134,11 @@ export function ItemListEditor<T>({
             <span className="text-[10px] text-muted-foreground font-medium shrink-0">
               {idx + 1}.
             </span>
+            {renderThumb && (
+              <span className="shrink-0 h-8 w-8 rounded overflow-hidden border border-border bg-muted/30 flex items-center justify-center">
+                {renderThumb(item, idx)}
+              </span>
+            )}
             <span className="text-xs text-foreground flex-1 truncate">
               {renderLabel(item, idx) || `${itemLabel} ${idx + 1}`}
             </span>
