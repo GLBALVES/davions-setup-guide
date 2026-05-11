@@ -136,10 +136,10 @@ export function AddonReviewModal({
               <span className="font-medium tabular-nums">{fmt(taxAmount)}</span>
             </div>
           )}
-          {depositAlreadyPaid && depositValue > 0 && (
+          {alreadyPaid > 0 && (
             <div className="flex justify-between text-emerald-600">
-              <span>{tp.depositAmount || "Deposit paid"}</span>
-              <span className="font-medium tabular-nums">-{fmt(depositValue)}</span>
+              <span>{tp.alreadyPaid || "Already paid"}</span>
+              <span className="font-medium tabular-nums">-{fmt(alreadyPaid)}</span>
             </div>
           )}
           <Separator className="my-1" />
