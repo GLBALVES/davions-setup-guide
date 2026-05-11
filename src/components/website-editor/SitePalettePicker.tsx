@@ -288,14 +288,11 @@ export function SitePaletteInlineSwatches({
   value: string;
   onChange: (hex: string) => void;
 }) {
-  const swatches = useMemo(() => {
-    const styles = getComputedStyle(document.documentElement);
-    return SITE_TOKENS.map((t) => {
-      const raw = styles.getPropertyValue(t.var).trim();
-      if (!raw) return null;
-      return { ...t, hex: resolveCssColor(raw) };
-    }).filter(Boolean) as { var: string; label: string; hex: string }[];
-  }, []);
+  const list = useSiteColorsList();
+  const swatches = useMemo(
+    () => list.map((c, i) => ({ key: `${i}-${c}`, label: c, hex: resolveCssColor(c) })),
+    [list],
+  );
 
   if (swatches.length === 0) return null;
   const current = (value || "").toLowerCase();
@@ -306,10 +303,10 @@ export function SitePaletteInlineSwatches({
         const active = current === sw.hex.toLowerCase();
         return (
           <button
-            key={sw.var}
+            key={sw.key}
             type="button"
             onClick={() => onChange(sw.hex)}
-            title={`${sw.label} · ${sw.hex}`}
+            title={sw.label}
             className={cn(
               "h-6 w-6 rounded border transition-all relative",
               active ? "ring-2 ring-foreground ring-offset-1" : "border-border hover:scale-110",
@@ -328,6 +325,7 @@ export function SitePaletteInlineSwatches({
     </div>
   );
 }
+
 
 export function SitePalettePicker({
   value,
