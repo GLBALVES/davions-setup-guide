@@ -377,8 +377,7 @@ export default function GalleryImagePicker({
                 disabled={uploading}
                 onDrop={(e) => {
                   e.preventDefault();
-                  const f = e.dataTransfer.files?.[0];
-                  if (f) handleUploadFile(f);
+                  if (e.dataTransfer.files?.length) handleUploadFiles(e.dataTransfer.files);
                 }}
                 onDragOver={(e) => e.preventDefault()}
                 className="w-full aspect-[3/1] border-2 border-dashed border-border rounded-md flex flex-col items-center justify-center gap-2 hover:border-foreground/40 hover:bg-muted/20 transition-colors"
@@ -389,18 +388,18 @@ export default function GalleryImagePicker({
                   <Upload className="h-6 w-6 text-muted-foreground" />
                 )}
                 <div className="text-sm">
-                  {uploading ? "Enviando..." : "Clique ou arraste uma imagem"}
+                  {uploading ? "Enviando..." : multiple ? "Clique ou arraste imagens" : "Clique ou arraste uma imagem"}
                 </div>
-                <div className="text-[11px] text-muted-foreground">PNG, JPG, WEBP, SVG até 50MB</div>
+                <div className="text-[11px] text-muted-foreground">PNG, JPG, WEBP, SVG até 50MB{multiple ? " (várias)" : ""}</div>
               </button>
               <input
                 ref={fileRef}
                 type="file"
                 accept="image/*"
+                multiple={multiple}
                 className="hidden"
                 onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleUploadFile(f);
+                  if (e.target.files?.length) handleUploadFiles(e.target.files);
                   e.currentTarget.value = "";
                 }}
               />
