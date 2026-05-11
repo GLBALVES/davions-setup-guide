@@ -1929,6 +1929,36 @@ const Projects = () => {
   };
 
   const handleSave = async (data: Partial<ClientProject>) => {
+    // Validate scheduling conflicts whenever a shoot date is set/changed.
+    const targetDate = (data as any).shoot_date ?? editing?.shoot_date ?? null;
+    const targetTime = (data as any).shoot_time ?? editing?.shoot_time ?? "09:00";
+    const sessTitle = (data as any).session_type ?? editing?.session_type ?? null;
+    if (targetDate) {
+      let duration = 60;
+      if (sessTitle && user?.id) {
+        const { data: sess } = await (supabase as any)
+          .from("sessions")
+          .select("duration_minutes")
+          .eq("photographer_id", user.id)
+          .eq("title", sessTitle)
+          .maybeSingle();
+        if (sess?.duration_minutes) duration = sess.duration_minutes;
+      }
+      const totalMins = timeToMinutes(targetTime) + duration;
+      const endTime = `${String(Math.floor(totalMins / 60) % 24).padStart(2, "0")}:${String(totalMins % 60).padStart(2, "0")}`;
+      const conflict = await checkBookingConflict(
+        user!.id,
+        targetDate,
+        targetTime,
+        endTime,
+        editing?.booking_id ?? undefined,
+      );
+      if (conflict.hasConflict) {
+        toast.error(conflict.conflictDetails || "Time conflict detected");
+        return;
+      }
+    }
+
     if (editing) {
       const { error } = await supabase
         .from("client_projects" as any)
