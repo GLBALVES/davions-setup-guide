@@ -4162,7 +4162,6 @@ const StylePanel = ({ photographerId, site, onSiteChange, openSubKey, onSubKeyHa
                 }}
                 onCustomFontsChange={(next) => onSiteChange({ custom_fonts: next as any })}
                 onCustomFontCssChange={(next) => onSiteChange({ custom_font_css: next as any })}
-                onExternalFontsChange={(next) => onSiteChange({ external_font_families: next as any })}
               />
             );
           })()}
