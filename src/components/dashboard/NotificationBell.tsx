@@ -175,7 +175,11 @@ export function NotificationBell() {
             );
           })}
         </div>
-        <ScrollArea className="max-h-[360px]">
+        <ScrollArea
+          className="h-[360px]"
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+        >
           {(() => {
             const activeGroup = FILTER_GROUPS.find((g) => g.key === activeFilter)!;
             const filtered = activeGroup.events.length === 0
