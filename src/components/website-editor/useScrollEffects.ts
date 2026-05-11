@@ -364,6 +364,7 @@ export function useScrollEffects() {
       if (raf) cancelAnimationFrame(raf);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
+      window.removeEventListener("lov-scrub-change", onScrub);
       io.disconnect();
       mo.disconnect();
     };
