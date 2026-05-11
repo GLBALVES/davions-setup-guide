@@ -40,6 +40,15 @@ export interface BlockSettings {
   blockPosition?: "left" | "center" | "right";
   colorScheme?: "light" | "dark" | "auto";
   animation?: "none" | "fade-up" | "fade-in" | "slide-left";
+  scrollEffect?:
+    | "none"
+    | "parallax"
+    | "reveal"
+    | "zoom-on-scroll"
+    | "fade-on-scroll"
+    | "fly-in-left"
+    | "fly-in-right"
+    | "fly-in-up";
 }
 
 // Reusable overlay controls (color + opacity slider) for background images
@@ -103,6 +112,17 @@ const ANIMATIONS = [
   { id: "fade-up", label: "Fade Up" },
   { id: "fade-in", label: "Fade In" },
   { id: "slide-left", label: "Slide Left" },
+];
+
+const SCROLL_EFFECTS: { id: NonNullable<BlockSettings["scrollEffect"]>; label: string; hint?: string }[] = [
+  { id: "none", label: "None" },
+  { id: "parallax", label: "Parallax", hint: "Image moves slower than scroll" },
+  { id: "reveal", label: "Reveal", hint: "Curtain opens on scroll" },
+  { id: "zoom-on-scroll", label: "Zoom", hint: "Image scales as you scroll" },
+  { id: "fade-on-scroll", label: "Fade", hint: "Fades in & out with scroll" },
+  { id: "fly-in-left", label: "Fly In Left" },
+  { id: "fly-in-right", label: "Fly In Right" },
+  { id: "fly-in-up", label: "Fly In Up" },
 ];
 
 interface BlockSettingsPanelProps {
@@ -1298,6 +1318,33 @@ export const BlockSettingsPanel = ({
                   (s.animation ?? "none") === a.id
                     ? "bg-primary/10 border-primary/30 text-primary"
                     : "border-border text-muted-foreground hover:bg-muted/50"
+                )}
+              >
+                {a.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="border-t border-border" />
+
+        {/* ── Scroll Effect (Wix-style continuous motion) ── */}
+        <div className="px-4 pt-4 pb-2">
+          <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">Scroll Effect</p>
+          <p className="text-[10px] text-muted-foreground/70 mt-1">Tied to scroll position. Best for sections with images.</p>
+        </div>
+        <div className="px-4 pb-4">
+          <div className="flex gap-1.5 flex-wrap">
+            {SCROLL_EFFECTS.map((a) => (
+              <button
+                key={a.id}
+                onClick={() => update({ scrollEffect: a.id })}
+                title={a.hint}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-[10px] font-medium border transition-colors",
+                  (s.scrollEffect ?? "none") === a.id
+                    ? "bg-primary/10 border-primary/30 text-primary"
+                    : "border-border text-muted-foreground hover:bg-muted/50",
                 )}
               >
                 {a.label}

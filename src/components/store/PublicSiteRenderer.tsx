@@ -8,6 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
 import { useSiteColors } from "@/components/website-editor/useSiteColors";
 import { useSiteAnimations } from "@/components/website-editor/useSiteAnimations";
+import { useScrollEffects } from "@/components/website-editor/useScrollEffects";
 import { useSiteSpacing } from "@/components/website-editor/useSiteSpacing";
 import type {
   ColorOverrides,
@@ -2268,6 +2269,8 @@ export default function PublicSiteRenderer(props: Props) {
 
   // Apply scroll-triggered section animations on the live site.
   useSiteAnimations((site as any)?.animation_style ?? "none");
+  // Per-block continuous scroll effects.
+  useScrollEffects();
 
   // Apply spacing settings (max page width + base block padding).
   useSiteSpacing(
