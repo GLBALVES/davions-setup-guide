@@ -197,7 +197,6 @@ export default function FontsSubPanel({
 }
 
 // ── Per-element editor (font family/weight/style/size/etc.) ────────────────
-import type { ExternalFontEntry } from "@/components/website-editor/site-fonts";
 
 interface ElementEditorProps {
   elementKey: ElementKey;
