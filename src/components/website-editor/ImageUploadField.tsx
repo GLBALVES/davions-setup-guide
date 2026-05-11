@@ -58,6 +58,7 @@ export function ImageUploadField({
   maxHeight,
   requireSquare,
   helperText,
+  onAddMore,
 }: ImageUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
