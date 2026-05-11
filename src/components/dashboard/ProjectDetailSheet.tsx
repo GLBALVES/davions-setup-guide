@@ -2184,20 +2184,36 @@ export function ProjectDetailSheet({
           return;
         }
       } else if (shootDate) {
-        const { data: blockedTimes } = await (supabase as any)
-          .from("blocked_times")
-          .select("start_time, end_time, all_day, reason")
-          .eq("photographer_id", photographerId)
-          .eq("date", shootDate);
+        // Project without a booking — still validate conflicts against existing
+        // bookings and blocked times. Use the linked session's duration when
+        // available, otherwise fall back to 60min.
+        const sessTitle = project.session_title ?? project.session_type;
+        let duration = 60;
+        if (sessTitle) {
+          const { data: linkedSession } = await (supabase as any)
+            .from("sessions")
+            .select("duration_minutes")
+            .eq("photographer_id", photographerId)
+            .eq("title", sessTitle)
+            .maybeSingle();
+          if (linkedSession?.duration_minutes) duration = linkedSession.duration_minutes;
+        }
+        const totalMins = timeToMinutes(shootTime) + duration;
+        const endTime = `${String(Math.floor(totalMins / 60) % 24).padStart(2, "0")}:${String(totalMins % 60).padStart(2, "0")}`;
 
-        if (blockedTimes) {
-          for (const bt of blockedTimes) {
-            if (bt.all_day) {
-              toast.error(bt.reason || "This day is blocked");
-              setSaving(false);
-              return;
-            }
-          }
+        const conflictResult = await checkBookingConflict(
+          photographerId,
+          shootDate,
+          shootTime,
+          endTime,
+        );
+
+        if (conflictResult.hasConflict) {
+          const msg = conflictResult.conflictDetails || "Time conflict detected";
+          setConflictWarning(msg);
+          toast.error(msg);
+          setSaving(false);
+          return;
         }
       }
     }
