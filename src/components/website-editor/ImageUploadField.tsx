@@ -226,8 +226,12 @@ export function ImageUploadField({
         ref={inputRef}
         type="file"
         accept={acceptAttr}
+        multiple={!!onAddMore}
         className="hidden"
-        onChange={(e) => handleFiles(e.target.files)}
+        onChange={(e) => {
+          handleFiles(e.target.files);
+          e.currentTarget.value = "";
+        }}
       />
       {allowGalleryPicker && (
         <GalleryImagePicker
@@ -235,6 +239,12 @@ export function ImageUploadField({
           onOpenChange={setPickerOpen}
           photographerId={photographerId}
           onSelect={(url) => onChange(url)}
+          onSelectMany={onAddMore ? (urls) => {
+            if (urls.length === 0) return;
+            onChange(urls[0]);
+            if (urls.length > 1) onAddMore(urls.slice(1));
+          } : undefined}
+          multiple={!!onAddMore}
           uploadFolder={folder}
         />
       )}
