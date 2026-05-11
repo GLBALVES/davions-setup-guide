@@ -119,10 +119,52 @@ export default function AdminLeads() {
     }
   };
 
+  const countries = useMemo(() => {
+    const set = new Set<string>();
+    leads.forEach((l) => l.country && set.add(l.country));
+    return Array.from(set).sort();
+  }, [leads]);
+
+  const filteredLeads = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    let arr = leads.filter((l) => {
+      if (statusFilter === "invited" && !l.invited_at) return false;
+      if (statusFilter === "pending" && l.invited_at) return false;
+      if (countryFilter !== "all" && l.country !== countryFilter) return false;
+      if (q) {
+        const hay = `${l.name} ${l.email} ${l.phone} ${l.country}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    arr = [...arr].sort((a, b) => {
+      switch (sortBy) {
+        case "oldest":
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case "name-asc":
+          return (a.name || "").localeCompare(b.name || "");
+        case "name-desc":
+          return (b.name || "").localeCompare(a.name || "");
+        case "newest":
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+    return arr;
+  }, [leads, search, statusFilter, countryFilter, sortBy]);
+
+  const hasActiveFilters = search !== "" || statusFilter !== "all" || countryFilter !== "all";
+
+  const clearFilters = () => {
+    setSearch("");
+    setStatusFilter("all");
+    setCountryFilter("all");
+  };
+
   const handleExport = () => {
     const csv = [
       "Name,Email,Phone,Country,Date,Invited",
-      ...leads.map((l) =>
+      ...filteredLeads.map((l) =>
         `"${l.name}","${l.email}","${l.phone}","${l.country}","${l.created_at}","${l.invited_at ?? ""}"`
       ),
     ].join("\n");
@@ -142,11 +184,70 @@ export default function AdminLeads() {
           <div className="flex items-center gap-3">
             <Users size={18} />
             <h1 className="text-lg font-light tracking-wide">Waitlist Leads</h1>
-            <Badge variant="secondary" className="text-xs">{leads.length}</Badge>
+            <Badge variant="secondary" className="text-xs">
+              {filteredLeads.length}
+              {filteredLeads.length !== leads.length && (
+                <span className="text-muted-foreground"> / {leads.length}</span>
+              )}
+            </Badge>
           </div>
-          <Button variant="outline" size="sm" onClick={handleExport} disabled={leads.length === 0}>
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={filteredLeads.length === 0}>
             <Download size={13} className="mr-1.5" /> Export CSV
           </Button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 min-w-[220px] max-w-sm">
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search name, email, phone..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-8 h-9 text-xs"
+            />
+          </div>
+
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+            <SelectTrigger className="h-9 w-[140px] text-xs">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" className="text-xs">All statuses</SelectItem>
+              <SelectItem value="invited" className="text-xs">Invited</SelectItem>
+              <SelectItem value="pending" className="text-xs">Pending</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={countryFilter} onValueChange={setCountryFilter}>
+            <SelectTrigger className="h-9 w-[160px] text-xs">
+              <SelectValue placeholder="Country" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" className="text-xs">All countries</SelectItem>
+              {countries.map((c) => (
+                <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+            <SelectTrigger className="h-9 w-[160px] text-xs">
+              <ArrowUpDown size={12} className="mr-1 text-muted-foreground" />
+              <SelectValue placeholder="Sort" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest" className="text-xs">Newest first</SelectItem>
+              <SelectItem value="oldest" className="text-xs">Oldest first</SelectItem>
+              <SelectItem value="name-asc" className="text-xs">Name A–Z</SelectItem>
+              <SelectItem value="name-desc" className="text-xs">Name Z–A</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" className="h-9 text-xs" onClick={clearFilters}>
+              <X size={12} className="mr-1" /> Clear
+            </Button>
+          )}
         </div>
 
         <div className="border border-border rounded-md overflow-hidden">
@@ -171,14 +272,14 @@ export default function AdminLeads() {
                     ))}
                   </TableRow>
                 ))
-              ) : leads.length === 0 ? (
+              ) : filteredLeads.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-10">
-                    No leads yet
+                    {leads.length === 0 ? "No leads yet" : "No leads match your filters"}
                   </TableCell>
                 </TableRow>
               ) : (
-                leads.map((lead) => {
+                filteredLeads.map((lead) => {
                   const invited = !!lead.invited_at;
                   return (
                     <TableRow key={lead.id}>
