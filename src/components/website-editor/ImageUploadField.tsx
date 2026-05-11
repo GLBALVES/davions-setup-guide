@@ -85,79 +85,75 @@ export function ImageUploadField({
       img.src = url;
     });
 
-  const handleFiles = async (files: FileList | null) => {
-    const file = files?.[0];
-    if (!file) return;
-
-    // Format validation
+  const validateFile = async (file: File): Promise<string | null> => {
     if (allowedTypes && allowedTypes.length > 0) {
       if (!allowedTypes.includes(file.type)) {
-        toast.error(
-          `Invalid format. Allowed: ${allowedTypesLabel || allowedTypes.join(", ")}`
-        );
-        return;
+        return `Invalid format. Allowed: ${allowedTypesLabel || allowedTypes.join(", ")}`;
       }
     } else if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
-      return;
+      return "Please select an image file";
     }
-
-    // Size validation
     if (file.size > maxSizeMB * 1024 * 1024) {
-      toast.error(`Image must be smaller than ${maxSizeMB}MB`);
-      return;
+      return `Image must be smaller than ${maxSizeMB}MB`;
     }
+    if (minWidth || minHeight || maxWidth || maxHeight || requireSquare) {
+      const dims = await readImageSize(file);
+      if (dims) {
+        if (requireSquare && dims.width !== dims.height) return `Image must be square (got ${dims.width}×${dims.height}px)`;
+        if (minWidth && dims.width < minWidth) return `Image width must be at least ${minWidth}px`;
+        if (minHeight && dims.height < minHeight) return `Image height must be at least ${minHeight}px`;
+        if (maxWidth && dims.width > maxWidth) return `Image width must be at most ${maxWidth}px`;
+        if (maxHeight && dims.height > maxHeight) return `Image height must be at most ${maxHeight}px`;
+      }
+    }
+    return null;
+  };
 
+  const uploadFile = async (file: File): Promise<string> => {
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const safeExt = ext.replace(/[^a-z0-9]/g, "") || "jpg";
+    const path = `${photographerId}/${folder}/${crypto.randomUUID()}.${safeExt}`;
+    const { error } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, file, { contentType: file.type, upsert: true });
+    if (error) throw error;
+    const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+    return data.publicUrl;
+  };
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
     if (!photographerId) {
       toast.error("Not signed in");
       return;
     }
-
-    // Dimension validation (skipped silently for SVG / non-decodable)
-    if (minWidth || minHeight || maxWidth || maxHeight || requireSquare) {
-      const dims = await readImageSize(file);
-      if (dims) {
-        if (requireSquare && dims.width !== dims.height) {
-          toast.error(
-            `Image must be square (got ${dims.width}×${dims.height}px)`
-          );
-          return;
-        }
-        if (minWidth && dims.width < minWidth) {
-          toast.error(`Image width must be at least ${minWidth}px (got ${dims.width}px)`);
-          return;
-        }
-        if (minHeight && dims.height < minHeight) {
-          toast.error(`Image height must be at least ${minHeight}px (got ${dims.height}px)`);
-          return;
-        }
-        if (maxWidth && dims.width > maxWidth) {
-          toast.error(`Image width must be at most ${maxWidth}px (got ${dims.width}px)`);
-          return;
-        }
-        if (maxHeight && dims.height > maxHeight) {
-          toast.error(`Image height must be at most ${maxHeight}px (got ${dims.height}px)`);
-          return;
-        }
-      }
-    }
+    const allowMulti = !!onAddMore;
+    const list = allowMulti ? Array.from(files) : [files[0]];
 
     setUploading(true);
     try {
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-      const safeExt = ext.replace(/[^a-z0-9]/g, "") || "jpg";
-      const path = `${photographerId}/${folder}/${crypto.randomUUID()}.${safeExt}`;
-      const { error } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, file, { contentType: file.type, upsert: true });
-      if (error) throw error;
-
-      const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-      onChange(data.publicUrl);
-      toast.success("Image uploaded");
-    } catch (e: any) {
-      console.error("Upload failed", e);
-      toast.error(e.message || "Upload failed");
+      const urls: string[] = [];
+      let failed = 0;
+      for (const file of list) {
+        const err = await validateFile(file);
+        if (err) {
+          toast.error(err);
+          failed++;
+          continue;
+        }
+        try {
+          urls.push(await uploadFile(file));
+        } catch (e: any) {
+          console.error("Upload failed", e);
+          failed++;
+        }
+      }
+      if (urls.length > 0) {
+        onChange(urls[0]);
+        if (urls.length > 1 && onAddMore) onAddMore(urls.slice(1));
+        toast.success(urls.length > 1 ? `${urls.length} images uploaded` : "Image uploaded");
+      }
+      if (failed > 0) toast.error(`${failed} image${failed > 1 ? "s" : ""} failed`);
     } finally {
       setUploading(false);
     }
