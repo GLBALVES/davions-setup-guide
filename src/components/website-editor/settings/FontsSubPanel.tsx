@@ -207,11 +207,12 @@ interface ElementEditorProps {
   templateId: string;
   overrides: FontOverrides;
   customFonts: CustomFontEntry[];
+  externalFonts: ExternalFontEntry[];
   onChange: (patch: Partial<{ fontFamily: string; weight: number; style: FontStyle; fontSize: number; lineHeight: number; letterSpacing: number; textTransform: TextTransform; textDecoration: TextDecoration }>) => void;
   onReset: () => void;
 }
 
-function ElementEditor({ elementKey, templateId, overrides, customFonts, onChange, onReset }: ElementEditorProps) {
+function ElementEditor({ elementKey, templateId, overrides, customFonts, externalFonts, onChange, onReset }: ElementEditorProps) {
   const { lang } = useLanguage();
   const eff = resolveElement(templateId, overrides, elementKey, 1);
   const hasOverride = Boolean(overrides[elementKey] && Object.keys(overrides[elementKey]!).length > 0);
@@ -221,6 +222,8 @@ function ElementEditor({ elementKey, templateId, overrides, customFonts, onChang
     ? { bold: "B", italic: "I", underline: "U" }
     : { bold: "N", italic: "I", underline: "S" };
 
+  const externalLabel = lang === "en" ? "External" : lang === "es" ? "Externas" : "Externas";
+
   return (
     <div className="space-y-3 pb-4">
 
@@ -228,6 +231,19 @@ function ElementEditor({ elementKey, templateId, overrides, customFonts, onChang
         <Select value={eff.fontFamily} onValueChange={(v) => onChange({ fontFamily: v })}>
           <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
           <SelectContent className="z-[60] max-h-72">
+            {externalFonts.length > 0 && (
+              <>
+                <div className="px-2 py-1 text-[9px] uppercase tracking-widest text-muted-foreground">
+                  {externalLabel}
+                </div>
+                {externalFonts.map((f) => (
+                  <SelectItem key={f.id} value={`external:${f.id}`} style={{ fontFamily: `'${f.family}', system-ui, sans-serif` }}>
+                    {f.label}
+                  </SelectItem>
+                ))}
+                <div className="border-t border-border my-1" />
+              </>
+            )}
             {customFonts.length > 0 && (
               <>
                 <div className="px-2 py-1 text-[9px] uppercase tracking-widest text-muted-foreground">
