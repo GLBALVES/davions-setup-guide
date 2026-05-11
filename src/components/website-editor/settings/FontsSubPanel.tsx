@@ -570,3 +570,99 @@ function CustomFontsSection({ customFonts, photographerId, onChange }: CustomFon
     </div>
   );
 }
+
+// ── Custom Font CSS (Typekit / Adobe Fonts / @import / @font-face) ─────────
+function CustomFontCssSection({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const { lang } = useLanguage();
+  const [local, setLocal] = useState(value);
+
+  // keep local in sync if parent changes
+  if (local !== value && document.activeElement?.tagName !== "TEXTAREA") {
+    // best-effort sync without rerender storms
+    setTimeout(() => setLocal(value), 0);
+  }
+
+  const t = {
+    title:
+      lang === "en"
+        ? "Custom Font CSS"
+        : lang === "es"
+          ? "CSS de Fuentes Personalizado"
+          : "CSS de Fontes Personalizado",
+    desc:
+      lang === "en"
+        ? "Paste a Typekit/Adobe Fonts <link> tag, @import, or @font-face declarations to load external fonts."
+        : lang === "es"
+          ? "Pega una etiqueta <link> de Typekit/Adobe Fonts, @import o declaraciones @font-face para cargar fuentes externas."
+          : "Cole uma tag <link> do Typekit/Adobe Fonts, @import ou declarações @font-face para carregar fontes externas.",
+    save: lang === "en" ? "Save" : lang === "es" ? "Guardar" : "Salvar",
+    clear: lang === "en" ? "Clear" : lang === "es" ? "Limpiar" : "Limpar",
+  };
+
+  const placeholder = `<link rel="stylesheet" href="https://use.typekit.net/btb3gmc.css">
+
+/* or */
+@import url("https://fonts.googleapis.com/css2?family=Lora&display=swap");
+
+/* or */
+@font-face {
+  font-family: 'My Font';
+  src: url('https://example.com/fonts/myfont.woff2') format('woff2');
+}`;
+
+  return (
+    <div className="space-y-2 pt-3 border-t border-border">
+      <div>
+        <h4 className="text-xs font-medium text-foreground">{t.title}</h4>
+        <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">{t.desc}</p>
+      </div>
+      <textarea
+        value={local}
+        onChange={(e) => setLocal(e.target.value)}
+        onBlur={() => {
+          if (local !== value) onChange(local);
+        }}
+        placeholder={placeholder}
+        spellCheck={false}
+        className={cn(
+          "w-full h-32 px-3 py-2 text-[11px] font-mono",
+          "bg-background border border-border text-foreground",
+          "focus:outline-none focus:ring-1 focus:ring-foreground",
+          "placeholder:text-muted-foreground/60 resize-y",
+        )}
+      />
+      <div className="flex items-center justify-end gap-2">
+        {value && (
+          <Button
+            variant="ghost"
+            size="sm"
+            type="button"
+            onClick={() => {
+              setLocal("");
+              onChange("");
+            }}
+            className="h-7 text-[10px]"
+          >
+            {t.clear}
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          type="button"
+          disabled={local === value}
+          onClick={() => onChange(local)}
+          className="h-7 text-[10px]"
+        >
+          {t.save}
+        </Button>
+      </div>
+    </div>
+  );
+}
