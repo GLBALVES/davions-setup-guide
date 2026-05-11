@@ -2188,21 +2188,29 @@ function CarouselBlock({ images = [], itemsVisible = 3, autoplay = false, interv
   const canLoop = slides.length > itemsVisible;
   const rendered = canLoop ? [...slides, ...slides] : slides;
 
-  // Keep scroll within the first half on every scroll event.
+  // Keep scroll within the first half. Wait for the smooth scroll to settle
+  // (debounced) before snapping, so the user never sees the jump mid-animation.
   useEffect(() => {
     if (!canLoop) return;
     const el = scrollerRef.current;
     if (!el) return;
+    let timer: number | null = null;
     const onScroll = () => {
-      const half = el.scrollWidth / 2;
-      if (el.scrollLeft >= half) {
-        el.scrollLeft -= half;
-      } else if (el.scrollLeft <= 0) {
-        el.scrollLeft += half;
-      }
+      if (timer) window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        const half = el.scrollWidth / 2;
+        if (el.scrollLeft >= half) {
+          el.scrollLeft = el.scrollLeft - half;
+        } else if (el.scrollLeft <= 0) {
+          el.scrollLeft = el.scrollLeft + half;
+        }
+      }, 120);
     };
     el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      if (timer) window.clearTimeout(timer);
+    };
   }, [canLoop, slides.length]);
 
   useEffect(() => {
