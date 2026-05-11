@@ -2695,6 +2695,7 @@ export type Database = {
           show_booking: boolean | null
           show_contact: boolean | null
           show_store: boolean | null
+          site_colors: Json
           site_headline: string | null
           site_hero_image_url: string | null
           site_pages_initialized: boolean | null
@@ -2815,6 +2816,7 @@ export type Database = {
           show_booking?: boolean | null
           show_contact?: boolean | null
           show_store?: boolean | null
+          site_colors?: Json
           site_headline?: string | null
           site_hero_image_url?: string | null
           site_pages_initialized?: boolean | null
@@ -2935,6 +2937,7 @@ export type Database = {
           show_booking?: boolean | null
           show_contact?: boolean | null
           show_store?: boolean | null
+          site_colors?: Json
           site_headline?: string | null
           site_hero_image_url?: string | null
           site_pages_initialized?: boolean | null
