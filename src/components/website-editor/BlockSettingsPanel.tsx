@@ -333,6 +333,52 @@ function normalizeGalleryItems(raw: any[]): GalleryItem[] {
 
 function GalleryContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
   const items: GalleryItem[] = normalizeGalleryItems(props.images || []);
+  const bulkInputRef = useRef<HTMLInputElement>(null);
+  const [bulkUploading, setBulkUploading] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
+
+  const handleBulkUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    if (!photographerId) {
+      toast.error("Not signed in");
+      return;
+    }
+    const list = Array.from(files).filter((f) => f.type.startsWith("image/") && f.size <= 50 * 1024 * 1024);
+    if (list.length === 0) {
+      toast.error("No valid images selected (max 50MB each)");
+      return;
+    }
+    setBulkUploading(true);
+    setBulkProgress({ done: 0, total: list.length });
+    const uploaded: GalleryItem[] = [];
+    let failed = 0;
+    for (let i = 0; i < list.length; i++) {
+      const file = list[i];
+      try {
+        const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+        const path = `${photographerId}/gallery/${crypto.randomUUID()}.${ext}`;
+        const { error } = await supabase.storage
+          .from("site-assets")
+          .upload(path, file, { contentType: file.type, upsert: true });
+        if (error) throw error;
+        const { data } = supabase.storage.from("site-assets").getPublicUrl(path);
+        uploaded.push({ image: data.publicUrl, title: "", caption: "", link: "" });
+      } catch (e) {
+        console.error("Bulk upload failed for", file.name, e);
+        failed++;
+      }
+      setBulkProgress({ done: i + 1, total: list.length });
+    }
+    if (uploaded.length > 0) {
+      onChange({ ...props, images: [...items, ...uploaded] });
+      toast.success(`${uploaded.length} image${uploaded.length > 1 ? "s" : ""} added`);
+    }
+    if (failed > 0) toast.error(`${failed} image${failed > 1 ? "s" : ""} failed to upload`);
+    setBulkUploading(false);
+    setBulkProgress(null);
+    if (bulkInputRef.current) bulkInputRef.current.value = "";
+  };
+
   return (
     <div className="space-y-3">
       <Field label="Columns">
@@ -346,33 +392,63 @@ function GalleryContentEditor({ props, onChange, photographerId }: { props: any;
         </Select>
       </Field>
       <Field label="Images">
-        <ItemListEditor
-          items={items}
-          onChange={(next) => onChange({ ...props, images: next })}
-          itemLabel="Image"
-          addLabel="Add Image"
-          newItem={() => ({ image: "", title: "", caption: "", link: "" })}
-          renderLabel={(it) => it.title || (it.image ? it.image.split("/").pop() || it.image : "Empty image")}
-          renderDetail={(item, update) => (
-            <div className="space-y-3">
-              <ImageUploadField
-                value={item.image}
-                onChange={(url) => update({ image: url ?? "" })}
-                photographerId={photographerId}
-                folder="gallery"
-              />
-              <Field label="Title (optional)">
-                <RichTextField value={item.title || ""} onChange={(v) => update({ title: v })} placeholder="Image title" />
-              </Field>
-              <Field label="Caption (optional)">
-                <RichTextField multiline value={item.caption || ""} onChange={(v) => update({ caption: v })} placeholder="Short description" />
-              </Field>
-              <Field label="Link URL (optional)">
-                <Input value={item.link || ""} onChange={(e) => update({ link: e.target.value })} className="h-9 text-sm" placeholder="https://..." />
-              </Field>
-            </div>
-          )}
-        />
+        <div className="space-y-2">
+          <input
+            ref={bulkInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => handleBulkUpload(e.target.files)}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-full text-xs gap-1"
+            onClick={() => bulkInputRef.current?.click()}
+            disabled={bulkUploading}
+          >
+            {bulkUploading ? (
+              <>
+                <Loader2 className="h-3 w-3 animate-spin" />
+                {bulkProgress ? `Uploading ${bulkProgress.done}/${bulkProgress.total}…` : "Uploading…"}
+              </>
+            ) : (
+              <>
+                <Upload className="h-3 w-3" />
+                Upload multiple images
+              </>
+            )}
+          </Button>
+          <ItemListEditor
+            items={items}
+            onChange={(next) => onChange({ ...props, images: next })}
+            itemLabel="Image"
+            addLabel="Add Image"
+            newItem={() => ({ image: "", title: "", caption: "", link: "" })}
+            renderLabel={(it) => it.title || (it.image ? it.image.split("/").pop() || it.image : "Empty image")}
+            renderDetail={(item, update) => (
+              <div className="space-y-3">
+                <ImageUploadField
+                  value={item.image}
+                  onChange={(url) => update({ image: url ?? "" })}
+                  photographerId={photographerId}
+                  folder="gallery"
+                />
+                <Field label="Title (optional)">
+                  <RichTextField value={item.title || ""} onChange={(v) => update({ title: v })} placeholder="Image title" />
+                </Field>
+                <Field label="Caption (optional)">
+                  <RichTextField multiline value={item.caption || ""} onChange={(v) => update({ caption: v })} placeholder="Short description" />
+                </Field>
+                <Field label="Link URL (optional)">
+                  <Input value={item.link || ""} onChange={(e) => update({ link: e.target.value })} className="h-9 text-sm" placeholder="https://..." />
+                </Field>
+              </div>
+            )}
+          />
+        </div>
       </Field>
     </div>
   );
