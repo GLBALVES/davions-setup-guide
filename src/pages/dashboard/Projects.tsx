@@ -1075,9 +1075,6 @@ function ProjectModal({
       title: name,
       client_name: name,
       client_email: clientEmail.trim() || null,
-      session_type: sessionTypes.find((s) => s.id === sessionTypeId)?.name ?? null,
-      shoot_date: shootDate || null,
-      shoot_time: shootDate ? shootTime : null,
       stage: defaultStage ?? "upcoming",
     });
   };
