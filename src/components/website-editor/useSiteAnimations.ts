@@ -39,9 +39,11 @@ export function useSiteAnimations(style: AnimationStyle | string | null | undefi
         opacity: 1 !important;
         transform: none !important;
         clip-path: inset(0 0 0 0) !important;
+        filter: none !important;
         transition:
           opacity 800ms cubic-bezier(0.22, 1, 0.36, 1),
-          transform 800ms cubic-bezier(0.22, 1, 0.36, 1),
+          transform 900ms cubic-bezier(0.22, 1, 0.36, 1),
+          filter 800ms cubic-bezier(0.22, 1, 0.36, 1),
           clip-path 900ms cubic-bezier(0.22, 1, 0.36, 1);
       }
 
