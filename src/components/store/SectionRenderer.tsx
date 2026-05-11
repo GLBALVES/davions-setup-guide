@@ -380,6 +380,7 @@ function SectionBlock({
   return (
     <div
       style={wrapperStyle}
+      data-scroll-effect={hasScrollEffect ? bs.scrollEffect : undefined}
       className={[
         schemeClass,
         animClass,
@@ -390,6 +391,7 @@ function SectionBlock({
       {bs.backgroundImage && (
         <div
           aria-hidden
+          data-bg-image
           style={{
             position: "absolute",
             inset: 0,
