@@ -258,7 +258,7 @@ const groups: MenuGroup[] = [
       { title: "Proof Galleries", icon: ScanEye, to: "/dashboard/galleries?type=proof", permKey: "galleries", badgeKey: "unlinkedGalleries" },
       { title: "Final Galleries", icon: Images, to: "/dashboard/galleries?type=final", permKey: "galleries" },
       { title: "Personalize", icon: Wand2, to: "/dashboard/personalize" },
-      { title: "Website", icon: Globe, to: "/dashboard/website", permKey: "website" },
+      { title: "Website", icon: Globe, to: "/dashboard/website" },
       { title: "Email Inbox", icon: Inbox, to: "/dashboard/email-inbox" },
     ],
   },
