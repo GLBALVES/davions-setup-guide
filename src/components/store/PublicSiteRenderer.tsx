@@ -2244,15 +2244,18 @@ function MiloTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
 // ─── Main Router ─────────────────────────────────────────────────────────
 
 export default function PublicSiteRenderer(props: Props) {
-  const { photographer, site, subPageTitle, subPageData, emptyState } = props;
+  const { photographer, site, subPageTitle, subPageDescription, subPageData, emptyState } = props;
+  const { lang } = useLanguage();
 
   const seoUrl = props.seoUrl;
   const displayName = site?.tagline || photographer?.business_name || photographer?.full_name || photographer?.email || "";
   const subheadline = site?.site_subheadline || photographer?.bio || "";
+  const photographyWord = lang === "pt" ? "Fotografia" : lang === "es" ? "Fotografía" : "Photography";
   const seoTitle = subPageTitle
     ? `${subPageTitle} — ${displayName}`
-    : site?.seo_title || `${displayName} — Photography`;
-  const seoDescription = site?.seo_description || subheadline || undefined;
+    : site?.seo_title || `${displayName} — ${photographyWord}`;
+  const seoDescription =
+    subPageDescription || site?.seo_description || subheadline || undefined;
 
   // Apply the studio's typography template (Pixieset-style fonts panel).
   const fontOverrides = (site?.font_overrides ?? {}) as FontOverrides;
