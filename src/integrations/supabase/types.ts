@@ -577,6 +577,7 @@ export type Database = {
           photographer_id: string
           published_at: string | null
           reading_time_minutes: number | null
+          scheduled_at: string | null
           secondary_keywords: string[] | null
           slug: string | null
           status: string
@@ -599,6 +600,7 @@ export type Database = {
           photographer_id: string
           published_at?: string | null
           reading_time_minutes?: number | null
+          scheduled_at?: string | null
           secondary_keywords?: string[] | null
           slug?: string | null
           status?: string
@@ -621,6 +623,7 @@ export type Database = {
           photographer_id?: string
           published_at?: string | null
           reading_time_minutes?: number | null
+          scheduled_at?: string | null
           secondary_keywords?: string[] | null
           slug?: string | null
           status?: string
