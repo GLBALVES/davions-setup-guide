@@ -60,11 +60,6 @@ const DEFAULTS: Record<Lang, ShopDefaults> = {
     emptyDescription: "Em breve novidades estarão disponíveis por aqui.",
     onRequest: "Sob consulta",
     perPhoto: "/ foto",
-    loading: "Cargando…",
-    notFound: "No encontrado.",
-    pageNotFound: "Página no encontrada.",
-    contactNav: "Contacto",
-    contactSubmit: "Enviar",
     loading: "Carregando…",
     notFound: "Não encontrado.",
     pageNotFound: "Página não encontrada.",
@@ -86,6 +81,11 @@ const DEFAULTS: Record<Lang, ShopDefaults> = {
     emptyDescription: "Pronto habrá novedades disponibles aquí.",
     onRequest: "A consultar",
     perPhoto: "/ foto",
+    loading: "Cargando…",
+    notFound: "No encontrado.",
+    pageNotFound: "Página no encontrada.",
+    contactNav: "Contacto",
+    contactSubmit: "Enviar",
   },
 };
 
