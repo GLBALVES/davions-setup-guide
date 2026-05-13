@@ -81,6 +81,7 @@ import AdminVps from "./pages/admin/AdminVps";
 import AdminEmail from "./pages/admin/AdminEmail";
 import AdminApprovals from "./pages/admin/AdminApprovals";
 import AdminLeads from "./pages/admin/AdminLeads";
+import AdminPayments from "./pages/admin/AdminPayments";
 import EmailInbox from "./pages/dashboard/EmailInbox";
 import HelpCenter from "./pages/dashboard/HelpCenter";
 import { LanguageProvider } from "@/contexts/LanguageContext";
@@ -228,7 +229,8 @@ const App = () => {
                  <Route path="/admin/vps" element={<ProtectedRoute><AdminVps /></ProtectedRoute>} />
                  <Route path="/admin/email" element={<ProtectedRoute><AdminEmail /></ProtectedRoute>} />
                  <Route path="/admin/approvals" element={<ProtectedRoute><AdminApprovals /></ProtectedRoute>} />
-                 <Route path="/admin/leads" element={<ProtectedRoute><AdminLeads /></ProtectedRoute>} />
+                <Route path="/admin/leads" element={<ProtectedRoute><AdminLeads /></ProtectedRoute>} />
+                <Route path="/admin/payments" element={<ProtectedRoute><AdminPayments /></ProtectedRoute>} />
 
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
