@@ -211,6 +211,7 @@ export default function PublicShopPage({ mode }: { mode: "store" | "custom-domai
       blogHref={mode === "custom-domain" ? `/blog` : `/vitrine/${slug}/blog`}
       extraNavLinks={extraNavLinks}
       subPageTitle={(site as any)?.shop_title || d.pageTitle}
+      subPageDescription={(site as any)?.shop_description || d.pageDescription}
       subPageBody={shopBody}
       pageHeaderConfig={pageHeaderConfig}
     />
