@@ -161,6 +161,7 @@ export default function PublicLegalPage({ kind, mode }: { kind: Kind; mode: "sto
       extraNavLinks={extraNavLinks}
       subPageTitle={title}
       subPageDescription={`${title} — ${photographer.business_name ?? photographer.full_name ?? ""}`.trim()}
+      subPageType="legal"
       subPageHtml={html}
       pageHeaderConfig={pageHeaderConfig}
     />
