@@ -28,6 +28,13 @@ import SiteSubPage from "./pages/store/SiteSubPage";
 import BookingSuccess from "./pages/BookingSuccess";
 import BookingConfirm from "./pages/BookingConfirm";
 import NotFound from "./pages/NotFound";
+import { Navigate, useLocation } from "react-router-dom";
+
+function LegacyStoreRedirect() {
+  const loc = useLocation();
+  const newPath = loc.pathname.replace(/^\/store(\/|$)/, "/vitrine$1");
+  return <Navigate to={`${newPath}${loc.search}${loc.hash}`} replace />;
+}
 import BlogManager from "./pages/dashboard/BlogManager";
 import { BlogDashboardPage } from "./pages/dashboard/blog/DashboardPage";
 import { ManualPage } from "./pages/dashboard/blog/ManualPage";
