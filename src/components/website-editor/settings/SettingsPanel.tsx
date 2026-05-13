@@ -67,7 +67,7 @@ export default function SettingsPanel({
       trash: "Trash",
       forms: "Form Submissions",
       legal: "Legal",
-      shop: "Shop",
+      shop: "Showcase",
     };
     return (
       <>
