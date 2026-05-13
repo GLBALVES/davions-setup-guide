@@ -147,9 +147,7 @@ export default function PublicBlogListPage({ mode }: { mode: "store" | "custom-d
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">
-          Loading…
-        </span>
+        <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">{shopT.loading}</span>
       </div>
     );
   }
