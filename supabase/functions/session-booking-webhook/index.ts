@@ -1,8 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { logWebhookEvent } from "../_shared/webhook-log.ts";
 
 serve(async (req) => {
+  const startedAt = Date.now();
   const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
     apiVersion: "2025-08-27.basil",
   });
@@ -26,8 +28,16 @@ serve(async (req) => {
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Webhook error";
+    await logWebhookEvent(supabase, {
+      provider: "stripe",
+      status: "error",
+      error_message: `Signature validation failed: ${message}`,
+      duration_ms: Date.now() - startedAt,
+    });
     return new Response(`Webhook Error: ${message}`, { status: 400 });
   }
+
+  try {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
@@ -437,8 +447,33 @@ serve(async (req) => {
     }
   }
 
-  return new Response(JSON.stringify({ received: true }), {
-    headers: { "Content-Type": "application/json" },
-    status: 200,
-  });
+    await logWebhookEvent(supabase, {
+      provider: "stripe",
+      event_type: event.type,
+      external_id: event.id,
+      status: "success",
+      payload: event,
+      duration_ms: Date.now() - startedAt,
+    });
+
+    return new Response(JSON.stringify({ received: true }), {
+      headers: { "Content-Type": "application/json" },
+      status: 200,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    await logWebhookEvent(supabase, {
+      provider: "stripe",
+      event_type: event?.type,
+      external_id: event?.id,
+      status: "error",
+      error_message: message,
+      payload: event,
+      duration_ms: Date.now() - startedAt,
+    });
+    return new Response(JSON.stringify({ error: message }), {
+      headers: { "Content-Type": "application/json" },
+      status: 500,
+    });
+  }
 });
