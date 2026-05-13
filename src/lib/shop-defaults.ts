@@ -36,9 +36,9 @@ const DEFAULTS: Record<Lang, ShopDefaults> = {
     perPhoto: "/ photo",
   },
   pt: {
-    pageTitle: "Loja",
+    pageTitle: "Vitrine",
     pageDescription: "Sessões e galerias disponíveis para agendamento e compra.",
-    navLabel: "Loja",
+    navLabel: "Vitrine",
     allTab: "Todos",
     sessionsTab: "Sessões",
     galleriesTab: "Galerias",
