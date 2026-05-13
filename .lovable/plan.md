@@ -1,114 +1,59 @@
-# Plano: Pagar.me (BR) + Stripe (US/MX) com Split — 100% Whitelabel
+# Plano: Painel Admin de Pagamentos (Pagar.me + Stripe)
 
-## Visão geral
+Adicionar uma nova seção no painel administrativo (`/admin/payments`) para centralizar a configuração dos provedores de pagamento, sem precisar mexer em secrets via Lovable Cloud diretamente.
 
-Roteamento de gateway por país do fotógrafo (`photographers.business_country`):
+## Nova rota
 
-| Fluxo | EUA / México | Brasil |
-|---|---|---|
-| Assinatura do app pelo fotógrafo | Stripe (sem mudança) | Stripe (sem mudança) |
-| Pagamentos de clientes finais (booking, depósito, balance, galeria) | Stripe Connect (sem mudança) | **Pagar.me API v5** com split |
-| Comissão Davions | `application_fee` (já existe) | Split rule (recipient master) |
+- `/admin/payments` → `src/pages/admin/AdminPayments.tsx`
+- Adicionar item "Payments" em `AdminSidebar.tsx` (ícone `CreditCard`), entre "Email" e "Approvals".
 
-A marca **Pagar.me não aparece em nenhuma tela** — nem para o fotógrafo (KYC embutido), nem para o cliente final (checkout hospedado por nós, tokenização via SDK JS).
+## Estrutura da página
 
-## Whitelabel — como será percebido
+Tabs no topo: **Pagar.me (Brasil)** | **Stripe (Global)** | **Comissão & Split**
 
-**Fotógrafo (dashboard Davions):**
-- Card "Conta de Recebimento Davions" (não menciona Pagar.me).
-- Wizard KYC embutido: CPF/CNPJ, dados bancários, endereço, sócios — todos os campos renderizados na nossa UI, enviados via API.
-- Saldo, extratos, antecipação e transferências em telas nossas, consumindo `GET /recipients/:id/balance` e similares.
-- Termos: "Ao conectar, concorda com os Termos da Davions e do nosso processador de pagamentos" (link discreto para T&C do Pagar.me — exigência regulatória).
+### Tab 1 — Pagar.me (Brasil)
+Lê/escreve em `app_payment_settings` (única linha).
 
-**Cliente final (checkout):**
-- Página de pagamento renderizada na Davions, com a marca do estúdio do fotógrafo.
-- PIX: QR + copia-e-cola gerados via API, exibidos em tela nossa.
-- Cartão: tokenização client-side via `pagarme-js` SDK (PCI scope SAQ A — nada sensível toca nosso servidor).
-- Boleto: PDF baixável com layout nosso.
-- Descritor da fatura no cartão: "DAVIONS*<estúdio>" (até 22 chars).
-- E-mails transacionais saem pelo Brevo (já configurado), não pelo Pagar.me.
+- Card "Conta Master Davions"
+  - Input: **Master Recipient ID** (`pagarme_master_recipient_id`) — recipient da Davions que recebe a comissão.
+  - Botão "Testar conexão" → chama edge function `pagarme-recipient-status` com o ID, mostra status (active/pending/refused) e saldo.
+- Card "Credenciais de API" (somente leitura, mostra status dos secrets)
+  - `PAGARME_API_KEY` — Configurada / Não configurada
+  - `PAGARME_PUBLIC_KEY` — idem
+  - `PAGARME_WEBHOOK_SECRET` — idem
+  - Botão "Atualizar credenciais" abre instruções (não dá pra editar secret pelo painel — apenas via Lovable Cloud secrets manager).
+  - Edge function `admin-check-pagarme-secrets` retorna apenas booleanos (`hasApiKey`, `hasPublicKey`, `hasWebhookSecret`), nunca os valores.
+- Card "Webhook URL" (read-only, copiável)
+  - Mostra `https://<project>.functions.supabase.co/pagarme-webhook` para o admin colar no painel do Pagar.me.
 
-## Schema do banco (migration)
+### Tab 2 — Stripe (Global)
+- Card "Credenciais Stripe" — mesmo padrão de status (somente flags) para `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_CLIENT_ID`, `STRIPE_PUBLISHABLE_KEY`.
+- Card "Stripe Connect" — link para `https://dashboard.stripe.com/connect`.
+- Card "Webhook URL" — `https://<project>.functions.supabase.co/session-booking-webhook`.
 
-```sql
-ALTER TABLE photographers
-  ADD COLUMN pagarme_recipient_id text,
-  ADD COLUMN pagarme_connected_at timestamptz,
-  ADD COLUMN pagarme_kyc_status text;  -- 'pending' | 'active' | 'refused'
+### Tab 3 — Comissão & Split
+- Slider/input **Comissão Davions BR** (`davions_commission_percent`) — padrão 5%, range 0–30%.
+- Toggle "Davions arca com taxa de processamento Pagar.me" (`charge_processing_fee` no split — padrão ligado).
+- Card informativo: "Esta comissão se aplica a todos os pagamentos de clientes feitos por fotógrafos brasileiros via Pagar.me."
+- Para US/MX (Stripe Connect), comissão continua sendo o `application_fee` configurado por plano (link para a tela de planos).
 
-ALTER TABLE bookings
-  ADD COLUMN payment_provider text DEFAULT 'stripe',  -- 'stripe' | 'pagarme'
-  ADD COLUMN pagarme_order_id text,
-  ADD COLUMN pagarme_charge_id text;
-
-ALTER TABLE galleries  -- ou gallery_orders se existir
-  ADD COLUMN payment_provider text DEFAULT 'stripe';
-
-CREATE TABLE app_payment_settings (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  pagarme_master_recipient_id text NOT NULL,
-  davions_commission_percent numeric(5,2) NOT NULL DEFAULT 5,
-  updated_at timestamptz DEFAULT now()
-);
-```
-
-Filtrar `pagarme_*` nos upserts de `photographers` (padrão de `mem://architecture/database-schema-constraints`).
+Botão "Salvar" no rodapé (sticky) — atualiza `app_payment_settings` via supabase client (RLS já restringe a admins).
 
 ## Edge functions novas
 
-| Função | Responsabilidade |
-|---|---|
-| `pagarme-create-recipient` | Cria Recipient via API (KYC embutido, dados do wizard) |
-| `pagarme-recipient-status` | Polling de aprovação KYC + saldo |
-| `pagarme-create-order` | Cria Order com `split_rules` (booking, balance, galeria) |
-| `pagarme-confirm-order` | Verifica status pós-pagamento (substitui `confirm-booking` quando provider=pagarme) |
-| `pagarme-webhook` | Recebe `order.paid`, `charge.paid`, `charge.refunded`, `chargeback.opened` — espelha lógica do `session-booking-webhook` |
-| `pagarme-transfer-balance` | Solicita transferência manual de saldo do recipient para conta bancária do fotógrafo |
+- `admin-check-pagarme-secrets` — retorna `{ hasApiKey, hasPublicKey, hasWebhookSecret, hasMasterRecipient }`. Valida `has_role(auth.uid(), 'admin')` antes de responder.
+- `admin-test-pagarme-recipient` — recebe `{ recipientId }`, chama `GET /recipients/:id` e `GET /recipients/:id/balance`. Retorna status e saldo formatado. Também restrita a admin.
 
-## Edge functions existentes a ajustar
+## Acesso
 
-- `create-booking`, `create-balance-payment-link`, `create-gallery-checkout`: detectar `business_country` do fotógrafo → roteia para Stripe (atual) ou nova `pagarme-create-order`.
-- `confirm-booking`: aceitar `provider` e despachar.
-
-## Frontend
-
-- **Dashboard → Conexão de Pagamentos**: componente único; renderiza wizard Stripe Connect (US/MX) ou wizard Pagar.me embutido (BR), baseado no país.
-- **Wizard KYC BR** (etapas): tipo de pessoa → dados pessoais/empresariais → endereço → conta bancária → revisão → submit. Todos os passos são UI nossa, com estilo "luxury minimal".
-- **Checkout do cliente (BR)**: nova página/componente `PagarmeCheckout` com tabs PIX / Cartão / Boleto, integrando `pagarme-js` SDK para tokenização de cartão.
-- **Painel Financeiro**: novo card "Saldo a Receber" e "Próximos Repasses" via `pagarme-recipient-status` para fotógrafos BR.
-- **Admin → Settings**: tela para configurar `davions_commission_percent` e ver o `master_recipient_id`.
-
-## Split — modelo de comissão
-
-Em cada Order BR:
-- `split_rules`:
-  - Master Davions: `percentage = davions_commission_percent`, `charge_processing_fee = true`, `liable = false`
-  - Fotógrafo: `percentage = 100 - davions_commission_percent`, `liable = true`
-- Davions arca com a taxa de processamento Pagar.me (sai da nossa parte).
-- Chargeback do valor do produto fica com o fotógrafo (`liable=true`).
-
-## Secrets
-
-Pedir ao usuário via `add_secret`:
-- `PAGARME_API_KEY` — secret key (sk) da conta master Davions
-- `PAGARME_PUBLIC_KEY` — public key (pk) usada no SDK JS do checkout
-- `PAGARME_WEBHOOK_SECRET` — HMAC para validar webhooks
-- `PAGARME_MASTER_RECIPIENT_ID` — recipient da Davions que recebe a comissão
+Restrito por `has_role(auth.uid(), 'admin')` — mesma proteção do `AdminLayout`.
 
 ## i18n
 
-Strings novas em PT-BR, EN e ES (wizard KYC, checkout, mensagens de erro Pagar.me traduzidas).
+Strings novas em PT-BR / EN / ES (cards, botões, mensagens de teste de conexão).
 
-## Fora do escopo (sugestões futuras)
+## Fora do escopo
 
-- Migração ativa de fotógrafos BR já no Stripe Connect → Pagar.me (comunicação + reconexão manual).
-- Antecipação de recebíveis automática.
-- Integração com NFE.io / Enotas para emissão de notas fiscais.
-- Pagamentos Pagar.me para AR/MX (Pagar.me só opera BR).
-
-## Confirmar antes de implementar
-
-1. **Comissão Davions BR**: percentual fixo (sugestão: 5% como já é no Stripe) ou variar por plano (Starter 5% / Pro 3% / Studio 1% como hoje)?
-2. **Métodos de pagamento BR**: habilitar PIX + Cartão + Boleto, ou apenas PIX + Cartão?
-3. **Parcelamento no cartão**: até quantas vezes? Com ou sem juros ao cliente?
-4. **Fotógrafos BR já conectados ao Stripe Connect**: forçar migração para Pagar.me ou permitir manter Stripe até decisão?
+- Editar valores de secrets pelo painel (continua via Lovable Cloud — explicação na UI).
+- Histórico de transações Pagar.me (próxima iteração).
+- Onboarding do recipient master (admin cria manualmente no painel Pagar.me uma vez).
