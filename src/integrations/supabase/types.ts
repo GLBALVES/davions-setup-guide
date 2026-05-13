@@ -4360,6 +4360,42 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_events: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          event_type: string | null
+          external_id: string | null
+          id: string
+          payload: Json | null
+          provider: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          event_type?: string | null
+          external_id?: string | null
+          id?: string
+          payload?: Json | null
+          provider: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          event_type?: string | null
+          external_id?: string | null
+          id?: string
+          payload?: Json | null
+          provider?: string
+          status?: string
+        }
+        Relationships: []
+      }
       workflow_activity: {
         Row: {
           action: string
