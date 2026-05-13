@@ -29,7 +29,7 @@ export default function ShopSubPanel({
   const showGalleries = site?.shop_show_galleries !== false;
   const layout = (site?.shop_layout as string) || "grid-3";
 
-  const publicUrl = storeSlug ? `/store/${storeSlug}/shop` : "/shop";
+  const publicUrl = storeSlug ? `/vitrine/${storeSlug}/shop` : "/shop";
 
   return (
     <div className="p-4 space-y-5 overflow-y-auto h-full">

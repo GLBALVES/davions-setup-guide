@@ -6,7 +6,7 @@
  * original Host header to the Lovable CDN.  The browser's
  * window.location.hostname will therefore be the photographer's domain.
  * The store pages use this to look up the photographer without relying on a
- * /store/:slug URL segment.
+ * /vitrine/:slug URL segment.
  *
  * Two categories:
  * - PLATFORM_DOMAINS: every subdomain is also a platform instance.

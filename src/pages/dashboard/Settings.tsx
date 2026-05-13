@@ -638,7 +638,7 @@ const Settings = () => {
     setDisconnectingStripe(false);
   };
 
-  const storeUrl = slugInput ? `${window.location.origin}/store/${slugInput}` : null;
+  const storeUrl = slugInput ? `${window.location.origin}/vitrine/${slugInput}` : null;
   const copyUrl = async (url: string, setCopiedFn: (v: boolean) => void) => {
     await navigator.clipboard.writeText(url);
     setCopiedFn(true);

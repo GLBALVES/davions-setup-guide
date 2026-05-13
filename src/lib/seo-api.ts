@@ -33,7 +33,7 @@ export interface AnalyticsPageview {
 /* ── Default pages to seed for new photographers ── */
 export const DEFAULT_PAGES = [
   { page_path: "/", page_name: "Home" },
-  { page_path: "/store", page_name: "Store" },
+  { page_path: "/vitrine", page_name: "Showcase" },
   { page_path: "/gallery", page_name: "Gallery" },
 ];
 

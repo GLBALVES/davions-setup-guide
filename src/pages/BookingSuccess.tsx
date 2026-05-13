@@ -310,7 +310,7 @@ const BookingSuccess = () => {
           <p className="text-sm font-light text-muted-foreground">{confirmError}</p>
           {slug && (
             <button
-              onClick={() => navigate(`/store/${slug}`)}
+              onClick={() => navigate(`/vitrine/${slug}`)}
               className="text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground underline mt-2"
             >
               ← Back to Store
@@ -635,7 +635,7 @@ const BookingSuccess = () => {
           {slug && (
             <Button
               variant="outline"
-              onClick={() => navigate(`/store/${slug}`)}
+              onClick={() => navigate(`/vitrine/${slug}`)}
               className="w-full text-xs tracking-wider uppercase font-light"
             >
               ← Back to Store

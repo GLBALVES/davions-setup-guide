@@ -25,7 +25,7 @@ interface RawPage {
 
 /**
  * Renders a sub-page of a photographer's public site.
- * Route: /store/:slug/page/:pagePath
+ * Route: /vitrine/:slug/page/:pagePath
  */
 const SiteSubPage = () => {
   const { slug, pagePath } = useParams();
@@ -99,11 +99,11 @@ const SiteSubPage = () => {
     );
   }
 
-  const homeHref = `/store/${slug}`;
+  const homeHref = `/vitrine/${slug}`;
   const baseNavLinks = buildPublicSiteNavLinks({
     pages: sitePages,
     homeHref,
-    makePageHref: (pageItem) => `/store/${slug}/page/${pageItem.slug}`,
+    makePageHref: (pageItem) => `/vitrine/${slug}/page/${pageItem.slug}`,
   });
 
   const siteAny = (site ?? {}) as Record<string, any>;
@@ -119,12 +119,12 @@ const SiteSubPage = () => {
     shop: {
       enabled: shopEnabled && hasShopContent,
       label: (siteAny.shop_title as string)?.trim() || shopDefaults.navLabel,
-      href: `/store/${slug}/shop`,
+      href: `/vitrine/${slug}/shop`,
     },
     blog: {
       enabled: siteAny.show_blog === true,
       label: (siteAny.blog_title as string)?.trim() || blogDefaults.navLabel,
-      href: `/store/${slug}/blog`,
+      href: `/vitrine/${slug}/blog`,
     },
   });
 
@@ -143,10 +143,10 @@ const SiteSubPage = () => {
       scrolled={scrolled}
       mobileMenuOpen={mobileMenuOpen}
       setMobileMenuOpen={setMobileMenuOpen}
-      seoUrl={`${window.location.origin}/store/${slug}/page/${pagePath}`}
-      sessionHref={(s) => `/store/${slug}/${s.slug ?? s.id}`}
+      seoUrl={`${window.location.origin}/vitrine/${slug}/page/${pagePath}`}
+      sessionHref={(s) => `/vitrine/${slug}/${s.slug ?? s.id}`}
       galleryHref={(g) => `/gallery/${g.slug ?? g.id}`}
-      blogHref={`/store/${slug}/blog`}
+      blogHref={`/vitrine/${slug}/blog`}
       extraNavLinks={extraNavLinks}
       subPageData={pageContent}
       subPageTitle={page.title}

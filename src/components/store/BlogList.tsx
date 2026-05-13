@@ -17,7 +17,7 @@ export interface BlogListItem {
 
 interface BlogListProps {
   posts: BlogListItem[];
-  baseHref: string; // e.g. "/blog" or "/store/{slug}/blog"
+  baseHref: string; // e.g. "/blog" or "/vitrine/{slug}/blog"
   lang: Lang;
   t: BlogDefaults;
 }

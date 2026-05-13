@@ -797,7 +797,7 @@ const Personalize = () => {
     setTimeout(() => setCopiedFn(false), 2000);
   };
 
-  const storeUrl = slugInput ? `${window.location.origin}/store/${slugInput}` : null;
+  const storeUrl = slugInput ? `${window.location.origin}/vitrine/${slugInput}` : null;
   const appHost = window.location.host;
 
   return (

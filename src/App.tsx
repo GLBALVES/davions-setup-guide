@@ -28,6 +28,13 @@ import SiteSubPage from "./pages/store/SiteSubPage";
 import BookingSuccess from "./pages/BookingSuccess";
 import BookingConfirm from "./pages/BookingConfirm";
 import NotFound from "./pages/NotFound";
+import { useLocation } from "react-router-dom";
+
+function LegacyStoreRedirect() {
+  const loc = useLocation();
+  const newPath = loc.pathname.replace(/^\/store(\/|$)/, "/vitrine$1");
+  return <Navigate to={`${newPath}${loc.search}${loc.hash}`} replace />;
+}
 import BlogManager from "./pages/dashboard/BlogManager";
 import { BlogDashboardPage } from "./pages/dashboard/blog/DashboardPage";
 import { ManualPage } from "./pages/dashboard/blog/ManualPage";
@@ -143,14 +150,16 @@ const App = () => {
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsOfService />} />
-                <Route path="/store/:slug" element={<StorePage />} />
-                <Route path="/store/:slug/shop" element={<PublicShopPage mode="store" />} />
-                <Route path="/store/:slug/blog" element={<PublicBlogListPage mode="store" />} />
-                <Route path="/store/:slug/blog/:postSlug" element={<PublicBlogPostPage mode="store" />} />
-                <Route path="/store/:slug/terms" element={<PublicLegalPage kind="terms" mode="store" />} />
-                <Route path="/store/:slug/privacy" element={<PublicLegalPage kind="privacy" mode="store" />} />
-                <Route path="/store/:slug/page/:pagePath" element={<SiteSubPage />} />
-                <Route path="/store/:slug/:sessionSlug" element={<SessionDetailPage />} />
+                <Route path="/vitrine/:slug" element={<StorePage />} />
+                <Route path="/vitrine/:slug/shop" element={<PublicShopPage mode="store" />} />
+                <Route path="/vitrine/:slug/blog" element={<PublicBlogListPage mode="store" />} />
+                <Route path="/vitrine/:slug/blog/:postSlug" element={<PublicBlogPostPage mode="store" />} />
+                <Route path="/vitrine/:slug/terms" element={<PublicLegalPage kind="terms" mode="store" />} />
+                <Route path="/vitrine/:slug/privacy" element={<PublicLegalPage kind="privacy" mode="store" />} />
+                <Route path="/vitrine/:slug/page/:pagePath" element={<SiteSubPage />} />
+                <Route path="/vitrine/:slug/:sessionSlug" element={<SessionDetailPage />} />
+                {/* Legacy /store/* → redirect to /vitrine/* (backward compatibility) */}
+                <Route path="/store/*" element={<LegacyStoreRedirect />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />
                 <Route path="/booking/:bookingId/confirm" element={<BookingConfirm />} />
 

@@ -2487,10 +2487,10 @@ function ShopBlock({
 
   const onCustomDomain = typeof window !== "undefined" &&
     !window.location.hostname.includes("lovable") &&
-    !window.location.pathname.startsWith("/store/");
+    !window.location.pathname.startsWith("/vitrine/");
 
   const sessionHref = (s: any) =>
-    onCustomDomain ? `/book/${s.slug ?? s.id}` : `/store/${storeSlug}/${s.slug ?? s.id}`;
+    onCustomDomain ? `/book/${s.slug ?? s.id}` : `/vitrine/${storeSlug}/${s.slug ?? s.id}`;
   const galleryHref = (g: any) => `/gallery/${g.slug ?? g.id}`;
 
   return (

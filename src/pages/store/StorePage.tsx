@@ -125,8 +125,8 @@ const StorePage = () => {
         : [];
       const visibleNavLinks = buildPublicSiteNavLinks({
         pages: rawPages,
-        homeHref: `/store/${slug}`,
-        makePageHref: (page) => `/store/${slug}/page/${page.slug}`,
+        homeHref: `/vitrine/${slug}`,
+        makePageHref: (page) => `/vitrine/${slug}/page/${page.slug}`,
       });
 
       // Inject "Shop" + "Blog" links after Home whenever each is enabled.
@@ -140,15 +140,15 @@ const StorePage = () => {
       if (shopEnabled) {
         const shopDefaults = getShopDefaults(lang);
         const shopLabel = (siteAny.shop_title as string)?.trim() || shopDefaults.navLabel;
-        insertLinks.push({ label: shopLabel, href: `/store/${slug}/shop` });
+        insertLinks.push({ label: shopLabel, href: `/vitrine/${slug}/shop` });
       }
       if (blogEnabled) {
         const blogDefaults = getBlogDefaults(lang);
         const blogLabel = (siteAny.blog_title as string)?.trim() || blogDefaults.navLabel;
-        insertLinks.push({ label: blogLabel, href: `/store/${slug}/blog` });
+        insertLinks.push({ label: blogLabel, href: `/vitrine/${slug}/blog` });
       }
       if (insertLinks.length > 0) {
-        if (visibleNavLinks.length > 0 && visibleNavLinks[0].href === `/store/${slug}`) {
+        if (visibleNavLinks.length > 0 && visibleNavLinks[0].href === `/vitrine/${slug}`) {
           visibleNavLinks.splice(1, 0, ...insertLinks);
         } else {
           visibleNavLinks.unshift(...insertLinks);
@@ -225,10 +225,10 @@ const StorePage = () => {
       scrolled={scrolled}
       mobileMenuOpen={mobileMenuOpen}
       setMobileMenuOpen={setMobileMenuOpen}
-      seoUrl={`${window.location.origin}/store/${slug}`}
-      sessionHref={(s) => `/store/${slug}/${s.slug ?? s.id}`}
+      seoUrl={`${window.location.origin}/vitrine/${slug}`}
+      sessionHref={(s) => `/vitrine/${slug}/${s.slug ?? s.id}`}
       galleryHref={(g) => `/gallery/${g.slug ?? g.id}`}
-      blogHref={`/store/${slug}/blog`}
+      blogHref={`/vitrine/${slug}/blog`}
       extraNavLinks={cleanPreview ? [] : extraNavLinks}
       visibleSections={cleanPreview ? null : homeSections}
       pageSections={cleanPreview ? [] : pageSections}

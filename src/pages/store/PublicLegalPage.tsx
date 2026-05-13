@@ -120,9 +120,9 @@ export default function PublicLegalPage({ kind, mode }: { kind: Kind; mode: "sto
   const html = customHtml && String(customHtml).trim().length > 0 ? String(customHtml) : defaultHtml;
   const title = kind === "terms" ? defaults.termsTitle : defaults.privacyTitle;
 
-  const homeHref = mode === "custom-domain" ? "/" : `/store/${slug}`;
+  const homeHref = mode === "custom-domain" ? "/" : `/vitrine/${slug}`;
   const makePageHref = (pageItem: { slug: string }) =>
-    mode === "custom-domain" ? `/page/${pageItem.slug}` : `/store/${slug}/page/${pageItem.slug}`;
+    mode === "custom-domain" ? `/page/${pageItem.slug}` : `/vitrine/${slug}/page/${pageItem.slug}`;
 
   const extraNavLinks = buildPublicSiteNavLinks({
     pages: sitePages,
@@ -153,9 +153,9 @@ export default function PublicLegalPage({ kind, mode }: { kind: Kind; mode: "sto
       mobileMenuOpen={mobileMenuOpen}
       setMobileMenuOpen={setMobileMenuOpen}
       seoUrl={seoUrl}
-      sessionHref={(s) => (mode === "custom-domain" ? `/book/${s.slug ?? s.id}` : `/store/${slug}/${s.slug ?? s.id}`)}
+      sessionHref={(s) => (mode === "custom-domain" ? `/book/${s.slug ?? s.id}` : `/vitrine/${slug}/${s.slug ?? s.id}`)}
       galleryHref={(g) => `/gallery/${g.slug ?? g.id}`}
-      blogHref={mode === "custom-domain" ? `/blog` : `/store/${slug}/blog`}
+      blogHref={mode === "custom-domain" ? `/blog` : `/vitrine/${slug}/blog`}
       extraNavLinks={extraNavLinks}
       subPageTitle={title}
       subPageHtml={html}

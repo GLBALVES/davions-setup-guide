@@ -136,7 +136,7 @@ export function TemplatePreviewModal({
 
   // Open Full uses isolated preview mode so the public StorePage also strips
   // live data and only renders the chosen template visually.
-  const previewUrl = `/store/${storeSlug}?preview=${templateId}&clean=1`;
+  const previewUrl = `/vitrine/${storeSlug}?preview=${templateId}&clean=1`;
 
   // Always use sanitized data — never inherit live site config.
   const cleanSite = useMemo(() => ({ ...buildCleanSite(), site_template: templateId }), [templateId]);
@@ -211,7 +211,7 @@ export function TemplatePreviewModal({
               scrolled={scrolled}
               mobileMenuOpen={mobileMenuOpen}
               setMobileMenuOpen={setMobileMenuOpen}
-              seoUrl={`/store/${storeSlug}`}
+              seoUrl={`/vitrine/${storeSlug}`}
               sessionHref={() => "#"}
               galleryHref={() => "#"}
               blogHref="#"

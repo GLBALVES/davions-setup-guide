@@ -909,7 +909,7 @@ const WebsiteSettings = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(`/store/${storeSlug}`, "_blank")}
+                        onClick={() => window.open(`/vitrine/${storeSlug}`, "_blank")}
                         className="h-8 gap-1.5 text-[11px] tracking-[0.15em] uppercase"
                       >
                         <Eye className="h-3.5 w-3.5" />
@@ -1022,7 +1022,7 @@ const WebsiteSettings = () => {
                     <FieldRow label={ws.storeSlugLabel}>
                        <div className="flex items-center border border-input bg-background overflow-hidden focus-within:ring-1 focus-within:ring-ring">
                          <span className="pl-3 pr-1 h-9 flex items-center text-xs text-muted-foreground select-none shrink-0 whitespace-nowrap">
-                           davions.com/store/
+                           davions.com/vitrine/
                          </span>
                          <input
                            value={slugInput}
@@ -1038,7 +1038,7 @@ const WebsiteSettings = () => {
                        )}
                      </FieldRow>
                       {storeSlug && (
-                        <StoreSharePanel url={`https://davions.com/store/${storeSlug}`} />
+                        <StoreSharePanel url={`https://davions.com/vitrine/${storeSlug}`} />
                       )}
                     <Button onClick={handleSaveSlug} disabled={savingSlug} size="sm" variant="outline" className="gap-2 text-xs tracking-wider uppercase font-light w-fit">
                       {savingSlug ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ws.saving}</> : ws.saveStoreUrl}
