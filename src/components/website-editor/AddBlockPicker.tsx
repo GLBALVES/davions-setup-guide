@@ -103,7 +103,7 @@ const CATEGORIES: BlockCategory[] = [
     emoji: "🛍️",
     icon: ShoppingBag,
     blocks: [
-      { type: "shop", label: "Shop", description: "Sessions & galleries grid", icon: Store },
+      { type: "shop", label: "Showcase", description: "Sessions & galleries grid", icon: Store },
     ],
   },
   {
