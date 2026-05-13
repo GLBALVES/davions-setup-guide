@@ -117,7 +117,7 @@ export default function ShopSubPanel({
             </div>
           </div>
 
-          {/* Open public Shop */}
+          {/* Open public Showcase */}
           <a
             href={publicUrl}
             target="_blank"
@@ -125,7 +125,7 @@ export default function ShopSubPanel({
             className="flex items-center justify-center gap-1.5 w-full px-3 py-2 mt-2 text-[11px] font-medium border border-border rounded hover:bg-muted/50 transition-colors"
           >
             <ExternalLink className="h-3 w-3" />
-            View public Shop
+            View public Showcase
           </a>
         </>
       )}
