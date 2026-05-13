@@ -65,6 +65,27 @@ serve(async (req) => {
     const externalId: string =
       event?.id ?? event?.data?.id ?? event?.data?.charge?.id ?? null;
 
+    // Idempotency: if this exact event was already recorded, skip processing.
+    if (externalId && eventType) {
+      const { data: existing } = await supabase
+        .from("webhook_events")
+        .select("id")
+        .eq("provider", "pagarme")
+        .eq("event_type", eventType)
+        .eq("external_id", externalId)
+        .eq("status", "success")
+        .maybeSingle();
+      if (existing) {
+        return new Response(
+          JSON.stringify({ received: true, duplicate: true }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+
     // Handle key Pagar.me v5 events
     const data = event?.data ?? {};
     const metadata = data?.metadata ?? data?.charges?.[0]?.metadata ?? {};
