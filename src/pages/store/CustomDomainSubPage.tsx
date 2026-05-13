@@ -11,7 +11,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { getCurrentHostname } from "@/lib/custom-domain";
 import CustomDomainLoader from "@/components/store/CustomDomainLoader";
 import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
-import { buildPublicSiteNavLinks } from "@/lib/site-navigation";
+import { buildPublicSiteNavLinks, injectShopAndBlogNavLinks } from "@/lib/site-navigation";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getBlogDefaults } from "@/lib/blog-defaults";
+import { getShopDefaults } from "@/lib/shop-defaults";
 
 interface RawPage {
   id: string;
@@ -36,6 +39,7 @@ const CustomDomainSubPage = () => {
   const [searchParams] = useSearchParams();
   const isDraftPreview = searchParams.get("preview") === "1";
   const cacheBuster = searchParams.get("v");
+  const { lang } = useLanguage();
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
   const [site, setSite] = useState<SiteConfig | null>(null);
   const [page, setPage] = useState<RawPage | null>(null);
@@ -106,10 +110,32 @@ const CustomDomainSubPage = () => {
     );
   }
 
-  const extraNavLinks = buildPublicSiteNavLinks({
+  const baseNavLinks = buildPublicSiteNavLinks({
     pages: sitePages,
     homeHref: "/",
     makePageHref: (pageItem) => `/page/${pageItem.slug}`,
+  });
+
+  const siteAny = (site ?? {}) as Record<string, any>;
+  const shopEnabled = siteAny.show_store === true;
+  const hasShopContent =
+    ((siteAny.shop_show_sessions !== false) && sessions.length > 0) ||
+    ((siteAny.shop_show_galleries !== false) && galleries.length > 0);
+  const blogDefaults = getBlogDefaults(lang);
+  const shopDefaults = getShopDefaults(lang);
+  const extraNavLinks = injectShopAndBlogNavLinks({
+    links: baseNavLinks,
+    homeHref: "/",
+    shop: {
+      enabled: shopEnabled && hasShopContent,
+      label: (siteAny.shop_title as string)?.trim() || shopDefaults.navLabel,
+      href: "/shop",
+    },
+    blog: {
+      enabled: siteAny.show_blog === true,
+      label: (siteAny.blog_title as string)?.trim() || blogDefaults.navLabel,
+      href: "/blog",
+    },
   });
 
   const rawContent = isDraftPreview
