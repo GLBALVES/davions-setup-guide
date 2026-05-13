@@ -301,6 +301,30 @@ export type Database = {
           },
         ]
       }
+      app_payment_settings: {
+        Row: {
+          created_at: string
+          davions_commission_percent: number
+          id: string
+          pagarme_master_recipient_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          davions_commission_percent?: number
+          id?: string
+          pagarme_master_recipient_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          davions_commission_percent?: number
+          id?: string
+          pagarme_master_recipient_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       blocked_times: {
         Row: {
           all_day: boolean
@@ -708,6 +732,9 @@ export type Database = {
           deposit_paid_amount: number | null
           extras_total: number
           id: string
+          pagarme_charge_id: string | null
+          pagarme_order_id: string | null
+          payment_provider: string
           payment_status: string
           photographer_id: string
           session_id: string
@@ -733,6 +760,9 @@ export type Database = {
           deposit_paid_amount?: number | null
           extras_total?: number
           id?: string
+          pagarme_charge_id?: string | null
+          pagarme_order_id?: string | null
+          payment_provider?: string
           payment_status?: string
           photographer_id: string
           session_id: string
@@ -758,6 +788,9 @@ export type Database = {
           deposit_paid_amount?: number | null
           extras_total?: number
           id?: string
+          pagarme_charge_id?: string | null
+          pagarme_order_id?: string | null
+          payment_provider?: string
           payment_status?: string
           photographer_id?: string
           session_id?: string
@@ -1872,6 +1905,7 @@ export type Database = {
           id: string
           is_site_gallery: boolean
           last_download_at: string | null
+          payment_provider: string
           photographer_id: string
           price_per_photo: number
           project_id: string | null
@@ -1897,6 +1931,7 @@ export type Database = {
           id?: string
           is_site_gallery?: boolean
           last_download_at?: string | null
+          payment_provider?: string
           photographer_id: string
           price_per_photo?: number
           project_id?: string | null
@@ -1922,6 +1957,7 @@ export type Database = {
           id?: string
           is_site_gallery?: boolean
           last_download_at?: string | null
+          payment_provider?: string
           photographer_id?: string
           price_per_photo?: number
           project_id?: string | null
@@ -2979,6 +3015,9 @@ export type Database = {
           hero_image_url: string | null
           id: string
           package_name: string | null
+          pagarme_connected_at: string | null
+          pagarme_kyc_status: string | null
+          pagarme_recipient_id: string | null
           store_slug: string | null
           stripe_account_id: string | null
           stripe_connected_at: string | null
@@ -3006,6 +3045,9 @@ export type Database = {
           hero_image_url?: string | null
           id: string
           package_name?: string | null
+          pagarme_connected_at?: string | null
+          pagarme_kyc_status?: string | null
+          pagarme_recipient_id?: string | null
           store_slug?: string | null
           stripe_account_id?: string | null
           stripe_connected_at?: string | null
@@ -3033,6 +3075,9 @@ export type Database = {
           hero_image_url?: string | null
           id?: string
           package_name?: string | null
+          pagarme_connected_at?: string | null
+          pagarme_kyc_status?: string | null
+          pagarme_recipient_id?: string | null
           store_slug?: string | null
           stripe_account_id?: string | null
           stripe_connected_at?: string | null

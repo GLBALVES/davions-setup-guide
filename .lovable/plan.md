@@ -1,55 +1,114 @@
-## Objetivo
+# Plano: Pagar.me (BR) + Stripe (US/MX) com Split — 100% Whitelabel
 
-Permitir que fontes carregadas pelo campo **Custom Font CSS** (ex.: Typekit/Adobe Fonts, Google Fonts via `@import`, `@font-face` próprio) apareçam no dropdown **Font Family** de cada elemento (H1, H2, Body, Botões, etc.) — para que possam ser aplicadas pontualmente, sem virarem fonte global.
+## Visão geral
 
-## UX
+Roteamento de gateway por país do fotógrafo (`photographers.business_country`):
 
-No painel **Fontes**, abaixo do textarea "Custom Font CSS" que já existe, adicionar uma sub-seção **"External Font Families"** com:
+| Fluxo | EUA / México | Brasil |
+|---|---|---|
+| Assinatura do app pelo fotógrafo | Stripe (sem mudança) | Stripe (sem mudança) |
+| Pagamentos de clientes finais (booking, depósito, balance, galeria) | Stripe Connect (sem mudança) | **Pagar.me API v5** com split |
+| Comissão Davions | `application_fee` (já existe) | Split rule (recipient master) |
 
-- Lista de famílias registradas (cada item: nome de exibição + nome da família CSS + botão remover).
-- Botão **"+ Add family"** que abre um mini-form com 2 campos:
-  - **Display name** (ex.: "Ivy Presto Display")
-  - **Font family name** (ex.: `ivypresto-display`) — texto exato que vai pro `font-family` do CSS.
-- Botão extra **"Auto-detect from CSS"** que faz parse do conteúdo do `custom_font_css` e sugere famílias detectadas em `@font-face { font-family: ... }` (com 1 clique para adicionar).
-- Texto auxiliar: "Add the family name from your CSS provider (Typekit, Google Fonts, etc.) to make it selectable in each element's Font Family dropdown."
+A marca **Pagar.me não aparece em nenhuma tela** — nem para o fotógrafo (KYC embutido), nem para o cliente final (checkout hospedado por nós, tokenização via SDK JS).
 
-No editor de cada elemento, o dropdown **Font Family** ganha um novo grupo **"External"** (separador, depois os itens registrados), em adição aos grupos já existentes ("Custom" para uploads e os presets do sistema).
+## Whitelabel — como será percebido
 
-## Implementação técnica
+**Fotógrafo (dashboard Davions):**
+- Card "Conta de Recebimento Davions" (não menciona Pagar.me).
+- Wizard KYC embutido: CPF/CNPJ, dados bancários, endereço, sócios — todos os campos renderizados na nossa UI, enviados via API.
+- Saldo, extratos, antecipação e transferências em telas nossas, consumindo `GET /recipients/:id/balance` e similares.
+- Termos: "Ao conectar, concorda com os Termos da Davions e do nosso processador de pagamentos" (link discreto para T&C do Pagar.me — exigência regulatória).
 
-### 1. Dados
-- Nova coluna `external_font_families JSONB NOT NULL DEFAULT '[]'::jsonb` em `photographer_site`.
-- Estrutura: `Array<{ id: string; label: string; family: string }>` — `id` é uuid v4 local, `family` é o valor literal usado em `font-family`.
+**Cliente final (checkout):**
+- Página de pagamento renderizada na Davions, com a marca do estúdio do fotógrafo.
+- PIX: QR + copia-e-cola gerados via API, exibidos em tela nossa.
+- Cartão: tokenização client-side via `pagarme-js` SDK (PCI scope SAQ A — nada sensível toca nosso servidor).
+- Boleto: PDF baixável com layout nosso.
+- Descritor da fatura no cartão: "DAVIONS*<estúdio>" (até 22 chars).
+- E-mails transacionais saem pelo Brevo (já configurado), não pelo Pagar.me.
 
-### 2. Tipagem (`site-fonts.ts`)
-- Exportar `ExternalFontEntry = { id: string; label: string; family: string }`.
-- Atualizar `buildTypographyCss(...)` para receber `externalFonts` e, quando uma override de elemento referenciar `external:<id>`, resolver para o `family` correspondente (envolvido em aspas se contiver espaço/caractere especial).
-- Em `getFontStack(id)`, suportar prefixo `external:<id>` lendo de uma lista passada por contexto/parâmetro.
-
-### 3. Hook `useSiteTypography.ts`
-- Adicionar parâmetro `externalFonts: ExternalFontEntry[]` e propagar para `buildTypographyCss`.
-- Não precisa injetar CSS nenhum — o loading continua sendo responsabilidade do `customFontCss` (que já está implementado). Apenas mapeia ID → nome da família.
-
-### 4. UI `FontsSubPanel.tsx`
-- Nova sub-seção `ExternalFontFamiliesSection` (similar à `CustomFontsSection`).
-- Função utilitária `parseFamiliesFromCss(css: string): string[]` — regex em `@font-face\s*{[^}]*font-family\s*:\s*['"]?([^;'"}]+)` (case-insensitive). Retorna nomes únicos.
-- Em `ElementEditor`, no `<Select>` de Font Family, adicionar grupo "External" listando `externalFonts` com `value="external:<id>"` e label = `entry.label`.
-
-### 5. Wiring (`WebsiteEditor.tsx` e `PublicSiteRenderer.tsx`)
-- Persistir `external_font_families` igual aos demais campos do site.
-- Passar `externalFontFamilies` para `<FontsSubPanel>` e para `useSiteTypography(...)` em ambos (editor e site público).
-
-### 6. Migração
+## Schema do banco (migration)
 
 ```sql
-ALTER TABLE public.photographer_site
-ADD COLUMN external_font_families JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE photographers
+  ADD COLUMN pagarme_recipient_id text,
+  ADD COLUMN pagarme_connected_at timestamptz,
+  ADD COLUMN pagarme_kyc_status text;  -- 'pending' | 'active' | 'refused'
+
+ALTER TABLE bookings
+  ADD COLUMN payment_provider text DEFAULT 'stripe',  -- 'stripe' | 'pagarme'
+  ADD COLUMN pagarme_order_id text,
+  ADD COLUMN pagarme_charge_id text;
+
+ALTER TABLE galleries  -- ou gallery_orders se existir
+  ADD COLUMN payment_provider text DEFAULT 'stripe';
+
+CREATE TABLE app_payment_settings (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  pagarme_master_recipient_id text NOT NULL,
+  davions_commission_percent numeric(5,2) NOT NULL DEFAULT 5,
+  updated_at timestamptz DEFAULT now()
+);
 ```
 
-Filtrar essa propriedade no upsert do `photographer_site` se houver lista de campos permitidos (seguir o padrão registrado em mem://architecture/database-schema-constraints).
+Filtrar `pagarme_*` nos upserts de `photographers` (padrão de `mem://architecture/database-schema-constraints`).
 
-## Notas
+## Edge functions novas
 
-- O Custom Font CSS continua sendo o único responsável por **carregar** as fontes (links Typekit, `@import`, `@font-face`). Esta nova lista só **expõe** nomes para seleção.
-- Adobe Fonts/Typekit nem sempre tem `@font-face` no CSS retornado (usa JS interno), por isso o "Auto-detect" é só um auxiliar — o caminho garantido é o usuário digitar o nome manualmente (que o Typekit mostra na página do kit).
-- i18n: novas strings em EN/PT-BR/ES (External Font Families / Famílias de fonte externas / Familias de fuente externas, etc.).
+| Função | Responsabilidade |
+|---|---|
+| `pagarme-create-recipient` | Cria Recipient via API (KYC embutido, dados do wizard) |
+| `pagarme-recipient-status` | Polling de aprovação KYC + saldo |
+| `pagarme-create-order` | Cria Order com `split_rules` (booking, balance, galeria) |
+| `pagarme-confirm-order` | Verifica status pós-pagamento (substitui `confirm-booking` quando provider=pagarme) |
+| `pagarme-webhook` | Recebe `order.paid`, `charge.paid`, `charge.refunded`, `chargeback.opened` — espelha lógica do `session-booking-webhook` |
+| `pagarme-transfer-balance` | Solicita transferência manual de saldo do recipient para conta bancária do fotógrafo |
+
+## Edge functions existentes a ajustar
+
+- `create-booking`, `create-balance-payment-link`, `create-gallery-checkout`: detectar `business_country` do fotógrafo → roteia para Stripe (atual) ou nova `pagarme-create-order`.
+- `confirm-booking`: aceitar `provider` e despachar.
+
+## Frontend
+
+- **Dashboard → Conexão de Pagamentos**: componente único; renderiza wizard Stripe Connect (US/MX) ou wizard Pagar.me embutido (BR), baseado no país.
+- **Wizard KYC BR** (etapas): tipo de pessoa → dados pessoais/empresariais → endereço → conta bancária → revisão → submit. Todos os passos são UI nossa, com estilo "luxury minimal".
+- **Checkout do cliente (BR)**: nova página/componente `PagarmeCheckout` com tabs PIX / Cartão / Boleto, integrando `pagarme-js` SDK para tokenização de cartão.
+- **Painel Financeiro**: novo card "Saldo a Receber" e "Próximos Repasses" via `pagarme-recipient-status` para fotógrafos BR.
+- **Admin → Settings**: tela para configurar `davions_commission_percent` e ver o `master_recipient_id`.
+
+## Split — modelo de comissão
+
+Em cada Order BR:
+- `split_rules`:
+  - Master Davions: `percentage = davions_commission_percent`, `charge_processing_fee = true`, `liable = false`
+  - Fotógrafo: `percentage = 100 - davions_commission_percent`, `liable = true`
+- Davions arca com a taxa de processamento Pagar.me (sai da nossa parte).
+- Chargeback do valor do produto fica com o fotógrafo (`liable=true`).
+
+## Secrets
+
+Pedir ao usuário via `add_secret`:
+- `PAGARME_API_KEY` — secret key (sk) da conta master Davions
+- `PAGARME_PUBLIC_KEY` — public key (pk) usada no SDK JS do checkout
+- `PAGARME_WEBHOOK_SECRET` — HMAC para validar webhooks
+- `PAGARME_MASTER_RECIPIENT_ID` — recipient da Davions que recebe a comissão
+
+## i18n
+
+Strings novas em PT-BR, EN e ES (wizard KYC, checkout, mensagens de erro Pagar.me traduzidas).
+
+## Fora do escopo (sugestões futuras)
+
+- Migração ativa de fotógrafos BR já no Stripe Connect → Pagar.me (comunicação + reconexão manual).
+- Antecipação de recebíveis automática.
+- Integração com NFE.io / Enotas para emissão de notas fiscais.
+- Pagamentos Pagar.me para AR/MX (Pagar.me só opera BR).
+
+## Confirmar antes de implementar
+
+1. **Comissão Davions BR**: percentual fixo (sugestão: 5% como já é no Stripe) ou variar por plano (Starter 5% / Pro 3% / Studio 1% como hoje)?
+2. **Métodos de pagamento BR**: habilitar PIX + Cartão + Boleto, ou apenas PIX + Cartão?
+3. **Parcelamento no cartão**: até quantas vezes? Com ou sem juros ao cliente?
+4. **Fotógrafos BR já conectados ao Stripe Connect**: forçar migração para Pagar.me ou permitir manter Stripe até decisão?
