@@ -16,6 +16,11 @@ export interface ShopDefaults {
   emptyDescription: string;
   onRequest: string;
   perPhoto: string;
+  loading: string;
+  notFound: string;
+  pageNotFound: string;
+  contactNav: string;
+  contactSubmit: string;
 }
 
 const DEFAULTS: Record<Lang, ShopDefaults> = {
