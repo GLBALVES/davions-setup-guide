@@ -292,7 +292,7 @@ const getInitials = (name: string | null | undefined): string => {
 const SessionDetailPage = () => {
   const { slug, sessionSlug } = useParams();
   const customDomainSlug = useCustomDomainSlug();
-  const backPath = customDomainSlug ? "/" : `/store/${slug ?? customDomainSlug}`;
+  const backPath = customDomainSlug ? "/" : `/vitrine/${slug ?? customDomainSlug}`;
   const navigate = useNavigate();
   const { toast } = useToast();
 

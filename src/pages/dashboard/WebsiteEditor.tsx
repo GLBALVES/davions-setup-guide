@@ -2996,15 +2996,15 @@ const PagesPanel = ({
                   </SelectTrigger>
                   <SelectContent>
                     {storeSlug && (
-                      <SelectItem value={`/store/${storeSlug}`}>Home</SelectItem>
+                      <SelectItem value={`/vitrine/${storeSlug}`}>Home</SelectItem>
                     )}
                     {storeSlug && showBlog && (
-                      <SelectItem value={`/store/${storeSlug}/blog`}>Blog</SelectItem>
+                      <SelectItem value={`/vitrine/${storeSlug}/blog`}>Blog</SelectItem>
                     )}
                     {storeSlug && pages
                       .filter((p) => p.type === "page" && !p.isHome && p.slug)
                       .map((p) => (
-                        <SelectItem key={p.id} value={`/store/${storeSlug}/page/${p.slug}`}>
+                        <SelectItem key={p.id} value={`/vitrine/${storeSlug}/page/${p.slug}`}>
                           {p.label}
                         </SelectItem>
                       ))}
@@ -5010,7 +5010,7 @@ const WebsiteEditor = () => {
     const liveUrl = customDomain
       ? `https://${customDomain}/?v=${v}`
       : storeSlug
-        ? `${window.location.origin}/store/${storeSlug}?v=${v}`
+        ? `${window.location.origin}/vitrine/${storeSlug}?v=${v}`
         : null;
     if (!liveUrl) return;
     if (liveTabRef.current && !liveTabRef.current.closed) {
@@ -5052,7 +5052,7 @@ const WebsiteEditor = () => {
       return;
     }
     const cacheBuster = Date.now();
-    window.open(`/store/${storeSlug}?preview=1&v=${cacheBuster}`, "_blank", "noopener");
+    window.open(`/vitrine/${storeSlug}?preview=1&v=${cacheBuster}`, "_blank", "noopener");
   };
 
   const handleOpenLive = () => {
@@ -5060,7 +5060,7 @@ const WebsiteEditor = () => {
     const liveUrl = customDomain
       ? `https://${customDomain}/?v=${v}`
       : storeSlug
-        ? `/store/${storeSlug}?v=${v}`
+        ? `/vitrine/${storeSlug}?v=${v}`
         : null;
     if (!liveUrl) {
       toast.error(labels.noLiveUrl);
@@ -5108,7 +5108,7 @@ const WebsiteEditor = () => {
       const liveUrl = customDomain
         ? `https://${customDomain}/?v=${v}`
         : storeSlug
-          ? `/store/${storeSlug}?v=${v}`
+          ? `/vitrine/${storeSlug}?v=${v}`
           : null;
       const openLabel = lang === "pt" ? "Abrir site" : lang === "es" ? "Abrir sitio" : "Open live site";
       toast.success(labels.published, liveUrl ? {
@@ -5155,14 +5155,14 @@ const WebsiteEditor = () => {
       storeSlug={storeSlug}
       showBlog={Boolean((site as any)?.show_blog)}
       blogLabel={(site as any)?.blog_title || undefined}
-      blogHref={storeSlug ? `/store/${storeSlug}/blog` : "/blog"}
+      blogHref={storeSlug ? `/vitrine/${storeSlug}/blog` : "/blog"}
       blogInMenu={(site as any)?.blog_in_menu !== false}
       blogSortOrder={typeof (site as any)?.blog_sort_order === "number" ? (site as any).blog_sort_order : 2}
       onBlogChange={(patch) => updateSite(patch)}
       onBlogSettings={() => { setActiveTab("settings"); setPendingSettingsSub("blog"); }}
       showShop={Boolean((site as any)?.show_store)}
       shopLabel={(site as any)?.shop_title || undefined}
-      shopHref={storeSlug ? `/store/${storeSlug}/shop` : "/shop"}
+      shopHref={storeSlug ? `/vitrine/${storeSlug}/shop` : "/shop"}
       shopInMenu={(site as any)?.shop_in_menu !== false}
       shopSortOrder={typeof (site as any)?.shop_sort_order === "number" ? (site as any).shop_sort_order : 1}
       onShopChange={(patch) => updateSite(patch)}

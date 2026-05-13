@@ -397,7 +397,7 @@ serve(async (req) => {
           is_deposit: isDeposit ? "true" : "false",
         },
         success_url: `${origin}/booking-success?store=${storeSlug}&session=${sessionId}&booking=${bookingId}&checkout_session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/store/${storeSlug}/${sessionId}`,
+        cancel_url: `${origin}/vitrine/${storeSlug}/${sessionId}`,
       },
       { stripeAccount: stripeAccountId }
     );

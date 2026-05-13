@@ -2,8 +2,8 @@ import { useEffect, useRef, useState as useReactState } from "react";
 import { Camera, Clock, MapPin, Image as ImageIcon, Images, Instagram, Facebook, Youtube, Linkedin, Menu, X, Quote, ArrowRight, Phone } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/PreviewHeader";
-import SectionRenderer, { type PageSection } from "@/components/store/SectionRenderer";
-import DavionsFloatingBadge from "@/components/store/DavionsFloatingBadge";
+import SectionRenderer, { type PageSection } from "@/components/vitrine/SectionRenderer";
+import DavionsFloatingBadge from "@/components/vitrine/DavionsFloatingBadge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
 import { useExternalFonts } from "@/components/website-editor/useExternalFonts";
@@ -897,8 +897,8 @@ function SharedFooter({
 
   // ── Legal links (Terms + Privacy) — point to the photographer's own
   //    pages so the visitor stays inside the studio's site/branding.
-  const isOnStoreRoute = typeof window !== "undefined" && window.location.pathname.startsWith("/store/");
-  const legalBase = isOnStoreRoute && storeSlug ? `/store/${storeSlug}` : "";
+  const isOnStoreRoute = typeof window !== "undefined" && window.location.pathname.startsWith("/vitrine/");
+  const legalBase = isOnStoreRoute && storeSlug ? `/vitrine/${storeSlug}` : "";
   const legalBlock = (
     <div className={`flex flex-wrap gap-x-4 gap-y-1 ${alignment === "left" ? "justify-start" : alignment === "right" ? "justify-end" : "justify-center"}`}>
       <a href={`${legalBase}/terms`} className="text-[10px] font-light opacity-70 hover:opacity-100 transition-opacity" style={textStyle}>
@@ -2291,7 +2291,7 @@ export default function PublicSiteRenderer(props: Props) {
   const template = props.previewTemplate || site?.site_template || "editorial";
 
   // Inject photographer's custom favicon into <head> — only on the public-facing
-  // site (custom domain or /store/* route). Never on the dashboard preview,
+  // site (custom domain or /vitrine/* route). Never on the dashboard preview,
   // otherwise the photographer's favicon would override Davions' own favicon.
   useEffect(() => {
     const faviconUrl = site?.favicon_url;
@@ -2307,7 +2307,7 @@ export default function PublicSiteRenderer(props: Props) {
       host === "www.davions.com" ||
       host === "nevoxholding.com" ||
       host === "www.nevoxholding.com";
-    const isPublicRoute = path.startsWith("/store/") || path === "/store" || path.startsWith("/page/") || path.startsWith("/book/") || path.startsWith("/gallery/") || path.startsWith("/blog");
+    const isPublicRoute = path.startsWith("/vitrine/") || path === "/store" || path.startsWith("/page/") || path.startsWith("/book/") || path.startsWith("/gallery/") || path.startsWith("/blog");
     const isCustomDomain = !isPlatformHost;
     if (!isCustomDomain && !isPublicRoute) return;
 

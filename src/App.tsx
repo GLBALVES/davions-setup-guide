@@ -17,14 +17,14 @@ import Settings from "./pages/dashboard/Settings";
 import Galleries from "./pages/dashboard/Galleries";
 import GalleryDetail from "./pages/dashboard/GalleryDetail";
 import GalleryView from "./pages/gallery/GalleryView";
-import CustomDomainStore from "./pages/store/CustomDomainStore";
-import CustomDomainSessionGateway from "./pages/store/CustomDomainSessionGateway";
-import CustomDomainGalleryGateway from "./pages/store/CustomDomainGalleryGateway";
-import CustomDomainSubPage from "./pages/store/CustomDomainSubPage";
+import CustomDomainStore from "./pages/vitrine/CustomDomainStore";
+import CustomDomainSessionGateway from "./pages/vitrine/CustomDomainSessionGateway";
+import CustomDomainGalleryGateway from "./pages/vitrine/CustomDomainGalleryGateway";
+import CustomDomainSubPage from "./pages/vitrine/CustomDomainSubPage";
 import { isCustomDomain } from "./lib/custom-domain";
-import StorePage from "./pages/store/StorePage";
-import SessionDetailPage from "./pages/store/SessionDetailPage";
-import SiteSubPage from "./pages/store/SiteSubPage";
+import StorePage from "./pages/vitrine/StorePage";
+import SessionDetailPage from "./pages/vitrine/SessionDetailPage";
+import SiteSubPage from "./pages/vitrine/SiteSubPage";
 import BookingSuccess from "./pages/BookingSuccess";
 import BookingConfirm from "./pages/BookingConfirm";
 import NotFound from "./pages/NotFound";
@@ -92,10 +92,10 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
-import PublicLegalPage from "./pages/store/PublicLegalPage";
-import PublicShopPage from "./pages/store/PublicShopPage";
-import PublicBlogListPage from "./pages/store/PublicBlogListPage";
-import PublicBlogPostPage from "./pages/store/PublicBlogPostPage";
+import PublicLegalPage from "./pages/vitrine/PublicLegalPage";
+import PublicShopPage from "./pages/vitrine/PublicShopPage";
+import PublicBlogListPage from "./pages/vitrine/PublicBlogListPage";
+import PublicBlogPostPage from "./pages/vitrine/PublicBlogPostPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -143,14 +143,14 @@ const App = () => {
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsOfService />} />
-                <Route path="/store/:slug" element={<StorePage />} />
-                <Route path="/store/:slug/shop" element={<PublicShopPage mode="store" />} />
-                <Route path="/store/:slug/blog" element={<PublicBlogListPage mode="store" />} />
-                <Route path="/store/:slug/blog/:postSlug" element={<PublicBlogPostPage mode="store" />} />
-                <Route path="/store/:slug/terms" element={<PublicLegalPage kind="terms" mode="store" />} />
-                <Route path="/store/:slug/privacy" element={<PublicLegalPage kind="privacy" mode="store" />} />
-                <Route path="/store/:slug/page/:pagePath" element={<SiteSubPage />} />
-                <Route path="/store/:slug/:sessionSlug" element={<SessionDetailPage />} />
+                <Route path="/vitrine/:slug" element={<StorePage />} />
+                <Route path="/vitrine/:slug/shop" element={<PublicShopPage mode="store" />} />
+                <Route path="/vitrine/:slug/blog" element={<PublicBlogListPage mode="store" />} />
+                <Route path="/vitrine/:slug/blog/:postSlug" element={<PublicBlogPostPage mode="store" />} />
+                <Route path="/vitrine/:slug/terms" element={<PublicLegalPage kind="terms" mode="store" />} />
+                <Route path="/vitrine/:slug/privacy" element={<PublicLegalPage kind="privacy" mode="store" />} />
+                <Route path="/vitrine/:slug/page/:pagePath" element={<SiteSubPage />} />
+                <Route path="/vitrine/:slug/:sessionSlug" element={<SessionDetailPage />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />
                 <Route path="/booking/:bookingId/confirm" element={<BookingConfirm />} />
 

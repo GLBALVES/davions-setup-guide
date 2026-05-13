@@ -286,12 +286,12 @@ export default function BlogPostsPanel({ storeSlug }: Props) {
   const viewLive = (post: BlogRow) => {
     if (post.status !== "published") return;
     const slugPart = post.slug || post.id;
-    const path = storeSlug ? `/store/${storeSlug}/blog/${slugPart}` : `/blog/${slugPart}`;
+    const path = storeSlug ? `/vitrine/${storeSlug}/blog/${slugPart}` : `/blog/${slugPart}`;
     openInNewTab(path);
   };
 
   const previewBlog = () => {
-    const path = storeSlug ? `/store/${storeSlug}/blog` : `/blog`;
+    const path = storeSlug ? `/vitrine/${storeSlug}/blog` : `/blog`;
     openInNewTab(path);
   };
 

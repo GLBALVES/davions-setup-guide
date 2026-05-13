@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Settings2, LayoutTemplate, Menu, X } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { SiteCtaLink } from "@/components/store/SectionRenderer";
+import { SiteCtaLink } from "@/components/vitrine/SectionRenderer";
 import { useImageLuminance } from "@/hooks/useImageLuminance";
 import type { PreviewSiteConfig, PreviewNavLink } from "./PreviewRenderer";
 

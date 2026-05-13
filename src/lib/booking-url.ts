@@ -1,7 +1,7 @@
 /**
  * Build the public booking URL for a session.
  * - If photographer has a custom domain → https://<custom_domain>/book/<sessionSlug>
- * - Otherwise → <origin>/store/<storeSlug>/<sessionSlug>
+ * - Otherwise → <origin>/vitrine/<storeSlug>/<sessionSlug>
  */
 export function buildBookingUrl(opts: {
   customDomain?: string | null;
@@ -14,7 +14,7 @@ export function buildBookingUrl(opts: {
     return `https://${clean}/book/${sessionSlugOrId}`;
   }
   if (storeSlug) {
-    return `${window.location.origin}/store/${storeSlug}/${sessionSlugOrId}`;
+    return `${window.location.origin}/vitrine/${storeSlug}/${sessionSlugOrId}`;
   }
   return null;
 }

@@ -115,7 +115,7 @@ const categoriesData: Record<Lang, Omit<Category, "icon">[]> = {
       description: "Set up your account and understand the basics",
       articles: [
         { q: "How do I complete my profile?", a: "Go to **Settings → My Profile**. Fill in your name, business name, phone, address, and upload your profile/hero image. A complete profile is required to activate your public store." },
-        { q: "What is a Store Slug?", a: "Your store slug is the unique URL segment for your public booking page (e.g. `davions.app/store/your-slug`). You can set it in **Settings → My Profile**. It cannot contain spaces — use hyphens instead." },
+        { q: "What is a Store Slug?", a: "Your store slug is the unique URL segment for your public booking page (e.g. `davions.app/vitrine/your-slug`). You can set it in **Settings → My Profile**. It cannot contain spaces — use hyphens instead." },
         { q: "How do I connect Stripe to accept payments?", a: "Go to **Settings → My Profile** and click **Connect Stripe**. You will be redirected to Stripe to create or link an existing account. Once connected, clients can pay at checkout and funds go directly to your Stripe account." },
         { q: "Can I invite team members?", a: "Yes. Go to **Settings → Access Control** and click **Create Studio User**. Enter their email address and assign the permissions they need. They will receive an invitation email." },
       ],
@@ -206,7 +206,7 @@ const categoriesData: Record<Lang, Omit<Category, "icon">[]> = {
       description: "Configure sua conta e entenda o básico",
       articles: [
         { q: "Como faço para completar meu perfil?", a: "Acesse **Configurações → Meu Perfil**. Preencha seu nome, nome do negócio, telefone, endereço e envie sua foto de perfil/hero. Um perfil completo é necessário para ativar sua loja pública." },
-        { q: "O que é um Store Slug?", a: "O slug da loja é o segmento único de URL da sua página de agendamento público (ex: `davions.app/store/seu-slug`). Você pode configurá-lo em **Configurações → Meu Perfil**. Não pode conter espaços — use hífens." },
+        { q: "O que é um Store Slug?", a: "O slug da loja é o segmento único de URL da sua página de agendamento público (ex: `davions.app/vitrine/seu-slug`). Você pode configurá-lo em **Configurações → Meu Perfil**. Não pode conter espaços — use hífens." },
         { q: "Como conecto o Stripe para receber pagamentos?", a: "Acesse **Configurações → Meu Perfil** e clique em **Conectar Stripe**. Você será redirecionado ao Stripe para criar ou vincular uma conta existente. Após conectado, os clientes podem pagar no checkout e os fundos vão direto para sua conta." },
         { q: "Posso convidar membros da equipe?", a: "Sim. Acesse **Configurações → Controle de Acesso** e clique em **Criar Usuário do Estúdio**. Informe o e-mail e atribua as permissões necessárias. Eles receberão um e-mail de convite." },
       ],
@@ -297,7 +297,7 @@ const categoriesData: Record<Lang, Omit<Category, "icon">[]> = {
       description: "Configura tu cuenta y comprende lo básico",
       articles: [
         { q: "¿Cómo completo mi perfil?", a: "Ve a **Configuración → Mi Perfil**. Completa tu nombre, nombre del negocio, teléfono, dirección y sube tu foto de perfil/hero. Un perfil completo es necesario para activar tu tienda pública." },
-        { q: "¿Qué es un Store Slug?", a: "El slug de la tienda es el segmento único de URL de tu página de reservas pública (ej: `davions.app/store/tu-slug`). Puedes configurarlo en **Configuración → Mi Perfil**. No puede contener espacios — usa guiones." },
+        { q: "¿Qué es un Store Slug?", a: "El slug de la tienda es el segmento único de URL de tu página de reservas pública (ej: `davions.app/vitrine/tu-slug`). Puedes configurarlo en **Configuración → Mi Perfil**. No puede contener espacios — usa guiones." },
         { q: "¿Cómo conecto Stripe para aceptar pagos?", a: "Ve a **Configuración → Mi Perfil** y haz clic en **Conectar Stripe**. Serás redirigido a Stripe para crear o vincular una cuenta existente. Una vez conectado, los clientes pueden pagar en el checkout y los fondos van directamente a tu cuenta." },
         { q: "¿Puedo invitar miembros del equipo?", a: "Sí. Ve a **Configuración → Control de Acceso** y haz clic en **Crear Usuario del Estudio**. Ingresa su correo electrónico y asigna los permisos necesarios. Recibirán un correo de invitación." },
       ],

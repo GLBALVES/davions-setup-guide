@@ -10,9 +10,9 @@ import PublicSiteRenderer, {
   Session,
   Gallery,
   Photographer,
-} from "@/components/store/PublicSiteRenderer";
-import BlogPostView, { type BlogPost } from "@/components/store/BlogPostView";
-import type { BlogListItem } from "@/components/store/BlogList";
+} from "@/components/vitrine/PublicSiteRenderer";
+import BlogPostView, { type BlogPost } from "@/components/vitrine/BlogPostView";
+import type { BlogListItem } from "@/components/vitrine/BlogList";
 import { buildPublicSiteNavLinks } from "@/lib/site-navigation";
 import { DEFAULT_HEADER_CONFIG, type HeaderConfig } from "@/components/website-editor/PreviewHeader";
 import SEOHead from "@/components/SEOHead";
@@ -186,7 +186,7 @@ export default function PublicBlogPostPage({ mode }: { mode: "store" | "custom-d
     );
   }
 
-  const blogBaseHref = mode === "custom-domain" ? "/blog" : `/store/${slug}/blog`;
+  const blogBaseHref = mode === "custom-domain" ? "/blog" : `/vitrine/${slug}/blog`;
 
   if (notFound || !photographer || !post) {
     return (
@@ -203,10 +203,10 @@ export default function PublicBlogPostPage({ mode }: { mode: "store" | "custom-d
     );
   }
 
-  const homeHref = mode === "custom-domain" ? "/" : `/store/${slug}`;
+  const homeHref = mode === "custom-domain" ? "/" : `/vitrine/${slug}`;
   const makePageHref = (p: { slug: string }) =>
-    mode === "custom-domain" ? `/page/${p.slug}` : `/store/${slug}/page/${p.slug}`;
-  const shopHref = mode === "custom-domain" ? "/shop" : `/store/${slug}/shop`;
+    mode === "custom-domain" ? `/page/${p.slug}` : `/vitrine/${slug}/page/${p.slug}`;
+  const shopHref = mode === "custom-domain" ? "/shop" : `/vitrine/${slug}/shop`;
 
   const baseNavLinks = buildPublicSiteNavLinks({
     pages: sitePages,
@@ -296,7 +296,7 @@ export default function PublicBlogPostPage({ mode }: { mode: "store" | "custom-d
       setMobileMenuOpen={setMobileMenuOpen}
       seoUrl={seoUrl}
       sessionHref={(s) =>
-        mode === "custom-domain" ? `/book/${s.slug ?? s.id}` : `/store/${slug}/${s.slug ?? s.id}`
+        mode === "custom-domain" ? `/book/${s.slug ?? s.id}` : `/vitrine/${slug}/${s.slug ?? s.id}`
       }
       galleryHref={(g) => `/gallery/${g.slug ?? g.id}`}
       blogHref={blogBaseHref}

@@ -11,7 +11,7 @@ import { getCurrentHostname } from "@/lib/custom-domain";
 import SessionDetailPage from "./SessionDetailPage";
 import { CustomDomainSlugContext } from "@/contexts/CustomDomainSlugContext";
 import logoPreto from "@/assets/logo_principal_preto.png";
-import CustomDomainLoader from "@/components/store/CustomDomainLoader";
+import CustomDomainLoader from "@/components/vitrine/CustomDomainLoader";
 
 interface PhotographerMeta {
   store_slug: string | null;

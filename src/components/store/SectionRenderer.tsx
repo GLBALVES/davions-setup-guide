@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import EditableText from "@/components/website-editor/inline/EditableText";
 import EditableRichText from "@/components/website-editor/inline/EditableRichText";
 import EditableImage from "@/components/website-editor/inline/EditableImage";
-import { ImageLinksBlock, TextLinksBlock, ImageGridLinksBlock } from "@/components/store/blocks/LinksBlocks";
+import { ImageLinksBlock, TextLinksBlock, ImageGridLinksBlock } from "@/components/vitrine/blocks/LinksBlocks";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -2435,7 +2435,7 @@ function MapBlock({ address, height = 400 }: any) {
 }
 
 // ─── Shop Block (sessions + galleries grid) ─────────────────────────────────
-import ShopGrid from "@/components/store/ShopGrid";
+import ShopGrid from "@/components/vitrine/ShopGrid";
 import { supabase } from "@/integrations/supabase/client";
 
 function ShopBlock({
@@ -2487,10 +2487,10 @@ function ShopBlock({
 
   const onCustomDomain = typeof window !== "undefined" &&
     !window.location.hostname.includes("lovable") &&
-    !window.location.pathname.startsWith("/store/");
+    !window.location.pathname.startsWith("/vitrine/");
 
   const sessionHref = (s: any) =>
-    onCustomDomain ? `/book/${s.slug ?? s.id}` : `/store/${storeSlug}/${s.slug ?? s.id}`;
+    onCustomDomain ? `/book/${s.slug ?? s.id}` : `/vitrine/${storeSlug}/${s.slug ?? s.id}`;
   const galleryHref = (g: any) => `/gallery/${g.slug ?? g.id}`;
 
   return (
