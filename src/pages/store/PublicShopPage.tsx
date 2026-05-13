@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getCurrentHostname } from "@/lib/custom-domain";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getShopDefaults } from "@/lib/shop-defaults";
+import { getI18nField, type SiteI18nLang } from "@/lib/site-i18n";
 import PublicSiteRenderer, {
   SiteConfig,
   Session,
@@ -144,8 +145,12 @@ export default function PublicShopPage({ mode }: { mode: "store" | "custom-domai
     makePageHref,
   });
 
+  const il = (lang as SiteI18nLang) ?? "en";
+  const shopTitle = getI18nField(site, il, "shop_title", d.pageTitle) || d.pageTitle;
+  const shopDescription = getI18nField(site, il, "shop_description", d.pageDescription) || d.pageDescription;
+
   // Inject Shop link right after Home (or at start if no Home)
-  const shopLink = { label: (site as any)?.shop_title || d.navLabel, href: shopHref };
+  const shopLink = { label: shopTitle || d.navLabel, href: shopHref };
   const extraNavLinks =
     baseNavLinks.length > 0
       ? [baseNavLinks[0], shopLink, ...baseNavLinks.slice(1)]
@@ -170,10 +175,10 @@ export default function PublicShopPage({ mode }: { mode: "store" | "custom-domai
     <div className="max-w-6xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
       <header className="text-center mb-10 sm:mb-14">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-extralight tracking-[0.08em] uppercase mb-3">
-          {(site as any)?.shop_title || d.pageTitle}
+          {shopTitle}
         </h1>
         <p className="text-sm font-light text-muted-foreground max-w-xl mx-auto">
-          {(site as any)?.shop_description || d.pageDescription}
+          {shopDescription}
         </p>
       </header>
       <ShopGrid
@@ -208,8 +213,8 @@ export default function PublicShopPage({ mode }: { mode: "store" | "custom-domai
       galleryHref={(g) => `/gallery/${g.slug ?? g.id}`}
       blogHref={mode === "custom-domain" ? `/blog` : `/vitrine/${slug}/blog`}
       extraNavLinks={extraNavLinks}
-      subPageTitle={(site as any)?.shop_title || d.pageTitle}
-      subPageDescription={(site as any)?.shop_description || d.pageDescription}
+      subPageTitle={shopTitle}
+      subPageDescription={shopDescription}
       subPageType="shop"
       subPageBody={shopBody}
       pageHeaderConfig={pageHeaderConfig}
