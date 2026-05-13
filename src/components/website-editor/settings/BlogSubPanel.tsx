@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ExternalLink, Sparkles, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getBlogDefaults } from "@/lib/blog-defaults";
 
@@ -63,6 +64,7 @@ export default function BlogSubPanel({
   onSiteChange: (patch: Record<string, any>) => void;
 }) {
   const { lang } = useLanguage();
+  const navigate = useNavigate();
   const t = STR[lang as keyof typeof STR] ?? STR.en;
   const d = getBlogDefaults(lang);
   const enabled = site?.show_blog ?? false;
@@ -150,7 +152,7 @@ export default function BlogSubPanel({
           variant="ghost"
           size="sm"
           className="w-full justify-between text-xs normal-case tracking-normal font-normal h-9 px-3"
-          onClick={() => openInNewTab("/dashboard/blog")}
+          onClick={() => navigate("/dashboard/blog")}
         >
           <span>{t.managePosts}</span>
           <ExternalLink className="h-3.5 w-3.5 opacity-60" />
