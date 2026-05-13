@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentHostname } from "@/lib/custom-domain";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getShopDefaults } from "@/lib/shop-defaults";
 import { getLegalDefaults } from "@/lib/legal-defaults";
 import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 import { buildPublicSiteNavLinks } from "@/lib/site-navigation";
@@ -31,6 +32,7 @@ interface RawPage {
 export default function PublicLegalPage({ kind, mode }: { kind: Kind; mode: "store" | "custom-domain" }) {
   const { slug } = useParams();
   const { lang } = useLanguage();
+  const shopT = getShopDefaults(lang);
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
   const [site, setSite] = useState<SiteConfig | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -95,7 +97,7 @@ export default function PublicLegalPage({ kind, mode }: { kind: Kind; mode: "sto
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">Loading…</span>
+        <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">{shopT.loading}</span>
       </div>
     );
   }
@@ -103,7 +105,7 @@ export default function PublicLegalPage({ kind, mode }: { kind: Kind; mode: "sto
   if (notFound || !photographer) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <p className="text-sm font-light text-muted-foreground">Not found.</p>
+        <p className="text-sm font-light text-muted-foreground">{shopT.notFound}</p>
       </div>
     );
   }

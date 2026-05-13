@@ -32,6 +32,7 @@ const SiteSubPage = () => {
   const [searchParams] = useSearchParams();
   const isDraftPreview = searchParams.get("preview") === "1";
   const { lang } = useLanguage();
+  const shopDefaults = getShopDefaults(lang);
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
   const [site, setSite] = useState<SiteConfig | null>(null);
   const [page, setPage] = useState<RawPage | null>(null);
@@ -86,7 +87,7 @@ const SiteSubPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">Loading…</span>
+        <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">{shopDefaults.loading}</span>
       </div>
     );
   }
@@ -94,7 +95,7 @@ const SiteSubPage = () => {
   if (notFound || !photographer || !page) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <p className="text-sm font-light text-muted-foreground">Page not found.</p>
+        <p className="text-sm font-light text-muted-foreground">{shopDefaults.pageNotFound}</p>
       </div>
     );
   }
@@ -112,7 +113,6 @@ const SiteSubPage = () => {
     ((siteAny.shop_show_sessions !== false) && sessions.length > 0) ||
     ((siteAny.shop_show_galleries !== false) && galleries.length > 0);
   const blogDefaults = getBlogDefaults(lang);
-  const shopDefaults = getShopDefaults(lang);
   const extraNavLinks = injectShopAndBlogNavLinks({
     links: baseNavLinks,
     homeHref,

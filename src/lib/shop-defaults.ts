@@ -16,6 +16,11 @@ export interface ShopDefaults {
   emptyDescription: string;
   onRequest: string;
   perPhoto: string;
+  loading: string;
+  notFound: string;
+  pageNotFound: string;
+  contactNav: string;
+  contactSubmit: string;
 }
 
 const DEFAULTS: Record<Lang, ShopDefaults> = {
@@ -34,6 +39,11 @@ const DEFAULTS: Record<Lang, ShopDefaults> = {
     emptyDescription: "New offerings will be available here shortly.",
     onRequest: "On request",
     perPhoto: "/ photo",
+    loading: "Loading…",
+    notFound: "Not found.",
+    pageNotFound: "Page not found.",
+    contactNav: "Contact",
+    contactSubmit: "Send",
   },
   pt: {
     pageTitle: "Vitrine",
@@ -50,6 +60,11 @@ const DEFAULTS: Record<Lang, ShopDefaults> = {
     emptyDescription: "Em breve novidades estarão disponíveis por aqui.",
     onRequest: "Sob consulta",
     perPhoto: "/ foto",
+    loading: "Carregando…",
+    notFound: "Não encontrado.",
+    pageNotFound: "Página não encontrada.",
+    contactNav: "Contato",
+    contactSubmit: "Enviar",
   },
   es: {
     pageTitle: "Vitrina",
@@ -66,6 +81,11 @@ const DEFAULTS: Record<Lang, ShopDefaults> = {
     emptyDescription: "Pronto habrá novedades disponibles aquí.",
     onRequest: "A consultar",
     perPhoto: "/ foto",
+    loading: "Cargando…",
+    notFound: "No encontrado.",
+    pageNotFound: "Página no encontrada.",
+    contactNav: "Contacto",
+    contactSubmit: "Enviar",
   },
 };
 

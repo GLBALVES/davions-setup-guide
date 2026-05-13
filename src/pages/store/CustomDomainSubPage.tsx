@@ -40,6 +40,7 @@ const CustomDomainSubPage = () => {
   const isDraftPreview = searchParams.get("preview") === "1";
   const cacheBuster = searchParams.get("v");
   const { lang } = useLanguage();
+  const shopDefaults = getShopDefaults(lang);
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
   const [site, setSite] = useState<SiteConfig | null>(null);
   const [page, setPage] = useState<RawPage | null>(null);
@@ -105,7 +106,7 @@ const CustomDomainSubPage = () => {
   if (notFound || !photographer || !page) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <p className="text-sm font-light text-muted-foreground">Page not found.</p>
+        <p className="text-sm font-light text-muted-foreground">{shopDefaults.pageNotFound}</p>
       </div>
     );
   }
@@ -122,7 +123,6 @@ const CustomDomainSubPage = () => {
     ((siteAny.shop_show_sessions !== false) && sessions.length > 0) ||
     ((siteAny.shop_show_galleries !== false) && galleries.length > 0);
   const blogDefaults = getBlogDefaults(lang);
-  const shopDefaults = getShopDefaults(lang);
   const extraNavLinks = injectShopAndBlogNavLinks({
     links: baseNavLinks,
     homeHref: "/",
