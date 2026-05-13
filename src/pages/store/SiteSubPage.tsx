@@ -31,6 +31,7 @@ const SiteSubPage = () => {
   const { slug, pagePath } = useParams();
   const [searchParams] = useSearchParams();
   const isDraftPreview = searchParams.get("preview") === "1";
+  const { lang } = useLanguage();
   const [photographer, setPhotographer] = useState<Photographer | null>(null);
   const [site, setSite] = useState<SiteConfig | null>(null);
   const [page, setPage] = useState<RawPage | null>(null);
