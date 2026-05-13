@@ -2521,6 +2521,19 @@ export default function PublicSiteRenderer(props: Props) {
     }
   })();
 
+  const homeJsonLd = !subPageTitle
+    ? {
+        "@context": "https://schema.org",
+        "@type": "ProfessionalService",
+        name: displayName,
+        description: seoDescription,
+        url: seoUrl,
+        image: site?.og_image_url || site?.site_hero_image_url || undefined,
+        email: photographer?.email || undefined,
+        priceRange: "$$",
+      }
+    : undefined;
+
   return (
     <>
       <SEOHead
@@ -2529,6 +2542,7 @@ export default function PublicSiteRenderer(props: Props) {
         ogImage={site?.og_image_url || site?.site_hero_image_url || undefined}
         ogUrl={seoUrl}
         canonical={seoUrl}
+        jsonLd={homeJsonLd}
       />
       {templateEl}
       <DavionsFloatingBadge hidden={!!site?.hide_branding} />
