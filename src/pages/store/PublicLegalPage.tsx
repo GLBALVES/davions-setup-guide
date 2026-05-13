@@ -158,6 +158,9 @@ export default function PublicLegalPage({ kind, mode }: { kind: Kind; mode: "sto
       blogHref={mode === "custom-domain" ? `/blog` : `/vitrine/${slug}/blog`}
       extraNavLinks={extraNavLinks}
       subPageTitle={title}
+      subPageDescription={kind === "terms"
+        ? (defaults.termsMetaDescription ?? `${title} — ${photographer.business_name ?? photographer.full_name ?? ""}`)
+        : (defaults.privacyMetaDescription ?? `${title} — ${photographer.business_name ?? photographer.full_name ?? ""}`)}
       subPageHtml={html}
       pageHeaderConfig={pageHeaderConfig}
     />
