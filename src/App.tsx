@@ -28,7 +28,7 @@ import SiteSubPage from "./pages/store/SiteSubPage";
 import BookingSuccess from "./pages/BookingSuccess";
 import BookingConfirm from "./pages/BookingConfirm";
 import NotFound from "./pages/NotFound";
-import { Navigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 function LegacyStoreRedirect() {
   const loc = useLocation();
