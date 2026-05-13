@@ -20,9 +20,9 @@ export interface ShopDefaults {
 
 const DEFAULTS: Record<Lang, ShopDefaults> = {
   en: {
-    pageTitle: "Shop",
+    pageTitle: "Showcase",
     pageDescription: "Sessions & galleries available for booking and purchase.",
-    navLabel: "Shop",
+    navLabel: "Showcase",
     allTab: "All",
     sessionsTab: "Sessions",
     galleriesTab: "Galleries",
