@@ -294,6 +294,8 @@ interface Props {
   extraNavLinks?: NavLinkItem[];
   /** Sub-page title (for non-home pages) */
   subPageTitle?: string;
+  /** Sub-page meta description (overrides site.seo_description for SEO/OG on this sub-page) */
+  subPageDescription?: string;
   /** Sub-page content data */
   subPageData?: Record<string, any>;
   /** Sub-page sections order */
