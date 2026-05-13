@@ -1,59 +1,106 @@
-# Plano: Painel Admin de Pagamentos (Pagar.me + Stripe)
+## Objetivo
 
-Adicionar uma nova seção no painel administrativo (`/admin/payments`) para centralizar a configuração dos provedores de pagamento, sem precisar mexer em secrets via Lovable Cloud diretamente.
+Criar uma área dedicada de personalização da **Vitrine** dentro do Website Editor atual (`/dashboard/website/editor`), com edição visual drag-and-drop dos blocos da home + painel lateral para Identidade, Layout/Subpáginas e SEO — tudo com campos separados por idioma (PT-BR / EN / ES).
 
-## Nova rota
+## Escopo
 
-- `/admin/payments` → `src/pages/admin/AdminPayments.tsx`
-- Adicionar item "Payments" em `AdminSidebar.tsx` (ícone `CreditCard`), entre "Email" e "Approvals".
+1. **Identidade visual + tipografia da Vitrine**
+2. **Layout, seções e subpáginas (Shop / Blog / Legal)**
+3. **SEO e Open Graph por idioma**
 
-## Estrutura da página
+Fora de escopo: domínio/slug e wizard de onboarding.
 
-Tabs no topo: **Pagar.me (Brasil)** | **Stripe (Global)** | **Comissão & Split**
+## Onde vive no editor
 
-### Tab 1 — Pagar.me (Brasil)
-Lê/escreve em `app_payment_settings` (única linha).
+Adicionar uma nova entrada **"Vitrine"** no `SettingsPanel.tsx` (acima de "Showcase"), abrindo um sub-painel dedicado que agrupa as 3 áreas em abas internas:
 
-- Card "Conta Master Davions"
-  - Input: **Master Recipient ID** (`pagarme_master_recipient_id`) — recipient da Davions que recebe a comissão.
-  - Botão "Testar conexão" → chama edge function `pagarme-recipient-status` com o ID, mostra status (active/pending/refused) e saldo.
-- Card "Credenciais de API" (somente leitura, mostra status dos secrets)
-  - `PAGARME_API_KEY` — Configurada / Não configurada
-  - `PAGARME_PUBLIC_KEY` — idem
-  - `PAGARME_WEBHOOK_SECRET` — idem
-  - Botão "Atualizar credenciais" abre instruções (não dá pra editar secret pelo painel — apenas via Lovable Cloud secrets manager).
-  - Edge function `admin-check-pagarme-secrets` retorna apenas booleanos (`hasApiKey`, `hasPublicKey`, `hasWebhookSecret`), nunca os valores.
-- Card "Webhook URL" (read-only, copiável)
-  - Mostra `https://<project>.functions.supabase.co/pagarme-webhook` para o admin colar no painel do Pagar.me.
+```text
+Settings → Site Settings
+├── Domain
+├── Vitrine        ← NOVO (entrada principal)
+│    ├── Identidade
+│    ├── Layout & Subpáginas
+│    └── SEO (PT/EN/ES)
+├── Showcase
+├── SEO Manager
+└── …
+```
 
-### Tab 2 — Stripe (Global)
-- Card "Credenciais Stripe" — mesmo padrão de status (somente flags) para `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_CLIENT_ID`, `STRIPE_PUBLISHABLE_KEY`.
-- Card "Stripe Connect" — link para `https://dashboard.stripe.com/connect`.
-- Card "Webhook URL" — `https://<project>.functions.supabase.co/session-booking-webhook`.
+A canvas central continua sendo o editor visual drag-and-drop existente (blocos do `PublicSiteRenderer` reaproveitados), agora respeitando o idioma ativo do preview.
 
-### Tab 3 — Comissão & Split
-- Slider/input **Comissão Davions BR** (`davions_commission_percent`) — padrão 5%, range 0–30%.
-- Toggle "Davions arca com taxa de processamento Pagar.me" (`charge_processing_fee` no split — padrão ligado).
-- Card informativo: "Esta comissão se aplica a todos os pagamentos de clientes feitos por fotógrafos brasileiros via Pagar.me."
-- Para US/MX (Stripe Connect), comissão continua sendo o `application_fee` configurado por plano (link para a tela de planos).
+## Estrutura do painel "Vitrine"
 
-Botão "Salvar" no rodapé (sticky) — atualiza `app_payment_settings` via supabase client (RLS já restringe a admins).
+### Aba 1 — Identidade
+- Logo (claro/escuro), favicon, nome do estúdio, tagline
+- Paleta (`COLOR_PALETTES` + custom) e esquema (`SchemeId`)
+- Tipografia (heading + body) via `useSiteTypography`
+- Reusa: `ColorsSubPanel`, `FontsSubPanel`, `useSiteColors`, `useSiteSpacing` (já existentes)
 
-## Edge functions novas
+### Aba 2 — Layout & Subpáginas
+- Largura máxima e padding base (reusa `SpacingSubPanel`)
+- Toggle/ordem das seções da home (drag-and-drop na lista de blocos)
+- Toggles + título/descrição de **Shop**, **Blog**, **Legal** — cada um com 3 inputs por idioma
+- Reusa: `ShopSubPanel`, `BlogSubPanel`, `LegalSubPanel` estendidos com `LanguageTabs`
 
-- `admin-check-pagarme-secrets` — retorna `{ hasApiKey, hasPublicKey, hasWebhookSecret, hasMasterRecipient }`. Valida `has_role(auth.uid(), 'admin')` antes de responder.
-- `admin-test-pagarme-recipient` — recebe `{ recipientId }`, chama `GET /recipients/:id` e `GET /recipients/:id/balance`. Retorna status e saldo formatado. Também restrita a admin.
+### Aba 3 — SEO (PT/EN/ES)
+- Para cada idioma: `seo_title`, `seo_description`, `og_image`, `canonical override`
+- Preview SERP por idioma
+- Reusa `SeoSubPanel` envolvendo cada conjunto em `<Tabs value={lang}>`
 
-## Acesso
+## Persistência (PT/EN/ES)
 
-Restrito por `has_role(auth.uid(), 'admin')` — mesma proteção do `AdminLayout`.
+Hoje `photographer_site` guarda campos planos (`seo_title`, `site_subheadline`, `shop_page_title`…). Para suportar 3 idiomas sem quebrar o que existe:
 
-## i18n
+- Adicionar coluna `i18n jsonb` em `photographer_site` no formato:
+  ```json
+  {
+    "pt-BR": { "seo_title": "...", "seo_description": "...", "shop_title": "...", ... },
+    "en":    { ... },
+    "es":    { ... }
+  }
+  ```
+- Os campos planos atuais permanecem como **fallback** (compatibilidade).
+- Helper `getI18nField(site, lang, key)` lê `i18n[lang][key]` → fallback ao campo plano → fallback ao default localizado (`getShopDefaults`, `getBlogDefaults`).
+- `PublicSiteRenderer.tsx` e subpáginas passam a ler via esse helper, mantendo a saída SEO já corrigida.
 
-Strings novas em PT-BR / EN / ES (cards, botões, mensagens de teste de conexão).
+## Componentes novos / alterados
 
-## Fora do escopo
+**Novos**
+- `src/components/website-editor/settings/VitrineSubPanel.tsx` — container com 3 abas
+- `src/components/website-editor/settings/LanguageTabs.tsx` — tabs PT/EN/ES reutilizáveis
+- `src/lib/site-i18n.ts` — `getI18nField`, `setI18nField`, tipos
 
-- Editar valores de secrets pelo painel (continua via Lovable Cloud — explicação na UI).
-- Histórico de transações Pagar.me (próxima iteração).
-- Onboarding do recipient master (admin cria manualmente no painel Pagar.me uma vez).
+**Alterados**
+- `src/components/website-editor/settings/SettingsPanel.tsx` — adiciona item "Vitrine" e roteia para o novo subpanel
+- `ShopSubPanel.tsx`, `BlogSubPanel.tsx`, `LegalSubPanel.tsx`, `SeoSubPanel.tsx` — envelopam campos textuais em `LanguageTabs` + gravam em `i18n[lang][key]`
+- `src/components/store/PublicSiteRenderer.tsx` + páginas `Public*Page.tsx` — leem via `getI18nField(site, lang, key)`
+- `src/lib/shop-defaults.ts`, `blog-defaults.ts`, `legal-defaults.ts` — já localizados, viram só fallback
+
+## Migração de dados
+
+Migration:
+```sql
+ALTER TABLE public.photographer_site
+  ADD COLUMN IF NOT EXISTS i18n jsonb NOT NULL DEFAULT '{}'::jsonb;
+```
+Sem backfill destrutivo: campos planos continuam respondendo até serem sobrescritos pelo novo painel.
+
+## Preview
+
+- O header do editor já tem switcher de idioma do `LanguageContext`. O preview central re-renderiza ao trocar idioma usando `getI18nField`.
+- Adicionar ao topo do `VitrineSubPanel` um seletor de idioma sincronizado com o preview.
+
+## Validação
+
+- Testes manuais em `/dashboard/website/editor`: trocar logo, paleta, fonte → ver preview atualizar.
+- Editar título Shop em PT, alternar para EN → mostrar fallback default em inglês até ser preenchido.
+- Publicar e abrir `/vitrine/:slug?lang=pt-BR|en|es` — confirmar que SEO/OG e textos respeitam o idioma.
+- Rodar geração do `sitemap.xml` (sem mudança).
+
+## Entregáveis
+
+1. Migration `add_i18n_to_photographer_site`
+2. `VitrineSubPanel` + `LanguageTabs` + `site-i18n.ts`
+3. Subpaneis Shop/Blog/Legal/SEO atualizados com tabs PT/EN/ES
+4. `PublicSiteRenderer` + páginas públicas lendo via helper i18n
+5. Item "Vitrine" no `SettingsPanel` do editor
