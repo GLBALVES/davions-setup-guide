@@ -303,6 +303,7 @@ export type Database = {
       }
       app_payment_settings: {
         Row: {
+          charge_processing_fee: boolean
           created_at: string
           davions_commission_percent: number
           id: string
@@ -310,6 +311,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          charge_processing_fee?: boolean
           created_at?: string
           davions_commission_percent?: number
           id?: string
@@ -317,6 +319,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          charge_processing_fee?: boolean
           created_at?: string
           davions_commission_percent?: number
           id?: string
