@@ -5,7 +5,6 @@ import { getCurrentHostname } from "@/lib/custom-domain";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getBlogDefaults } from "@/lib/blog-defaults";
 import { getShopDefaults } from "@/lib/shop-defaults";
-import { getI18nField, type SiteI18nLang } from "@/lib/site-i18n";
 import PublicSiteRenderer, {
   SiteConfig,
   Session,
@@ -181,16 +180,11 @@ export default function PublicBlogListPage({ mode }: { mode: "store" | "custom-d
   const hasShopContent =
     ((siteAny.shop_show_sessions !== false) && sessions.length > 0) ||
     ((siteAny.shop_show_galleries !== false) && galleries.length > 0);
-  const il = (lang as SiteI18nLang) ?? "en";
-  const blogTitleI18n = getI18nField(site, il, "blog_title");
-  const blogDescI18n = getI18nField(site, il, "blog_description");
-  const shopTitleI18n = getI18nField(site, il, "shop_title");
-
   if (shopEnabled && hasShopContent) {
-    extra.push({ label: shopTitleI18n || shopT.navLabel, href: shopHref });
+    extra.push({ label: (siteAny.shop_title as string)?.trim() || shopT.navLabel, href: shopHref });
   }
   // Always inject Blog link (we're on the blog page, so we know there's content)
-  extra.push({ label: blogTitleI18n || t.navLabel, href: blogBaseHref });
+  extra.push({ label: (siteAny.blog_title as string)?.trim() || t.navLabel, href: blogBaseHref });
 
   const extraNavLinks =
     baseNavLinks.length > 0 ? [baseNavLinks[0], ...extra, ...baseNavLinks.slice(1)] : extra;
@@ -205,8 +199,9 @@ export default function PublicBlogListPage({ mode }: { mode: "store" | "custom-d
   const seoUrl =
     typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}` : "";
 
-  const heroTitle = blogTitleI18n || t.pageTitle;
-  const heroDescription = blogDescI18n || t.pageDescription;
+  const heroTitle = (siteAny.blog_title as string)?.trim() || t.pageTitle;
+  const heroDescription =
+    (siteAny.blog_description as string)?.trim() || t.pageDescription;
 
   const blogBody = (
     <div className="max-w-6xl mx-auto px-5 sm:px-8 py-12 sm:py-16">

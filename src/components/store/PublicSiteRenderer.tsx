@@ -5,7 +5,6 @@ import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/Pr
 import SectionRenderer, { type PageSection } from "@/components/store/SectionRenderer";
 import DavionsFloatingBadge from "@/components/store/DavionsFloatingBadge";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { getI18nField, type SiteI18nLang } from "@/lib/site-i18n";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
 import { useExternalFonts } from "@/components/website-editor/useExternalFonts";
 import { useSiteColors } from "@/components/website-editor/useSiteColors";
@@ -1174,12 +1173,12 @@ function ExperienceSection({ site, accentColor, editMode, onFieldChange }: { sit
 
 // ─── Common derived values ────────────────────────────────────────────────
 
-function deriveCommon(props: Props, lang: SiteI18nLang = "en") {
+function deriveCommon(props: Props) {
   const { photographer, site, scrolled: _scrolled, mobileMenuOpen: _m, setMobileMenuOpen, blogHref, extraNavLinks, editMode = false, onFieldChange, visibleSections } = props;
 
   const displayName = site?.tagline || photographer?.business_name || photographer?.full_name || photographer?.email || "";
-  const headline = getI18nField(site, lang, "site_headline", displayName) || displayName;
-  const subheadline = getI18nField(site, lang, "site_subheadline", photographer?.bio || "") || "";
+  const headline = site?.site_headline || displayName;
+  const subheadline = site?.site_subheadline || photographer?.bio || "";
   const ctaText = site?.cta_text || "Book a session";
   const accentColor = site?.accent_color || "#000000";
 
@@ -2266,16 +2265,13 @@ export default function PublicSiteRenderer(props: Props) {
 
   const seoUrl = props.seoUrl;
   const displayName = site?.tagline || photographer?.business_name || photographer?.full_name || photographer?.email || "";
-  const i18nLang: SiteI18nLang = (lang as SiteI18nLang) ?? "en";
-  const subheadline = getI18nField(site, i18nLang, "site_subheadline", photographer?.bio || "") || "";
+  const subheadline = site?.site_subheadline || photographer?.bio || "";
   const photographyWord = lang === "pt" ? "Fotografia" : lang === "es" ? "Fotografía" : "Photography";
-  const i18nSeoTitle = getI18nField(site, i18nLang, "seo_title");
-  const i18nSeoDesc = getI18nField(site, i18nLang, "seo_description");
   const seoTitle = subPageTitle
     ? `${subPageTitle} — ${displayName}`
-    : i18nSeoTitle || `${displayName} — ${photographyWord}`;
+    : site?.seo_title || `${displayName} — ${photographyWord}`;
   const seoDescription =
-    subPageDescription || i18nSeoDesc || subheadline || undefined;
+    subPageDescription || site?.seo_description || subheadline || undefined;
 
   // Apply the studio's typography template (Pixieset-style fonts panel).
   const fontOverrides = (site?.font_overrides ?? {}) as FontOverrides;
@@ -2312,7 +2308,7 @@ export default function PublicSiteRenderer(props: Props) {
     (site as any)?.base_block_padding,
   );
 
-  const derived = deriveCommon(props, i18nLang);
+  const derived = deriveCommon(props);
   const template = props.previewTemplate || site?.site_template || "editorial";
 
   // Inject photographer's custom favicon into <head> — only on the public-facing

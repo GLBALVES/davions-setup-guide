@@ -5,7 +5,6 @@ import { getCurrentHostname } from "@/lib/custom-domain";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getBlogDefaults } from "@/lib/blog-defaults";
 import { getShopDefaults } from "@/lib/shop-defaults";
-import { getI18nField, type SiteI18nLang } from "@/lib/site-i18n";
 import PublicSiteRenderer, {
   SiteConfig,
   Session,
@@ -219,11 +218,10 @@ export default function PublicBlogPostPage({ mode }: { mode: "store" | "custom-d
   const hasShopContent =
     ((siteAny.shop_show_sessions !== false) && sessions.length > 0) ||
     ((siteAny.shop_show_galleries !== false) && galleries.length > 0);
-  const il = (lang as SiteI18nLang) ?? "en";
   if (shopEnabled && hasShopContent) {
-    extra.push({ label: getI18nField(site, il, "shop_title", shopT.navLabel) || shopT.navLabel, href: shopHref });
+    extra.push({ label: (siteAny.shop_title as string)?.trim() || shopT.navLabel, href: shopHref });
   }
-  extra.push({ label: getI18nField(site, il, "blog_title", t.navLabel) || t.navLabel, href: blogBaseHref });
+  extra.push({ label: (siteAny.blog_title as string)?.trim() || t.navLabel, href: blogBaseHref });
 
   const extraNavLinks =
     baseNavLinks.length > 0 ? [baseNavLinks[0], ...extra, ...baseNavLinks.slice(1)] : extra;

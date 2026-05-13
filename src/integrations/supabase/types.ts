@@ -2701,7 +2701,6 @@ export type Database = {
           hero_bg_color: string | null
           hero_text_color: string | null
           hide_branding: boolean
-          i18n: Json
           instagram_url: string | null
           linkedin_url: string | null
           logo_alt_url: string | null
@@ -2823,7 +2822,6 @@ export type Database = {
           hero_bg_color?: string | null
           hero_text_color?: string | null
           hide_branding?: boolean
-          i18n?: Json
           instagram_url?: string | null
           linkedin_url?: string | null
           logo_alt_url?: string | null
@@ -2945,7 +2943,6 @@ export type Database = {
           hero_bg_color?: string | null
           hero_text_color?: string | null
           hide_branding?: boolean
-          i18n?: Json
           instagram_url?: string | null
           linkedin_url?: string | null
           logo_alt_url?: string | null
