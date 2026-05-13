@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getCurrentHostname } from "@/lib/custom-domain";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getLegalDefaults } from "@/lib/legal-defaults";
-import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "@/components/vitrine/PublicSiteRenderer";
+import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
 import { buildPublicSiteNavLinks } from "@/lib/site-navigation";
 import { DEFAULT_HEADER_CONFIG, type HeaderConfig } from "@/components/website-editor/PreviewHeader";
 

@@ -10,9 +10,9 @@ import PublicSiteRenderer, {
   Session,
   Gallery,
   Photographer,
-} from "@/components/vitrine/PublicSiteRenderer";
-import BlogPostView, { type BlogPost } from "@/components/vitrine/BlogPostView";
-import type { BlogListItem } from "@/components/vitrine/BlogList";
+} from "@/components/store/PublicSiteRenderer";
+import BlogPostView, { type BlogPost } from "@/components/store/BlogPostView";
+import type { BlogListItem } from "@/components/store/BlogList";
 import { buildPublicSiteNavLinks } from "@/lib/site-navigation";
 import { DEFAULT_HEADER_CONFIG, type HeaderConfig } from "@/components/website-editor/PreviewHeader";
 import SEOHead from "@/components/SEOHead";

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "@/components/vitrine/PublicSiteRenderer";
-import type { PageSection } from "@/components/vitrine/SectionRenderer";
+import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
+import type { PageSection } from "@/components/store/SectionRenderer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { buildPublicSiteNavLinks, getTopLevelHomePage } from "@/lib/site-navigation";
 import { getShopDefaults } from "@/lib/shop-defaults";

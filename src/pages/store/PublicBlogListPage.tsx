@@ -10,8 +10,8 @@ import PublicSiteRenderer, {
   Session,
   Gallery,
   Photographer,
-} from "@/components/vitrine/PublicSiteRenderer";
-import BlogList, { type BlogListItem } from "@/components/vitrine/BlogList";
+} from "@/components/store/PublicSiteRenderer";
+import BlogList, { type BlogListItem } from "@/components/store/BlogList";
 import { buildPublicSiteNavLinks } from "@/lib/site-navigation";
 import { DEFAULT_HEADER_CONFIG, type HeaderConfig } from "@/components/website-editor/PreviewHeader";
 

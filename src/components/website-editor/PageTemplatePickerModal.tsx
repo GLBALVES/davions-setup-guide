@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTemplateSections, type PageSection } from "./page-templates";
-import SectionRenderer from "@/components/vitrine/SectionRenderer";
+import SectionRenderer from "@/components/store/SectionRenderer";
 
 // ── Template categories & items ──────────────────────────────────────────────
 interface PageTemplate {

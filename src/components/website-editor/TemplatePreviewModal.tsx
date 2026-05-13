@@ -7,7 +7,7 @@ import PublicSiteRenderer, {
   type Photographer,
   type Session,
   type Gallery,
-} from "@/components/vitrine/PublicSiteRenderer";
+} from "@/components/store/PublicSiteRenderer";
 
 interface TemplatePreviewModalProps {
   open: boolean;

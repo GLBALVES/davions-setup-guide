@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Session, Gallery } from "@/components/vitrine/PublicSiteRenderer";
+import type { Session, Gallery } from "@/components/store/PublicSiteRenderer";
 import { getShopDefaults } from "@/lib/shop-defaults";
 import { useLanguage } from "@/contexts/LanguageContext";
 

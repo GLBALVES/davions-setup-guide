@@ -9,8 +9,8 @@ import PublicSiteRenderer, {
   Session,
   Gallery,
   Photographer,
-} from "@/components/vitrine/PublicSiteRenderer";
-import ShopGrid from "@/components/vitrine/ShopGrid";
+} from "@/components/store/PublicSiteRenderer";
+import ShopGrid from "@/components/store/ShopGrid";
 import { buildPublicSiteNavLinks } from "@/lib/site-navigation";
 import { DEFAULT_HEADER_CONFIG, type HeaderConfig } from "@/components/website-editor/PreviewHeader";
 

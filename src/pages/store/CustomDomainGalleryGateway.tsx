@@ -11,7 +11,7 @@ import { getCurrentHostname } from "@/lib/custom-domain";
 import { Camera } from "lucide-react";
 import GalleryView from "@/pages/gallery/GalleryView";
 import logoPreto from "@/assets/logo_principal_preto.png";
-import CustomDomainLoader from "@/components/vitrine/CustomDomainLoader";
+import CustomDomainLoader from "@/components/store/CustomDomainLoader";
 
 interface PhotographerMeta {
   id: string;

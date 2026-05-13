@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import EditableText from "@/components/website-editor/inline/EditableText";
 import EditableRichText from "@/components/website-editor/inline/EditableRichText";
 import EditableImage from "@/components/website-editor/inline/EditableImage";
-import { ImageLinksBlock, TextLinksBlock, ImageGridLinksBlock } from "@/components/vitrine/blocks/LinksBlocks";
+import { ImageLinksBlock, TextLinksBlock, ImageGridLinksBlock } from "@/components/store/blocks/LinksBlocks";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -2435,7 +2435,7 @@ function MapBlock({ address, height = 400 }: any) {
 }
 
 // ─── Shop Block (sessions + galleries grid) ─────────────────────────────────
-import ShopGrid from "@/components/vitrine/ShopGrid";
+import ShopGrid from "@/components/store/ShopGrid";
 import { supabase } from "@/integrations/supabase/client";
 
 function ShopBlock({
