@@ -105,7 +105,7 @@ const CustomDomainSubPage = () => {
   if (notFound || !photographer || !page) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <p className="text-sm font-light text-muted-foreground">Page not found.</p>
+        <p className="text-sm font-light text-muted-foreground">{shopDefaults.pageNotFound}</p>
       </div>
     );
   }

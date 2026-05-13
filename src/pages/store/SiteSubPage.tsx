@@ -86,7 +86,7 @@ const SiteSubPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">Loading…</span>
+        <span className="text-xs tracking-widest uppercase text-muted-foreground animate-pulse">{shopDefaults.loading}</span>
       </div>
     );
   }
@@ -94,7 +94,7 @@ const SiteSubPage = () => {
   if (notFound || !photographer || !page) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <p className="text-sm font-light text-muted-foreground">Page not found.</p>
+        <p className="text-sm font-light text-muted-foreground">{shopDefaults.pageNotFound}</p>
       </div>
     );
   }

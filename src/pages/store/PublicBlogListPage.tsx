@@ -157,7 +157,7 @@ export default function PublicBlogListPage({ mode }: { mode: "store" | "custom-d
   if (notFound || !photographer) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <p className="text-sm font-light text-muted-foreground">Not found.</p>
+        <p className="text-sm font-light text-muted-foreground">{shopT.notFound}</p>
       </div>
     );
   }
