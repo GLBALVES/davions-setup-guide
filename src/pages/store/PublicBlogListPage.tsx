@@ -298,6 +298,7 @@ export default function PublicBlogListPage({ mode }: { mode: "store" | "custom-d
       blogHref={blogBaseHref}
       extraNavLinks={extraNavLinks}
       subPageTitle={heroTitle}
+      subPageDescription={heroDescription}
       subPageBody={blogBody}
       pageHeaderConfig={pageHeaderConfig}
     />
