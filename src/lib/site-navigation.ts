@@ -54,3 +54,28 @@ export function buildPublicSiteNavLinks<T extends PublicSiteNavPage>(params: {
     ...otherPageLinks,
   ];
 }
+
+/**
+ * Inserts Shop and Blog nav links right after the Home link (or at the start
+ * when no Home is present). Mutates a copy of `links` and returns it.
+ */
+export function injectShopAndBlogNavLinks(params: {
+  links: PublicSiteNavLink[];
+  homeHref: string;
+  shop?: { enabled: boolean; label: string; href: string };
+  blog?: { enabled: boolean; label: string; href: string };
+}): PublicSiteNavLink[] {
+  const { links, homeHref, shop, blog } = params;
+  const insert: PublicSiteNavLink[] = [];
+  if (shop?.enabled) insert.push({ label: shop.label, href: shop.href });
+  if (blog?.enabled) insert.push({ label: blog.label, href: blog.href });
+  if (insert.length === 0) return links;
+
+  const out = [...links];
+  if (out.length > 0 && out[0].href === homeHref) {
+    out.splice(1, 0, ...insert);
+  } else {
+    out.unshift(...insert);
+  }
+  return out;
+}
