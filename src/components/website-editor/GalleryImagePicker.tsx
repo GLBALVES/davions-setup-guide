@@ -263,7 +263,7 @@ export default function GalleryImagePicker({
                         >
                           <div className="aspect-square bg-muted/30 overflow-hidden">
                             {g.cover_image_url ? (
-                              <img src={g.cover_image_url} alt="" className="w-full h-full object-cover" />
+                              <img src={g.cover_image_url} alt="" className="w-full h-full object-contain" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <ImageIcon className="h-6 w-6 text-muted-foreground/40" />
@@ -342,7 +342,7 @@ export default function GalleryImagePicker({
                               isSelected ? "border-foreground ring-2 ring-foreground" : "border-border hover:border-foreground/60"
                             )}
                           >
-                            <img src={p.url} alt={p.filename} className="w-full h-full object-cover" loading="lazy" />
+                            <img src={p.url} alt={p.filename} className="w-full h-full object-contain" loading="lazy" />
                             <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/20 transition-colors" />
                             {multiple && isSelected && (
                               <div className="absolute top-1 right-1 h-5 w-5 rounded-full bg-foreground text-background flex items-center justify-center">
