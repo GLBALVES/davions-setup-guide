@@ -106,7 +106,7 @@ export default function SettingsPanel({
         {/* SITE SETTINGS */}
         <Section title="Site Settings">
           <Item icon={Globe} label="Domain" onClick={() => navigate("/dashboard/website")} />
-          <Item icon={Store} label="Shop" onClick={() => setView("shop")} />
+          <Item icon={Store} label="Showcase" onClick={() => setView("shop")} />}
           <Item icon={Search} label="SEO Manager" onClick={() => setView("seo")} />
           <Item icon={BookOpen} label="Blog" onClick={() => setView("blog")} />
           <Item icon={Share2} label="Social" onClick={() => setView("social")} />
