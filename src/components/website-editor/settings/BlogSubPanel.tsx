@@ -152,7 +152,7 @@ export default function BlogSubPanel({
           variant="ghost"
           size="sm"
           className="w-full justify-between text-xs normal-case tracking-normal font-normal h-9 px-3"
-          onClick={() => openInNewTab("/dashboard/blog")}
+          onClick={() => navigate("/dashboard/blog")}
         >
           <span>{t.managePosts}</span>
           <ExternalLink className="h-3.5 w-3.5 opacity-60" />
