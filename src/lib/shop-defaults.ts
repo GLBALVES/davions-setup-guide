@@ -20,9 +20,9 @@ export interface ShopDefaults {
 
 const DEFAULTS: Record<Lang, ShopDefaults> = {
   en: {
-    pageTitle: "Shop",
+    pageTitle: "Showcase",
     pageDescription: "Sessions & galleries available for booking and purchase.",
-    navLabel: "Shop",
+    navLabel: "Showcase",
     allTab: "All",
     sessionsTab: "Sessions",
     galleriesTab: "Galleries",
@@ -36,9 +36,9 @@ const DEFAULTS: Record<Lang, ShopDefaults> = {
     perPhoto: "/ photo",
   },
   pt: {
-    pageTitle: "Loja",
+    pageTitle: "Vitrine",
     pageDescription: "Sessões e galerias disponíveis para agendamento e compra.",
-    navLabel: "Loja",
+    navLabel: "Vitrine",
     allTab: "Todos",
     sessionsTab: "Sessões",
     galleriesTab: "Galerias",
@@ -52,9 +52,9 @@ const DEFAULTS: Record<Lang, ShopDefaults> = {
     perPhoto: "/ foto",
   },
   es: {
-    pageTitle: "Tienda",
+    pageTitle: "Vitrina",
     pageDescription: "Sesiones y galerías disponibles para reservar y comprar.",
-    navLabel: "Tienda",
+    navLabel: "Vitrina",
     allTab: "Todos",
     sessionsTab: "Sesiones",
     galleriesTab: "Galerías",

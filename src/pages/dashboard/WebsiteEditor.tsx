@@ -2005,7 +2005,7 @@ const DndPagesArea = ({
               if (id === SHOP_VIRTUAL_ID && shopExtra) {
                 return (
                   <SortableRow key={id} id={id}>
-                    <VirtualRow icon={ShoppingBag} label={shopExtra.label} href={shopExtra.href} openTitle="Open Shop" onSettings={shopExtra.onSettings} />
+                    <VirtualRow icon={ShoppingBag} label={shopExtra.label} href={shopExtra.href} openTitle="Open Showcase" onSettings={shopExtra.onSettings} />
                   </SortableRow>
                 );
               }
@@ -2068,7 +2068,7 @@ const DndPagesArea = ({
               if (id === SHOP_VIRTUAL_ID && shopExtra) {
                 return (
                   <SortableRow key={id} id={id}>
-                    <VirtualRow icon={ShoppingBag} label={shopExtra.label} href={shopExtra.href} openTitle="Open Shop" onSettings={shopExtra.onSettings} />
+                    <VirtualRow icon={ShoppingBag} label={shopExtra.label} href={shopExtra.href} openTitle="Open Showcase" onSettings={shopExtra.onSettings} />
                   </SortableRow>
                 );
               }
@@ -2861,7 +2861,7 @@ const PagesPanel = ({
           }
         }}
         shopExtra={showShop && onShopChange ? {
-          label: shopLabel || "Shop",
+          label: shopLabel || "Showcase",
           href: shopHref || "#",
           inMenu: shopInMenu !== false,
           sortOrder: typeof shopSortOrder === "number" ? shopSortOrder : 1,

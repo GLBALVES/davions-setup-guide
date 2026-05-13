@@ -34,14 +34,14 @@ export default function ShopSubPanel({
   return (
     <div className="p-4 space-y-5 overflow-y-auto h-full">
       <p className="text-[11px] text-muted-foreground">
-        Showcase your sessions and published galleries on a dedicated Shop page that visitors can
+        Showcase your sessions and published galleries on a dedicated Showcase page that visitors can
         access from the site menu.
       </p>
 
       {/* Master toggle */}
       <div className="flex items-center justify-between rounded-md border border-border bg-muted/20 px-3 py-2.5">
         <div className="min-w-0">
-          <Label className="text-xs font-medium block">Enable Shop</Label>
+          <Label className="text-xs font-medium block">Enable Showcase</Label>
           <p className="text-[10px] text-muted-foreground mt-0.5">
             Adds a "{d.navLabel}" link to your menu and footer.
           </p>
@@ -117,7 +117,7 @@ export default function ShopSubPanel({
             </div>
           </div>
 
-          {/* Open public Shop */}
+          {/* Open public Showcase */}
           <a
             href={publicUrl}
             target="_blank"
@@ -125,7 +125,7 @@ export default function ShopSubPanel({
             className="flex items-center justify-center gap-1.5 w-full px-3 py-2 mt-2 text-[11px] font-medium border border-border rounded hover:bg-muted/50 transition-colors"
           >
             <ExternalLink className="h-3 w-3" />
-            View public Shop
+            View public Showcase
           </a>
         </>
       )}
