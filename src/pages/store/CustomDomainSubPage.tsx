@@ -11,7 +11,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { getCurrentHostname } from "@/lib/custom-domain";
 import CustomDomainLoader from "@/components/store/CustomDomainLoader";
 import PublicSiteRenderer, { SiteConfig, Session, Gallery, Photographer } from "@/components/store/PublicSiteRenderer";
-import { buildPublicSiteNavLinks } from "@/lib/site-navigation";
+import { buildPublicSiteNavLinks, injectShopAndBlogNavLinks } from "@/lib/site-navigation";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getBlogDefaults } from "@/lib/blog-defaults";
+import { getShopDefaults } from "@/lib/shop-defaults";
 
 interface RawPage {
   id: string;
