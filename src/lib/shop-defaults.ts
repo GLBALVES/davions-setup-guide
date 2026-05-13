@@ -52,9 +52,9 @@ const DEFAULTS: Record<Lang, ShopDefaults> = {
     perPhoto: "/ foto",
   },
   es: {
-    pageTitle: "Tienda",
+    pageTitle: "Vitrina",
     pageDescription: "Sesiones y galerías disponibles para reservar y comprar.",
-    navLabel: "Tienda",
+    navLabel: "Vitrina",
     allTab: "Todos",
     sessionsTab: "Sesiones",
     galleriesTab: "Galerías",
