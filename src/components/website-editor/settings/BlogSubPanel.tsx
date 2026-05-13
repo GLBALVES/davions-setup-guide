@@ -64,6 +64,7 @@ export default function BlogSubPanel({
   onSiteChange: (patch: Record<string, any>) => void;
 }) {
   const { lang } = useLanguage();
+  const navigate = useNavigate();
   const t = STR[lang as keyof typeof STR] ?? STR.en;
   const d = getBlogDefaults(lang);
   const enabled = site?.show_blog ?? false;
