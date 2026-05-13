@@ -1195,12 +1195,26 @@ function deriveCommon(props: Props) {
     ? extraNavLinks
     : visibleSections !== undefined && visibleSections !== null
       ? [] // site_pages is active but no visible nav pages exist — empty nav
-      : [
-          ...(showStore ? [{ label: "Sessions", href: "#sessions" }] : []),
-          ...(showAbout ? [{ label: "About", href: "#about" }] : []),
-          ...(showBlog ? [{ label: "Blog", href: blogHref }] : []),
-          ...((showContact && hasSocials) ? [{ label: "Contact", href: "#contact" }] : []),
-        ];
+      : (() => {
+          const navFallback = (() => {
+            try {
+              const saved = (typeof window !== "undefined" && localStorage.getItem("davions_lang")) as "en" | "pt" | "es" | null;
+              const nav = (typeof navigator !== "undefined" && navigator.language?.toLowerCase()) || "";
+              const l = saved || (nav.startsWith("pt") ? "pt" : nav.startsWith("es") ? "es" : "en");
+              if (l === "pt") return { sessions: "Sessões", about: "Sobre", blog: "Blog", contact: "Contato" };
+              if (l === "es") return { sessions: "Sesiones", about: "Sobre", blog: "Blog", contact: "Contacto" };
+              return { sessions: "Sessions", about: "About", blog: "Blog", contact: "Contact" };
+            } catch {
+              return { sessions: "Sessions", about: "About", blog: "Blog", contact: "Contact" };
+            }
+          })();
+          return [
+            ...(showStore ? [{ label: navFallback.sessions, href: "#sessions" }] : []),
+            ...(showAbout ? [{ label: navFallback.about, href: "#about" }] : []),
+            ...(showBlog ? [{ label: navFallback.blog, href: blogHref }] : []),
+            ...((showContact && hasSocials) ? [{ label: navFallback.contact, href: "#contact" }] : []),
+          ];
+        })();
 
   const handleNavClick = (href: string) => {
     if (editMode) return; // block navigation in edit mode
