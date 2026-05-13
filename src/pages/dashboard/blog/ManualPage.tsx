@@ -149,10 +149,12 @@ export const ManualPage = () => {
 
       let blogId = savedBlogId;
       if (blogId) {
-        await supabase.from("blogs").update(blogData).eq("id", blogId);
+        const { error: updateErr } = await supabase.from("blogs").update(blogData).eq("id", blogId);
+        if (updateErr) throw updateErr;
       } else {
-        const { data: newBlog } = await supabase.from("blogs").insert(blogData).select().single();
-        blogId = newBlog!.id;
+        const { data: newBlog, error: insertErr } = await supabase.from("blogs").insert(blogData).select().single();
+        if (insertErr || !newBlog) throw insertErr ?? new Error("Falha ao criar o blog");
+        blogId = newBlog.id;
         setSavedBlogId(blogId);
       }
 
