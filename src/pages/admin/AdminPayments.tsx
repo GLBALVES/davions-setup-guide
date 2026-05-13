@@ -13,6 +13,7 @@ type Settings = {
   id: string;
   pagarme_master_recipient_id: string | null;
   davions_commission_percent: number;
+  charge_processing_fee: boolean;
 };
 
 type SecretsStatus = {
@@ -49,6 +50,7 @@ export default function AdminPayments() {
       setSettings(s);
       setRecipientInput(s.pagarme_master_recipient_id ?? "");
       setCommissionInput(String(s.davions_commission_percent ?? 5));
+      setChargeProcessingFee(s.charge_processing_fee ?? true);
     }
     if (secData) setSecrets(secData as SecretsStatus);
     setLoading(false);
@@ -65,6 +67,7 @@ export default function AdminPayments() {
       .update({
         pagarme_master_recipient_id: recipientInput.trim() || null,
         davions_commission_percent: pct,
+        charge_processing_fee: chargeProcessingFee,
       })
       .eq("id", settings.id);
     setSaving(false);
