@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Globe, Search, BookOpen, Share2, BarChart3, Settings2, Inbox, FileText, Trash2, Scale, Store } from "lucide-react";
+import { ChevronLeft, ChevronRight, Globe, Search, BookOpen, Share2, BarChart3, Settings2, Inbox, FileText, Trash2, Scale, Store, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import TrackingModal from "./TrackingModal";
 import AdvancedModal from "./AdvancedModal";
@@ -12,8 +12,9 @@ import TrashSubPanel from "./TrashSubPanel";
 import FormSubmissionsSubPanel from "./FormSubmissionsSubPanel";
 import LegalModal from "./LegalModal";
 import ShopSubPanel from "./ShopSubPanel";
+import VitrineSubPanel from "./VitrineSubPanel";
 
-type SubView = null | "seo" | "blog" | "social" | "drafts" | "trash" | "forms" | "legal" | "shop";
+type SubView = null | "seo" | "blog" | "social" | "drafts" | "trash" | "forms" | "legal" | "shop" | "vitrine";
 
 export default function SettingsPanel({
   photographerId,
@@ -68,6 +69,7 @@ export default function SettingsPanel({
       forms: "Form Submissions",
       legal: "Legal",
       shop: "Showcase",
+      vitrine: "Vitrine",
     };
     return (
       <>
@@ -89,6 +91,7 @@ export default function SettingsPanel({
             {view === "trash" && <TrashSubPanel photographerId={photographerId} />}
             {view === "forms" && <FormSubmissionsSubPanel photographerId={photographerId} />}
             {view === "shop" && <ShopSubPanel site={site} onSiteChange={onSiteChange} storeSlug={(site as any)?.store_slug ?? null} />}
+            {view === "vitrine" && <VitrineSubPanel site={site} onSiteChange={onSiteChange} storeSlug={(site as any)?.store_slug ?? null} />}
           </div>
         </div>
         <LegalModal open={legalOpen} onOpenChange={setLegalOpen} site={site} onSiteChange={onSiteChange} />
@@ -106,6 +109,7 @@ export default function SettingsPanel({
         {/* SITE SETTINGS */}
         <Section title="Site Settings">
           <Item icon={Globe} label="Domain" onClick={() => navigate("/dashboard/website")} />
+          <Item icon={Sparkles} label="Vitrine" onClick={() => setView("vitrine")} />
           <Item icon={Store} label="Showcase" onClick={() => setView("shop")} />
           <Item icon={Search} label="SEO Manager" onClick={() => setView("seo")} />
           <Item icon={BookOpen} label="Blog" onClick={() => setView("blog")} />
