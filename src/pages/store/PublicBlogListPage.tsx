@@ -297,6 +297,7 @@ export default function PublicBlogListPage({ mode }: { mode: "store" | "custom-d
       extraNavLinks={extraNavLinks}
       subPageTitle={heroTitle}
       subPageDescription={heroDescription}
+      subPageType="blog"
       subPageBody={blogBody}
       pageHeaderConfig={pageHeaderConfig}
     />

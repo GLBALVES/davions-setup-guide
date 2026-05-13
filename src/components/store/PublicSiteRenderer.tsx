@@ -296,6 +296,8 @@ interface Props {
   subPageTitle?: string;
   /** Sub-page meta description (overrides site.seo_description for SEO/OG on this sub-page) */
   subPageDescription?: string;
+  /** Sub-page semantic type — drives JSON-LD schema for rich results */
+  subPageType?: "shop" | "blog" | "legal";
   /** Sub-page content data */
   subPageData?: Record<string, any>;
   /** Sub-page sections order */
@@ -2354,6 +2356,32 @@ export default function PublicSiteRenderer(props: Props) {
     const { navLinks, handleNavClick } = derived;
     const subSections = (props.subPageSections as PageSection[] | undefined) ?? [];
     const headerConfig = props.pageHeaderConfig ?? null;
+    const inLanguage = lang === "pt" ? "pt-BR" : lang === "es" ? "es" : "en";
+    const subPageJsonLd = (() => {
+      const base: Record<string, unknown> = {
+        "@context": "https://schema.org",
+        name: seoTitle,
+        description: seoDescription,
+        url: seoUrl,
+        inLanguage,
+        image: site?.og_image_url || undefined,
+        isPartOf: {
+          "@type": "WebSite",
+          name: displayName,
+          url: seoUrl ? seoUrl.split("/").slice(0, 5).join("/") : undefined,
+        },
+      };
+      if (props.subPageType === "shop") {
+        return { ...base, "@type": "CollectionPage", about: { "@type": "Service", provider: { "@type": "ProfessionalService", name: displayName } } };
+      }
+      if (props.subPageType === "blog") {
+        return { ...base, "@type": "Blog", author: { "@type": "Person", name: displayName } };
+      }
+      if (props.subPageType === "legal") {
+        return { ...base, "@type": "WebPage" };
+      }
+      return { ...base, "@type": "WebPage" };
+    })();
     return (
       <>
         <SEOHead
@@ -2362,6 +2390,7 @@ export default function PublicSiteRenderer(props: Props) {
           ogImage={site?.og_image_url || undefined}
           ogUrl={seoUrl}
           canonical={seoUrl}
+          jsonLd={subPageJsonLd}
         />
         <div className="min-h-screen bg-background">
           {headerConfig ? (
