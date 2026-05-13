@@ -28,6 +28,7 @@ const StorePage = () => {
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
   const { t, lang } = useLanguage();
+  const shopDefaults = getShopDefaults(lang);
   const rawPreview = searchParams.get("preview");
   const isDraftPreview = rawPreview === "1";
   // Only treat ?preview= as a template name override when it's NOT the draft flag.
@@ -138,7 +139,6 @@ const StorePage = () => {
       // Build extra links to insert after Home
       const insertLinks: Array<{ label: string; href: string }> = [];
       if (shopEnabled) {
-        const shopDefaults = getShopDefaults(lang);
         const shopLabel = (siteAny.shop_title as string)?.trim() || shopDefaults.navLabel;
         insertLinks.push({ label: shopLabel, href: `/vitrine/${slug}/shop` });
       }
