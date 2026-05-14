@@ -950,6 +950,7 @@ const SessionDetailPage = () => {
             contractHtml: resolvedContractHtml || null,
             signatureData: signatureData || null,
             clientTaxId: customFieldAnswers?.client_tax_id || null,
+            clientPhone: clientPhone || null,
           },
         }
       );
