@@ -10,6 +10,7 @@ import seloPreto from "@/assets/selo_preto.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { BugReportDialog } from "@/components/dashboard/BugReportDialog";
 import { HelpAssistantPanel } from "@/components/dashboard/HelpAssistantPanel";
+import { PagarmePaymentBanner } from "@/components/dashboard/PagarmePaymentBanner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { Lang } from "@/lib/i18n/translations";
 
@@ -146,6 +147,9 @@ export function DashboardHeader() {
 
       <BugReportDialog open={bugDialogOpen} onOpenChange={setBugDialogOpen} />
       <HelpAssistantPanel open={assistantOpen} onClose={() => setAssistantOpen(false)} />
+      <div className="absolute left-0 right-0 top-full z-40">
+        <PagarmePaymentBanner />
+      </div>
     </header>
   );
 }
