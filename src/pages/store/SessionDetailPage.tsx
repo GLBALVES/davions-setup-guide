@@ -2161,6 +2161,16 @@ const SessionDetailPage = () => {
       </footer>
         </>
       )}
+      {pagarmeModal && (
+        <PagarmeCheckoutModal
+          open={pagarmeModal.open}
+          onOpenChange={(o) => setPagarmeModal((m) => (m ? { ...m, open: o } : null))}
+          checkoutInput={pagarmeModal.checkoutInput}
+          amount={pagarmeModal.amount}
+          isDeposit={pagarmeModal.isDeposit}
+          onPaid={(url) => { window.location.href = url; }}
+        />
+      )}
     </div>
   );
 };
