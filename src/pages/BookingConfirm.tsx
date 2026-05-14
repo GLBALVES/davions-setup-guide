@@ -1448,6 +1448,17 @@ const BookingConfirm = () => {
       <footer className="mt-16">
         <p className="text-[9px] tracking-widest uppercase text-muted-foreground/40">Powered by Davions</p>
       </footer>
+
+      {pagarmeModal && (
+        <PagarmeCheckoutModal
+          open={pagarmeModal.open}
+          onOpenChange={(o) => setPagarmeModal((m) => (m ? { ...m, open: o } : null))}
+          checkoutInput={pagarmeModal.checkoutInput}
+          amount={pagarmeModal.amount}
+          isDeposit={pagarmeModal.isDeposit}
+          onPaid={(url) => { window.location.href = url; }}
+        />
+      )}
     </div>
   );
 };
