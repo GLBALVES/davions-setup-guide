@@ -358,31 +358,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
     }
   }
 
-  // ── Field renderers ────────────────────────────────────────────────
-  const Field = ({ label, value, onChange, type = "text", placeholder = "", className = "" }: any) => (
-    <div className={`flex flex-col gap-1.5 ${className}`}>
-      <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-light">{label}</Label>
-      <Input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        type={type}
-        placeholder={placeholder}
-        className="h-9 text-sm"
-      />
-    </div>
-  );
-
-  const AddressBlock = ({ value, onChange }: { value: typeof DEFAULT_ADDRESS; onChange: (v: typeof DEFAULT_ADDRESS) => void }) => (
-    <div className="grid grid-cols-12 gap-3">
-      <Field className="col-span-12 sm:col-span-3" label={t.zip} value={value.zip_code} onChange={(v: string) => onChange({ ...value, zip_code: v })} placeholder="00000-000" />
-      <Field className="col-span-12 sm:col-span-7" label={t.street} value={value.street} onChange={(v: string) => onChange({ ...value, street: v })} />
-      <Field className="col-span-6 sm:col-span-2" label={t.number} value={value.street_number} onChange={(v: string) => onChange({ ...value, street_number: v })} />
-      <Field className="col-span-12 sm:col-span-6" label={t.complement} value={value.complementary} onChange={(v: string) => onChange({ ...value, complementary: v })} />
-      <Field className="col-span-12 sm:col-span-6" label={t.neighborhood} value={value.neighborhood} onChange={(v: string) => onChange({ ...value, neighborhood: v })} />
-      <Field className="col-span-8 sm:col-span-9" label={t.city} value={value.city} onChange={(v: string) => onChange({ ...value, city: v })} />
-      <Field className="col-span-4 sm:col-span-3" label={t.state} value={value.state} onChange={(v: string) => onChange({ ...value, state: v.toUpperCase().slice(0, 2) })} placeholder="SP" />
-    </div>
-  );
+  const addressLabels = { zip: t.zip, street: t.street, number: t.number, complement: t.complement, neighborhood: t.neighborhood, city: t.city, state: t.state };
 
   const BankBlock = (
     <div className="flex flex-col gap-3">
