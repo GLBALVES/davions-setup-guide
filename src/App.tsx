@@ -91,6 +91,7 @@ import AdminApprovals from "./pages/admin/AdminApprovals";
 import AdminLeads from "./pages/admin/AdminLeads";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminWebhookEvents from "./pages/admin/AdminWebhookEvents";
+import AdminPlans from "./pages/admin/AdminPlans";
 import EmailInbox from "./pages/dashboard/EmailInbox";
 import HelpCenter from "./pages/dashboard/HelpCenter";
 import { LanguageProvider } from "@/contexts/LanguageContext";
