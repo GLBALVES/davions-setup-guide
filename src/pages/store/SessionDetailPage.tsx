@@ -649,24 +649,13 @@ const SessionDetailPage = () => {
         all_day: b.all_day,
       }));
 
-      // Convert each booking into a pseudo-blocked range so overlapping slots get disabled
-      for (const b of allBookings) {
-        if (!b.booked_date) continue;
-        const avail = bookedAvailMap.get(b.availability_id);
-        if (!avail) continue;
-        const startHHmm = (avail.start_time ?? "00:00").slice(0, 5);
-        // Use end_time from availability if present; otherwise compute from session duration
-        let endHHmm = (avail.end_time ?? "").slice(0, 5);
-        if (!endHHmm) {
-          const dur = sessionDurationMap.get(avail.session_id ?? "") ?? 60;
-          const [h, m] = startHHmm.split(":").map(Number);
-          const total = h * 60 + m + dur;
-          endHHmm = `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
-        }
+      // Convert each busy range into a pseudo-blocked range so overlapping slots get disabled
+      for (const r of busyRanges) {
+        if (!r.busy_date || !r.start_time) continue;
         blockedTimes.push({
-          date: b.booked_date,
-          start_time: startHHmm,
-          end_time: endHHmm,
+          date: r.busy_date,
+          start_time: r.start_time.slice(0, 5),
+          end_time: (r.end_time ?? r.start_time).slice(0, 5),
           all_day: false,
         });
       }
