@@ -83,6 +83,7 @@ export async function prepareBookingOrder(
     contractHtml = null,
     signatureData = null,
     clientTaxId = null,
+    clientPhone = null,
   } = input;
 
   // ── Session ──
