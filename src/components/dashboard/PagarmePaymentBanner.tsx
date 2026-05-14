@@ -63,28 +63,34 @@ export function PagarmePaymentBanner() {
 
   return (
     <>
-      <div className="border border-border bg-muted/20 px-5 py-4 flex items-center gap-4">
-        <div className="shrink-0 w-9 h-9 rounded-full bg-foreground text-background flex items-center justify-center">
+      <div className="border-b border-border bg-background px-6 py-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground text-background">
           <CreditCard className="h-4 w-4" />
+            </div>
+            <div className="min-w-0 space-y-0.5">
+              <p className="text-sm font-light leading-snug tracking-wide text-foreground">{t.title}</p>
+              <p className="max-w-2xl text-[11px] font-light leading-relaxed text-muted-foreground">{t.subtitle}</p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2 pl-12 sm:pl-0">
+            <Button size="sm" onClick={() => setOpen(true)} className="h-8 px-4 text-[10px] tracking-[0.22em]">
+              {t.cta}
+            </Button>
+            <button
+              onClick={() => {
+                // Snooze 24h
+                localStorage.setItem(DISMISS_KEY, String(Date.now() + 24 * 3600 * 1000));
+                setShow(false);
+              }}
+              aria-label={t.later}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-light tracking-wide">{t.title}</p>
-          <p className="text-[11px] text-muted-foreground font-light leading-relaxed">{t.subtitle}</p>
-        </div>
-        <Button size="sm" onClick={() => setOpen(true)} className="shrink-0">
-          {t.cta}
-        </Button>
-        <button
-          onClick={() => {
-            // Snooze 24h
-            localStorage.setItem(DISMISS_KEY, String(Date.now() + 24 * 3600 * 1000));
-            setShow(false);
-          }}
-          aria-label={t.later}
-          className="text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <X className="h-4 w-4" />
-        </button>
       </div>
 
       <PagarmeOnboardingModal
