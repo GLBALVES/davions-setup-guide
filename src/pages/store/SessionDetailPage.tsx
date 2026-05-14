@@ -954,17 +954,38 @@ const SessionDetailPage = () => {
         }
       );
 
-      if (fnError || !checkoutData?.url) {
-        throw new Error(fnError?.message || "No payment URL returned");
+      if (fnError) throw new Error(fnError.message);
+      const resp = checkoutData as any;
+
+      // Brazilian photographers → open transparent Pagar.me modal
+      if (resp?.provider === "pagarme_transparent") {
+        const extrasTotal = selectedExtras.reduce((s, e) => s + e.price * e.qty, 0);
+        const subtotal = (session.price ?? 0) + extrasTotal;
+        const taxRate = session.tax_rate ?? 0;
+        const taxAmount = Math.round(subtotal * (taxRate / 100));
+        const fullTotal = subtotal + taxAmount;
+        const isDeposit = !!session.deposit_enabled;
+        const depositType = (session.deposit_type ?? "").toLowerCase();
+        const isPercent = depositType === "percent" || depositType === "percentage";
+        const amount = isDeposit
+          ? (isPercent
+              ? Math.round(fullTotal * ((session.deposit_amount ?? 0) / 100))
+              : (session.deposit_amount ?? 0))
+          : fullTotal;
+        try { localStorage.removeItem(clientStorageKey); } catch { /* ignore */ }
+        setPagarmeModal({
+          open: true,
+          checkoutInput: resp.checkout_input,
+          amount,
+          isDeposit,
+        });
+        setSubmitting(false);
+        return;
       }
+
+      if (!resp?.url) throw new Error("No payment URL returned");
       try { localStorage.removeItem(clientStorageKey); } catch { /* ignore */ }
-      window.location.href = checkoutData.url;
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      toast({ title: "Payment error", description: message, variant: "destructive" });
-      setSubmitting(false);
-    }
-  };
+      window.location.href = resp.url;
 
   // ────────────────────────────────────────────
   // Loading / not found
