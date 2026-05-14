@@ -205,6 +205,12 @@ const BookingConfirm = () => {
 
   // Payment state
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [pagarmeModal, setPagarmeModal] = useState<{
+    open: boolean;
+    checkoutInput: Record<string, unknown>;
+    amount: number;
+    isDeposit: boolean;
+  } | null>(null);
   const [isSavingContinue, setIsSavingContinue] = useState(false);
 
   useEffect(() => {
