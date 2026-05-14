@@ -328,6 +328,12 @@ const SessionDetailPage = () => {
     try { return JSON.parse(localStorage.getItem(clientStorageKey) ?? "{}").notes ?? ""; } catch { return ""; }
   });
   const [submitting, setSubmitting] = useState(false);
+  const [pagarmeModal, setPagarmeModal] = useState<{
+    open: boolean;
+    checkoutInput: Record<string, unknown>;
+    amount: number;
+    isDeposit: boolean;
+  } | null>(null);
   const [contractAgreed, setContractAgreed] = useState(false);
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [contractCustomFields, setContractCustomFields] = useState<ContractCustomField[]>([]);
