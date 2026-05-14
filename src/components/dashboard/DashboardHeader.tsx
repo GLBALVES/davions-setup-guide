@@ -46,8 +46,9 @@ export function DashboardHeader() {
   }, [user]);
 
   return (
-    <header className="sticky top-0 z-40 bg-background h-14 border-b border-border flex items-center justify-between px-6 shrink-0">
-      <div className="flex items-center gap-3">
+    <div className="sticky top-0 z-40 shrink-0 bg-background">
+      <header className="h-14 border-b border-border flex items-center justify-between px-6">
+        <div className="flex items-center gap-3">
         <SidebarTrigger className="text-muted-foreground" />
 
         <AnimatePresence mode="wait" initial={false}>
@@ -84,9 +85,9 @@ export function DashboardHeader() {
             />
           )}
         </AnimatePresence>
-      </div>
+        </div>
 
-      <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1">
         {/* Language selector */}
         <div className="flex items-center gap-0.5 mr-2">
           {LANG_OPTIONS.map((opt) => (
@@ -143,13 +144,12 @@ export function DashboardHeader() {
           </TooltipTrigger>
           <TooltipContent side="bottom">{t.headerTooltips.bugReport}</TooltipContent>
         </Tooltip>
-      </div>
+        </div>
+      </header>
 
       <BugReportDialog open={bugDialogOpen} onOpenChange={setBugDialogOpen} />
       <HelpAssistantPanel open={assistantOpen} onClose={() => setAssistantOpen(false)} />
-      <div className="absolute left-0 right-0 top-full z-40">
-        <PagarmePaymentBanner />
-      </div>
-    </header>
+      <PagarmePaymentBanner />
+    </div>
   );
 }
