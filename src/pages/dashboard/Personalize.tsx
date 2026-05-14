@@ -34,6 +34,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import WorkflowEmailTemplates from "@/components/dashboard/WorkflowEmailTemplates";
+import { PaymentsSettings } from "@/components/dashboard/PaymentsSettings";
 import ImageUploadField from "@/components/website-editor/ImageUploadField";
 
 // ── Briefing types ─────────────────────────────────────────────────────────────
@@ -824,6 +825,7 @@ const Personalize = () => {
                     {[
                   { value: "studio", label: t.personalize.studioTab },
                   { value: "business", label: t.personalize.businessTab },
+                  { value: "payments", label: t.personalize.paymentsTab },
                   { value: "galleries", label: t.personalize.galleriesTab },
                   { value: "templates", label: t.personalize.templatesTab }].
                   map((tab) =>
@@ -1940,6 +1942,11 @@ const Personalize = () => {
                       )}
                       </div>
                     </section>
+                  </TabsContent>
+
+                  {/* ── PAYMENTS TAB ── */}
+                  <TabsContent value="payments" className="mt-0 flex flex-col gap-6">
+                    <PaymentsSettings />
                   </TabsContent>
 
                   {/* ── TEMPLATES TAB ── */}
