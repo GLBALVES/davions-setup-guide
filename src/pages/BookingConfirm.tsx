@@ -950,8 +950,12 @@ const BookingConfirm = () => {
                   <Input
                     type="tel"
                     value={clientInfo.phone}
-                    onChange={(e) => setClientInfo((p) => ({ ...p, phone: e.target.value }))}
-                    placeholder="+1 (555) 123-4567"
+                    onChange={(e) => {
+                      const isBR = (photographer?.business_country ?? "").toString().toUpperCase().startsWith("BR");
+                      const v = isBR ? formatPhoneBR(e.target.value) : e.target.value;
+                      setClientInfo((p) => ({ ...p, phone: v }));
+                    }}
+                    placeholder={(photographer?.business_country ?? "").toString().toUpperCase().startsWith("BR") ? "(11) 99999-9999" : "+1 (555) 123-4567"}
                     className="text-sm font-light"
                   />
                 </div>
