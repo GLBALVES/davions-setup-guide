@@ -795,6 +795,7 @@ export const translations = {
       studioTab: "Studio",
       businessTab: "Business",
       galleriesTab: "Galleries",
+      paymentsTab: "Payments",
       // Studio tab
       sessionTypes: "Session Types",
       sessionTypesDesc: "Categorize your sessions by type (e.g. Newborn, Wedding, Portrait).",
@@ -2924,6 +2925,7 @@ export const translations = {
       studioTab: "Estúdio",
       businessTab: "Negócio",
       galleriesTab: "Galerias",
+      paymentsTab: "Pagamentos",
       sessionTypes: "Tipos de Sessão",
       sessionTypesDesc: "Categorize suas sessões por tipo (ex: Newborn, Casamento, Retrato).",
       contracts: "Contratos",
@@ -5024,6 +5026,7 @@ export const translations = {
       studioTab: "Estudio",
       businessTab: "Negocio",
       galleriesTab: "Galerías",
+      paymentsTab: "Pagos",
       sessionTypes: "Tipos de Sesión",
       sessionTypesDesc: "Categoriza tus sesiones por tipo (ej: Newborn, Boda, Retrato).",
       contracts: "Contratos",
