@@ -91,6 +91,7 @@ import AdminApprovals from "./pages/admin/AdminApprovals";
 import AdminLeads from "./pages/admin/AdminLeads";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminWebhookEvents from "./pages/admin/AdminWebhookEvents";
+import AdminPlans from "./pages/admin/AdminPlans";
 import EmailInbox from "./pages/dashboard/EmailInbox";
 import HelpCenter from "./pages/dashboard/HelpCenter";
 import { LanguageProvider } from "@/contexts/LanguageContext";
@@ -244,6 +245,7 @@ const App = () => {
                 <Route path="/admin/leads" element={<ProtectedRoute><AdminLeads /></ProtectedRoute>} />
                 <Route path="/admin/payments" element={<ProtectedRoute><AdminPayments /></ProtectedRoute>} />
                 <Route path="/admin/webhooks" element={<ProtectedRoute><AdminWebhookEvents /></ProtectedRoute>} />
+                <Route path="/admin/plans" element={<ProtectedRoute><AdminPlans /></ProtectedRoute>} />
 
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
