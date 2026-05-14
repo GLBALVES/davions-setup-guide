@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PagarmeCheckoutModal } from "@/components/booking/PagarmeCheckoutModal";
+import { formatPhoneBR } from "@/lib/utils";
 import {
   Calendar,
   Camera,
