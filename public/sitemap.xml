@@ -66,10 +66,19 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://davions.com/vitrine/palomaschell/page/maternity</loc>
-    <lastmod>2026-05-14T03:06:59.645Z</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <loc>https://davions.com/vitrine/priscillafelix</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://davions.com/vitrine/priscillafelix/shop</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://davions.com/vitrine/priscillafelix/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://davions.com/vitrine/giombelli/page/servios</loc>
@@ -78,8 +87,26 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://davions.com/vitrine/palomaschell/page/maternity</loc>
+    <lastmod>2026-05-14T14:41:44.597Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://davions.com/vitrine/giombelli/page/contact</loc>
     <lastmod>2026-05-13T14:07:51.093Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://davions.com/vitrine/priscillafelix/page/contact</loc>
+    <lastmod>2026-05-13T20:07:29.266Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://davions.com/vitrine/priscillafelix/page/blog</loc>
+    <lastmod>2026-05-13T20:07:29.266Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
