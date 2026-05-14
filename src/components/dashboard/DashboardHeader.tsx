@@ -147,6 +147,9 @@ export function DashboardHeader() {
 
       <BugReportDialog open={bugDialogOpen} onOpenChange={setBugDialogOpen} />
       <HelpAssistantPanel open={assistantOpen} onClose={() => setAssistantOpen(false)} />
+      <div className="absolute left-0 right-0 top-full z-40">
+        <PagarmePaymentBanner />
+      </div>
     </header>
   );
 }
