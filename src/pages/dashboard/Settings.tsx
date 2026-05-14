@@ -673,7 +673,6 @@ const Settings = () => {
                   <TabsList className="h-auto bg-transparent p-0 border-b border-border rounded-none w-full justify-start gap-0 mb-8">
                     {[
                       { value: "profile", label: t.settings.profile },
-                      { value: "payments", label: t.settings.payments },
                       { value: "notifications", label: t.notif.title },
                       { value: "security", label: t.settings.security },
                     ].map((tab) => (
