@@ -34,6 +34,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { WatermarkEditor, WatermarkData } from "@/components/dashboard/WatermarkEditor";
 import SessionTypeManager, { SessionType } from "@/components/dashboard/SessionTypeManager";
 import WorkflowEmailTemplates from "@/components/dashboard/WorkflowEmailTemplates";
+import { PaymentsSettings } from "@/components/dashboard/PaymentsSettings";
 import ImageUploadField from "@/components/website-editor/ImageUploadField";
 
 // ── Briefing types ─────────────────────────────────────────────────────────────
