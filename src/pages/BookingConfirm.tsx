@@ -501,7 +501,32 @@ const BookingConfirm = () => {
         },
       });
       if (error) throw error;
-      if (data?.url) window.location.href = data.url;
+      const resp = data as any;
+
+      if (resp?.provider === "pagarme_transparent") {
+        // Compute the same amount the edge function will charge
+        const subtotal = session?.price ?? 0;
+        const taxRate = (session as any)?.tax_rate ?? 0;
+        const taxAmount = Math.round(subtotal * (taxRate / 100));
+        const fullTotal = subtotal + taxAmount;
+        const isDeposit = !!(session as any)?.deposit_enabled;
+        const depositType = ((session as any)?.deposit_type ?? "").toLowerCase();
+        const isPercent = depositType === "percent" || depositType === "percentage";
+        const amount = isDeposit
+          ? (isPercent
+              ? Math.round(fullTotal * (((session as any)?.deposit_amount ?? 0) / 100))
+              : ((session as any)?.deposit_amount ?? 0))
+          : fullTotal;
+        setPagarmeModal({
+          open: true,
+          checkoutInput: { ...resp.checkout_input, bookingId: booking.id, sessionId: booking.session_id },
+          amount,
+          isDeposit,
+        });
+        return;
+      }
+
+      if (resp?.url) window.location.href = resp.url;
     } catch (err: any) {
       console.error("Payment error:", err);
     } finally {
