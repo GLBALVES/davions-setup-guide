@@ -35,6 +35,10 @@ export function PagarmeCardTab({ checkoutInput, amount, onPaid }: Props) {
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
   const [doc, setDoc] = useState("");
+  const [zip, setZip] = useState("");
+  const [street, setStreet] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
   const [installments, setInstallments] = useState("1");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
