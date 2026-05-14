@@ -825,6 +825,7 @@ const Personalize = () => {
                     {[
                   { value: "studio", label: t.personalize.studioTab },
                   { value: "business", label: t.personalize.businessTab },
+                  { value: "payments", label: t.personalize.paymentsTab ?? "Payments" },
                   { value: "galleries", label: t.personalize.galleriesTab },
                   { value: "templates", label: t.personalize.templatesTab }].
                   map((tab) =>
