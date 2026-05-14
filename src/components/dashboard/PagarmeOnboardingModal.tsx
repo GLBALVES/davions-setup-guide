@@ -438,7 +438,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
             </div>
             <div className="flex flex-col gap-3">
               <h4 className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-light">{t.address}</h4>
-              <AddressBlock value={pj.address} onChange={(v) => setPj({ ...pj, address: v })} />
+              <AddressBlock labels={addressLabels} value={pj.address} onChange={(v) => setPj({ ...pj, address: v })} />
             </div>
 
             <div className="flex flex-col gap-3 border-t border-border pt-5">
