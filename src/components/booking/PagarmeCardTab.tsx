@@ -67,6 +67,11 @@ export function PagarmeCardTab({ checkoutInput, amount, onPaid }: Props) {
       setErrMsg("Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido");
       return;
     }
+    const cleanZip = onlyDigits(zip);
+    if (cleanZip.length !== 8 || !street.trim() || !city.trim() || state.trim().length !== 2) {
+      setErrMsg("Preencha o endereço de cobrança (CEP, rua, cidade e UF)");
+      return;
+    }
     setSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke(
@@ -83,6 +88,13 @@ export function PagarmeCardTab({ checkoutInput, amount, onPaid }: Props) {
               exp_year: Number(yy.length === 2 ? `20${yy}` : yy),
               cvv,
               holder_document: onlyDigits(doc) || undefined,
+              billing_address: {
+                line_1: street.trim(),
+                zip_code: cleanZip,
+                city: city.trim(),
+                state: state.trim().toUpperCase(),
+                country: "BR",
+              },
             },
           },
         }
