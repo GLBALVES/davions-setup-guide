@@ -198,6 +198,13 @@ serve(async (req) => {
               installments: [{ number: 1, total: amountToCharge }],
               statement_descriptor: "DAVIONS",
             },
+            pix: {
+              expires_in: 3600,
+            },
+            boleto: {
+              instructions: "Pagar até a data de vencimento.",
+              due_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+            },
           },
           split: split_rules,
         },
