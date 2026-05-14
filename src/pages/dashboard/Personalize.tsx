@@ -1944,6 +1944,11 @@ const Personalize = () => {
                     </section>
                   </TabsContent>
 
+                  {/* ── PAYMENTS TAB ── */}
+                  <TabsContent value="payments" className="mt-0 flex flex-col gap-6">
+                    <PaymentsSettings />
+                  </TabsContent>
+
                   {/* ── TEMPLATES TAB ── */}
                   <TabsContent value="templates" className="mt-0 flex flex-col gap-8">
                     <WorkflowEmailTemplates />
