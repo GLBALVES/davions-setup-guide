@@ -197,10 +197,15 @@ export async function prepareBookingOrder(
 
   // ── Split ──
   const settings = await getPaymentSettings(supabase);
+  const feePercent = await resolveFeePercent(
+    supabase,
+    sessionData.photographer_id as string,
+    settings.default_fee_percent
+  );
   const split_rules = buildSplitRules({
-    amount: amountToCharge,
     photographerRecipientId: recipientId,
-    settings,
+    masterRecipientId: settings.pagarme_master_recipient_id ?? "",
+    feePercent,
   });
 
   return {
