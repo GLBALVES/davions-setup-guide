@@ -106,6 +106,17 @@ Deno.serve(async (req) => {
       type: "mobile" as const,
     });
 
+    const addressObj = (a: Address) => ({
+      street: a.street,
+      street_number: a.street_number,
+      complementary: a.complementary?.trim() || "N/A",
+      reference_point: a.reference_point?.trim() || "N/A",
+      neighborhood: a.neighborhood,
+      city: a.city,
+      state: a.state,
+      zip_code: onlyDigits(a.zip_code),
+    });
+
     let register_information: any;
     let holder_type: "individual" | "company";
 
