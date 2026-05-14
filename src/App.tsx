@@ -77,6 +77,7 @@ import FinanceDashboard from "./pages/dashboard/FinanceDashboard";
 import FinanceReceivables from "./pages/dashboard/FinanceReceivables";
 import FinancePayables from "./pages/dashboard/FinancePayables";
 import FinanceCashFlow from "./pages/dashboard/FinanceCashFlow";
+import FinancePagarme from "./pages/dashboard/FinancePagarme";
 import FinanceReports from "./pages/dashboard/FinanceReports";
 import Billing from "./pages/dashboard/Billing";
 import AdminBugReports from "./pages/admin/AdminBugReports";
@@ -223,6 +224,7 @@ const App = () => {
                  <Route path="/dashboard/finance/payables" element={<ProtectedRoute><FinancePayables /></ProtectedRoute>} />
                  <Route path="/dashboard/finance/cashflow" element={<ProtectedRoute><FinanceCashFlow /></ProtectedRoute>} />
                  <Route path="/dashboard/finance/reports" element={<ProtectedRoute><FinanceReports /></ProtectedRoute>} />
+                 <Route path="/dashboard/finance/pagarme" element={<ProtectedRoute><FinancePagarme /></ProtectedRoute>} />
                  <Route path="/dashboard/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
 
                  <Route path="/dashboard/help" element={<ProtectedRoute><HelpCenter /></ProtectedRoute>} />
