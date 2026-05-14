@@ -142,6 +142,7 @@ const Billing = () => {
   const [loadingManage, setLoadingManage] = useState(false);
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
   const [stripeConnectedAt, setStripeConnectedAt] = useState<string | null>(null);
+  const [planFeePercent, setPlanFeePercent] = useState<number | null>(null);
 
   const fetchAll = async () => {
     if (!user) return;
