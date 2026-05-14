@@ -22,9 +22,30 @@ export interface BookingInput {
   clientEmail: string;
   clientName: string;
   clientTaxId?: string | null;
+  clientPhone?: string | null;
   selectedExtras?: SelectedExtra[];
   contractHtml?: string | null;
   signatureData?: string | null;
+}
+
+/**
+ * Parse any phone string into Pagar.me's { country_code, area_code, number } shape.
+ * Defaults to BR (+55). Returns null when there are not enough digits.
+ */
+export function parsePhoneForPagarme(raw?: string | null) {
+  if (!raw) return null;
+  const onlyDigits = String(raw).replace(/\D/g, "");
+  if (!onlyDigits) return null;
+  // Strip leading country code 55 if present and we have a full BR number
+  let digits = onlyDigits;
+  if ((digits.length === 12 || digits.length === 13) && digits.startsWith("55")) {
+    digits = digits.slice(2);
+  }
+  // Need at least area (2) + 8 digits
+  if (digits.length < 10) return null;
+  const area = digits.slice(0, 2);
+  const number = digits.slice(2, 11); // up to 9 digits
+  return { country_code: "55", area_code: area, number };
 }
 
 export interface PreparedOrder {
