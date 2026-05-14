@@ -1,0 +1,1 @@
+ALTER TABLE public.photographers ADD COLUMN IF NOT EXISTS plan_key TEXT;

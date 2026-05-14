@@ -3027,6 +3027,7 @@ export type Database = {
           pagarme_connected_at: string | null
           pagarme_kyc_status: string | null
           pagarme_recipient_id: string | null
+          plan_key: string | null
           store_slug: string | null
           stripe_account_id: string | null
           stripe_connected_at: string | null
@@ -3057,6 +3058,7 @@ export type Database = {
           pagarme_connected_at?: string | null
           pagarme_kyc_status?: string | null
           pagarme_recipient_id?: string | null
+          plan_key?: string | null
           store_slug?: string | null
           stripe_account_id?: string | null
           stripe_connected_at?: string | null
@@ -3087,6 +3089,7 @@ export type Database = {
           pagarme_connected_at?: string | null
           pagarme_kyc_status?: string | null
           pagarme_recipient_id?: string | null
+          plan_key?: string | null
           store_slug?: string | null
           stripe_account_id?: string | null
           stripe_connected_at?: string | null
