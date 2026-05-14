@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
         monthly_income: Math.round(body.monthly_income * 100),
         professional_occupation: body.professional_occupation || "Photographer",
         phone_numbers: [phoneObj(body.phone)],
-        address: { ...body.address, zip_code: onlyDigits(body.address.zip_code) },
+        address: addressObj(body.address),
       };
     } else {
       holder_type = "company";
@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
         corporation_type: body.corporation_type || "limited",
         founding_date: body.founding_date,
         phone_numbers: [phoneObj(body.phone)],
-        address: { ...body.address, zip_code: onlyDigits(body.address.zip_code) },
+        address: addressObj(body.address),
         managing_partners: [
           {
             type: "individual",
