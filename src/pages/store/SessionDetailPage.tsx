@@ -986,6 +986,12 @@ const SessionDetailPage = () => {
       if (!resp?.url) throw new Error("No payment URL returned");
       try { localStorage.removeItem(clientStorageKey); } catch { /* ignore */ }
       window.location.href = resp.url;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      toast({ title: "Payment error", description: message, variant: "destructive" });
+      setSubmitting(false);
+    }
+  };
 
   // ────────────────────────────────────────────
   // Loading / not found
