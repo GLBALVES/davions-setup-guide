@@ -2,7 +2,7 @@
 // Handles: booking upsert, amount calculation, items, customer, split rules,
 // and order finalization (status updates + slot booking).
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { getPaymentSettings, buildSplitRules } from "./pagarme-split.ts";
+import { getPaymentSettings, buildSplitRules, resolveFeePercent } from "./pagarme-split.ts";
 
 export const PAGARME_BASE = "https://api.pagar.me/core/v5";
 
