@@ -245,6 +245,7 @@ const App = () => {
                 <Route path="/admin/leads" element={<ProtectedRoute><AdminLeads /></ProtectedRoute>} />
                 <Route path="/admin/payments" element={<ProtectedRoute><AdminPayments /></ProtectedRoute>} />
                 <Route path="/admin/webhooks" element={<ProtectedRoute><AdminWebhookEvents /></ProtectedRoute>} />
+                <Route path="/admin/plans" element={<ProtectedRoute><AdminPlans /></ProtectedRoute>} />
 
                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
