@@ -87,7 +87,22 @@ serve(async (req) => {
     if (country === "BR" || country === "BRA" || country === "BRAZIL") {
       const { data: pmData, error: pmErr } = await supabase.functions.invoke(
         "create-pagarme-booking-checkout",
-        { body: await (async () => ({ ...(await req.clone().json()) }))() }
+        {
+          body: {
+            bookingId: existingBookingId,
+            sessionId,
+            slotId,
+            bookedDate,
+            startTime,
+            clientEmail,
+            clientName,
+            selectedExtras,
+            contractHtml,
+            signatureData,
+            clientTaxId,
+          },
+          headers: { origin: req.headers.get("origin") ?? "" },
+        }
       );
       if (pmErr) throw pmErr;
       return new Response(JSON.stringify(pmData), {
