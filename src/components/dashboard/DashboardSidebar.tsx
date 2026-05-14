@@ -50,6 +50,7 @@ import {
   SlidersHorizontal,
   HelpCircle,
   Inbox,
+  Wallet,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -199,6 +200,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
         { title: t.nav.payables,          icon: ArrowUpCircle,   to: "/dashboard/finance/payables" },
         { title: t.nav.cashFlow,          icon: TrendingUp,      to: "/dashboard/finance/cashflow" },
         { title: t.nav.reports,           icon: BarChart3,       to: "/dashboard/finance/reports" },
+        { title: t.nav.pagarmeBalance,    icon: Wallet,          to: "/dashboard/finance/pagarme" },
       ],
     },
     {

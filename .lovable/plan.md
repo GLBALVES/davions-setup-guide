@@ -1,116 +1,77 @@
-# Checkout Transparente Pagar.me — PIX, Cartão e Boleto
+# Painel de Saldo & Recebíveis (Pagar.me)
 
-Substitui o redirect para o checkout hospedado do Pagar.me por um checkout 100% no Davions, com os 3 métodos de pagamento processados via API v5.
+Hoje o fotógrafo já tem o `FinanceDashboard` (visão de bookings) e o `get-stripe-balance` (saldo Stripe Connect). Falta uma tela equivalente para o **Pagar.me**, que é o gateway usado pelos clientes BR (PIX, boleto, cartão).
 
-## Arquitetura
+## Objetivo
+
+Criar uma página dedicada onde o fotógrafo:
+1. Vê **quanto tem disponível**, **a receber** (recebíveis futuros, ex.: parcelas de cartão e D+1 do PIX) e **bloqueado**.
+2. Acompanha o **histórico de transações** (PIX/boleto/cartão) com status, valor líquido, taxas e data prevista de liberação.
+3. Solicita **saque (transferência para conta bancária)** do saldo disponível.
+4. Consulta **histórico de saques** já realizados.
+
+## Localização na UI
+
+- Nova rota: `/dashboard/finance/pagarme` (ou aba dentro de `FinanceDashboard`).
+- Card novo no `FinanceDashboard` chamado **"Saldo Pagar.me"** ao lado do bloco de Stripe, com link "Ver detalhes".
+- Item no `DashboardSidebar` em Finance: **"Saldo Pagar.me"**.
+- i18n em EN / PT-BR / ES (regra do projeto).
+
+## Layout da página (luxury minimal, padrão do projeto)
 
 ```text
-[BookingWizard / SessionDetailPage]
-            │
-            ▼
-   <PagarmeCheckoutModal>      ◄── novo componente
-   ├── Tab PIX     → QR Code + copia-e-cola + polling
-   ├── Tab Cartão  → form com tokenização client-side
-   └── Tab Boleto  → linha digitável + PDF
-            │
-            ▼
-   Edge functions (novas)
-   ├── pagarme-create-pix-order
-   ├── pagarme-create-card-order
-   ├── pagarme-create-boleto-order
-   └── pagarme-check-order-status   (polling do PIX)
+┌──────────────────────────────────────────────────────────┐
+│ SALDO PAGAR.ME                                            │
+│                                                           │
+│ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐        │
+│ │ Disponível   │ │ A receber    │ │ Bloqueado    │        │
+│ │ R$ 0.000,00  │ │ R$ 0.000,00  │ │ R$ 0.000,00  │        │
+│ └──────────────┘ └──────────────┘ └──────────────┘        │
+│                                                           │
+│ [ Solicitar saque ]   conta: Banco XX ag/cc ****          │
+├──────────────────────────────────────────────────────────┤
+│ Próximos recebíveis (calendário / lista por data)         │
+│  14/05  R$ 320,00  cartão 2/3                             │
+│  15/05  R$ 180,00  PIX                                    │
+├──────────────────────────────────────────────────────────┤
+│ Transações (filtros: status, método, período)             │
+│  data  cliente  método  bruto  taxa  líquido  status      │
+├──────────────────────────────────────────────────────────┤
+│ Saques (histórico)                                        │
+│  data  valor  status  conta destino                       │
+└──────────────────────────────────────────────────────────┘
 ```
 
-A função antiga `create-pagarme-booking-checkout` (hosted checkout) continua existindo como fallback — mas o roteamento BR em `create-session-checkout` passa a abrir o modal transparente em vez de retornar uma `url`.
+## Fluxo de saque
 
-## Mudanças
+1. Botão "Solicitar saque" abre modal com valor (default = saldo disponível) e conta destino (a cadastrada no onboarding Pagar.me).
+2. Confirma → edge function cria transferência → atualiza lista.
+3. Se não houver conta bancária cadastrada, mostra CTA para completar o onboarding (`PagarmeOnboardingModal` já existe).
 
-### 1. Frontend — novo modal
-- `src/components/booking/PagarmeCheckoutModal.tsx` (novo)
-  - Tabs: PIX (default) · Cartão · Boleto
-  - Resumo do pedido no topo (sessão, add-ons, taxa, total/sinal)
-  - i18n EN/PT-BR/ES
-- `src/components/booking/PagarmePixTab.tsx`
-  - Chama `pagarme-create-pix-order`
-  - Mostra QR code (img base64 retornada) + botão "Copiar código"
-  - Timer de expiração (1h)
-  - Polling a cada 4s via `pagarme-check-order-status` até `paid`
-  - Em sucesso: redireciona para `/booking-success?...`
-- `src/components/booking/PagarmeCardTab.tsx`
-  - Form: número, nome, validade (MM/AA), CVV, parcelas (1-12), CPF do titular
-  - Tokenização via `https://api.pagar.me/core/v5/tokens?appId=PAGARME_PUBLIC_KEY` direto do browser (cartão **não** passa pelo nosso servidor)
-  - Envia apenas `card_token` para `pagarme-create-card-order`
-  - Trata 3DS challenge se `next_action.redirect_to_url` vier no response
-- `src/components/booking/PagarmeBoletoTab.tsx`
-  - Form: CPF/CNPJ + endereço (autopreenchido se já houver)
-  - Chama `pagarme-create-boleto-order`
-  - Mostra linha digitável copiável + botão "Baixar PDF" + "Ver boleto"
-  - CTA: "Já paguei" leva para tela de aguardo
+## Detalhes técnicos
 
-### 2. Roteamento de checkout
-- `src/lib/booking-checkout.ts` (novo helper) — abstrai a chamada
-- Páginas que hoje chamam `create-session-checkout` e fazem `window.location = url`:
-  - `src/pages/store/SessionDetailPage.tsx`
-  - `src/pages/BookingConfirm.tsx`
-  - `src/components/booking/BookingWizard.tsx` (se existir)
-  - Quando o backend responder `{ provider: "pagarme_transparent", booking_id, order_payload }`, abre `<PagarmeCheckoutModal>` em vez de redirecionar
-  - Stripe (não-BR) continua redirecionando como hoje
+**Edge functions novas (usando `PAGARME_API_KEY` que já existe nos secrets):**
 
-### 3. Backend — Edge Functions (novas)
+- `pagarme-get-balance` — `GET /core/v5/recipients/{recipient_id}/balance` → retorna `available`, `waiting_funds`, `transferred`.
+- `pagarme-list-transactions` — `GET /core/v5/orders` filtrando por `customer_id`/metadata do fotógrafo, ou cache local na nossa tabela `bookings` filtrando `payment_provider = 'pagarme'`.
+- `pagarme-list-receivables` — `GET /core/v5/recipients/{recipient_id}/anticipation_limits` ou `/payables` para parcelas futuras.
+- `pagarme-create-withdrawal` — `POST /core/v5/recipients/{recipient_id}/withdrawals` com `amount`.
+- `pagarme-list-withdrawals` — `GET /core/v5/recipients/{recipient_id}/withdrawals`.
 
-Todas usam `Deno.env.get("PAGARME_API_KEY")` como Basic Auth, `esm.sh` imports, e CORS padrão do projeto.
+Todas: validam o usuário via JWT, lêem `photographers.pagarme_recipient_id` (já existente no onboarding) com service role e chamam a Pagar.me com o secret. CORS padrão do projeto.
 
-**`pagarme-create-pix-order`**
-- Input: `bookingId, sessionId, slotId, bookedDate, startTime, clientEmail, clientName, clientTaxId, selectedExtras, contractHtml, signatureData`
-- Cria/atualiza `bookings` (mesma lógica do hosted checkout)
-- Calcula total (sessão + extras + tax) ou sinal (deposit)
-- Monta `Order` com `payments: [{ payment_method: "pix", pix: { expires_in: 3600 } }]`
-- Inclui `split_rules` via `_shared/pagarme-split.ts` (igual ao atual)
-- Persiste `pagarme_order_id` na booking
-- Retorna `{ qr_code_url, qr_code_text, expires_at, order_id }`
+**Frontend:**
 
-**`pagarme-create-card-order`**
-- Input: tudo acima + `cardToken, holderName, holderDocument, installments`
-- Monta `payments: [{ payment_method: "credit_card", credit_card: { card_token, installments, statement_descriptor: "DAVIONS" } }]`
-- Mesmo split_rules
-- Trata response: se `status === "paid"` → confirma booking + retorna `{ status: "paid", redirect_url }`. Se `failed` → retorna mensagem do gateway. Se `authorized` ou `pending` (3DS) → retorna `{ next_action }`
+- `src/pages/dashboard/FinancePagarme.tsx` — página principal.
+- `src/components/dashboard/PagarmeWithdrawModal.tsx` — modal de saque.
+- Reuso de `KpiCard`/estilos do `FinanceDashboard`.
+- React Query com `staleTime: 30s` (regra do projeto).
+- Valores em centavos, exibidos em BRL via `Intl.NumberFormat('pt-BR', { currency: 'BRL' })`.
 
-**`pagarme-create-boleto-order`**
-- Input: tudo + `address` (logradouro, número, bairro, CEP, cidade, UF), `clientTaxId`
-- `payments: [{ payment_method: "boleto", boleto: { instructions, due_at, document_number } }]`
-- Retorna `{ line, pdf_url, barcode, due_at }`
+**Sem alterações de schema** — `photographers.pagarme_recipient_id` já existe; não é preciso persistir saldo (sempre buscar ao vivo).
 
-**`pagarme-check-order-status`**
-- Input: `{ orderId }` (ou `bookingId`)
-- Lê do Pagar.me; se `paid`, atualiza booking → `confirmed`/`paid` e marca `session_availability.is_booked`
-- Retorna `{ status, paid_at }`
+## Pontos a confirmar
 
-### 4. Webhook
-- `supabase/functions/pagarme-webhook/index.ts` já existe. Garantir que processa `order.paid`, `order.payment_failed`, `charge.paid` para os 3 métodos. Adicionar handler de `charge.refused` (cartão recusado) para atualizar booking → `payment_failed`.
-
-### 5. i18n
-- `src/lib/i18n/translations.ts` — adicionar chaves: `pix`, `creditCard`, `boleto`, `cardNumber`, `expiry`, `cvv`, `installments`, `holderName`, `cpfCnpj`, `pixInstructions`, `pixWaiting`, `pixPaid`, `boletoInstructions`, `cardDeclined`, `processing`, `copyPixCode`, `copied`, `downloadBoleto`, etc. — para EN, PT-BR e ES.
-
-### 6. Configuração
-- Garantir que `PAGARME_PUBLIC_KEY` está exposto no frontend via `import.meta.env.VITE_PAGARME_PUBLIC_KEY` (build secret) — necessário para tokenização de cartão. Se ainda não estiver, peço para você adicionar.
-
-## Ordem de implementação (1 message)
-
-1. Edge functions: criar as 4 novas
-2. Helper de roteamento + modal + 3 tabs
-3. Atualizar páginas que chamam o checkout
-4. Adicionar traduções
-5. Testar fluxo PIX (mais simples) via curl + preview
-
-## Detalhes técnicos relevantes
-
-- **Sem dependência de SDK do Pagar.me** — chamamos a REST API direto (`https://api.pagar.me/core/v5/...`). Mais leve e estável que `npm:pagarme`.
-- **Tokenização do cartão**: `POST https://api.pagar.me/core/v5/tokens?appId={PUBLIC_KEY}` — esse é o único request que sai do browser direto pro Pagar.me. Garante PCI SAQ-A.
-- **Polling PIX**: 4s de intervalo, máximo 15min (depois mostra "Verificar manualmente" / "Já paguei"). Webhook continua sendo a fonte de verdade — polling é só pra UX.
-- **Split rules**: continua usando `_shared/pagarme-split.ts`, sem mudanças.
-- **Deposito (sinal)**: a mesma lógica de `deposit_enabled / deposit_amount / deposit_type` do `create-session-checkout` é replicada nas 3 edge functions novas.
-- **Compat**: `create-pagarme-booking-checkout` (hosted) fica no projeto como fallback — pode ser removida em uma segunda PR depois que confirmarmos que o transparente funciona em produção.
-
-## Riscos
-- 3DS no cartão pode exigir um redirect curto (Pagar.me retorna URL pra abrir em iframe/janela). Implemento com fallback simples: redireciona a aba inteira pra URL do desafio e volta pra `/booking-success`.
-- Antifraude: o Pagar.me v5 já roda regras automáticas no plano padrão; não precisamos integrar Clearsale separadamente nessa fase.
+1. Você já tem **`pagarme_recipient_id`** salvo no onboarding do fotógrafo? (vou assumir que sim — está no `PagarmeOnboardingModal`).
+2. O saque deve permitir **valor parcial** ou só "sacar tudo"?
+3. Quer também um **gráfico de evolução** (últimos 6 meses) como no `FinanceDashboard`, ou manter mais enxuto nesta primeira versão?
