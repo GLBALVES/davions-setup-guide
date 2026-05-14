@@ -23,7 +23,7 @@ import {
   startOfMonth,
 } from "date-fns";
 import { ArrowLeft, ArrowRight, Camera, Check, ChevronLeft, ChevronRight, Clock, Loader2, MapPin, Minus, Plus, PenLine } from "lucide-react";
-import { cn, formatTime12 } from "@/lib/utils";
+import { cn, formatTime12, formatPhoneBR } from "@/lib/utils";
 import { PagarmeCheckoutModal } from "@/components/booking/PagarmeCheckoutModal";
 
 // ────────────────────────────────────────────
