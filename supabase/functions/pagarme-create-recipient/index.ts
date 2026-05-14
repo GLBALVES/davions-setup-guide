@@ -162,10 +162,7 @@ Deno.serve(async (req) => {
             professional_occupation:
               body.managing_partner.professional_occupation || "Photographer",
             phone_numbers: [phoneObj(body.managing_partner.phone)],
-            address: {
-              ...body.managing_partner.address,
-              zip_code: onlyDigits(body.managing_partner.address.zip_code),
-            },
+            address: addressObj(body.managing_partner.address),
             self_declared_legal_representative: true,
           },
         ],
