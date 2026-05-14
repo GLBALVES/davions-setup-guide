@@ -40,6 +40,7 @@ serve(async (req) => {
       contractHtml = null,
       signatureData = null,
       clientTaxId = null,
+      clientPhone = null,
     } = await req.json();
 
     // Format booking date & time for display (12-hour AM/PM)
@@ -102,6 +103,7 @@ serve(async (req) => {
             contractHtml,
             signatureData,
             clientTaxId,
+            clientPhone,
           },
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }

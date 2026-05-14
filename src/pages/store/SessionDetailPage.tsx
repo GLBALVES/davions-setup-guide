@@ -23,7 +23,7 @@ import {
   startOfMonth,
 } from "date-fns";
 import { ArrowLeft, ArrowRight, Camera, Check, ChevronLeft, ChevronRight, Clock, Loader2, MapPin, Minus, Plus, PenLine } from "lucide-react";
-import { cn, formatTime12 } from "@/lib/utils";
+import { cn, formatTime12, formatPhoneBR } from "@/lib/utils";
 import { PagarmeCheckoutModal } from "@/components/booking/PagarmeCheckoutModal";
 
 // ────────────────────────────────────────────
@@ -950,6 +950,7 @@ const SessionDetailPage = () => {
             contractHtml: resolvedContractHtml || null,
             signatureData: signatureData || null,
             clientTaxId: customFieldAnswers?.client_tax_id || null,
+            clientPhone: clientPhone || null,
           },
         }
       );
@@ -1662,6 +1663,11 @@ const SessionDetailPage = () => {
                     type="tel"
                     value={clientPhone}
                     onChange={(e) => {
+                      const isBR = (photographer?.business_country ?? "").toString().toUpperCase().startsWith("BR");
+                      if (isBR) {
+                        setClientPhone(formatPhoneBR(e.target.value));
+                        return;
+                      }
                       const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
                       let masked = digits;
                       if (digits.length >= 7) {
@@ -1673,7 +1679,7 @@ const SessionDetailPage = () => {
                       }
                       setClientPhone(masked);
                     }}
-                    placeholder="(555) 555-0100"
+                    placeholder={(photographer?.business_country ?? "").toString().toUpperCase().startsWith("BR") ? "(11) 99999-9999" : "(555) 555-0100"}
                     className="rounded-none"
                   />
                 </div>
