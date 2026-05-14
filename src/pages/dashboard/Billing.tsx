@@ -266,6 +266,32 @@ const Billing = () => {
   const totalPending = balance?.pending?.reduce((s, a) => s + a.amount, 0) ?? 0;
   const balanceCurrency = balance?.available?.[0]?.currency ?? balance?.pending?.[0]?.currency ?? "usd";
 
+  // Load configured per-operation fee from subscription_plans (admin-managed)
+  useEffect(() => {
+    const loadFee = async () => {
+      if (!activePlan?.key || region.loading) return;
+      const { data } = await supabase
+        .from("subscription_plans")
+        .select("transaction_fee_percent")
+        .eq("plan_key", activePlan.key)
+        .eq("currency", region.currency)
+        .maybeSingle();
+      if (data?.transaction_fee_percent != null) {
+        setPlanFeePercent(Number(data.transaction_fee_percent));
+      } else {
+        setPlanFeePercent(null);
+      }
+    };
+    loadFee();
+  }, [activePlan?.key, region.currency, region.loading]);
+
+  const effectiveFee = planFeePercent ?? activePlan?.split ?? 0;
+  const activeFeatures = activePlan
+    ? activePlan.features.map((f) =>
+        /platform fee on sales/i.test(f) ? `${effectiveFee}% platform fee on sales` : f
+      )
+    : [];
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
