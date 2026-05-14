@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { OnboardingChecklist } from "@/components/dashboard/OnboardingChecklist";
 import { PushBanner } from "@/components/dashboard/PushBanner";
+import { PagarmePaymentBanner } from "@/components/dashboard/PagarmePaymentBanner";
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
 
 import {
