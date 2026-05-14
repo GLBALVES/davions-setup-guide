@@ -4153,6 +4153,48 @@ export type Database = {
           },
         ]
       }
+      subscription_plans: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          display: string
+          id: string
+          is_active: boolean
+          plan_key: string
+          price_id: string
+          sort_order: number
+          transaction_fee_percent: number
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency: string
+          display: string
+          id?: string
+          is_active?: boolean
+          plan_key: string
+          price_id: string
+          sort_order?: number
+          transaction_fee_percent?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          display?: string
+          id?: string
+          is_active?: boolean
+          plan_key?: string
+          price_id?: string
+          sort_order?: number
+          transaction_fee_percent?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       support_messages: {
         Row: {
           attachment_url: string | null
