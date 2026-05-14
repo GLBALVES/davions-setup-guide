@@ -142,6 +142,7 @@ const Billing = () => {
   const [loadingManage, setLoadingManage] = useState(false);
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
   const [stripeConnectedAt, setStripeConnectedAt] = useState<string | null>(null);
+  const [planFeePercent, setPlanFeePercent] = useState<number | null>(null);
 
   const fetchAll = async () => {
     if (!user) return;
@@ -265,6 +266,32 @@ const Billing = () => {
   const totalPending = balance?.pending?.reduce((s, a) => s + a.amount, 0) ?? 0;
   const balanceCurrency = balance?.available?.[0]?.currency ?? balance?.pending?.[0]?.currency ?? "usd";
 
+  // Load configured per-operation fee from subscription_plans (admin-managed)
+  useEffect(() => {
+    const loadFee = async () => {
+      if (!activePlan?.key || region.loading) return;
+      const { data } = await supabase
+        .from("subscription_plans")
+        .select("transaction_fee_percent")
+        .eq("plan_key", activePlan.key)
+        .eq("currency", region.currency)
+        .maybeSingle();
+      if (data?.transaction_fee_percent != null) {
+        setPlanFeePercent(Number(data.transaction_fee_percent));
+      } else {
+        setPlanFeePercent(null);
+      }
+    };
+    loadFee();
+  }, [activePlan?.key, region.currency, region.loading]);
+
+  const effectiveFee = planFeePercent ?? activePlan?.split ?? 0;
+  const activeFeatures = activePlan
+    ? activePlan.features.map((f) =>
+        /platform fee on sales/i.test(f) ? `${effectiveFee}% platform fee on sales` : f
+      )
+    : [];
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -341,10 +368,10 @@ const Billing = () => {
                         </div>
                         <h2 className="text-2xl font-light tracking-wide">{activePlan.name}</h2>
                         <p className="text-sm text-muted-foreground font-light">
-                          {REGIONAL_PLANS[activePlan.key as keyof typeof REGIONAL_PLANS]?.[region.currency as SupportedCurrency]?.display ?? ""}/month · {activePlan.split}% fee on sales
+                          {REGIONAL_PLANS[activePlan.key as keyof typeof REGIONAL_PLANS]?.[region.currency as SupportedCurrency]?.display ?? ""}/month · {effectiveFee}% fee on sales
                         </p>
                         <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
-                          {activePlan.features.map((f) => (
+                          {activeFeatures.map((f) => (
                             <li key={f} className="flex items-center gap-1.5 text-[11px] font-light text-muted-foreground">
                               <Check className="h-3 w-3 shrink-0 text-foreground" />{f}
                             </li>
