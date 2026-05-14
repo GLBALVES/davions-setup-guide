@@ -65,6 +65,7 @@ export function PagarmeCardTab({ checkoutInput, amount, onPaid }: Props) {
         {
           body: {
             ...checkoutInput,
+            clientTaxId: onlyDigits(doc) || (checkoutInput as any).clientTaxId,
             installments: Number(installments),
             card: {
               number: cleanNum,
