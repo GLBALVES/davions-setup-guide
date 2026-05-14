@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PagarmeCheckoutModal } from "@/components/booking/PagarmeCheckoutModal";
 import {
   Calendar,
   Camera,
@@ -204,6 +205,12 @@ const BookingConfirm = () => {
 
   // Payment state
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [pagarmeModal, setPagarmeModal] = useState<{
+    open: boolean;
+    checkoutInput: Record<string, unknown>;
+    amount: number;
+    isDeposit: boolean;
+  } | null>(null);
   const [isSavingContinue, setIsSavingContinue] = useState(false);
 
   useEffect(() => {
@@ -494,7 +501,32 @@ const BookingConfirm = () => {
         },
       });
       if (error) throw error;
-      if (data?.url) window.location.href = data.url;
+      const resp = data as any;
+
+      if (resp?.provider === "pagarme_transparent") {
+        // Compute the same amount the edge function will charge
+        const subtotal = session?.price ?? 0;
+        const taxRate = (session as any)?.tax_rate ?? 0;
+        const taxAmount = Math.round(subtotal * (taxRate / 100));
+        const fullTotal = subtotal + taxAmount;
+        const isDeposit = !!(session as any)?.deposit_enabled;
+        const depositType = ((session as any)?.deposit_type ?? "").toLowerCase();
+        const isPercent = depositType === "percent" || depositType === "percentage";
+        const amount = isDeposit
+          ? (isPercent
+              ? Math.round(fullTotal * (((session as any)?.deposit_amount ?? 0) / 100))
+              : ((session as any)?.deposit_amount ?? 0))
+          : fullTotal;
+        setPagarmeModal({
+          open: true,
+          checkoutInput: { ...resp.checkout_input, bookingId: booking.id, sessionId: booking.session_id },
+          amount,
+          isDeposit,
+        });
+        return;
+      }
+
+      if (resp?.url) window.location.href = resp.url;
     } catch (err: any) {
       console.error("Payment error:", err);
     } finally {
@@ -1416,6 +1448,17 @@ const BookingConfirm = () => {
       <footer className="mt-16">
         <p className="text-[9px] tracking-widest uppercase text-muted-foreground/40">Powered by Davions</p>
       </footer>
+
+      {pagarmeModal && (
+        <PagarmeCheckoutModal
+          open={pagarmeModal.open}
+          onOpenChange={(o) => setPagarmeModal((m) => (m ? { ...m, open: o } : null))}
+          checkoutInput={pagarmeModal.checkoutInput}
+          amount={pagarmeModal.amount}
+          isDeposit={pagarmeModal.isDeposit}
+          onPaid={(url) => { window.location.href = url; }}
+        />
+      )}
     </div>
   );
 };
