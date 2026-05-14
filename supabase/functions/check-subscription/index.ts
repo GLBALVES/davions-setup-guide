@@ -99,18 +99,38 @@ serve(async (req) => {
       ? new Date(sub.current_period_end * 1000).toISOString()
       : null;
 
-    // Determine plan
+    // Determine plan — first try the editable subscription_plans table by price_id
     let planKey: string | null = null;
     let splitPercent = 5;
     let planName = "Unknown";
 
-    for (const [key, planData] of Object.entries(PLANS)) {
-      if (planData.product_id === productId || planData.price_id === priceId) {
-        planKey = key;
-        splitPercent = planData.split_percent;
-        planName = planData.name;
-        break;
+    const { data: dbPlan } = await supabaseClient
+      .from("subscription_plans")
+      .select("plan_key, transaction_fee_percent")
+      .eq("price_id", priceId)
+      .maybeSingle();
+
+    if (dbPlan) {
+      planKey = (dbPlan as any).plan_key;
+      splitPercent = Number((dbPlan as any).transaction_fee_percent ?? 5);
+      planName = planKey ? planKey.charAt(0).toUpperCase() + planKey.slice(1) : "Unknown";
+    } else {
+      for (const [key, planData] of Object.entries(PLANS)) {
+        if (planData.product_id === productId || planData.price_id === priceId) {
+          planKey = key;
+          splitPercent = planData.split_percent;
+          planName = planData.name;
+          break;
+        }
       }
+    }
+
+    // Persist plan_key on photographer for split-time lookup
+    if (planKey) {
+      await supabaseClient
+        .from("photographers")
+        .update({ plan_key: planKey })
+        .eq("id", user.id);
     }
 
     logStep("Active subscription found", { planKey, productId, subscriptionEnd });
