@@ -35,6 +35,10 @@ export function PagarmeCardTab({ checkoutInput, amount, onPaid }: Props) {
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
   const [doc, setDoc] = useState("");
+  const [zip, setZip] = useState("");
+  const [street, setStreet] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
   const [installments, setInstallments] = useState("1");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -63,6 +67,11 @@ export function PagarmeCardTab({ checkoutInput, amount, onPaid }: Props) {
       setErrMsg("Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido");
       return;
     }
+    const cleanZip = onlyDigits(zip);
+    if (cleanZip.length !== 8 || !street.trim() || !city.trim() || state.trim().length !== 2) {
+      setErrMsg("Preencha o endereço de cobrança (CEP, rua, cidade e UF)");
+      return;
+    }
     setSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke(
@@ -79,6 +88,13 @@ export function PagarmeCardTab({ checkoutInput, amount, onPaid }: Props) {
               exp_year: Number(yy.length === 2 ? `20${yy}` : yy),
               cvv,
               holder_document: onlyDigits(doc) || undefined,
+              billing_address: {
+                line_1: street.trim(),
+                zip_code: cleanZip,
+                city: city.trim(),
+                state: state.trim().toUpperCase(),
+                country: "BR",
+              },
             },
           },
         }
@@ -172,6 +188,44 @@ export function PagarmeCardTab({ checkoutInput, amount, onPaid }: Props) {
           onChange={(e) => setDoc(onlyDigits(e.target.value).slice(0, 14))}
           placeholder="000.000.000-00"
         />
+      </div>
+
+      <div className="space-y-2 pt-1">
+        <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t.cardBilling}</Label>
+        <div className="grid grid-cols-3 gap-2">
+          <Input
+            placeholder={t.cardZip}
+            inputMode="numeric"
+            value={zip}
+            onChange={(e) => {
+              const d = onlyDigits(e.target.value).slice(0, 8);
+              setZip(d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d);
+            }}
+            maxLength={9}
+            className="col-span-1"
+          />
+          <Input
+            placeholder={t.cardStreet}
+            value={street}
+            onChange={(e) => setStreet(e.target.value)}
+            className="col-span-2"
+          />
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <Input
+            placeholder={t.cardCity}
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            className="col-span-2"
+          />
+          <Input
+            placeholder={t.cardState}
+            value={state}
+            onChange={(e) => setState(e.target.value.toUpperCase().slice(0, 2))}
+            maxLength={2}
+            className="col-span-1"
+          />
+        </div>
       </div>
 
       <div className="space-y-2">
