@@ -14,6 +14,7 @@ interface GalleryRow {
   title: string;
   cover_image_url: string | null;
   is_site_gallery: boolean;
+  thumbnail_url?: string | null;
   photos_count?: number;
 }
 
@@ -22,6 +23,7 @@ interface PhotoRow {
   filename: string;
   storage_path: string | null;
   url: string;
+  thumbnailUrl: string;
 }
 
 interface Props {
@@ -39,6 +41,25 @@ interface Props {
 
 const ASSETS_BUCKET = "site-assets";
 const PHOTOS_BUCKET = "gallery-photos";
+
+const getGalleryPhotoUrl = (path: string, size?: number) => {
+  const options = size
+    ? { transform: { width: size, height: size, resize: "cover" as const, quality: 72 } }
+    : undefined;
+  return supabase.storage.from(PHOTOS_BUCKET).getPublicUrl(path, options).data.publicUrl;
+};
+
+const getStoragePathFromPublicUrl = (url: string, bucket: string) => {
+  const marker = `/storage/v1/object/public/${bucket}/`;
+  const [, rawPath] = url.split(marker);
+  return rawPath ? decodeURIComponent(rawPath.split("?")[0]) : null;
+};
+
+const getGalleryCoverThumbnail = (url: string | null) => {
+  if (!url) return null;
+  const path = getStoragePathFromPublicUrl(url, PHOTOS_BUCKET);
+  return path ? getGalleryPhotoUrl(path, 360) : url;
+};
 
 export default function GalleryImagePicker({
   open,
@@ -77,7 +98,11 @@ export default function GalleryImagePicker({
       if (error) {
         toast.error(error.message);
       } else {
-        setGalleries((data ?? []) as any);
+        const rows = (data ?? []).map((g: any) => ({
+          ...g,
+          thumbnail_url: getGalleryCoverThumbnail(g.cover_image_url),
+        }));
+        setGalleries(rows as any);
       }
       setLoadingGalleries(false);
     })();
@@ -124,10 +149,9 @@ export default function GalleryImagePicker({
         setPhotos([]);
       } else {
         const rows: PhotoRow[] = (data ?? []).map((p: any) => {
-          const url = p.storage_path
-            ? supabase.storage.from(PHOTOS_BUCKET).getPublicUrl(p.storage_path).data.publicUrl
-            : "";
-          return { id: p.id, filename: p.filename, storage_path: p.storage_path, url };
+          const url = p.storage_path ? getGalleryPhotoUrl(p.storage_path) : "";
+          const thumbnailUrl = p.storage_path ? getGalleryPhotoUrl(p.storage_path, 360) : url;
+          return { id: p.id, filename: p.filename, storage_path: p.storage_path, url, thumbnailUrl };
         }).filter((p) => !!p.url);
         setPhotos(rows);
       }
