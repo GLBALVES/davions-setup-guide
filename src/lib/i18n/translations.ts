@@ -40,6 +40,7 @@ export const translations = {
       payables: "Payables",
       cashFlow: "Cash Flow",
       reports: "Reports",
+      pagarmeBalance: "Brazil Balance",
       clients: "Clients",
       leads: "Leads",
       kanban: "Kanban",
