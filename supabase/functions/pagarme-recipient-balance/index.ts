@@ -46,6 +46,13 @@ Deno.serve(async (req) => {
     const base = `https://api.pagar.me/core/v5/recipients/${recipientId}`;
     const headers = { Authorization: auth, "Content-Type": "application/json" };
 
+    const safeJson = async (res: Response) => {
+      const txt = await res.text();
+      if (!txt) return null;
+      try { return JSON.parse(txt); }
+      catch { console.warn("[pagarme-recipient-balance] non-json body", res.url, txt.slice(0, 200)); return null; }
+    };
+
     const [balanceRes, opsRes, withdrawalsRes, recipientRes] = await Promise.all([
       fetch(`${base}/balance`, { headers }),
       fetch(`${base}/balance/operations?size=30`, { headers }),
@@ -53,10 +60,17 @@ Deno.serve(async (req) => {
       fetch(`${base}`, { headers }),
     ]);
 
-    const balance = await balanceRes.json();
-    const operations = await opsRes.json();
-    const withdrawals = await withdrawalsRes.json();
-    const recipient = await recipientRes.json();
+    const [balance, operations, withdrawals, recipient] = await Promise.all([
+      safeJson(balanceRes), safeJson(opsRes), safeJson(withdrawalsRes), safeJson(recipientRes),
+    ]);
+
+    if (!balanceRes.ok) {
+      console.error("[pagarme-recipient-balance] balance error", balanceRes.status, balance);
+      return new Response(
+        JSON.stringify({ error: balance?.message || `pagarme_${balanceRes.status}`, details: balance }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     return new Response(
       JSON.stringify({
