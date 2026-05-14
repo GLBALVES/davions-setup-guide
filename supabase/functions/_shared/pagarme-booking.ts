@@ -190,6 +190,10 @@ export async function prepareBookingOrder(
     customer.document = docDigits;
     customer.document_type = docDigits.length === 14 ? "CNPJ" : "CPF";
   }
+  const phone = parsePhoneForPagarme(clientPhone);
+  if (phone) {
+    customer.phones = { mobile_phone: phone };
+  }
 
   // ── Split ──
   const settings = await getPaymentSettings(supabase);
