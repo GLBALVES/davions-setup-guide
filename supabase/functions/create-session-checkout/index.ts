@@ -82,13 +82,15 @@ serve(async (req) => {
       .eq("id", sessionData.photographer_id)
       .single();
 
-    // ── Route Brazilian photographers to Pagar.me ──
+    // ── Route Brazilian photographers to Pagar.me transparent checkout ──
+    // Frontend opens a modal and calls pagarme-create-{pix,card,boleto}-order directly.
     const country = ((photoData as any)?.business_country ?? "").toString().toUpperCase();
     if (country === "BR" || country === "BRA" || country === "BRAZIL") {
-      const { data: pmData, error: pmErr } = await supabase.functions.invoke(
-        "create-pagarme-booking-checkout",
-        {
-          body: {
+      return new Response(
+        JSON.stringify({
+          provider: "pagarme_transparent",
+          // Frontend will pass these through when calling the per-method endpoints
+          checkout_input: {
             bookingId: existingBookingId,
             sessionId,
             slotId,
@@ -101,14 +103,9 @@ serve(async (req) => {
             signatureData,
             clientTaxId,
           },
-          headers: { origin: req.headers.get("origin") ?? "" },
-        }
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
-      if (pmErr) throw pmErr;
-      return new Response(JSON.stringify(pmData), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
     }
 
     const storeSlug = photoData?.store_slug ?? "";
