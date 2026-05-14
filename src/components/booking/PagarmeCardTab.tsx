@@ -53,9 +53,14 @@ export function PagarmeCardTab({ checkoutInput, amount, onPaid }: Props) {
     e.preventDefault();
     setErrMsg(null);
     const cleanNum = onlyDigits(number);
+    const cleanDoc = onlyDigits(doc);
     const [mm, yy] = expiry.split("/");
     if (cleanNum.length < 13 || !mm || !yy || cvv.length < 3 || !holder) {
       setErrMsg("Preencha os dados do cartão corretamente");
+      return;
+    }
+    if (cleanDoc.length !== 11 && cleanDoc.length !== 14) {
+      setErrMsg("Informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido");
       return;
     }
     setSubmitting(true);
