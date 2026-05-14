@@ -498,6 +498,10 @@ const BookingConfirm = () => {
           bookingId: booking.id,
           sessionId: booking.session_id,
           photographerId: booking.photographer_id,
+          clientPhone: clientInfo.phone || null,
+          clientTaxId: clientInfo.tax_id || null,
+          clientName: clientInfo.full_name || booking.client_name,
+          clientEmail: booking.client_email,
         },
       });
       if (error) throw error;
