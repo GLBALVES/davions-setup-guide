@@ -230,6 +230,7 @@ const Dashboard = () => {
 
               {/* ── Onboarding checklist (auto-hides when complete) ── */}
               <OnboardingChecklist />
+              <PagarmePaymentBanner />
               <PushBanner />
 
               {loading ? (
