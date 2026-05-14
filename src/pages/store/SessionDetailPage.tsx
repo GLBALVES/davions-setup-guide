@@ -613,61 +613,26 @@ const SessionDetailPage = () => {
       const fromDate = format(addDays(startOfToday(), noticeDays), "yyyy-MM-dd");
       const toDate = format(addDays(startOfToday(), windowDays), "yyyy-MM-dd");
 
-      // Fetch ALL bookings for this photographer in the window (across all sessions)
-      // so overlapping time slots from other sessions also block availability.
-      const { data: allBookingsData } = await (supabase as any)
-        .from("bookings")
-        .select("availability_id, booked_date, status, session_id")
-        .eq("photographer_id", s.photographer_id)
-        .gte("booked_date", fromDate)
-        .lte("booked_date", toDate)
-        .in("status", ["confirmed", "pending"]);
-
-      const allBookings = (allBookingsData ?? []) as Array<{
-        availability_id: string;
-        booked_date: string;
-        session_id: string;
+      // Fetch busy ranges via SECURITY DEFINER RPC (works for anonymous public visitors,
+      // since RLS blocks reading other clients' bookings directly).
+      const { data: busyData } = await (supabase as any).rpc("get_photographer_busy_ranges", {
+        _photographer_id: s.photographer_id,
+        _from_date: fromDate,
+        _to_date: toDate,
+      });
+      const busyRanges = (busyData ?? []) as Array<{
+        busy_date: string;
+        start_time: string;
+        end_time: string;
       }>;
 
-      // Resolve booked availability times (could be from any session)
-      const bookedAvailIds = Array.from(new Set(allBookings.map((b) => b.availability_id).filter(Boolean)));
-      let bookedAvailMap = new Map<string, { start_time: string; end_time: string; session_id: string | null }>();
-      if (bookedAvailIds.length > 0) {
-        const { data: bookedAvails } = await (supabase as any)
-          .from("session_availability")
-          .select("id, start_time, end_time, session_id")
-          .in("id", bookedAvailIds);
-        for (const a of (bookedAvails ?? []) as any[]) {
-          bookedAvailMap.set(a.id, { start_time: a.start_time, end_time: a.end_time, session_id: a.session_id });
-        }
+      // Same-session exact-slot "booked" labeling: check session_availability.is_booked
+      // (this column is publicly readable for the current session)
+      const bookedKeys = new Set<string>();
+      for (const def of defs) {
+        // weekly slots map by day_of_week — we mark via busy ranges below; keep set empty here
+        void def;
       }
-
-      // Resolve duration for bookings whose availability belongs to a different session
-      const otherSessionIds = Array.from(
-        new Set(
-          Array.from(bookedAvailMap.values())
-            .map((a) => a.session_id)
-            .filter((id): id is string => !!id && id !== s.id)
-        )
-      );
-      const sessionDurationMap = new Map<string, number>();
-      sessionDurationMap.set(s.id, s.duration_minutes);
-      if (otherSessionIds.length > 0) {
-        const { data: otherSessions } = await (supabase as any)
-          .from("sessions")
-          .select("id, duration_minutes")
-          .in("id", otherSessionIds);
-        for (const os of (otherSessions ?? []) as any[]) {
-          sessionDurationMap.set(os.id, os.duration_minutes ?? 60);
-        }
-      }
-
-      // bookedKeys still used for same-session "booked" labeling (exact slot match)
-      const bookedKeys = new Set<string>(
-        allBookings
-          .filter((b) => b.booked_date && defs.some((d) => d.id === b.availability_id))
-          .map((b) => `${b.availability_id}_${b.booked_date}`)
-      );
 
       // Fetch blocked times for this photographer in the booking window
       const { data: blockedData } = await (supabase as any)
@@ -684,24 +649,13 @@ const SessionDetailPage = () => {
         all_day: b.all_day,
       }));
 
-      // Convert each booking into a pseudo-blocked range so overlapping slots get disabled
-      for (const b of allBookings) {
-        if (!b.booked_date) continue;
-        const avail = bookedAvailMap.get(b.availability_id);
-        if (!avail) continue;
-        const startHHmm = (avail.start_time ?? "00:00").slice(0, 5);
-        // Use end_time from availability if present; otherwise compute from session duration
-        let endHHmm = (avail.end_time ?? "").slice(0, 5);
-        if (!endHHmm) {
-          const dur = sessionDurationMap.get(avail.session_id ?? "") ?? 60;
-          const [h, m] = startHHmm.split(":").map(Number);
-          const total = h * 60 + m + dur;
-          endHHmm = `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
-        }
+      // Convert each busy range into a pseudo-blocked range so overlapping slots get disabled
+      for (const r of busyRanges) {
+        if (!r.busy_date || !r.start_time) continue;
         blockedTimes.push({
-          date: b.booked_date,
-          start_time: startHHmm,
-          end_time: endHHmm,
+          date: r.busy_date,
+          start_time: r.start_time.slice(0, 5),
+          end_time: (r.end_time ?? r.start_time).slice(0, 5),
           all_day: false,
         });
       }

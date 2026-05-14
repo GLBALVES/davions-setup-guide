@@ -4794,6 +4794,14 @@ export type Database = {
     }
     Functions: {
       get_my_photographer_id: { Args: never; Returns: string }
+      get_photographer_busy_ranges: {
+        Args: { _from_date: string; _photographer_id: string; _to_date: string }
+        Returns: {
+          busy_date: string
+          end_time: string
+          start_time: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
