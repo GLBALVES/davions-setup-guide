@@ -37,6 +37,7 @@ import {
 
 import { subscribeToPush } from "@/lib/notifications-api";
 import { toast as sonnerToast } from "sonner";
+import { PaymentsStatusCard } from "@/components/dashboard/PaymentsSettings";
 
 function NotificationPushStatusCard({ photographerId, n }: { photographerId: string | null; n: any }) {
   const [pushPermission, setPushPermission] = useState(
@@ -786,6 +787,9 @@ const Settings = () => {
                         </div>
                       </div>
                     </section>
+
+                    {/* Payment status indicator → links to Personalize > Payments */}
+                    <PaymentsStatusCard onNavigate={() => navigate("/dashboard/personalize?tab=payments")} />
 
                     <div>
                       <Button
