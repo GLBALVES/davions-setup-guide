@@ -103,6 +103,7 @@ serve(async (req) => {
             contractHtml,
             signatureData,
             clientTaxId,
+            clientPhone,
           },
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
