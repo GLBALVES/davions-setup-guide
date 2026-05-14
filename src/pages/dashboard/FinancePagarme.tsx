@@ -20,7 +20,7 @@ import { format } from "date-fns";
 const T = {
   en: {
     section: "FINANCE",
-    title: "Brazil Balance",
+    title: "Balance",
     desc: "Manage funds processed via PIX, boleto and credit card.",
     available: "Available",
     waiting: "Pending receivables",
@@ -45,7 +45,7 @@ const T = {
   },
   pt: {
     section: "FINANCEIRO",
-    title: "Saldo Brasil",
+    title: "Saldo",
     desc: "Gerencie os valores processados via PIX, boleto e cartão.",
     available: "Disponível",
     waiting: "A receber",
@@ -70,7 +70,7 @@ const T = {
   },
   es: {
     section: "FINANZAS",
-    title: "Saldo Brasil",
+    title: "Saldo",
     desc: "Gestiona los fondos procesados vía PIX, boleto y tarjeta.",
     available: "Disponible",
     waiting: "Por cobrar",
