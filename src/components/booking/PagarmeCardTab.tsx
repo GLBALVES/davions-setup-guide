@@ -190,6 +190,44 @@ export function PagarmeCardTab({ checkoutInput, amount, onPaid }: Props) {
         />
       </div>
 
+      <div className="space-y-2 pt-1">
+        <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t.cardBilling}</Label>
+        <div className="grid grid-cols-3 gap-2">
+          <Input
+            placeholder={t.cardZip}
+            inputMode="numeric"
+            value={zip}
+            onChange={(e) => {
+              const d = onlyDigits(e.target.value).slice(0, 8);
+              setZip(d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d);
+            }}
+            maxLength={9}
+            className="col-span-1"
+          />
+          <Input
+            placeholder={t.cardStreet}
+            value={street}
+            onChange={(e) => setStreet(e.target.value)}
+            className="col-span-2"
+          />
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <Input
+            placeholder={t.cardCity}
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            className="col-span-2"
+          />
+          <Input
+            placeholder={t.cardState}
+            value={state}
+            onChange={(e) => setState(e.target.value.toUpperCase().slice(0, 2))}
+            maxLength={2}
+            className="col-span-1"
+          />
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Label>{t.cardInstallments}</Label>
         <Select value={installments} onValueChange={setInstallments}>
