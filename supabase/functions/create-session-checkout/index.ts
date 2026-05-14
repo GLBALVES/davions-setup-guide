@@ -78,9 +78,38 @@ serve(async (req) => {
     // Fetch photographer data
     const { data: photoData } = await supabase
       .from("photographers")
-      .select("store_slug, stripe_account_id, email")
+      .select("store_slug, stripe_account_id, email, business_country, pagarme_recipient_id")
       .eq("id", sessionData.photographer_id)
       .single();
+
+    // ── Route Brazilian photographers to Pagar.me ──
+    const country = ((photoData as any)?.business_country ?? "").toString().toUpperCase();
+    if (country === "BR" || country === "BRA" || country === "BRAZIL") {
+      const { data: pmData, error: pmErr } = await supabase.functions.invoke(
+        "create-pagarme-booking-checkout",
+        {
+          body: {
+            bookingId: existingBookingId,
+            sessionId,
+            slotId,
+            bookedDate,
+            startTime,
+            clientEmail,
+            clientName,
+            selectedExtras,
+            contractHtml,
+            signatureData,
+            clientTaxId,
+          },
+          headers: { origin: req.headers.get("origin") ?? "" },
+        }
+      );
+      if (pmErr) throw pmErr;
+      return new Response(JSON.stringify(pmData), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
 
     const storeSlug = photoData?.store_slug ?? "";
     let stripeAccountId = (photoData as any)?.stripe_account_id as string | null;

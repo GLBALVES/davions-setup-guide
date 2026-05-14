@@ -110,3 +110,6 @@ verify_jwt = false
 
 [functions.notify-gallery-checkout]
 verify_jwt = false
+
+[functions.create-pagarme-booking-checkout]
+verify_jwt = false
