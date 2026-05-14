@@ -191,6 +191,48 @@ const COPY = {
   },
 };
 
+interface FieldProps {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  placeholder?: string;
+  className?: string;
+}
+
+const Field = ({ label, value, onChange, type = "text", placeholder = "", className = "" }: FieldProps) => (
+  <div className={`flex flex-col gap-1.5 ${className}`}>
+    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-light">{label}</Label>
+    <Input
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      type={type}
+      placeholder={placeholder}
+      className="h-9 text-sm"
+    />
+  </div>
+);
+
+const AddressBlock = ({
+  value,
+  onChange,
+  labels,
+}: {
+  value: typeof DEFAULT_ADDRESS;
+  onChange: (v: typeof DEFAULT_ADDRESS) => void;
+  labels: { zip: string; street: string; number: string; complement: string; neighborhood: string; city: string; state: string };
+}) => (
+  <div className="grid grid-cols-12 gap-3">
+    <Field className="col-span-12 sm:col-span-3" label={labels.zip} value={value.zip_code} onChange={(v) => onChange({ ...value, zip_code: v })} placeholder="00000-000" />
+    <Field className="col-span-12 sm:col-span-7" label={labels.street} value={value.street} onChange={(v) => onChange({ ...value, street: v })} />
+    <Field className="col-span-6 sm:col-span-2" label={labels.number} value={value.street_number} onChange={(v) => onChange({ ...value, street_number: v })} />
+    <Field className="col-span-12 sm:col-span-6" label={labels.complement} value={value.complementary} onChange={(v) => onChange({ ...value, complementary: v })} />
+    <Field className="col-span-12 sm:col-span-6" label={labels.neighborhood} value={value.neighborhood} onChange={(v) => onChange({ ...value, neighborhood: v })} />
+    <Field className="col-span-8 sm:col-span-9" label={labels.city} value={value.city} onChange={(v) => onChange({ ...value, city: v })} />
+    <Field className="col-span-4 sm:col-span-3" label={labels.state} value={value.state} onChange={(v) => onChange({ ...value, state: v.toUpperCase().slice(0, 2) })} placeholder="SP" />
+  </div>
+);
+
 export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuccess }: Props) {
   const { user } = useAuth();
   const { lang } = useLanguage();
@@ -316,31 +358,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
     }
   }
 
-  // ── Field renderers ────────────────────────────────────────────────
-  const Field = ({ label, value, onChange, type = "text", placeholder = "", className = "" }: any) => (
-    <div className={`flex flex-col gap-1.5 ${className}`}>
-      <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-light">{label}</Label>
-      <Input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        type={type}
-        placeholder={placeholder}
-        className="h-9 text-sm"
-      />
-    </div>
-  );
-
-  const AddressBlock = ({ value, onChange }: { value: typeof DEFAULT_ADDRESS; onChange: (v: typeof DEFAULT_ADDRESS) => void }) => (
-    <div className="grid grid-cols-12 gap-3">
-      <Field className="col-span-12 sm:col-span-3" label={t.zip} value={value.zip_code} onChange={(v: string) => onChange({ ...value, zip_code: v })} placeholder="00000-000" />
-      <Field className="col-span-12 sm:col-span-7" label={t.street} value={value.street} onChange={(v: string) => onChange({ ...value, street: v })} />
-      <Field className="col-span-6 sm:col-span-2" label={t.number} value={value.street_number} onChange={(v: string) => onChange({ ...value, street_number: v })} />
-      <Field className="col-span-12 sm:col-span-6" label={t.complement} value={value.complementary} onChange={(v: string) => onChange({ ...value, complementary: v })} />
-      <Field className="col-span-12 sm:col-span-6" label={t.neighborhood} value={value.neighborhood} onChange={(v: string) => onChange({ ...value, neighborhood: v })} />
-      <Field className="col-span-8 sm:col-span-9" label={t.city} value={value.city} onChange={(v: string) => onChange({ ...value, city: v })} />
-      <Field className="col-span-4 sm:col-span-3" label={t.state} value={value.state} onChange={(v: string) => onChange({ ...value, state: v.toUpperCase().slice(0, 2) })} placeholder="SP" />
-    </div>
-  );
+  const addressLabels = { zip: t.zip, street: t.street, number: t.number, complement: t.complement, neighborhood: t.neighborhood, city: t.city, state: t.state };
 
   const BankBlock = (
     <div className="flex flex-col gap-3">
@@ -398,7 +416,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
 
             <div className="flex flex-col gap-3">
               <h4 className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-light">{t.address}</h4>
-              <AddressBlock value={pf.address} onChange={(v) => setPf({ ...pf, address: v })} />
+              <AddressBlock labels={addressLabels} value={pf.address} onChange={(v) => setPf({ ...pf, address: v })} />
             </div>
 
             {BankBlock}
@@ -420,7 +438,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
             </div>
             <div className="flex flex-col gap-3">
               <h4 className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-light">{t.address}</h4>
-              <AddressBlock value={pj.address} onChange={(v) => setPj({ ...pj, address: v })} />
+              <AddressBlock labels={addressLabels} value={pj.address} onChange={(v) => setPj({ ...pj, address: v })} />
             </div>
 
             <div className="flex flex-col gap-3 border-t border-border pt-5">
@@ -435,7 +453,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
                 <Field className="col-span-2" label={t.ddd} value={pj.partner.phone.ddd} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, phone: { ...pj.partner.phone, ddd: v } } })} />
                 <Field className="col-span-10 sm:col-span-6" label={t.phone} value={pj.partner.phone.number} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, phone: { ...pj.partner.phone, number: v } } })} />
               </div>
-              <AddressBlock value={pj.partner.address} onChange={(v) => setPj({ ...pj, partner: { ...pj.partner, address: v } })} />
+              <AddressBlock labels={addressLabels} value={pj.partner.address} onChange={(v) => setPj({ ...pj, partner: { ...pj.partner, address: v } })} />
             </div>
 
             {BankBlock}
