@@ -549,25 +549,33 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     enabled: !project.booking_id && !!projectSessionTitle,
   });
 
-  // Photographer business default tax rate (fallback when session has none)
-  const { data: businessTaxRate = 0 } = useQuery<number>({
+  // Photographer business defaults (country controls whether tax is billable)
+  const { data: photographerTaxSettings } = useQuery<{ business_sales_tax: number; business_country: string | null }>({
     queryKey: ["photographer-business-tax", photographerId],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("photographers")
-        .select("business_sales_tax")
+        .select("business_sales_tax, business_country")
         .eq("id", photographerId)
         .maybeSingle();
-      if (error) return 0;
-      return Number(data?.business_sales_tax ?? 0) || 0;
+      if (error) return { business_sales_tax: 0, business_country: null };
+      return {
+        business_sales_tax: Number(data?.business_sales_tax ?? 0) || 0,
+        business_country: data?.business_country ?? null,
+      };
     },
     enabled: !!photographerId,
   });
+  const businessTaxRate = photographerTaxSettings?.business_sales_tax ?? 0;
+  const businessCountry = photographerTaxSettings?.business_country ?? null;
 
   const sessionTaxRate =
-    Number((bookingPayment?.sessions as any)?.tax_rate ?? 0) ||
-    Number((projectSession as any)?.tax_rate ?? 0) ||
-    businessTaxRate;
+    getBillableTaxRate(
+      Number((bookingPayment?.sessions as any)?.tax_rate ?? 0) ||
+      Number((projectSession as any)?.tax_rate ?? 0) ||
+      businessTaxRate,
+      businessCountry
+    );
 
   // Auto-compute charge fee from effective tax rate unless manually edited
   useEffect(() => {
