@@ -20,6 +20,7 @@ interface BookingRow {
   payment_status: string;
   session_title: string;
   session_price: number;
+  extras_total: number;
   deposit_enabled: boolean;
   deposit_amount: number;
   deposit_type: string;
