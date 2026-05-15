@@ -743,6 +743,8 @@ export type Database = {
           payment_provider: string
           payment_status: string
           photographer_id: string
+          platform_fee_amount: number | null
+          platform_fee_percent: number | null
           session_id: string
           status: string
           stripe_checkout_session_id: string | null
@@ -771,6 +773,8 @@ export type Database = {
           payment_provider?: string
           payment_status?: string
           photographer_id: string
+          platform_fee_amount?: number | null
+          platform_fee_percent?: number | null
           session_id: string
           status?: string
           stripe_checkout_session_id?: string | null
@@ -799,6 +803,8 @@ export type Database = {
           payment_provider?: string
           payment_status?: string
           photographer_id?: string
+          platform_fee_amount?: number | null
+          platform_fee_percent?: number | null
           session_id?: string
           status?: string
           stripe_checkout_session_id?: string | null
