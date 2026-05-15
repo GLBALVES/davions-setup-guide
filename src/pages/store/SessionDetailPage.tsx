@@ -770,7 +770,9 @@ const SessionDetailPage = () => {
   const extrasTotal = selectedExtras.reduce((sum, e) => sum + e.price * e.qty, 0);
   const sessionPrice = session?.price ?? 0;
   const subtotal = sessionPrice + extrasTotal;
-  const taxAmount = session ? Math.round(subtotal * (session.tax_rate / 100)) : 0;
+  // Brazil: tax is informational only (already included in price). Don't add on top.
+  const isBRPhotographer = (photographer?.business_country ?? "").toString().toUpperCase().startsWith("BR");
+  const taxAmount = session && !isBRPhotographer ? Math.round(subtotal * (session.tax_rate / 100)) : 0;
   const total = subtotal + taxAmount;
 
   // percent deposit: X% of total (subtotal + tax); fixed: stored value in cents
