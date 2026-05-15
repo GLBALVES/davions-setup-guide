@@ -348,6 +348,7 @@ function SortableFavoriteItem({ id, item, isActive, collapsed, badgeCount = 0, o
       <NavLink
         to={item.to}
         end={item.end}
+        onClick={(e) => e.currentTarget.scrollIntoView({ block: "nearest", behavior: "smooth" })}
         className="gap-3 text-xs tracking-wider uppercase font-light hover:bg-sidebar-accent/50"
       >
         <div className="relative shrink-0">
