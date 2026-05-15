@@ -128,11 +128,11 @@ const App = () => {
         <AuthProvider>
           <LanguageProvider>
           <AppUpdateNotifier />
+          {onCustomDomain && <CustomDomainFavicon />}
           <Routes>
             {/* ── Custom domain routes (photographer's personal domain) ── */}
             {onCustomDomain ? (
               <>
-                <CustomDomainFavicon />
                 <Route path="/" element={<CustomDomainStore />} />
                 <Route path="/page/:pagePath" element={<CustomDomainSubPage />} />
                 <Route path="/book/:sessionSlug" element={<CustomDomainSessionGateway />} />
