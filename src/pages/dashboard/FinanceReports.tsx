@@ -63,19 +63,25 @@ function filterByPeriod(rows: BookingRow[], period: Period) {
   });
 }
 
-function exportCSV(rows: BookingRow[]) {
-  const header = ["Date", "Client", "Email", "Session", "Total", "Paid", "Balance", "Payment Status", "Booking Status"];
-  const csvRows = rows.map((r) => [
-    format(new Date(r.booked_date || r.created_at), "yyyy-MM-dd"),
-    `"${r.client_name}"`,
-    r.client_email,
-    `"${r.session_title}"`,
-    (calcTotal(r) / 100).toFixed(2),
-    (calcPaid(r) / 100).toFixed(2),
-    (calcBalance(r) / 100).toFixed(2),
-    r.payment_status,
-    r.status,
-  ]);
+function exportCSV(rows: BookingRow[], feePercent: number) {
+  const header = ["Date", "Client", "Email", "Session", "Total", "Paid", `Fee (${feePercent}%)`, "Net", "Balance", "Payment Status", "Booking Status"];
+  const csvRows = rows.map((r) => {
+    const paid = calcPaid(r);
+    const fee = Math.round(paid * (feePercent / 100));
+    return [
+      format(new Date(r.booked_date || r.created_at), "yyyy-MM-dd"),
+      `"${r.client_name}"`,
+      r.client_email,
+      `"${r.session_title}"`,
+      (calcTotal(r) / 100).toFixed(2),
+      (paid / 100).toFixed(2),
+      (fee / 100).toFixed(2),
+      ((paid - fee) / 100).toFixed(2),
+      (calcBalance(r) / 100).toFixed(2),
+      r.payment_status,
+      r.status,
+    ];
+  });
   const csv = [header, ...csvRows].map((row) => row.join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
