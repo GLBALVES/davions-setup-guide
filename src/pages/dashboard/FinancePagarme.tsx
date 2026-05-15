@@ -134,6 +134,8 @@ const T = {
     modalCancel: "Cancelar",
     success: "Retiro solicitado",
     failed: "Retiro fallido",
+    invalidAmount: "Importe inválido",
+    missingFields: "Completa todos los campos obligatorios",
     change: "Cambiar",
     changeBankTitle: "Cambiar cuenta bancaria",
     changeBankDesc: "Actualiza la cuenta donde se depositan tus retiros. El titular debe coincidir con el documento de la cuenta de pago.",
