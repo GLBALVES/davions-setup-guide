@@ -19,6 +19,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { getBillableTaxRate } from "@/lib/tax-utils";
+import { usePlatformFee } from "@/hooks/usePlatformFee";
 
 interface BookingRow {
   id: string;
