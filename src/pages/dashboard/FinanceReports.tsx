@@ -89,9 +89,12 @@ function exportCSV(rows: BookingRow[]) {
 export default function FinanceReports() {
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
+  const { feePercent } = usePlatformFee();
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<Period>("this_month");
+
+  const calcFee = (paid: number) => Math.round(paid * (feePercent / 100));
 
   const PERIODS: { key: Period; label: string }[] = [
     { key: "this_month", label: t.finance.thisMonthPeriod },
