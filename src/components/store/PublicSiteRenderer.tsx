@@ -2471,7 +2471,6 @@ export default function PublicSiteRenderer(props: Props) {
           </div>
           <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} navLinks={derived.navLinks} photographerEmail={props.photographer?.email ?? null} storeSlug={props.photographer?.store_slug ?? null} />
         </div>
-        <PublicLanguageSwitcher />
         <DavionsFloatingBadge hidden={!!site?.hide_branding} />
       </>
     );
