@@ -2611,7 +2611,6 @@ export default function PublicSiteRenderer(props: Props) {
         jsonLd={homeJsonLd}
       />
       {templateEl}
-      <PublicLanguageSwitcher />
         <DavionsFloatingBadge hidden={!!site?.hide_branding} />
     </>
   );
