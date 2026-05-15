@@ -36,7 +36,7 @@ serve(async (req) => {
 
     const { data: booking, error: bErr } = await supabase
       .from("bookings")
-      .select("id, photographer_id, client_email, client_name, payment_status, status, session_id, extras_total, booked_date, deposit_paid_amount, total_paid_amount, sessions(title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate)")
+      .select("id, photographer_id, client_email, client_name, payment_status, status, session_id, extras_total, booked_date, deposit_paid_amount, total_paid_amount, photographers(business_country), sessions(title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate)")
       .eq("id", booking_id)
       .single();
 
@@ -50,7 +50,9 @@ serve(async (req) => {
     const sessionPrice = s.price as number;
     const extrasTotal = (booking as any).extras_total ?? 0;
     const subtotal = sessionPrice + extrasTotal;
-    const taxRate = (s.tax_rate as number) ?? 0;
+    const country = String((booking as any).photographers?.business_country ?? "").toUpperCase();
+    const isBR = country === "BR" || country === "BRA" || country === "BRAZIL" || country === "BRASIL";
+    const taxRate = isBR ? 0 : ((s.tax_rate as number) ?? 0);
     const taxAmount = Math.round(subtotal * (taxRate / 100));
     const fullTotal = subtotal + taxAmount;
     const isPercent = s.deposit_type === "percent" || s.deposit_type === "percentage";
