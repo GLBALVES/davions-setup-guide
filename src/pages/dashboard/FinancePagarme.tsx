@@ -61,6 +61,7 @@ const T = {
     saveBank: "Save bank account",
     bankUpdated: "Bank account updated",
     bankUpdateFailed: "Failed to update bank account",
+  },
   pt: {
     section: "FINANCEIRO",
     title: "Saldo",
