@@ -42,17 +42,19 @@ const T = {
     modalCancel: "Cancel",
     success: "Withdrawal requested",
     failed: "Withdrawal failed",
+    invalidAmount: "Invalid amount",
+    missingFields: "Please fill in all required fields",
     change: "Change",
     changeBankTitle: "Change bank account",
-    changeBankDesc: "Update where your withdrawals are deposited. Holder must match the recipient document.",
+    changeBankDesc: "Update where your withdrawals are deposited. The holder must match the recipient document.",
     holderName: "Holder name",
     holderDocument: "Holder document (CPF/CNPJ)",
     holderType: "Holder type",
     holderIndividual: "Individual",
     holderCompany: "Company",
     bankCode: "Bank code (3 digits)",
-    branchNumber: "Agency",
-    branchDigit: "Agency digit (optional)",
+    branchNumber: "Branch",
+    branchDigit: "Branch digit (optional)",
     accountNumber: "Account",
     accountDigit: "Account digit",
     accountType: "Account type",
@@ -86,6 +88,8 @@ const T = {
     modalCancel: "Cancelar",
     success: "Saque solicitado",
     failed: "Falha no saque",
+    invalidAmount: "Valor inválido",
+    missingFields: "Preencha todos os campos obrigatórios",
     change: "Trocar",
     changeBankTitle: "Trocar conta bancária",
     changeBankDesc: "Atualize a conta para onde os saques serão depositados. O titular precisa coincidir com o documento da conta de pagamento.",
@@ -130,6 +134,8 @@ const T = {
     modalCancel: "Cancelar",
     success: "Retiro solicitado",
     failed: "Retiro fallido",
+    invalidAmount: "Importe inválido",
+    missingFields: "Completa todos los campos obligatorios",
     change: "Cambiar",
     changeBankTitle: "Cambiar cuenta bancaria",
     changeBankDesc: "Actualiza la cuenta donde se depositan tus retiros. El titular debe coincidir con el documento de la cuenta de pago.",
@@ -235,7 +241,7 @@ export default function FinancePagarme() {
       !bankForm.account_number ||
       !bankForm.account_check_digit
     ) {
-      toast({ title: t.bankUpdateFailed, description: "Missing fields", variant: "destructive" });
+      toast({ title: t.bankUpdateFailed, description: t.missingFields, variant: "destructive" });
       return;
     }
     setBankSubmitting(true);
@@ -295,7 +301,7 @@ export default function FinancePagarme() {
   const confirmWithdraw = async () => {
     const cents = Math.round(parseFloat(withdrawAmount.replace(",", ".")) * 100);
     if (!Number.isFinite(cents) || cents <= 0 || cents > available) {
-      toast({ title: t.failed, description: "Invalid amount", variant: "destructive" });
+      toast({ title: t.failed, description: t.invalidAmount, variant: "destructive" });
       return;
     }
     setSubmitting(true);
