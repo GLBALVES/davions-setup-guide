@@ -170,3 +170,40 @@ describe("fee/net rounding consistency (cents)", () => {
     }
   });
 });
+
+// ── Zero-fee plans ─────────────────────────────────────────────────────
+// Some plans (e.g. enterprise, comped accounts, promo periods) have
+// transaction_fee_percent = 0. Dashboards and the snapshot must show
+// Fee=0 and Net=Total exactly, with no rounding artefacts.
+
+describe("zero-fee plan invariants", () => {
+  it("Fee = 0 and Net = Total when feePercent is 0 (BR)", () => {
+    const total = calcSubtotalCents(149_99, 25_00, 10, "BR"); // tax ignored
+    expect(total).toBe(174_99);
+    expect(calcFeeCents(total, 0)).toBe(0);
+    expect(calcNetCents(total, 0)).toBe(total);
+  });
+
+  it("Fee = 0 and Net = Total when feePercent is 0 (non-BR, taxed)", () => {
+    const total = calcSubtotalCents(100_00, 0, 8, "US");
+    expect(total).toBe(108_00);
+    expect(calcFeeCents(total, 0)).toBe(0);
+    expect(calcNetCents(total, 0)).toBe(108_00);
+  });
+
+  it("works across awkward totals without producing -0 or 0.0001 drift", () => {
+    for (const total of [1, 7, 99, 333, 12_345, 999_999]) {
+      const fee = calcFeeCents(total, 0);
+      const net = calcNetCents(total, 0);
+      expect(fee).toBe(0);
+      expect(Object.is(fee, -0)).toBe(false);
+      expect(net).toBe(total);
+      expect(Number.isInteger(net)).toBe(true);
+    }
+  });
+
+  it("0% fee on a 0-cent total stays 0 (no NaN, no division weirdness)", () => {
+    expect(calcFeeCents(0, 0)).toBe(0);
+    expect(calcNetCents(0, 0)).toBe(0);
+  });
+});

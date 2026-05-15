@@ -307,3 +307,45 @@ Deno.test("snapshotPlatformFee — defaults business_currency to BRL when null",
   assertEquals(updates[0].platform_fee_percent, 1);
   assertEquals(updates[0].platform_fee_amount, 1_000);
 });
+
+// ── Zero-fee plans ─────────────────────────────────────────────────────
+// When the resolved plan rate is 0 (enterprise / comped / promo), the
+// snapshot must persist platform_fee_percent: 0 and platform_fee_amount: 0
+// so that Net = Total in the dashboards.
+
+Deno.test("snapshotPlatformFee — persists 0/0 when subscription_plans rate is 0", async () => {
+  const zeroPlans: PlanRow[] = [{ plan_key: "enterprise", currency: "BRL", transaction_fee_percent: 0 }];
+  const { client, updates } = makeSupabaseWithPlans({
+    photographer: { plan_key: "enterprise", business_currency: "BRL" },
+    plans: zeroPlans,
+    settings: { davions_commission_percent: 7 }, // must NOT leak through
+  });
+  await snapshotPlatformFee(client, "bk", 100_000);
+  assertEquals(updates.length, 1);
+  assertEquals(updates[0], { platform_fee_percent: 0, platform_fee_amount: 0 });
+});
+
+Deno.test("snapshotPlatformFee — persists 0/0 when app_payment_settings is 0 and no plan_key", async () => {
+  const { client, updates } = makeSupabaseWithPlans({
+    photographer: { plan_key: null, business_currency: "BRL" },
+    plans: [],
+    settings: { davions_commission_percent: 0 },
+  });
+  await snapshotPlatformFee(client, "bk", 250_000);
+  assertEquals(updates[0], { platform_fee_percent: 0, platform_fee_amount: 0 });
+});
+
+Deno.test("snapshotPlatformFee — 0% across BRL/USD/MXN keeps Net = Total", async () => {
+  for (const currency of ["BRL", "USD", "MXN"]) {
+    const { client, updates } = makeSupabaseWithPlans({
+      photographer: { plan_key: "enterprise", business_currency: currency },
+      plans: [{ plan_key: "enterprise", currency, transaction_fee_percent: 0 }],
+    });
+    const total = 137_53; // awkward odd cents
+    await snapshotPlatformFee(client, "bk", total);
+    assertEquals(updates[0].platform_fee_percent, 0, currency);
+    assertEquals(updates[0].platform_fee_amount, 0, currency);
+    // Net = Total - Fee = total
+    assertEquals(total - (updates[0].platform_fee_amount as number), total);
+  }
+});
