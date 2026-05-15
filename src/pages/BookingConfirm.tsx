@@ -510,9 +510,10 @@ const BookingConfirm = () => {
 
       if (resp?.provider === "pagarme_transparent") {
         // Compute the same amount the edge function will charge
+        // Compute the same amount the edge function will charge.
+        // Brazil (Pagar.me): tax is informational only, do NOT add on top of price.
         const subtotal = session?.price ?? 0;
-        const taxRate = (session as any)?.tax_rate ?? 0;
-        const taxAmount = Math.round(subtotal * (taxRate / 100));
+        const taxAmount = 0;
         const fullTotal = subtotal + taxAmount;
         const isDeposit = !!(session as any)?.deposit_enabled;
         const depositType = ((session as any)?.deposit_type ?? "").toLowerCase();
@@ -563,16 +564,18 @@ const BookingConfirm = () => {
         ? `<ul>${invoiceItems.map((i) => `<li>${i.quantity}× ${i.description} — ${formatCurrency(i.unit_price * i.quantity)}</li>`).join("")}</ul>`
         : "—",
       total_amount: (() => {
+        const isBR = (photographer?.business_country ?? "").toString().toUpperCase().startsWith("BR");
         const extras = invoiceItems.reduce((s, i) => s + i.unit_price * i.quantity, 0);
         const sub = (session.price ?? 0) + extras;
-        const tax = Math.round(sub * ((session.tax_rate ?? 0) / 100));
+        const tax = isBR ? 0 : Math.round(sub * ((session.tax_rate ?? 0) / 100));
         return formatCurrency(sub + tax);
       })(),
       deposit_amount: (() => {
         if (!session.deposit_enabled) return "—";
+        const isBR = (photographer?.business_country ?? "").toString().toUpperCase().startsWith("BR");
         const extras = invoiceItems.reduce((s, i) => s + i.unit_price * i.quantity, 0);
         const sub = (session.price ?? 0) + extras;
-        const tax = Math.round(sub * ((session.tax_rate ?? 0) / 100));
+        const tax = isBR ? 0 : Math.round(sub * ((session.tax_rate ?? 0) / 100));
         const total = sub + tax;
         const isPercent = session.deposit_type === "percent" || session.deposit_type === "percentage";
         const dep = isPercent
@@ -581,9 +584,10 @@ const BookingConfirm = () => {
         return formatCurrency(dep);
       })(),
       balance_amount: (() => {
+        const isBR = (photographer?.business_country ?? "").toString().toUpperCase().startsWith("BR");
         const extras = invoiceItems.reduce((s, i) => s + i.unit_price * i.quantity, 0);
         const sub = (session.price ?? 0) + extras;
-        const tax = Math.round(sub * ((session.tax_rate ?? 0) / 100));
+        const tax = isBR ? 0 : Math.round(sub * ((session.tax_rate ?? 0) / 100));
         const total = sub + tax;
         if (!session.deposit_enabled) return formatCurrency(0);
         const isPercent = session.deposit_type === "percent" || session.deposit_type === "percentage";
