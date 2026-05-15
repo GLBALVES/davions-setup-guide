@@ -3032,6 +3032,7 @@ export function ProjectDetailSheet({
           items={addonItems}
           newSession={pendingNewSession}
           amountAlreadyPaid={amountAlreadyPaidCents}
+          businessCountry={businessCountry}
           onConfirm={(keptItems) => applySessionChange(pendingNewSession, keptItems)}
           confirming={changingSession}
         />
