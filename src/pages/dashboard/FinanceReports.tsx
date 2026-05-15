@@ -226,6 +226,12 @@ export default function FinanceReports() {
                           <td className="px-4 py-3 whitespace-nowrap">{row.session_title}</td>
                           <td className="px-4 py-3 whitespace-nowrap tabular-nums">{fmt(calcTotal(row))}</td>
                           <td className="px-4 py-3 whitespace-nowrap tabular-nums font-normal">{fmt(calcPaid(row))}</td>
+                          <td className="px-4 py-3 whitespace-nowrap tabular-nums text-amber-600">
+                            {calcPaid(row) > 0 ? `−${fmt(calcFee(calcPaid(row)))}` : <span className="text-muted-foreground/40">—</span>}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap tabular-nums font-normal">
+                            {calcPaid(row) > 0 ? fmt(calcPaid(row) - calcFee(calcPaid(row))) : <span className="text-muted-foreground/40">—</span>}
+                          </td>
                           <td className="px-4 py-3 whitespace-nowrap tabular-nums">
                             {calcBalance(row) > 0
                               ? <span className="text-yellow-600">{fmt(calcBalance(row))}</span>
