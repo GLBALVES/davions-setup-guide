@@ -609,7 +609,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     const isDepositPaid = ps === "deposit_paid";
     const sess = bookingPayment.sessions as any;
     const sessionPrice = sess?.price ?? 0;
-    const taxRate = sess?.tax_rate ?? 0;
+    const taxRate = getBillableTaxRate(sess?.tax_rate ?? 0, businessCountry);
     const depositEnabled = sess?.deposit_enabled ?? false;
     const depositAmount = sess?.deposit_amount ?? 0;
     const depositType = sess?.deposit_type ?? "fixed";
@@ -714,7 +714,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const projectSessionTotal = (() => {
     if (bookingPayment || !projectSession) return 0;
     const price = projectSession.price ?? 0;
-    const taxRate = projectSession.tax_rate ?? 0;
+    const taxRate = getBillableTaxRate(projectSession.tax_rate ?? 0, businessCountry);
     const taxAmount = Math.round(price * taxRate / 100);
     return (price + taxAmount) / 100;
   })();
