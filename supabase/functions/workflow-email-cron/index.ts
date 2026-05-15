@@ -134,6 +134,7 @@ serve(async (req) => {
       .select(`
         id, photographer_id, client_name, client_email, booked_date, session_id, extras_total,
         sessions!inner(title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate, balance_due_timing, balance_due_offset_hours),
+        photographers(business_country),
         session_availability:availability_id(start_time)
       `)
       .eq("payment_status", "deposit_paid")
@@ -157,7 +158,9 @@ serve(async (req) => {
       // Compute remaining balance
       const sessionPrice = s.price ?? 0;
       const subtotal = sessionPrice + ((b as any).extras_total ?? 0);
-      const taxRate = s.tax_rate ?? 0;
+      const country = String((b as any).photographers?.business_country ?? "").toUpperCase();
+      const isBR = country === "BR" || country === "BRA" || country === "BRAZIL" || country === "BRASIL";
+      const taxRate = isBR ? 0 : (s.tax_rate ?? 0);
       const taxAmount = Math.round(subtotal * (taxRate / 100));
       const fullTotal = subtotal + taxAmount;
       const isPercent = s.deposit_type === "percent" || s.deposit_type === "percentage";
