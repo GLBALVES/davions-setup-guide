@@ -114,6 +114,7 @@ serve(async (req) => {
               total_paid_amount: newTotalPaid,
             })
             .eq("id", bookingId);
+          await snapshotPlatformFee(supabase, bookingId, newTotalPaid);
         } else {
           await supabase
             .from("bookings")
@@ -124,6 +125,7 @@ serve(async (req) => {
               total_paid_amount: wasDeposit ? null : amountPaid,
             })
             .eq("id", bookingId);
+          await snapshotPlatformFee(supabase, bookingId, amountPaid);
         }
       } else if (
         eventType === "charge.payment_failed" ||
