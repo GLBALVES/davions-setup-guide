@@ -241,7 +241,7 @@ export default function FinancePagarme() {
       !bankForm.account_number ||
       !bankForm.account_check_digit
     ) {
-      toast({ title: t.bankUpdateFailed, description: "Missing fields", variant: "destructive" });
+      toast({ title: t.bankUpdateFailed, description: t.missingFields, variant: "destructive" });
       return;
     }
     setBankSubmitting(true);
