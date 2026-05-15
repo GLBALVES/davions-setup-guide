@@ -208,8 +208,8 @@ export default function Revenue() {
 
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 <KpiCard icon={DollarSign}    label={t.finance.totalCollected}   value={fmt(totalRevenue)}    highlight />
-                <KpiCard icon={ArrowUpRight}   label={`Platform fee (${feePercent}%)`} value={`-${fmt(totalPlatformFee)}`} />
-                <KpiCard icon={Wallet}         label="Net to receive"             value={fmt(totalNet)} />
+                <KpiCard icon={Wallet}         label={t.finance.balanceDue}       value={fmt(totalBalance)} />
+                <KpiCard icon={TrendingUp}     label={t.finance.avgBookingValue}  value={fmt(avgBookingValue)} />
                 <KpiCard icon={CheckCircle2}   label={t.finance.fullyPaid}        value={String(paidCount)} />
                 <KpiCard icon={Clock}          label={t.finance.pendingPayment}   value={String(pendingCount)} />
               </div>
