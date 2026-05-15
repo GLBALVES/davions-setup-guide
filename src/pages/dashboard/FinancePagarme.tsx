@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import {
-  Wallet, Clock, ArrowDownToLine, RefreshCw, Loader2, AlertCircle,
+  Wallet, Clock, ArrowDownToLine, RefreshCw, Loader2, AlertCircle, Pencil,
 } from "lucide-react";
 import { format } from "date-fns";
 
