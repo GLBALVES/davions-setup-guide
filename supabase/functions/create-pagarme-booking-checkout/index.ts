@@ -120,7 +120,9 @@ serve(async (req) => {
     const extrasTotal = extras.reduce((s, e) => s + e.price * e.qty, 0);
     const sessionPrice = sessionData.price as number;
     const subtotal = sessionPrice + extrasTotal;
-    const taxRate = (sessionData.tax_rate as number) ?? 0;
+    const country = String((photoData as any)?.business_country ?? "").toUpperCase();
+    const isBR = country === "BR" || country === "BRA" || country === "BRAZIL" || country === "BRASIL";
+    const taxRate = isBR ? 0 : ((sessionData.tax_rate as number) ?? 0);
     const taxAmount = Math.round(subtotal * (taxRate / 100));
     const fullTotal = subtotal + taxAmount;
 
