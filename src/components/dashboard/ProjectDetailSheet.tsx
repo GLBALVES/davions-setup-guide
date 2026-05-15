@@ -777,7 +777,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         // Financial calculations (all in cents)
         const sess = bookingPayment.sessions as any;
         const sessionPrice = sess?.price ?? 0;
-        const taxRate = sess?.tax_rate ?? 0;
+        const taxRate = getBillableTaxRate(sess?.tax_rate ?? 0, businessCountry);
         const depositEnabled = sess?.deposit_enabled ?? false;
         const depositAmount = sess?.deposit_amount ?? 0;
         const depositType = sess?.deposit_type ?? "fixed";
@@ -1994,7 +1994,7 @@ export function ProjectDetailSheet({
       if (bookingData?.sessions) {
         const sess = bookingData.sessions;
         const sessionPrice = sess.price ?? 0;
-        const taxRate = sess.tax_rate ?? 0;
+        const taxRate = getBillableTaxRate(sess.tax_rate ?? 0, businessCountry);
         const extrasTotal = bookingData.extras_total ?? 0;
         const subtotal = sessionPrice + extrasTotal;
         const taxAmount = Math.round(subtotal * taxRate / 100);
@@ -2316,7 +2316,8 @@ export function ProjectDetailSheet({
     const sess = bookingData.sessions;
     const extrasTotal = bookingData.extras_total ?? 0;
     const subtotal = (sess.price ?? 0) + extrasTotal;
-    const taxAmount = Math.round(subtotal * ((sess.tax_rate ?? 0) / 100));
+    const taxRate = getBillableTaxRate(sess.tax_rate ?? 0, businessCountry);
+    const taxAmount = Math.round(subtotal * (taxRate / 100));
     const grandTotal = subtotal + taxAmount;
     const isPercent = sess.deposit_type === "percent" || sess.deposit_type === "percentage";
     const computedDeposit = sess.deposit_enabled
