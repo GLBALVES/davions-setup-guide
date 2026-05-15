@@ -4301,6 +4301,7 @@ export const translations = {
       cashFlow: "Flujo de Caja",
       reports: "Informes",
       pagarmeBalance: "Saldo",
+      feeAudit: "Auditoría de Tarifas",
       clients: "Clientes",
       leads: "Leads",
       kanban: "Kanban",
