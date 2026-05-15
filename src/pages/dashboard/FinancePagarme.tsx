@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import {
-  Wallet, Clock, ArrowDownToLine, RefreshCw, Loader2, AlertCircle,
+  Wallet, Clock, ArrowDownToLine, RefreshCw, Loader2, AlertCircle, Pencil,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -42,6 +42,25 @@ const T = {
     modalCancel: "Cancel",
     success: "Withdrawal requested",
     failed: "Withdrawal failed",
+    change: "Change",
+    changeBankTitle: "Change bank account",
+    changeBankDesc: "Update where your withdrawals are deposited. Holder must match the recipient document.",
+    holderName: "Holder name",
+    holderDocument: "Holder document (CPF/CNPJ)",
+    holderType: "Holder type",
+    holderIndividual: "Individual",
+    holderCompany: "Company",
+    bankCode: "Bank code (3 digits)",
+    branchNumber: "Agency",
+    branchDigit: "Agency digit (optional)",
+    accountNumber: "Account",
+    accountDigit: "Account digit",
+    accountType: "Account type",
+    accountChecking: "Checking",
+    accountSavings: "Savings",
+    saveBank: "Save bank account",
+    bankUpdated: "Bank account updated",
+    bankUpdateFailed: "Failed to update bank account",
   },
   pt: {
     section: "FINANCEIRO",
@@ -67,6 +86,25 @@ const T = {
     modalCancel: "Cancelar",
     success: "Saque solicitado",
     failed: "Falha no saque",
+    change: "Trocar",
+    changeBankTitle: "Trocar conta bancária",
+    changeBankDesc: "Atualize a conta para onde os saques serão depositados. O titular precisa coincidir com o documento da conta de pagamento.",
+    holderName: "Nome do titular",
+    holderDocument: "Documento do titular (CPF/CNPJ)",
+    holderType: "Tipo de titular",
+    holderIndividual: "Pessoa física",
+    holderCompany: "Pessoa jurídica",
+    bankCode: "Código do banco (3 dígitos)",
+    branchNumber: "Agência",
+    branchDigit: "Dígito da agência (opcional)",
+    accountNumber: "Conta",
+    accountDigit: "Dígito da conta",
+    accountType: "Tipo de conta",
+    accountChecking: "Corrente",
+    accountSavings: "Poupança",
+    saveBank: "Salvar conta",
+    bankUpdated: "Conta bancária atualizada",
+    bankUpdateFailed: "Falha ao atualizar conta",
   },
   es: {
     section: "FINANZAS",
@@ -92,6 +130,25 @@ const T = {
     modalCancel: "Cancelar",
     success: "Retiro solicitado",
     failed: "Retiro fallido",
+    change: "Cambiar",
+    changeBankTitle: "Cambiar cuenta bancaria",
+    changeBankDesc: "Actualiza la cuenta donde se depositan tus retiros. El titular debe coincidir con el documento de la cuenta de pago.",
+    holderName: "Nombre del titular",
+    holderDocument: "Documento del titular (CPF/CNPJ)",
+    holderType: "Tipo de titular",
+    holderIndividual: "Persona física",
+    holderCompany: "Persona jurídica",
+    bankCode: "Código del banco (3 dígitos)",
+    branchNumber: "Agencia",
+    branchDigit: "Dígito de la agencia (opcional)",
+    accountNumber: "Cuenta",
+    accountDigit: "Dígito de la cuenta",
+    accountType: "Tipo de cuenta",
+    accountChecking: "Corriente",
+    accountSavings: "Ahorro",
+    saveBank: "Guardar cuenta",
+    bankUpdated: "Cuenta bancaria actualizada",
+    bankUpdateFailed: "Error al actualizar la cuenta",
   },
 } as const;
 
@@ -141,6 +198,62 @@ export default function FinancePagarme() {
   const [modalOpen, setModalOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Change-bank-account dialog state
+  const [bankOpen, setBankOpen] = useState(false);
+  const [bankSubmitting, setBankSubmitting] = useState(false);
+  const [bankForm, setBankForm] = useState({
+    holder_name: "",
+    holder_document: "",
+    holder_type: "individual" as "individual" | "company",
+    bank: "",
+    branch_number: "",
+    branch_check_digit: "",
+    account_number: "",
+    account_check_digit: "",
+    type: "checking" as "checking" | "savings",
+  });
+
+  const openChangeBank = () => {
+    setBankForm((f) => ({
+      ...f,
+      holder_name: bank?.holder_name ?? "",
+      bank: bank?.bank ?? "",
+      branch_number: bank?.branch_number ?? "",
+      account_number: bank?.account_number ?? "",
+      account_check_digit: bank?.account_check_digit ?? "",
+    }));
+    setBankOpen(true);
+  };
+
+  const submitChangeBank = async () => {
+    if (
+      !bankForm.holder_name ||
+      !bankForm.holder_document ||
+      !bankForm.bank ||
+      !bankForm.branch_number ||
+      !bankForm.account_number ||
+      !bankForm.account_check_digit
+    ) {
+      toast({ title: t.bankUpdateFailed, description: "Missing fields", variant: "destructive" });
+      return;
+    }
+    setBankSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "pagarme-update-bank-account",
+        { body: bankForm },
+      );
+      if (error || data?.error) throw new Error(data?.error || error?.message);
+      toast({ title: t.bankUpdated });
+      setBankOpen(false);
+      load();
+    } catch (e: any) {
+      toast({ title: t.bankUpdateFailed, description: e.message, variant: "destructive" });
+    } finally {
+      setBankSubmitting(false);
+    }
+  };
 
   const load = async () => {
     setRefreshing(true);
@@ -262,11 +375,18 @@ export default function FinancePagarme() {
                           : "—"}
                       </p>
                     </div>
-                    <Button onClick={openWithdraw} disabled={available <= 0}
-                      className="text-[10px] tracking-widest uppercase">
-                      <ArrowDownToLine className="h-3 w-3 mr-2" />
-                      {t.withdraw}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" onClick={openChangeBank}
+                        className="text-[10px] tracking-widest uppercase">
+                        <Pencil className="h-3 w-3 mr-2" />
+                        {t.change}
+                      </Button>
+                      <Button onClick={openWithdraw} disabled={available <= 0}
+                        className="text-[10px] tracking-widest uppercase">
+                        <ArrowDownToLine className="h-3 w-3 mr-2" />
+                        {t.withdraw}
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Operations */}
@@ -350,6 +470,70 @@ export default function FinancePagarme() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Change bank account */}
+      <Dialog open={bankOpen} onOpenChange={setBankOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-light tracking-wide">{t.changeBankTitle}</DialogTitle>
+          </DialogHeader>
+          <p className="text-[11px] text-muted-foreground font-light">{t.changeBankDesc}</p>
+          <div className="grid grid-cols-2 gap-3 py-2">
+            <BankField label={t.holderName} className="col-span-2"
+              value={bankForm.holder_name}
+              onChange={(v) => setBankForm({ ...bankForm, holder_name: v })} />
+            <BankField label={t.holderDocument}
+              value={bankForm.holder_document}
+              onChange={(v) => setBankForm({ ...bankForm, holder_document: v })} />
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.holderType}</label>
+              <select
+                className="h-9 px-2 text-sm bg-background border border-input"
+                value={bankForm.holder_type}
+                onChange={(e) => setBankForm({ ...bankForm, holder_type: e.target.value as any })}
+              >
+                <option value="individual">{t.holderIndividual}</option>
+                <option value="company">{t.holderCompany}</option>
+              </select>
+            </div>
+            <BankField label={t.bankCode}
+              value={bankForm.bank}
+              onChange={(v) => setBankForm({ ...bankForm, bank: v })} />
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.accountType}</label>
+              <select
+                className="h-9 px-2 text-sm bg-background border border-input"
+                value={bankForm.type}
+                onChange={(e) => setBankForm({ ...bankForm, type: e.target.value as any })}
+              >
+                <option value="checking">{t.accountChecking}</option>
+                <option value="savings">{t.accountSavings}</option>
+              </select>
+            </div>
+            <BankField label={t.branchNumber}
+              value={bankForm.branch_number}
+              onChange={(v) => setBankForm({ ...bankForm, branch_number: v })} />
+            <BankField label={t.branchDigit}
+              value={bankForm.branch_check_digit}
+              onChange={(v) => setBankForm({ ...bankForm, branch_check_digit: v })} />
+            <BankField label={t.accountNumber}
+              value={bankForm.account_number}
+              onChange={(v) => setBankForm({ ...bankForm, account_number: v })} />
+            <BankField label={t.accountDigit}
+              value={bankForm.account_check_digit}
+              onChange={(v) => setBankForm({ ...bankForm, account_check_digit: v })} />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setBankOpen(false)}
+              className="text-[10px] tracking-widest uppercase">{t.modalCancel}</Button>
+            <Button size="sm" onClick={submitChangeBank} disabled={bankSubmitting}
+              className="text-[10px] tracking-widest uppercase">
+              {bankSubmitting && <Loader2 className="h-3 w-3 mr-2 animate-spin" />}
+              {t.saveBank}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 }
@@ -364,6 +548,17 @@ function KpiCard({ icon: Icon, label, value, highlight }: {
         <Icon className="h-3.5 w-3.5 text-muted-foreground/30" />
       </div>
       <p className="text-xl font-light tabular-nums">{value}</p>
+    </div>
+  );
+}
+
+function BankField({ label, value, onChange, className }: {
+  label: string; value: string; onChange: (v: string) => void; className?: string;
+}) {
+  return (
+    <div className={`flex flex-col gap-1 ${className ?? ""}`}>
+      <label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{label}</label>
+      <Input value={value} onChange={(e) => onChange(e.target.value)} />
     </div>
   );
 }
