@@ -88,6 +88,8 @@ const T = {
     modalCancel: "Cancelar",
     success: "Saque solicitado",
     failed: "Falha no saque",
+    invalidAmount: "Valor inválido",
+    missingFields: "Preencha todos os campos obrigatórios",
     change: "Trocar",
     changeBankTitle: "Trocar conta bancária",
     changeBankDesc: "Atualize a conta para onde os saques serão depositados. O titular precisa coincidir com o documento da conta de pagamento.",
