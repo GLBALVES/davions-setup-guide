@@ -177,6 +177,8 @@ export default function Revenue() {
 
   const totalRevenue     = rows.reduce((s, r) => s + calcPaid(r), 0);
   const totalBalance     = rows.reduce((s, r) => s + calcBalance(r), 0);
+  const totalPlatformFee = calcFee(totalRevenue);
+  const totalNet         = totalRevenue - totalPlatformFee;
   const paidCount        = rows.filter((r) => r.payment_status === "paid").length;
   const pendingCount     = rows.filter((r) => r.payment_status === "pending").length;
   const avgBookingValue  = rows.length ? rows.reduce((s, r) => s + calcTotal(r), 0) / rows.length : 0;
