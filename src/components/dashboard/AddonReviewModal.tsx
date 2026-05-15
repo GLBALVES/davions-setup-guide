@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Trash2, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getBillableTaxRate } from "@/lib/tax-utils";
 
 export interface AddonItem {
   id: string;
@@ -33,12 +33,13 @@ interface Props {
   newSession: SessionInfo;
   /** Total amount already paid by the client, in cents. Honored regardless of new session deposit config. */
   amountAlreadyPaid: number;
+  businessCountry?: string | null;
   onConfirm: (keptItems: AddonItem[]) => void;
   confirming?: boolean;
 }
 
 export function AddonReviewModal({
-  open, onOpenChange, items: initialItems, newSession, amountAlreadyPaid, onConfirm, confirming,
+  open, onOpenChange, items: initialItems, newSession, amountAlreadyPaid, businessCountry, onConfirm, confirming,
 }: Props) {
   const { t } = useLanguage();
   const tp = t.projects;
@@ -54,7 +55,8 @@ export function AddonReviewModal({
   const extrasTotal = useMemo(() => items.reduce((s, i) => s + i.quantity * i.unit_price, 0), [items]);
   const sessionPrice = newSession.price;
   const subtotal = sessionPrice + extrasTotal;
-  const taxAmount = Math.round(subtotal * newSession.tax_rate / 100);
+  const taxRate = getBillableTaxRate(newSession.tax_rate, businessCountry);
+  const taxAmount = Math.round(subtotal * taxRate / 100);
   const total = subtotal + taxAmount;
 
   // Honor what the client has actually paid; ignore the new session's deposit config.
@@ -130,9 +132,9 @@ export function AddonReviewModal({
             <span className="text-muted-foreground">{tp.extrasTotal || "Extras"}</span>
             <span className="font-medium tabular-nums">{fmt(extrasTotal)}</span>
           </div>
-          {newSession.tax_rate > 0 && (
+          {taxRate > 0 && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">{tp.taxAmount || "Tax"} ({newSession.tax_rate}%)</span>
+              <span className="text-muted-foreground">{tp.taxAmount || "Tax"} ({taxRate}%)</span>
               <span className="font-medium tabular-nums">{fmt(taxAmount)}</span>
             </div>
           )}
