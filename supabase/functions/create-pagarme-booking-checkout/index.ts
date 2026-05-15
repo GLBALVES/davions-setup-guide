@@ -151,10 +151,10 @@ serve(async (req) => {
         code: bookingId,
       });
       for (const e of extras) {
-        items.push({ amount: e.price, description: e.description.slice(0, 256), quantity: e.qty });
+        items.push({ amount: e.price, description: e.description.slice(0, 256), quantity: e.qty, code: e.id || `extra-${bookingId}` });
       }
       if (taxAmount > 0) {
-        items.push({ amount: taxAmount, description: `Imposto (${taxRate}%)`, quantity: 1 });
+        items.push({ amount: taxAmount, description: `Imposto (${taxRate}%)`, quantity: 1, code: `tax-${bookingId}` });
       }
     }
 
