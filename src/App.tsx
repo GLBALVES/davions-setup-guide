@@ -79,6 +79,7 @@ import FinancePayables from "./pages/dashboard/FinancePayables";
 import FinanceCashFlow from "./pages/dashboard/FinanceCashFlow";
 import FinancePagarme from "./pages/dashboard/FinancePagarme";
 import FinanceReports from "./pages/dashboard/FinanceReports";
+import FinanceFeeAudit from "./pages/dashboard/FinanceFeeAudit";
 import Billing from "./pages/dashboard/Billing";
 import AdminBugReports from "./pages/admin/AdminBugReports";
 import AdminDashboard from "./pages/admin/AdminDashboard";
