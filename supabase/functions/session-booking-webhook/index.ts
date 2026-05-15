@@ -55,6 +55,7 @@ serve(async (req) => {
     const amountPaidCents = (session.amount_total ?? 0) as number;
 
     if (bookingId) {
+      let totalPaidForFee = amountPaidCents;
       if (paymentKind === "balance_due") {
         // Read prior deposit to compute the new total paid value
         const { data: prior } = await supabase
@@ -63,6 +64,7 @@ serve(async (req) => {
           .eq("id", bookingId)
           .maybeSingle();
         const newTotalPaid = (prior?.deposit_paid_amount ?? 0) + amountPaidCents;
+        totalPaidForFee = newTotalPaid;
         await supabase
           .from("bookings")
           .update({ payment_status: "paid", total_paid_amount: newTotalPaid })
@@ -79,6 +81,9 @@ serve(async (req) => {
           })
           .eq("id", bookingId);
       }
+
+      // Snapshot platform transaction fee on the booking
+      await snapshotPlatformFee(supabase, bookingId, totalPaidForFee);
     }
 
     // Lock contract snapshot + propagate to client_projects (if session has a contract)
