@@ -919,7 +919,9 @@ const SessionDetailPage = () => {
         const extrasTotal = selectedExtras.reduce((s, e) => s + e.price * e.qty, 0);
         const subtotal = (session.price ?? 0) + extrasTotal;
         const taxRate = session.tax_rate ?? 0;
-        const taxAmount = Math.round(subtotal * (taxRate / 100));
+        // Brazil (Pagar.me) → tax already included in price; do not add on top.
+        const taxAmount = 0;
+        void taxRate;
         const fullTotal = subtotal + taxAmount;
         const isDeposit = !!session.deposit_enabled;
         const depositType = (session.deposit_type ?? "").toLowerCase();
