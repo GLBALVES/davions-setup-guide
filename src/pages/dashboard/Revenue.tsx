@@ -349,6 +349,12 @@ export default function Revenue() {
                               )}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums text-foreground">{fmt(calcPaid(row))}</td>
+                            <td className="px-4 py-3 whitespace-nowrap tabular-nums text-amber-600">
+                              {calcPaid(row) > 0 ? `−${fmt(calcFee(calcPaid(row)))}` : <span className="text-muted-foreground/40">—</span>}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap tabular-nums font-normal">
+                              {calcPaid(row) > 0 ? fmt(calcNet(calcPaid(row))) : <span className="text-muted-foreground/40">—</span>}
+                            </td>
                             <td className="px-4 py-3 whitespace-nowrap tabular-nums">
                               {balance > 0 ? (
                                 <span className="flex items-center gap-1 text-amber-600">
