@@ -510,9 +510,10 @@ const BookingConfirm = () => {
 
       if (resp?.provider === "pagarme_transparent") {
         // Compute the same amount the edge function will charge
+        // Compute the same amount the edge function will charge.
+        // Brazil (Pagar.me): tax is informational only, do NOT add on top of price.
         const subtotal = session?.price ?? 0;
-        const taxRate = (session as any)?.tax_rate ?? 0;
-        const taxAmount = Math.round(subtotal * (taxRate / 100));
+        const taxAmount = 0;
         const fullTotal = subtotal + taxAmount;
         const isDeposit = !!(session as any)?.deposit_enabled;
         const depositType = ((session as any)?.deposit_type ?? "").toLowerCase();
