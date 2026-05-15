@@ -199,6 +199,62 @@ export default function FinancePagarme() {
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Change-bank-account dialog state
+  const [bankOpen, setBankOpen] = useState(false);
+  const [bankSubmitting, setBankSubmitting] = useState(false);
+  const [bankForm, setBankForm] = useState({
+    holder_name: "",
+    holder_document: "",
+    holder_type: "individual" as "individual" | "company",
+    bank: "",
+    branch_number: "",
+    branch_check_digit: "",
+    account_number: "",
+    account_check_digit: "",
+    type: "checking" as "checking" | "savings",
+  });
+
+  const openChangeBank = () => {
+    setBankForm((f) => ({
+      ...f,
+      holder_name: bank?.holder_name ?? "",
+      bank: bank?.bank ?? "",
+      branch_number: bank?.branch_number ?? "",
+      account_number: bank?.account_number ?? "",
+      account_check_digit: bank?.account_check_digit ?? "",
+    }));
+    setBankOpen(true);
+  };
+
+  const submitChangeBank = async () => {
+    if (
+      !bankForm.holder_name ||
+      !bankForm.holder_document ||
+      !bankForm.bank ||
+      !bankForm.branch_number ||
+      !bankForm.account_number ||
+      !bankForm.account_check_digit
+    ) {
+      toast({ title: t.bankUpdateFailed, description: "Missing fields", variant: "destructive" });
+      return;
+    }
+    setBankSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "pagarme-update-bank-account",
+        { body: bankForm },
+      );
+      if (error || data?.error) throw new Error(data?.error || error?.message);
+      toast({ title: t.bankUpdated });
+      setBankOpen(false);
+      load();
+    } catch (e: any) {
+      toast({ title: t.bankUpdateFailed, description: e.message, variant: "destructive" });
+    } finally {
+      setBankSubmitting(false);
+    }
+  };
+
   const load = async () => {
     setRefreshing(true);
     try {
