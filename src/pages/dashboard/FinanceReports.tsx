@@ -184,10 +184,10 @@ export default function FinanceReports() {
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: t.finance.collected,   value: fmt(totalCollected) },
-                  { label: t.finance.outstanding,  value: fmt(totalPending) },
-                  { label: "Bookings",             value: String(totalBookings) },
-                  { label: t.finance.avgTicket,    value: fmt(avgTicket) },
+                  { label: t.finance.collected,        value: fmt(totalCollected) },
+                  { label: `Platform fee (${feePercent}%)`, value: `−${fmt(totalFee)}` },
+                  { label: "Net to receive",            value: fmt(totalNet) },
+                  { label: t.finance.outstanding,       value: fmt(totalPending) },
                 ].map((item) => (
                   <div key={item.label} className="border border-border p-5 flex flex-col gap-2">
                     <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{item.label}</p>
