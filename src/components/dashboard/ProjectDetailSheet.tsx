@@ -1936,6 +1936,20 @@ export function ProjectDetailSheet({
   const [oneSessionId, setOneSessionId] = useState<string | null>(null);
   const [creatingOneSession, setCreatingOneSession] = useState(false);
 
+  const { data: projectTaxSettings } = useQuery<{ business_country: string | null }>({
+    queryKey: ["project-detail-tax-settings", photographerId],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("photographers")
+        .select("business_country")
+        .eq("id", photographerId)
+        .maybeSingle();
+      return { business_country: data?.business_country ?? null };
+    },
+    enabled: !!photographerId && open,
+  });
+  const businessCountry = projectTaxSettings?.business_country ?? null;
+
   // Fetch sessions for this photographer
   const { data: photographerSessions = [] } = useQuery({
     queryKey: ["photographer-sessions-for-project", photographerId],
