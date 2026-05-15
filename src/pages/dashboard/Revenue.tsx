@@ -19,6 +19,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { getBillableTaxRate } from "@/lib/tax-utils";
+import { usePlatformFee } from "@/hooks/usePlatformFee";
 
 interface BookingRow {
   id: string;
@@ -97,10 +98,14 @@ function ChartTooltip({ active, payload, label, fmt }: any) {
 export default function Revenue() {
   const { user, signOut, photographerId } = useAuth();
   const { t } = useLanguage();
+  const { feePercent } = usePlatformFee();
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("all");
+
+  const calcFee = (paid: number) => Math.round(paid * (feePercent / 100));
+  const calcNet = (paid: number) => paid - calcFee(paid);
 
   const STATUS_CONFIG: Record<string, {
     label: string;
@@ -172,6 +177,8 @@ export default function Revenue() {
 
   const totalRevenue     = rows.reduce((s, r) => s + calcPaid(r), 0);
   const totalBalance     = rows.reduce((s, r) => s + calcBalance(r), 0);
+  const totalPlatformFee = calcFee(totalRevenue);
+  const totalNet         = totalRevenue - totalPlatformFee;
   const paidCount        = rows.filter((r) => r.payment_status === "paid").length;
   const pendingCount     = rows.filter((r) => r.payment_status === "pending").length;
   const avgBookingValue  = rows.length ? rows.reduce((s, r) => s + calcTotal(r), 0) / rows.length : 0;
@@ -244,8 +251,16 @@ export default function Revenue() {
                       <span className="text-xs font-normal tabular-nums">{fmt(item.val)}</span>
                     </div>
                   ))}
-                  <div className="border-t border-border pt-4">
+                  <div className="border-t border-border pt-4 flex flex-col gap-2">
                     <div className="flex items-center justify-between">
+                      <span className="text-xs font-light text-muted-foreground">Platform fee ({feePercent}%)</span>
+                      <span className="text-xs font-normal tabular-nums text-amber-600">−{fmt(totalPlatformFee)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-normal">Net to receive</span>
+                      <span className="text-xs font-normal tabular-nums">{fmt(totalNet)}</span>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-border/60">
                       <span className="text-xs font-light text-muted-foreground">{t.finance.totalBookings}</span>
                       <span className="text-xs font-normal">{rows.length}</span>
                     </div>
@@ -296,7 +311,7 @@ export default function Revenue() {
                   <table className="w-full text-xs font-light">
                     <thead>
                       <tr className="border-b border-border bg-muted/20">
-                        {[t.finance.date, t.finance.client, t.finance.session, t.finance.total, t.finance.deposit, t.finance.paid, t.finance.balance, "Payment", "Booking"].map((h) => (
+                        {[t.finance.date, t.finance.client, t.finance.session, t.finance.total, t.finance.deposit, t.finance.paid, `Fee (${feePercent}%)`, "Net", t.finance.balance, "Payment", "Booking"].map((h) => (
                           <th key={h} className="text-left px-4 py-3 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light whitespace-nowrap">{h}</th>
                         ))}
                       </tr>
@@ -334,6 +349,12 @@ export default function Revenue() {
                               )}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums text-foreground">{fmt(calcPaid(row))}</td>
+                            <td className="px-4 py-3 whitespace-nowrap tabular-nums text-amber-600">
+                              {calcPaid(row) > 0 ? `−${fmt(calcFee(calcPaid(row)))}` : <span className="text-muted-foreground/40">—</span>}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap tabular-nums font-normal">
+                              {calcPaid(row) > 0 ? fmt(calcNet(calcPaid(row))) : <span className="text-muted-foreground/40">—</span>}
+                            </td>
                             <td className="px-4 py-3 whitespace-nowrap tabular-nums">
                               {balance > 0 ? (
                                 <span className="flex items-center gap-1 text-amber-600">
