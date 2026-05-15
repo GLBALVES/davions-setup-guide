@@ -98,10 +98,14 @@ function ChartTooltip({ active, payload, label, fmt }: any) {
 export default function Revenue() {
   const { user, signOut, photographerId } = useAuth();
   const { t } = useLanguage();
+  const { feePercent } = usePlatformFee();
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("all");
+
+  const calcFee = (paid: number) => Math.round(paid * (feePercent / 100));
+  const calcNet = (paid: number) => paid - calcFee(paid);
 
   const STATUS_CONFIG: Record<string, {
     label: string;
