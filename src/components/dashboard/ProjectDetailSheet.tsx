@@ -41,6 +41,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { checkBookingConflict, syncProjectDateToBooking, timeToMinutes } from "@/lib/booking-conflict";
 import { formatCurrencyInput, parseCurrencyInput, currencyPlaceholder, type CurrencyLang } from "@/lib/currency-format";
+import { getBillableTaxRate } from "@/lib/tax-utils";
 import { BriefingDialog } from "@/components/dashboard/schedule/BookingDetailSheet";
 
 type Stage = "upcoming" | "shot" | "proof_gallery" | "post_production" | "final_gallery" | "archived";
@@ -548,25 +549,33 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     enabled: !project.booking_id && !!projectSessionTitle,
   });
 
-  // Photographer business default tax rate (fallback when session has none)
-  const { data: businessTaxRate = 0 } = useQuery<number>({
+  // Photographer business defaults (country controls whether tax is billable)
+  const { data: photographerTaxSettings } = useQuery<{ business_sales_tax: number; business_country: string | null }>({
     queryKey: ["photographer-business-tax", photographerId],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("photographers")
-        .select("business_sales_tax")
+        .select("business_sales_tax, business_country")
         .eq("id", photographerId)
         .maybeSingle();
-      if (error) return 0;
-      return Number(data?.business_sales_tax ?? 0) || 0;
+      if (error) return { business_sales_tax: 0, business_country: null };
+      return {
+        business_sales_tax: Number(data?.business_sales_tax ?? 0) || 0,
+        business_country: data?.business_country ?? null,
+      };
     },
     enabled: !!photographerId,
   });
+  const businessTaxRate = photographerTaxSettings?.business_sales_tax ?? 0;
+  const businessCountry = photographerTaxSettings?.business_country ?? null;
 
   const sessionTaxRate =
-    Number((bookingPayment?.sessions as any)?.tax_rate ?? 0) ||
-    Number((projectSession as any)?.tax_rate ?? 0) ||
-    businessTaxRate;
+    getBillableTaxRate(
+      Number((bookingPayment?.sessions as any)?.tax_rate ?? 0) ||
+      Number((projectSession as any)?.tax_rate ?? 0) ||
+      businessTaxRate,
+      businessCountry
+    );
 
   // Auto-compute charge fee from effective tax rate unless manually edited
   useEffect(() => {
@@ -600,7 +609,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     const isDepositPaid = ps === "deposit_paid";
     const sess = bookingPayment.sessions as any;
     const sessionPrice = sess?.price ?? 0;
-    const taxRate = sess?.tax_rate ?? 0;
+    const taxRate = getBillableTaxRate(sess?.tax_rate ?? 0, businessCountry);
     const depositEnabled = sess?.deposit_enabled ?? false;
     const depositAmount = sess?.deposit_amount ?? 0;
     const depositType = sess?.deposit_type ?? "fixed";
@@ -705,7 +714,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const projectSessionTotal = (() => {
     if (bookingPayment || !projectSession) return 0;
     const price = projectSession.price ?? 0;
-    const taxRate = projectSession.tax_rate ?? 0;
+    const taxRate = getBillableTaxRate(projectSession.tax_rate ?? 0, businessCountry);
     const taxAmount = Math.round(price * taxRate / 100);
     return (price + taxAmount) / 100;
   })();
@@ -768,7 +777,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         // Financial calculations (all in cents)
         const sess = bookingPayment.sessions as any;
         const sessionPrice = sess?.price ?? 0;
-        const taxRate = sess?.tax_rate ?? 0;
+        const taxRate = getBillableTaxRate(sess?.tax_rate ?? 0, businessCountry);
         const depositEnabled = sess?.deposit_enabled ?? false;
         const depositAmount = sess?.deposit_amount ?? 0;
         const depositType = sess?.deposit_type ?? "fixed";
@@ -1927,6 +1936,20 @@ export function ProjectDetailSheet({
   const [oneSessionId, setOneSessionId] = useState<string | null>(null);
   const [creatingOneSession, setCreatingOneSession] = useState(false);
 
+  const { data: projectTaxSettings } = useQuery<{ business_country: string | null }>({
+    queryKey: ["project-detail-tax-settings", photographerId],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("photographers")
+        .select("business_country")
+        .eq("id", photographerId)
+        .maybeSingle();
+      return { business_country: data?.business_country ?? null };
+    },
+    enabled: !!photographerId && open,
+  });
+  const businessCountry = projectTaxSettings?.business_country ?? null;
+
   // Fetch sessions for this photographer
   const { data: photographerSessions = [] } = useQuery({
     queryKey: ["photographer-sessions-for-project", photographerId],
@@ -1985,7 +2008,7 @@ export function ProjectDetailSheet({
       if (bookingData?.sessions) {
         const sess = bookingData.sessions;
         const sessionPrice = sess.price ?? 0;
-        const taxRate = sess.tax_rate ?? 0;
+        const taxRate = getBillableTaxRate(sess.tax_rate ?? 0, businessCountry);
         const extrasTotal = bookingData.extras_total ?? 0;
         const subtotal = sessionPrice + extrasTotal;
         const taxAmount = Math.round(subtotal * taxRate / 100);
@@ -2307,7 +2330,8 @@ export function ProjectDetailSheet({
     const sess = bookingData.sessions;
     const extrasTotal = bookingData.extras_total ?? 0;
     const subtotal = (sess.price ?? 0) + extrasTotal;
-    const taxAmount = Math.round(subtotal * ((sess.tax_rate ?? 0) / 100));
+    const taxRate = getBillableTaxRate(sess.tax_rate ?? 0, businessCountry);
+    const taxAmount = Math.round(subtotal * (taxRate / 100));
     const grandTotal = subtotal + taxAmount;
     const isPercent = sess.deposit_type === "percent" || sess.deposit_type === "percentage";
     const computedDeposit = sess.deposit_enabled
@@ -3008,6 +3032,7 @@ export function ProjectDetailSheet({
           items={addonItems}
           newSession={pendingNewSession}
           amountAlreadyPaid={amountAlreadyPaidCents}
+          businessCountry={businessCountry}
           onConfirm={(keptItems) => applySessionChange(pendingNewSession, keptItems)}
           confirming={changingSession}
         />

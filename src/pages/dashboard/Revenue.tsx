@@ -18,6 +18,7 @@ import { format, startOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
+import { getBillableTaxRate } from "@/lib/tax-utils";
 
 interface BookingRow {
   id: string;
@@ -34,11 +35,13 @@ interface BookingRow {
   deposit_amount: number;
   deposit_type: string;
   tax_rate: number;
+  business_country: string | null;
 }
 
 function calcTotal(row: BookingRow) {
   const base = row.session_price + row.extras_total;
-  const tax = base * (row.tax_rate / 100);
+  const taxRate = getBillableTaxRate(row.tax_rate, row.business_country);
+  const tax = base * (taxRate / 100);
   return base + tax;
 }
 
@@ -126,7 +129,8 @@ export default function Revenue() {
         .select(`
           id, client_name, client_email, created_at, booked_date,
           payment_status, status, extras_total,
-          sessions ( title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate )
+          sessions ( title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate ),
+          photographers ( business_country )
         `)
         .eq("photographer_id", photographerId)
         .order("created_at", { ascending: false });
@@ -147,6 +151,7 @@ export default function Revenue() {
           deposit_amount: b.sessions?.deposit_amount ?? 0,
           deposit_type: b.sessions?.deposit_type ?? "fixed",
           tax_rate: b.sessions?.tax_rate ?? 0,
+          business_country: b.photographers?.business_country ?? null,
         }));
         setRows(mapped);
       }

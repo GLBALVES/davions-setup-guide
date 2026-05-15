@@ -14,6 +14,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { format, startOfMonth, eachMonthOfInterval, subMonths, isSameMonth } from "date-fns";
+import { getBillableTaxRate } from "@/lib/tax-utils";
 
 interface BookingRow {
   id: string;
@@ -28,12 +29,14 @@ interface BookingRow {
   deposit_amount: number;
   deposit_type: string;
   tax_rate: number;
+  business_country: string | null;
   stripe_checkout_session_id: string | null;
 }
 
 function calcTotal(r: BookingRow) {
   const base = r.session_price + r.extras_total;
-  return base + base * (r.tax_rate / 100);
+  const taxRate = getBillableTaxRate(r.tax_rate, r.business_country);
+  return base + base * (taxRate / 100);
 }
 function calcPaid(r: BookingRow) {
   if (r.payment_status !== "paid" && r.payment_status !== "deposit_paid") return 0;
@@ -95,7 +98,7 @@ export default function FinanceDashboard() {
       setLoading(true);
       const { data } = await supabase
         .from("bookings")
-        .select(`id, client_name, created_at, booked_date, payment_status, extras_total, stripe_checkout_session_id, sessions(title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate)`)
+        .select(`id, client_name, created_at, booked_date, payment_status, extras_total, stripe_checkout_session_id, sessions(title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate), photographers(business_country)`)
         .eq("photographer_id", user.id)
         .order("created_at", { ascending: false });
       if (data) {
@@ -112,6 +115,7 @@ export default function FinanceDashboard() {
           deposit_amount: b.sessions?.deposit_amount ?? 0,
           deposit_type: b.sessions?.deposit_type ?? "fixed",
           tax_rate: b.sessions?.tax_rate ?? 0,
+          business_country: b.photographers?.business_country ?? null,
           stripe_checkout_session_id: b.stripe_checkout_session_id ?? null,
         })));
       }

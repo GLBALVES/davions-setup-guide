@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowDownCircle, Search, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getBillableTaxRate } from "@/lib/tax-utils";
 
 interface BookingRow {
   id: string;
@@ -19,14 +20,18 @@ interface BookingRow {
   payment_status: string;
   session_title: string;
   session_price: number;
+  extras_total: number;
   deposit_enabled: boolean;
   deposit_amount: number;
   deposit_type: string;
   tax_rate: number;
+  business_country: string | null;
 }
 
 function calcTotal(r: BookingRow) {
-  return r.session_price + r.session_price * (r.tax_rate / 100);
+  const base = r.session_price + r.extras_total;
+  const taxRate = getBillableTaxRate(r.tax_rate, r.business_country);
+  return base + base * (taxRate / 100);
 }
 function calcPaid(r: BookingRow) {
   if (r.payment_status !== "paid" && r.payment_status !== "deposit_paid") return 0;
@@ -60,7 +65,7 @@ export default function FinanceReceivables() {
       setLoading(true);
       const { data } = await supabase
         .from("bookings")
-        .select(`id, client_name, client_email, created_at, booked_date, payment_status, extras_total, sessions(title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate)`)
+        .select(`id, client_name, client_email, created_at, booked_date, payment_status, extras_total, sessions(title, price, deposit_enabled, deposit_amount, deposit_type, tax_rate), photographers(business_country)`)
         .eq("photographer_id", user.id)
         .in("payment_status", ["pending", "deposit_paid"])
         .order("created_at", { ascending: false });
@@ -80,6 +85,7 @@ export default function FinanceReceivables() {
           deposit_amount: b.sessions?.deposit_amount ?? 0,
           deposit_type: b.sessions?.deposit_type ?? "fixed",
           tax_rate: b.sessions?.tax_rate ?? 0,
+          business_country: b.photographers?.business_country ?? null,
         })));
       }
       setLoading(false);
