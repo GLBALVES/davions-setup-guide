@@ -30,6 +30,23 @@
 </head>
 
   <body>
+    <script>
+      // Apply locale to <html lang> before React mounts to prevent flicker
+      (function () {
+        try {
+          var saved = localStorage.getItem('davions_lang');
+          var lang = (saved === 'en' || saved === 'pt' || saved === 'es')
+            ? saved
+            : (function () {
+                var nav = (navigator.language || '').toLowerCase();
+                if (nav.indexOf('pt') === 0) return 'pt';
+                if (nav.indexOf('es') === 0) return 'es';
+                return 'en';
+              })();
+          document.documentElement.lang = lang;
+        } catch (_) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
