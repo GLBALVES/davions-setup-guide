@@ -2198,6 +2198,7 @@ export const translations = {
       cashFlow: "Fluxo de Caixa",
       reports: "Relatórios",
       pagarmeBalance: "Saldo",
+      feeAudit: "Auditoria de Taxas",
       clients: "Clientes",
       leads: "Leads",
       kanban: "Kanban",
