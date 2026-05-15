@@ -208,7 +208,7 @@ export default function FinanceReports() {
                   <table className="w-full text-xs font-light">
                     <thead>
                       <tr className="border-b border-border bg-muted/20">
-                        {[t.finance.date, t.finance.client, t.finance.session, t.finance.total, t.finance.collected, t.finance.balance, t.finance.status].map((h) => (
+                        {[t.finance.date, t.finance.client, t.finance.session, t.finance.total, t.finance.collected, `Fee (${feePercent}%)`, "Net", t.finance.balance, t.finance.status].map((h) => (
                           <th key={h} className="text-left px-4 py-3 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light whitespace-nowrap">{h}</th>
                         ))}
                       </tr>
