@@ -301,7 +301,7 @@ export default function FinancePagarme() {
   const confirmWithdraw = async () => {
     const cents = Math.round(parseFloat(withdrawAmount.replace(",", ".")) * 100);
     if (!Number.isFinite(cents) || cents <= 0 || cents > available) {
-      toast({ title: t.failed, description: "Invalid amount", variant: "destructive" });
+      toast({ title: t.failed, description: t.invalidAmount, variant: "destructive" });
       return;
     }
     setSubmitting(true);
