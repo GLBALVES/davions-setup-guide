@@ -147,3 +147,163 @@ Deno.test("snapshotPlatformFee — bails out gracefully when booking is missing"
 
   assertEquals(tables.bookings.updates.length, 0);
 });
+
+// ── Plan × currency matrix ─────────────────────────────────────────────
+// The fee snapshot must pick the correct subscription_plans row by
+// (plan_key, currency). A photographer billed in USD on the "pro" plan
+// must NOT inherit the BRL "pro" rate, and once snapshotted the rate
+// of THAT payment is preserved even if the plan rate later changes.
+
+interface PlanRow { plan_key: string; currency: string; transaction_fee_percent: number }
+
+function makeSupabaseWithPlans(opts: {
+  photographer: { plan_key: string | null; business_currency: string };
+  plans: PlanRow[];
+  settings?: { davions_commission_percent: number } | null;
+}) {
+  const updates: Array<Record<string, unknown>> = [];
+  const from = (name: string) => {
+    const filters: Record<string, unknown> = {};
+    const builder: any = {
+      _isSelect: false,
+      _payload: null as Record<string, unknown> | null,
+      select() { this._isSelect = true; return this; },
+      update(p: Record<string, unknown>) { this._payload = p; return this; },
+      eq(col: string, val: unknown) { filters[col] = val; return this; },
+      limit() { return this; },
+      async maybeSingle() {
+        if (name === "bookings") return { data: { photographer_id: "ph-1" }, error: null };
+        if (name === "app_payment_settings") return { data: opts.settings ?? null, error: null };
+        if (name === "photographers") return { data: opts.photographer, error: null };
+        if (name === "subscription_plans") {
+          const match = opts.plans.find(
+            (p) => p.plan_key === filters.plan_key && p.currency === filters.currency,
+          );
+          return { data: match ?? null, error: null };
+        }
+        return { data: null, error: null };
+      },
+      then(resolve: (v: unknown) => void) {
+        if (name === "bookings" && this._payload) updates.push(this._payload);
+        resolve({ data: null, error: null });
+      },
+    };
+    return builder;
+  };
+  return { client: { from } as any, updates };
+}
+
+const PLANS: PlanRow[] = [
+  { plan_key: "starter", currency: "BRL", transaction_fee_percent: 5 },
+  { plan_key: "pro",     currency: "BRL", transaction_fee_percent: 3 },
+  { plan_key: "studio",  currency: "BRL", transaction_fee_percent: 1 },
+  { plan_key: "starter", currency: "USD", transaction_fee_percent: 6 },
+  { plan_key: "pro",     currency: "USD", transaction_fee_percent: 4 },
+  { plan_key: "studio",  currency: "USD", transaction_fee_percent: 2 },
+  { plan_key: "starter", currency: "MXN", transaction_fee_percent: 7 },
+  { plan_key: "pro",     currency: "MXN", transaction_fee_percent: 4.5 },
+  { plan_key: "studio",  currency: "MXN", transaction_fee_percent: 2.5 },
+];
+
+Deno.test("snapshotPlatformFee — picks plan rate by (plan_key, currency) for BRL/USD/MXN", async () => {
+  const cases: Array<{ plan: string; currency: string; expectedPct: number }> = [
+    { plan: "starter", currency: "BRL", expectedPct: 5 },
+    { plan: "pro",     currency: "BRL", expectedPct: 3 },
+    { plan: "studio",  currency: "BRL", expectedPct: 1 },
+    { plan: "starter", currency: "USD", expectedPct: 6 },
+    { plan: "pro",     currency: "USD", expectedPct: 4 },
+    { plan: "studio",  currency: "USD", expectedPct: 2 },
+    { plan: "starter", currency: "MXN", expectedPct: 7 },
+    { plan: "pro",     currency: "MXN", expectedPct: 4.5 },
+    { plan: "studio",  currency: "MXN", expectedPct: 2.5 },
+  ];
+
+  for (const c of cases) {
+    const { client, updates } = makeSupabaseWithPlans({
+      photographer: { plan_key: c.plan, business_currency: c.currency },
+      plans: PLANS,
+      settings: { davions_commission_percent: 99 }, // must NOT be used
+    });
+    await snapshotPlatformFee(client, "bk", 100_000);
+    assertEquals(
+      updates[0],
+      {
+        platform_fee_percent: c.expectedPct,
+        platform_fee_amount: Math.round(100_000 * (c.expectedPct / 100)),
+      },
+      `plan=${c.plan} currency=${c.currency}`,
+    );
+  }
+});
+
+Deno.test("snapshotPlatformFee — same plan_key resolves different fee per currency", async () => {
+  // BRL pro = 3%, USD pro = 4%, MXN pro = 4.5%
+  const brl = makeSupabaseWithPlans({
+    photographer: { plan_key: "pro", business_currency: "BRL" }, plans: PLANS,
+  });
+  const usd = makeSupabaseWithPlans({
+    photographer: { plan_key: "pro", business_currency: "USD" }, plans: PLANS,
+  });
+  const mxn = makeSupabaseWithPlans({
+    photographer: { plan_key: "pro", business_currency: "MXN" }, plans: PLANS,
+  });
+
+  await snapshotPlatformFee(brl.client, "bk", 100_000);
+  await snapshotPlatformFee(usd.client, "bk", 100_000);
+  await snapshotPlatformFee(mxn.client, "bk", 100_000);
+
+  assertEquals(brl.updates[0].platform_fee_percent, 3);
+  assertEquals(usd.updates[0].platform_fee_percent, 4);
+  assertEquals(mxn.updates[0].platform_fee_percent, 4.5);
+  assertEquals(brl.updates[0].platform_fee_amount, 3_000);
+  assertEquals(usd.updates[0].platform_fee_amount, 4_000);
+  assertEquals(mxn.updates[0].platform_fee_amount, 4_500);
+});
+
+Deno.test("snapshotPlatformFee — falls back to PLAN_DEFAULT_FEE when (plan, currency) row missing", async () => {
+  // Photographer is on "pro" but only BRL plans exist; he is on USD.
+  const onlyBRL = PLANS.filter((p) => p.currency === "BRL");
+  const { client, updates } = makeSupabaseWithPlans({
+    photographer: { plan_key: "pro", business_currency: "USD" },
+    plans: onlyBRL,
+    settings: { davions_commission_percent: 9 },
+  });
+  await snapshotPlatformFee(client, "bk", 100_000);
+  // PLAN_DEFAULT_FEE.pro === 3, NOT app_payment_settings (9) nor BRL pro (3 — same value but via different path)
+  assertEquals(updates[0].platform_fee_percent, 3);
+  assertEquals(updates[0].platform_fee_amount, 3_000);
+});
+
+Deno.test("snapshotPlatformFee — preserves the fee of THAT payment (no later override)", async () => {
+  // First payment under pro/BRL = 3%. Plan rate later changes to 8%.
+  // The first snapshot row must remain 3% / 3000; the second uses 8%.
+  const state = {
+    photographer: { plan_key: "pro", business_currency: "BRL" } as { plan_key: string | null; business_currency: string },
+    plans: PLANS,
+  };
+  const first = makeSupabaseWithPlans(state);
+  await snapshotPlatformFee(first.client, "bk", 100_000);
+  assertEquals(first.updates[0], { platform_fee_percent: 3, platform_fee_amount: 3_000 });
+
+  const newPlans: PlanRow[] = PLANS.map((p) =>
+    p.plan_key === "pro" && p.currency === "BRL" ? { ...p, transaction_fee_percent: 8 } : p,
+  );
+  const second = makeSupabaseWithPlans({ ...state, plans: newPlans });
+  await snapshotPlatformFee(second.client, "bk2", 100_000);
+  assertEquals(second.updates[0], { platform_fee_percent: 8, platform_fee_amount: 8_000 });
+
+  // The first snapshot is independent and untouched (it's a different mock client).
+  assertEquals(first.updates.length, 1);
+  assertEquals(first.updates[0].platform_fee_percent, 3);
+});
+
+Deno.test("snapshotPlatformFee — defaults business_currency to BRL when null", async () => {
+  const { client, updates } = makeSupabaseWithPlans({
+    photographer: { plan_key: "studio", business_currency: "" },
+    plans: PLANS,
+  });
+  await snapshotPlatformFee(client, "bk", 100_000);
+  // empty currency -> defaulted to BRL -> studio/BRL = 1%
+  assertEquals(updates[0].platform_fee_percent, 1);
+  assertEquals(updates[0].platform_fee_amount, 1_000);
+});
