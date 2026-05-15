@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import { format, startOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getBillableTaxRate } from "@/lib/tax-utils";
 
 interface BookingRow {
   created_at: string;
@@ -21,11 +22,13 @@ interface BookingRow {
   deposit_amount: number;
   deposit_type: string;
   tax_rate: number;
+  business_country: string | null;
 }
 
 function calcTotal(r: BookingRow) {
   const base = r.session_price + r.extras_total;
-  return base + base * (r.tax_rate / 100);
+  const taxRate = getBillableTaxRate(r.tax_rate, r.business_country);
+  return base + base * (taxRate / 100);
 }
 function calcPaid(r: BookingRow) {
   if (r.payment_status !== "paid" && r.payment_status !== "deposit_paid") return 0;
@@ -80,7 +83,7 @@ export default function FinanceCashFlow() {
       setLoading(true);
       const { data } = await supabase
         .from("bookings")
-        .select(`created_at, booked_date, payment_status, extras_total, sessions(price, deposit_enabled, deposit_amount, deposit_type, tax_rate)`)
+        .select(`created_at, booked_date, payment_status, extras_total, sessions(price, deposit_enabled, deposit_amount, deposit_type, tax_rate), photographers(business_country)`)
         .eq("photographer_id", user.id);
       if (data) {
         setRows((data as any[]).map((b) => ({
@@ -93,6 +96,7 @@ export default function FinanceCashFlow() {
           deposit_amount: b.sessions?.deposit_amount ?? 0,
           deposit_type: b.sessions?.deposit_type ?? "fixed",
           tax_rate: b.sessions?.tax_rate ?? 0,
+          business_country: b.photographers?.business_country ?? null,
         })));
       }
       setLoading(false);
