@@ -9,6 +9,7 @@ import { FileText, Download } from "lucide-react";
 import { format, startOfMonth, startOfYear, subMonths } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getBillableTaxRate } from "@/lib/tax-utils";
+import { usePlatformFee } from "@/hooks/usePlatformFee";
 
 interface BookingRow {
   id: string;
