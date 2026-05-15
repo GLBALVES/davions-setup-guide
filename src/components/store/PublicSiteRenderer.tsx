@@ -691,6 +691,9 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
                 {ctaText} →
               </button>
             )}
+            <div className="pt-3 mt-2 border-t border-border/50 flex justify-start">
+              <PublicLanguageSwitcher inline />
+            </div>
           </nav>
         </div>
       )}
