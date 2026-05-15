@@ -139,7 +139,8 @@ export default function FinanceReports() {
   const totalCollected = filtered.reduce((s, r) => s + calcPaid(r), 0);
   const totalPending   = filtered.reduce((s, r) => s + calcBalance(r), 0);
   const totalBookings  = filtered.length;
-  const avgTicket      = totalBookings ? filtered.reduce((s, r) => s + calcTotal(r), 0) / totalBookings : 0;
+  const totalFee       = calcFee(totalCollected);
+  const totalNet       = totalCollected - totalFee;
 
   return (
     <SidebarProvider>
