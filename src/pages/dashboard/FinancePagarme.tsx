@@ -375,11 +375,18 @@ export default function FinancePagarme() {
                           : "—"}
                       </p>
                     </div>
-                    <Button onClick={openWithdraw} disabled={available <= 0}
-                      className="text-[10px] tracking-widest uppercase">
-                      <ArrowDownToLine className="h-3 w-3 mr-2" />
-                      {t.withdraw}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" onClick={openChangeBank}
+                        className="text-[10px] tracking-widest uppercase">
+                        <Pencil className="h-3 w-3 mr-2" />
+                        {t.change}
+                      </Button>
+                      <Button onClick={openWithdraw} disabled={available <= 0}
+                        className="text-[10px] tracking-widest uppercase">
+                        <ArrowDownToLine className="h-3 w-3 mr-2" />
+                        {t.withdraw}
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Operations */}
