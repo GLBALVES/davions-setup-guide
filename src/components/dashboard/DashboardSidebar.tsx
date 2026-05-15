@@ -200,6 +200,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
         { title: t.nav.payables,          icon: ArrowUpCircle,   to: "/dashboard/finance/payables" },
         { title: t.nav.cashFlow,          icon: TrendingUp,      to: "/dashboard/finance/cashflow" },
         { title: t.nav.reports,           icon: BarChart3,       to: "/dashboard/finance/reports" },
+        { title: t.nav.feeAudit,          icon: Receipt,         to: "/dashboard/finance/fee-audit" },
         { title: t.nav.pagarmeBalance,    icon: Wallet,          to: "/dashboard/finance/pagarme" },
       ],
     },
