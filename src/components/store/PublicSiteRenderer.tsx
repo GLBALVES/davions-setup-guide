@@ -561,6 +561,15 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
       </button>
     );
 
+  const langSwitcher = (
+    <PublicLanguageSwitcher
+      inline
+      textColor={textColor ?? null}
+      onDark={!isOpaque && !textColor}
+      className="hidden md:inline-flex"
+    />
+  );
+
   // Choose layout based on menu style
   let layout: React.ReactNode;
   if (menuStyle === "centered-split") {
@@ -571,6 +580,7 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
         {renderLinks(leftLinks, "flex-1 justify-end")}
         <div className="flex items-center justify-center shrink-0 px-8">{renderLogo()}</div>
         {renderLinks(rightLinks, "flex-1 justify-start")}
+        {langSwitcher}
         {renderMobileToggle()}
       </div>
     );
@@ -578,7 +588,10 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
     layout = (
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
         <div className="flex items-center shrink-0">{renderLogo()}</div>
-        {renderLinks(navLinks, "justify-end")}
+        <div className="flex items-center gap-4">
+          {renderLinks(navLinks, "justify-end")}
+          {langSwitcher}
+        </div>
         {renderMobileToggle()}
       </div>
     );
@@ -586,21 +599,25 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
     layout = (
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
         <div className="flex items-center shrink-0">{renderLogo()}</div>
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          style={textColor ? { color: textColor } : undefined}
-          className={`transition-colors duration-300 ${!textColor ? (isOpaque ? "text-foreground" : "text-white") : ""}`}
-          aria-label="Toggle menu"
-        >
-          {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-3">
+          {langSwitcher}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            style={textColor ? { color: textColor } : undefined}
+            className={`transition-colors duration-300 ${!textColor ? (isOpaque ? "text-foreground" : "text-white") : ""}`}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
     );
   } else if (menuStyle === "logo-center-links-below") {
     layout = (
-      <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col items-center gap-3">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col items-center gap-3 relative">
         <div className="flex items-center justify-center">{renderLogo()}</div>
         {renderLinks(navLinks, "justify-center")}
+        <div className="hidden md:block absolute right-6 top-1/2 -translate-y-1/2">{langSwitcher}</div>
         {renderMobileToggle("md:hidden")}
       </div>
     );
@@ -610,14 +627,16 @@ function SharedNav({ scrolled, mobileMenuOpen, setMobileMenuOpen, displayName, l
         <div className="flex items-center shrink-0">{renderLogo()}</div>
         {renderLinks(navLinks, "")}
         <div className="flex-1" />
+        {langSwitcher}
         {renderMobileToggle()}
       </div>
     );
   } else {
     // logo-center-only
     layout = (
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-center">
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-center relative">
         {renderLogo()}
+        <div className="hidden md:block absolute right-6 top-1/2 -translate-y-1/2">{langSwitcher}</div>
       </div>
     );
   }
