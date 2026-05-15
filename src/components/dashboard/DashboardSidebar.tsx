@@ -819,6 +819,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
         <NavLink
           to={item.to}
           end={item.end}
+          onClick={(e) => e.currentTarget.scrollIntoView({ block: "nearest", behavior: "smooth" })}
           className={`gap-3 text-xs tracking-wider uppercase font-light hover:bg-sidebar-accent/50 ${subItemClass}`}
         >
           <div className="relative shrink-0">
