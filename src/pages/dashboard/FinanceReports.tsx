@@ -168,7 +168,7 @@ export default function FinanceReports() {
                   variant="outline"
                   size="sm"
                   className="gap-2"
-                  onClick={() => exportCSV(filtered)}
+                  onClick={() => exportCSV(filtered, feePercent)}
                   disabled={filtered.length === 0}
                 >
                   <Download className="h-3.5 w-3.5" />
