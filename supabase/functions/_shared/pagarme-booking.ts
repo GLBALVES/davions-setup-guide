@@ -141,9 +141,10 @@ export async function prepareBookingOrder(
   const extrasTotal = extras.reduce((s, e) => s + e.price * e.qty, 0);
   const sessionPrice = sessionData.price as number;
   const subtotal = sessionPrice + extrasTotal;
+  // Brazil: tax is informational only (already included in price). Do NOT add on top.
   const taxRate = (sessionData.tax_rate as number) ?? 0;
-  const taxAmount = Math.round(subtotal * (taxRate / 100));
-  const fullTotal = subtotal + taxAmount;
+  const taxAmount = 0;
+  const fullTotal = subtotal;
 
   const isDeposit = sessionData.deposit_enabled as boolean;
   let amountToCharge = fullTotal;
