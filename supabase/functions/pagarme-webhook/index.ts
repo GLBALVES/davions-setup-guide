@@ -5,6 +5,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { logWebhookEvent } from "../_shared/webhook-log.ts";
+import { snapshotPlatformFee } from "../_shared/platform-fee.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -113,6 +114,7 @@ serve(async (req) => {
               total_paid_amount: newTotalPaid,
             })
             .eq("id", bookingId);
+          await snapshotPlatformFee(supabase, bookingId, newTotalPaid);
         } else {
           await supabase
             .from("bookings")
@@ -123,6 +125,7 @@ serve(async (req) => {
               total_paid_amount: wasDeposit ? null : amountPaid,
             })
             .eq("id", bookingId);
+          await snapshotPlatformFee(supabase, bookingId, amountPaid);
         }
       } else if (
         eventType === "charge.payment_failed" ||
