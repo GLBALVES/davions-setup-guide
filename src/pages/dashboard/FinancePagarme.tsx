@@ -470,6 +470,70 @@ export default function FinancePagarme() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Change bank account */}
+      <Dialog open={bankOpen} onOpenChange={setBankOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-light tracking-wide">{t.changeBankTitle}</DialogTitle>
+          </DialogHeader>
+          <p className="text-[11px] text-muted-foreground font-light">{t.changeBankDesc}</p>
+          <div className="grid grid-cols-2 gap-3 py-2">
+            <BankField label={t.holderName} className="col-span-2"
+              value={bankForm.holder_name}
+              onChange={(v) => setBankForm({ ...bankForm, holder_name: v })} />
+            <BankField label={t.holderDocument}
+              value={bankForm.holder_document}
+              onChange={(v) => setBankForm({ ...bankForm, holder_document: v })} />
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.holderType}</label>
+              <select
+                className="h-9 px-2 text-sm bg-background border border-input"
+                value={bankForm.holder_type}
+                onChange={(e) => setBankForm({ ...bankForm, holder_type: e.target.value as any })}
+              >
+                <option value="individual">{t.holderIndividual}</option>
+                <option value="company">{t.holderCompany}</option>
+              </select>
+            </div>
+            <BankField label={t.bankCode}
+              value={bankForm.bank}
+              onChange={(v) => setBankForm({ ...bankForm, bank: v })} />
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.accountType}</label>
+              <select
+                className="h-9 px-2 text-sm bg-background border border-input"
+                value={bankForm.type}
+                onChange={(e) => setBankForm({ ...bankForm, type: e.target.value as any })}
+              >
+                <option value="checking">{t.accountChecking}</option>
+                <option value="savings">{t.accountSavings}</option>
+              </select>
+            </div>
+            <BankField label={t.branchNumber}
+              value={bankForm.branch_number}
+              onChange={(v) => setBankForm({ ...bankForm, branch_number: v })} />
+            <BankField label={t.branchDigit}
+              value={bankForm.branch_check_digit}
+              onChange={(v) => setBankForm({ ...bankForm, branch_check_digit: v })} />
+            <BankField label={t.accountNumber}
+              value={bankForm.account_number}
+              onChange={(v) => setBankForm({ ...bankForm, account_number: v })} />
+            <BankField label={t.accountDigit}
+              value={bankForm.account_check_digit}
+              onChange={(v) => setBankForm({ ...bankForm, account_check_digit: v })} />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setBankOpen(false)}
+              className="text-[10px] tracking-widest uppercase">{t.modalCancel}</Button>
+            <Button size="sm" onClick={submitChangeBank} disabled={bankSubmitting}
+              className="text-[10px] tracking-widest uppercase">
+              {bankSubmitting && <Loader2 className="h-3 w-3 mr-2 animate-spin" />}
+              {t.saveBank}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 }
