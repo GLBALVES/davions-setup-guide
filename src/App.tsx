@@ -21,6 +21,7 @@ import CustomDomainStore from "./pages/store/CustomDomainStore";
 import CustomDomainSessionGateway from "./pages/store/CustomDomainSessionGateway";
 import CustomDomainGalleryGateway from "./pages/store/CustomDomainGalleryGateway";
 import CustomDomainSubPage from "./pages/store/CustomDomainSubPage";
+import CustomDomainFavicon from "./components/store/CustomDomainFavicon";
 import { isCustomDomain } from "./lib/custom-domain";
 import StorePage from "./pages/store/StorePage";
 import SessionDetailPage from "./pages/store/SessionDetailPage";
