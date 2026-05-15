@@ -551,3 +551,14 @@ function KpiCard({ icon: Icon, label, value, highlight }: {
     </div>
   );
 }
+
+function BankField({ label, value, onChange, className }: {
+  label: string; value: string; onChange: (v: string) => void; className?: string;
+}) {
+  return (
+    <div className={`flex flex-col gap-1 ${className ?? ""}`}>
+      <label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{label}</label>
+      <Input value={value} onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}
