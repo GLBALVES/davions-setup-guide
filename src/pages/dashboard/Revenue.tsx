@@ -251,8 +251,16 @@ export default function Revenue() {
                       <span className="text-xs font-normal tabular-nums">{fmt(item.val)}</span>
                     </div>
                   ))}
-                  <div className="border-t border-border pt-4">
+                  <div className="border-t border-border pt-4 flex flex-col gap-2">
                     <div className="flex items-center justify-between">
+                      <span className="text-xs font-light text-muted-foreground">Platform fee ({feePercent}%)</span>
+                      <span className="text-xs font-normal tabular-nums text-amber-600">−{fmt(totalPlatformFee)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-normal">Net to receive</span>
+                      <span className="text-xs font-normal tabular-nums">{fmt(totalNet)}</span>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-border/60">
                       <span className="text-xs font-light text-muted-foreground">{t.finance.totalBookings}</span>
                       <span className="text-xs font-normal">{rows.length}</span>
                     </div>
