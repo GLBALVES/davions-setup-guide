@@ -5143,6 +5143,8 @@ const WebsiteEditor = () => {
     setEditorActiveSlideId(null);
     setActiveTab(tab);
     setTabResetNonce((n) => n + 1);
+    // Leaving settings (or switching tabs) exits the Showcase preview.
+    setShowcasePreview(false);
   };
 
   const panelMap: Record<EditorTab, React.ReactNode> = {
