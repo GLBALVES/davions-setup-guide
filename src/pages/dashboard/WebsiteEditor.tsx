@@ -2427,6 +2427,18 @@ const PagesPanel = ({
   useEffect(() => {
     const targetId = editingSectionsPageId ?? activePage;
     if (!targetId) { registerActivePageActions(null); return; }
+    if (targetId === SHOP_VIRTUAL_ID) {
+      registerActivePageActions({
+        setSections: (newSections: PageSection[]) => {
+          const idx = newSections.findIndex((s) => s.type === "shop-grid");
+          const above = idx >= 0 ? newSections.slice(0, idx) : newSections;
+          const below = idx >= 0 ? newSections.slice(idx + 1) : [];
+          onShopBlocksChange?.({ above, below });
+          onActiveSectionsChange(newSections);
+        },
+      });
+      return () => registerActivePageActions(null);
+    }
     registerActivePageActions({
       setSections: (newSections: PageSection[]) => {
         findAndUpdate(targetId, { sections: newSections });
@@ -2436,6 +2448,13 @@ const PagesPanel = ({
     return () => registerActivePageActions(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingSectionsPageId, activePage, pages]);
+
+  // Re-emit Showcase sections when shop props change (settings panel edits, etc.)
+  useEffect(() => {
+    if (activePage !== SHOP_VIRTUAL_ID) return;
+    onActiveSectionsChange(buildShopSections());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePage, shopBlocksAbove, shopBlocksBelow, shopShowDefaultGrid, shopGridConfig]);
 
   // ── Persist helpers ──
   const persistUpdate = async (id: string, patch: Record<string, any>) => {
