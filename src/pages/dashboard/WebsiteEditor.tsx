@@ -4509,7 +4509,7 @@ const WebsiteEditor = () => {
   });
   useEffect(() => {
     if (!showcasePreview) return;
-    const t = window.setTimeout(() => setShowcasePreviewKey((k) => k + 1), 600);
+    const t = window.setTimeout(() => setShowcasePreviewKey((k) => k + 1), 1500);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shopSignature, showcasePreview]);
@@ -5540,7 +5540,6 @@ const WebsiteEditor = () => {
                 </div>
               </div>
               <iframe
-                key={showcasePreviewKey}
                 src={`/vitrine/${storeSlug}/shop?preview=1&_=${showcasePreviewKey}`}
                 title="Showcase live preview"
                 className="flex-1 w-full border-0 bg-background"
