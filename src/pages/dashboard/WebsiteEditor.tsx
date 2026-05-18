@@ -2482,6 +2482,12 @@ const PagesPanel = ({
     const targets = allP.filter((p) => p.headerConfig?.groupId === sharedGroupId).map((p) => p.id);
     if (!targets.includes(pageId)) targets.push(pageId);
     targets.forEach((id) => findAndUpdate(id, { headerConfig: nextHeader }));
+
+    // If the showcase header is in the same group, keep it in sync as well.
+    const shopGroupId = (shopHeaderConfig as any)?.groupId;
+    if (shopGroupId && shopGroupId === sharedGroupId) {
+      onShopHeaderChange?.(nextHeader);
+    }
   };
 
   // Count how many pages share a given header groupId
