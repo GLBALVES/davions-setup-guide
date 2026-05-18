@@ -2242,6 +2242,17 @@ const PagesPanel = ({
 
   const selectPage = (id: string, pagesList?: SitePage[]) => {
     setActivePage(id);
+    if (id === SHOP_VIRTUAL_ID) {
+      setEditingSectionsPageId(null);
+      onActiveSectionsChange([]);
+      onSelectBlock(null);
+      onActivePageChange({
+        id: SHOP_VIRTUAL_ID,
+        showHeaderFooter: true,
+        headerConfig: shopHeaderConfig ?? null,
+      });
+      return;
+    }
     const allP = flattenPages(pagesList || pages);
     const page = allP.find((p) => p.id === id);
     if (page?.type === "page") {
