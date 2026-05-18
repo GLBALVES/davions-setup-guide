@@ -2860,6 +2860,26 @@ const PagesPanel = ({
 
   // If editing page sections (blocks)
   if (editingSectionsPageId) {
+    if (editingSectionsPageId === SHOP_VIRTUAL_ID) {
+      const combined = buildShopSections();
+      return (
+        <PageSectionsPanel
+          pageLabel={shopLabel || "Showcase"}
+          sections={combined}
+          onBack={() => { setEditingSectionsPageId(null); onSelectBlock(null); }}
+          onEditSection={setEditingSection}
+          selectedBlockIndex={selectedBlockIndex}
+          onSelectBlock={onSelectBlock}
+          onSectionsChange={(newSections) => {
+            const idx = newSections.findIndex((s) => s.type === "shop-grid");
+            const above = idx >= 0 ? newSections.slice(0, idx) : newSections;
+            const below = idx >= 0 ? newSections.slice(idx + 1) : [];
+            onShopBlocksChange?.({ above, below });
+            onActiveSectionsChange(newSections);
+          }}
+        />
+      );
+    }
     const targetPage = allPages.find((p) => p.id === editingSectionsPageId);
     if (targetPage && targetPage.type === "page") {
       return (
