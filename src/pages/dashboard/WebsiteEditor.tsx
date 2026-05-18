@@ -2943,6 +2943,7 @@ const PagesPanel = ({
             const newIdx = orderedIds.indexOf(SHOP_VIRTUAL_ID);
             if (newIdx >= 0) onShopChange({ shop_sort_order: newIdx });
           },
+          onSelect: () => { selectPage(SHOP_VIRTUAL_ID); },
           onSettings: () => { selectPage(SHOP_VIRTUAL_ID); onShopSettings?.(); },
         } : null}
         blogExtra={showBlog && onBlogChange ? {
