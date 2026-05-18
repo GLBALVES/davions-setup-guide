@@ -3,7 +3,7 @@
  * shown on every published page unless the photographer has hidden it via
  * Footer settings (hide_branding = true).
  */
-import { Camera } from "lucide-react";
+import seloIcon from "@/assets/davions-selo.png";
 
 export default function DavionsFloatingBadge({ hidden }: { hidden?: boolean }) {
   if (hidden) return null;
@@ -16,8 +16,8 @@ export default function DavionsFloatingBadge({ hidden }: { hidden?: boolean }) {
       aria-label="Made with Davions"
       className="fixed bottom-4 right-4 z-[60] inline-flex items-center gap-2 rounded-full bg-primary pl-1.5 pr-3 py-1.5 text-primary-foreground shadow-lg transition-opacity hover:opacity-95"
     >
-      <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white">
-        <Camera className="h-3.5 w-3.5 text-black" strokeWidth={2} />
+      <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white overflow-hidden">
+        <img src={seloIcon} alt="" className="h-5 w-5 object-contain" />
       </span>
       <span className="whitespace-nowrap text-xs font-medium text-primary-foreground">
         Made with Davions
