@@ -2034,7 +2034,7 @@ const DndPagesArea = ({
               if (id === BLOG_VIRTUAL_ID && blogExtra) {
                 return (
                   <SortableRow key={id} id={id}>
-                    <VirtualRow icon={Newspaper} label={blogExtra.label} href={blogExtra.href} openTitle="Open Blog" onSettings={blogExtra.onSettings} />
+                    <VirtualRow icon={Newspaper} label={blogExtra.label} href={blogExtra.href} openTitle="Open Blog" active={activePage === BLOG_VIRTUAL_ID} onSelect={blogExtra.onSelect} onSettings={blogExtra.onSettings} />
                   </SortableRow>
                 );
               }
