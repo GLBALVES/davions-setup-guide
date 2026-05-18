@@ -4792,6 +4792,8 @@ const WebsiteEditor = () => {
 
   const handleActivePageChange = useCallback((info: { id: string | null; showHeaderFooter: boolean; headerConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null }) => {
     setActivePageInfo(info);
+    // Selecting a real site page exits the Showcase preview overlay.
+    if (info.id) setShowcasePreview(false);
   }, []);
 
   const handleRegisterActions = useCallback((api: { setSections: (s: PageSection[]) => void } | null) => {
