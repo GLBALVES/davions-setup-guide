@@ -11,6 +11,7 @@ import PublicSiteRenderer, {
   Photographer,
 } from "@/components/store/PublicSiteRenderer";
 import ShopGrid from "@/components/store/ShopGrid";
+import SectionRenderer, { type PageSection } from "@/components/store/SectionRenderer";
 import { buildPublicSiteNavLinks } from "@/lib/site-navigation";
 import { DEFAULT_HEADER_CONFIG, type HeaderConfig } from "@/components/website-editor/PreviewHeader";
 
