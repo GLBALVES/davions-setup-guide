@@ -2662,6 +2662,42 @@ const PagesPanel = ({
 
   // If editing a section (e.g. header slider)
   if (editingSection === "header-slider") {
+    // Showcase header (virtual page) — persists into site.shop_header_config
+    if (activePage === SHOP_VIRTUAL_ID) {
+      return (
+        <HeaderSliderPanel
+          onBack={() => { setEditingSection(null); onActiveSlideChange?.(null); }}
+          value={shopHeaderConfig ?? null}
+          onChange={(next) => {
+            onShopHeaderChange?.(next);
+            onHeaderConfigChange?.(next);
+          }}
+          photographerId={photographerId}
+          onActiveSlideChange={onActiveSlideChange}
+          currentPageId={SHOP_VIRTUAL_ID}
+          currentPageLabel={shopLabel || "Showcase"}
+          allPages={allPages}
+          sharedPagesCount={1}
+          onCopyHeaderFromPage={(sourceId) => {
+            const src = allPages.find((p) => p.id === sourceId);
+            if (!src?.headerConfig) return;
+            const cloned = JSON.parse(JSON.stringify(src.headerConfig));
+            delete cloned.groupId;
+            onShopHeaderChange?.(cloned);
+            onHeaderConfigChange?.(cloned);
+          }}
+          onShareHeaderWithPage={() => {
+            // Sharing the showcase header with regular pages is not supported yet.
+          }}
+          onUnshareHeader={() => {
+            if (!shopHeaderConfig) return;
+            const { groupId, ...rest } = shopHeaderConfig as any;
+            onShopHeaderChange?.(rest);
+            onHeaderConfigChange?.(rest);
+          }}
+        />
+      );
+    }
     const activeP = allPages.find((p) => p.id === activePage);
     const sharedCount = countPagesInGroup(activeP?.headerConfig?.groupId);
     return (
