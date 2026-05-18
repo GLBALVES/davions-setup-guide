@@ -292,6 +292,7 @@ function SectionBlock({
       case "logo-strip":
         return <LogoStripBlock {...p} />;
       case "shop":
+      case "shop-grid":
         return <ShopBlock {...p} photographerId={photographerId ?? edit?.photographerId ?? null} />;
       case "map":
         return <MapBlock {...p} />;
