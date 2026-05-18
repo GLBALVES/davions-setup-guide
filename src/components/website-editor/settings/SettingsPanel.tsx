@@ -191,3 +191,41 @@ function Item({ icon: Icon, label, onClick }: { icon: any; label: string; onClic
     </button>
   );
 }
+
+function LanguageItem({ value, onChange }: { value: "en" | "pt" | "es" | null; onChange: (v: "en" | "pt" | "es") => void }) {
+  const options: Array<{ v: "en" | "pt" | "es"; label: string }> = [
+    { v: "en", label: "English" },
+    { v: "pt", label: "Português" },
+    { v: "es", label: "Español" },
+  ];
+  const current = value ?? "en";
+  return (
+    <div className="px-2 py-2 rounded">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="flex items-center gap-2 text-xs text-foreground">
+          <Languages className="h-3.5 w-3.5 text-muted-foreground" />
+          Site Language
+        </span>
+      </div>
+      <div className="grid grid-cols-3 gap-1">
+        {options.map((o) => (
+          <button
+            key={o.v}
+            onClick={() => onChange(o.v)}
+            className={cn(
+              "px-2 py-1.5 text-[10px] tracking-wide uppercase border rounded transition-colors",
+              current === o.v
+                ? "border-foreground bg-foreground text-background"
+                : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+            )}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+      <p className="text-[10px] text-muted-foreground mt-1.5">
+        Public site is always shown in this language.
+      </p>
+    </div>
+  );
+}
