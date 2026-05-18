@@ -4488,6 +4488,10 @@ const WebsiteEditor = () => {
   const [pageActions, setPageActions] = useState<{ setSections: (s: PageSection[]) => void } | null>(null);
   const [addBlockOpen, setAddBlockOpen] = useState(false);
   const [insertIndex, setInsertIndex] = useState(0);
+  // When true, the canvas shows the public Showcase page in an iframe instead
+  // of the regular PreviewRenderer for the active site page.
+  const [showcasePreview, setShowcasePreview] = useState(false);
+  const [showcasePreviewKey, setShowcasePreviewKey] = useState(0);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
