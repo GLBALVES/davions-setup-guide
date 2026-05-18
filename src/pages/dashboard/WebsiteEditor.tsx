@@ -1790,22 +1790,43 @@ const VirtualRow = ({
   label,
   href,
   openTitle,
+  active,
+  onSelect,
   onSettings,
 }: {
   icon: any;
   label: string;
   href: string;
   openTitle: string;
+  active?: boolean;
+  onSelect?: () => void;
   onSettings?: () => void;
 }) => {
   return (
-    <button
-      type="button"
-      onClick={onSettings}
-      className="group w-full flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50 text-left"
+    <div
+      className={cn(
+        "group w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-left",
+        active ? "bg-muted/70" : "hover:bg-muted/50"
+      )}
     >
-      <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-      <span className="text-xs text-foreground flex-1 truncate">{label}</span>
+      <button
+        type="button"
+        onClick={onSelect ?? onSettings}
+        className="flex items-center gap-2 flex-1 min-w-0 text-left"
+      >
+        <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <span className="text-xs text-foreground flex-1 truncate">{label}</span>
+      </button>
+      {onSettings && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onSettings(); }}
+          title="Settings"
+          className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+        >
+          <Settings className="h-3.5 w-3.5" />
+        </button>
+      )}
       <a
         href={href}
         target="_blank"
@@ -1816,7 +1837,7 @@ const VirtualRow = ({
       >
         <ExternalLink className="h-3.5 w-3.5" />
       </a>
-    </button>
+    </div>
   );
 };
 
@@ -1827,6 +1848,7 @@ type VirtualExtra = {
   sortOrder: number;
   onMove: (toZone: "menu" | "notmenu") => void;
   onReorder: (zone: "menu" | "notmenu", orderedIds: string[]) => void;
+  onSelect?: () => void;
   onSettings?: () => void;
 };
 
@@ -2005,14 +2027,14 @@ const DndPagesArea = ({
               if (id === SHOP_VIRTUAL_ID && shopExtra) {
                 return (
                   <SortableRow key={id} id={id}>
-                    <VirtualRow icon={ShoppingBag} label={shopExtra.label} href={shopExtra.href} openTitle="Open Showcase" onSettings={shopExtra.onSettings} />
+                    <VirtualRow icon={ShoppingBag} label={shopExtra.label} href={shopExtra.href} openTitle="Open Showcase" active={activePage === SHOP_VIRTUAL_ID} onSelect={shopExtra.onSelect} onSettings={shopExtra.onSettings} />
                   </SortableRow>
                 );
               }
               if (id === BLOG_VIRTUAL_ID && blogExtra) {
                 return (
                   <SortableRow key={id} id={id}>
-                    <VirtualRow icon={Newspaper} label={blogExtra.label} href={blogExtra.href} openTitle="Open Blog" onSettings={blogExtra.onSettings} />
+                    <VirtualRow icon={Newspaper} label={blogExtra.label} href={blogExtra.href} openTitle="Open Blog" active={activePage === BLOG_VIRTUAL_ID} onSelect={blogExtra.onSelect} onSettings={blogExtra.onSettings} />
                   </SortableRow>
                 );
               }
@@ -2068,14 +2090,14 @@ const DndPagesArea = ({
               if (id === SHOP_VIRTUAL_ID && shopExtra) {
                 return (
                   <SortableRow key={id} id={id}>
-                    <VirtualRow icon={ShoppingBag} label={shopExtra.label} href={shopExtra.href} openTitle="Open Showcase" onSettings={shopExtra.onSettings} />
+                    <VirtualRow icon={ShoppingBag} label={shopExtra.label} href={shopExtra.href} openTitle="Open Showcase" active={activePage === SHOP_VIRTUAL_ID} onSelect={shopExtra.onSelect} onSettings={shopExtra.onSettings} />
                   </SortableRow>
                 );
               }
               if (id === BLOG_VIRTUAL_ID && blogExtra) {
                 return (
                   <SortableRow key={id} id={id}>
-                    <VirtualRow icon={Newspaper} label={blogExtra.label} href={blogExtra.href} openTitle="Open Blog" onSettings={blogExtra.onSettings} />
+                    <VirtualRow icon={Newspaper} label={blogExtra.label} href={blogExtra.href} openTitle="Open Blog" active={activePage === BLOG_VIRTUAL_ID} onSelect={blogExtra.onSelect} onSettings={blogExtra.onSettings} />
                   </SortableRow>
                 );
               }
@@ -2921,6 +2943,7 @@ const PagesPanel = ({
             const newIdx = orderedIds.indexOf(SHOP_VIRTUAL_ID);
             if (newIdx >= 0) onShopChange({ shop_sort_order: newIdx });
           },
+          onSelect: () => { selectPage(SHOP_VIRTUAL_ID); },
           onSettings: () => { selectPage(SHOP_VIRTUAL_ID); onShopSettings?.(); },
         } : null}
         blogExtra={showBlog && onBlogChange ? {
