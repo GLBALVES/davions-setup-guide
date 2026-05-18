@@ -97,7 +97,7 @@ export default function SettingsPanel({
             {view === "drafts" && <DraftsSubPanel photographerId={photographerId} />}
             {view === "trash" && <TrashSubPanel photographerId={photographerId} />}
             {view === "forms" && <FormSubmissionsSubPanel photographerId={photographerId} />}
-            {view === "shop" && <ShopSubPanel site={site} onSiteChange={onSiteChange} storeSlug={storeSlug ?? (site as any)?.store_slug ?? null} />}
+            {view === "shop" && <ShopSubPanel site={site} onSiteChange={onSiteChange} storeSlug={storeSlug ?? (site as any)?.store_slug ?? null} photographerId={photographerId} />}
           </div>
         </div>
         <LegalModal open={legalOpen} onOpenChange={setLegalOpen} site={site} onSiteChange={onSiteChange} />
