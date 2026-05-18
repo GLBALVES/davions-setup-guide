@@ -5451,7 +5451,7 @@ const WebsiteEditor = () => {
 
         <InlineFormatToolbar />
 
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 relative">
           <PreviewRenderer
             key={`preview-${previewVersion}`}
             sections={activePageSections}
@@ -5509,6 +5509,43 @@ const WebsiteEditor = () => {
             undoLabel={undoLabel}
             redoLabel={redoLabel}
           />
+          {showcasePreview && storeSlug && (
+            <div className="absolute inset-0 z-30 bg-background flex flex-col">
+              <div className="flex items-center justify-between px-4 h-9 border-b border-border bg-card shrink-0">
+                <span className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">
+                  Showcase · Preview
+                </span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setShowcasePreviewKey((k) => k + 1)}
+                    className="text-[11px] px-2 py-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground"
+                  >
+                    Refresh
+                  </button>
+                  <a
+                    href={`/vitrine/${storeSlug}/shop?preview=1`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] px-2 py-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground"
+                  >
+                    Open ↗
+                  </a>
+                  <button
+                    onClick={() => setShowcasePreview(false)}
+                    className="text-[11px] px-2 py-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+              <iframe
+                key={showcasePreviewKey}
+                src={`/vitrine/${storeSlug}/shop?preview=1&_=${showcasePreviewKey}`}
+                title="Showcase live preview"
+                className="flex-1 w-full border-0 bg-background"
+              />
+            </div>
+          )}
         </div>
       </div>
 
