@@ -32,54 +32,7 @@ export default function MotionScrubber() {
     };
   }, [open, value]);
 
-  return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[55] pointer-events-auto">
-      {!open ? (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className={cn(
-            "flex items-center gap-2 px-3 py-2 rounded-full",
-            "bg-foreground text-background shadow-lg hover:opacity-90 transition",
-            "text-[11px] font-medium",
-          )}
-          title="Preview scroll effects without scrolling"
-        >
-          <Play className="h-3.5 w-3.5" />
-          Preview Motion
-        </button>
-      ) : (
-        <div
-          className={cn(
-            "flex items-center gap-3 px-4 py-2.5 rounded-full",
-            "bg-foreground text-background shadow-xl",
-            "min-w-[360px]",
-          )}
-        >
-          <span className="text-[10px] uppercase tracking-wider opacity-70 shrink-0">
-            Scroll
-          </span>
-          <Slider
-            value={[value]}
-            min={0}
-            max={100}
-            step={1}
-            onValueChange={([v]) => setValue(v)}
-            className="flex-1 [&_[role=slider]]:bg-background [&_[role=slider]]:border-background"
-          />
-          <span className="text-[10px] tabular-nums opacity-80 w-8 text-right">
-            {value}%
-          </span>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="p-1 rounded-full hover:bg-background/10 transition"
-            title="Close scrubber"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      )}
-    </div>
-  );
+  // Floating button removed per UX request. Component kept as no-op so existing
+  // imports/usages don't break; can be re-mounted inside a settings panel later.
+  return null;
 }
