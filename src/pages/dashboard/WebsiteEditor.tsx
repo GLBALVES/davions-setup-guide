@@ -4488,7 +4488,31 @@ const WebsiteEditor = () => {
   const [pageActions, setPageActions] = useState<{ setSections: (s: PageSection[]) => void } | null>(null);
   const [addBlockOpen, setAddBlockOpen] = useState(false);
   const [insertIndex, setInsertIndex] = useState(0);
+  // When true, the canvas shows the public Showcase page in an iframe instead
+  // of the regular PreviewRenderer for the active site page.
+  const [showcasePreview, setShowcasePreview] = useState(false);
+  const [showcasePreviewKey, setShowcasePreviewKey] = useState(0);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+
+  // Debounced refresh of the Showcase iframe whenever shop-related settings change.
+  const shopSignature = JSON.stringify({
+    enabled: (site as any)?.show_store,
+    title: (site as any)?.shop_title ?? "",
+    desc: (site as any)?.shop_description ?? "",
+    layout: (site as any)?.shop_layout,
+    showSessions: (site as any)?.shop_show_sessions,
+    showGalleries: (site as any)?.shop_show_galleries,
+    showFilters: (site as any)?.shop_show_filters,
+    showPrice: (site as any)?.shop_show_price,
+    order: (site as any)?.shop_order,
+    limit: (site as any)?.shop_limit,
+  });
+  useEffect(() => {
+    if (!showcasePreview) return;
+    const t = window.setTimeout(() => setShowcasePreviewKey((k) => k + 1), 600);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shopSignature, showcasePreview]);
   const navigate = useNavigate();
   const { user } = useAuth();
   const isMobile = useIsMobile();
@@ -4788,6 +4812,8 @@ const WebsiteEditor = () => {
 
   const handleActivePageChange = useCallback((info: { id: string | null; showHeaderFooter: boolean; headerConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null }) => {
     setActivePageInfo(info);
+    // Selecting a real site page exits the Showcase preview overlay.
+    if (info.id) setShowcasePreview(false);
   }, []);
 
   const handleRegisterActions = useCallback((api: { setSections: (s: PageSection[]) => void } | null) => {
@@ -5137,6 +5163,8 @@ const WebsiteEditor = () => {
     setEditorActiveSlideId(null);
     setActiveTab(tab);
     setTabResetNonce((n) => n + 1);
+    // Leaving settings (or switching tabs) exits the Showcase preview.
+    setShowcasePreview(false);
   };
 
   const panelMap: Record<EditorTab, React.ReactNode> = {
@@ -5166,7 +5194,7 @@ const WebsiteEditor = () => {
       shopInMenu={(site as any)?.shop_in_menu !== false}
       shopSortOrder={typeof (site as any)?.shop_sort_order === "number" ? (site as any).shop_sort_order : 1}
       onShopChange={(patch) => updateSite(patch)}
-      onShopSettings={() => { setActiveTab("settings"); setPendingSettingsSub("shop"); }}
+      onShopSettings={() => { setActiveTab("settings"); setPendingSettingsSub("shop"); setShowcasePreview(true); }}
       onActiveSlideChange={setEditorActiveSlideId}
       resetNonce={tabResetNonce}
     />,
@@ -5423,7 +5451,7 @@ const WebsiteEditor = () => {
 
         <InlineFormatToolbar />
 
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 relative">
           <PreviewRenderer
             key={`preview-${previewVersion}`}
             sections={activePageSections}
@@ -5481,6 +5509,43 @@ const WebsiteEditor = () => {
             undoLabel={undoLabel}
             redoLabel={redoLabel}
           />
+          {showcasePreview && storeSlug && (
+            <div className="absolute inset-0 z-30 bg-background flex flex-col">
+              <div className="flex items-center justify-between px-4 h-9 border-b border-border bg-card shrink-0">
+                <span className="text-[11px] tracking-[0.2em] uppercase text-muted-foreground">
+                  Showcase · Preview
+                </span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setShowcasePreviewKey((k) => k + 1)}
+                    className="text-[11px] px-2 py-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground"
+                  >
+                    Refresh
+                  </button>
+                  <a
+                    href={`/vitrine/${storeSlug}/shop?preview=1`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] px-2 py-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground"
+                  >
+                    Open ↗
+                  </a>
+                  <button
+                    onClick={() => setShowcasePreview(false)}
+                    className="text-[11px] px-2 py-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+              <iframe
+                key={showcasePreviewKey}
+                src={`/vitrine/${storeSlug}/shop?preview=1&_=${showcasePreviewKey}`}
+                title="Showcase live preview"
+                className="flex-1 w-full border-0 bg-background"
+              />
+            </div>
+          )}
         </div>
       </div>
 
