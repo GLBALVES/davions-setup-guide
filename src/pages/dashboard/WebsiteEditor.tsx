@@ -5179,6 +5179,7 @@ const WebsiteEditor = () => {
       openSubKey={pendingSettingsSub}
       onSubKeyHandled={() => setPendingSettingsSub(null)}
       resetNonce={tabResetNonce}
+      storeSlug={storeSlug}
     />,
   };
 
