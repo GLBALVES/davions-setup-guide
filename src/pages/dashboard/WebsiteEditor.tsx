@@ -4509,7 +4509,7 @@ const WebsiteEditor = () => {
   });
   useEffect(() => {
     if (!showcasePreview) return;
-    const t = window.setTimeout(() => setShowcasePreviewKey((k) => k + 1), 600);
+    const t = window.setTimeout(() => setShowcasePreviewKey((k) => k + 1), 1500);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shopSignature, showcasePreview]);
