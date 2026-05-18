@@ -4493,6 +4493,26 @@ const WebsiteEditor = () => {
   const [showcasePreview, setShowcasePreview] = useState(false);
   const [showcasePreviewKey, setShowcasePreviewKey] = useState(0);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+
+  // Debounced refresh of the Showcase iframe whenever shop-related settings change.
+  const shopSignature = JSON.stringify({
+    enabled: (site as any)?.show_store,
+    title: (site as any)?.shop_title ?? "",
+    desc: (site as any)?.shop_description ?? "",
+    layout: (site as any)?.shop_layout,
+    showSessions: (site as any)?.shop_show_sessions,
+    showGalleries: (site as any)?.shop_show_galleries,
+    showFilters: (site as any)?.shop_show_filters,
+    showPrice: (site as any)?.shop_show_price,
+    order: (site as any)?.shop_order,
+    limit: (site as any)?.shop_limit,
+  });
+  useEffect(() => {
+    if (!showcasePreview) return;
+    const t = window.setTimeout(() => setShowcasePreviewKey((k) => k + 1), 600);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shopSignature, showcasePreview]);
   const navigate = useNavigate();
   const { user } = useAuth();
   const isMobile = useIsMobile();
