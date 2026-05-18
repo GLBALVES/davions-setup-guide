@@ -1848,6 +1848,7 @@ type VirtualExtra = {
   sortOrder: number;
   onMove: (toZone: "menu" | "notmenu") => void;
   onReorder: (zone: "menu" | "notmenu", orderedIds: string[]) => void;
+  onSelect?: () => void;
   onSettings?: () => void;
 };
 
