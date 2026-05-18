@@ -2735,7 +2735,11 @@ export type Database = {
           shop_description: string | null
           shop_in_menu: boolean
           shop_layout: string
+          shop_limit: number
+          shop_order: string
+          shop_show_filters: boolean
           shop_show_galleries: boolean
+          shop_show_price: boolean
           shop_show_sessions: boolean
           shop_sort_order: number
           shop_title: string | null
@@ -2857,7 +2861,11 @@ export type Database = {
           shop_description?: string | null
           shop_in_menu?: boolean
           shop_layout?: string
+          shop_limit?: number
+          shop_order?: string
+          shop_show_filters?: boolean
           shop_show_galleries?: boolean
+          shop_show_price?: boolean
           shop_show_sessions?: boolean
           shop_sort_order?: number
           shop_title?: string | null
@@ -2979,7 +2987,11 @@ export type Database = {
           shop_description?: string | null
           shop_in_menu?: boolean
           shop_layout?: string
+          shop_limit?: number
+          shop_order?: string
+          shop_show_filters?: boolean
           shop_show_galleries?: boolean
+          shop_show_price?: boolean
           shop_show_sessions?: boolean
           shop_sort_order?: number
           shop_title?: string | null
