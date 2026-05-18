@@ -1,77 +1,75 @@
-# Painel de Saldo & Recebíveis (Pagar.me)
-
-Hoje o fotógrafo já tem o `FinanceDashboard` (visão de bookings) e o `get-stripe-balance` (saldo Stripe Connect). Falta uma tela equivalente para o **Pagar.me**, que é o gateway usado pelos clientes BR (PIX, boleto, cartão).
-
 ## Objetivo
 
-Criar uma página dedicada onde o fotógrafo:
-1. Vê **quanto tem disponível**, **a receber** (recebíveis futuros, ex.: parcelas de cartão e D+1 do PIX) e **bloqueado**.
-2. Acompanha o **histórico de transações** (PIX/boleto/cartão) com status, valor líquido, taxas e data prevista de liberação.
-3. Solicita **saque (transferência para conta bancária)** do saldo disponível.
-4. Consulta **histórico de saques** já realizados.
+Transformar a página **Showcase** em uma página "quase normal" do editor: header editável (com opção de copiar/compartilhar header de outra página, igual às outras páginas) e blocos arrastáveis (Sessions selecionadas, Galleries selecionadas, e blocos genéricos — texto, imagem, vídeo, CTA, etc.) renderizados acima e abaixo da grade automática de produtos.
 
-## Localização na UI
+Mantém-se a rota especial `/vitrine/{slug}/shop` (sem virar slug livre na tabela `pages`).
 
-- Nova rota: `/dashboard/finance/pagarme` (ou aba dentro de `FinanceDashboard`).
-- Card novo no `FinanceDashboard` chamado **"Saldo Pagar.me"** ao lado do bloco de Stripe, com link "Ver detalhes".
-- Item no `DashboardSidebar` em Finance: **"Saldo Pagar.me"**.
-- i18n em EN / PT-BR / ES (regra do projeto).
+## Backend (migration)
 
-## Layout da página (luxury minimal, padrão do projeto)
+Adicionar colunas em `photographer_site`:
+
+- `shop_header_config jsonb` — mesma forma do `header_config` das páginas. Quando `null`, herda o header global do site (comportamento atual).
+- `shop_blocks_above jsonb default '[]'::jsonb` — array de blocos (mesmo schema dos blocos de páginas normais) renderizados antes da grade.
+- `shop_blocks_below jsonb default '[]'::jsonb` — array renderizado depois da grade.
+- `shop_show_default_grid boolean default true` — permite ocultar a grade automática se o usuário quiser usar só blocos manuais.
+- `shop_manual_sessions uuid[] default '{}'` — quando preenchido, a grade lista somente essas sessões (na ordem fornecida).
+- `shop_manual_galleries uuid[] default '{}'` — idem para galerias.
+
+Nada disso requer RLS nova (a tabela já tem políticas).
+
+## Editor (frontend)
+
+### 1. Header editável no Showcase
+- Tratar `__shop__` como uma página com `headerConfig` derivado de `site.shop_header_config`.
+- Quando o usuário abre o Showcase no editor, mostrar o `HeaderSettingsPanel` existente (mesma UI usada nas páginas) e permitir:
+  - editar slides / overlay / menu
+  - **compartilhar** header com outra página (`shareHeaderWithPage`)
+  - **copiar** header independente de outra página (`copyHeaderFromPage`)
+- Persistir em `photographer_site.shop_header_config` em vez da tabela `pages`.
+
+### 2. Renderizar blocos no canvas
+- Mostrar o `PreviewRenderer` no canvas do editor com:
+  - Header preview (usando `shop_header_config`)
+  - `shop_blocks_above`
+  - Grade automática (placeholder visual no editor; iframe real continua sendo a verdade final)
+  - `shop_blocks_below`
+- Reutilizar `AddBlockPicker`, `BlockToolbar`, `BlockSettingsPanel` para inserir/editar/remover/reordenar blocos.
+- Substituir o overlay de iframe atual por esse render direto (mais rápido, sem reload).
+
+### 3. Seleção manual de Sessions / Galleries
+Novo painel (`ShopSubPanel` reaproveitado / estendido) com 3 abas:
+- **Layout** (já existe: layout, filtros, preço, order, limit) + toggle "Mostrar grade automática".
+- **Sessions** — checklist arrastável das sessões publicadas. Se vazio = automático (comportamento atual). Se preenchido = só essas, nessa ordem.
+- **Galleries** — idem para galerias.
+
+### 4. Renderer público (`PublicShopPage.tsx`)
+- Ler `shop_header_config` e passar como `pageHeaderConfig` (igual SiteSubPage).
+- Renderizar `shop_blocks_above` antes do título/grade e `shop_blocks_below` depois, usando o mesmo componente que renderiza blocos em páginas normais.
+- Se `shop_show_default_grid === false`, omitir a grade.
+- Se `shop_manual_sessions`/`shop_manual_galleries` tiverem itens, filtrar a query por esses ids e ordenar conforme o array.
+
+## Arquivos afetados
 
 ```text
-┌──────────────────────────────────────────────────────────┐
-│ SALDO PAGAR.ME                                            │
-│                                                           │
-│ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐        │
-│ │ Disponível   │ │ A receber    │ │ Bloqueado    │        │
-│ │ R$ 0.000,00  │ │ R$ 0.000,00  │ │ R$ 0.000,00  │        │
-│ └──────────────┘ └──────────────┘ └──────────────┘        │
-│                                                           │
-│ [ Solicitar saque ]   conta: Banco XX ag/cc ****          │
-├──────────────────────────────────────────────────────────┤
-│ Próximos recebíveis (calendário / lista por data)         │
-│  14/05  R$ 320,00  cartão 2/3                             │
-│  15/05  R$ 180,00  PIX                                    │
-├──────────────────────────────────────────────────────────┤
-│ Transações (filtros: status, método, período)             │
-│  data  cliente  método  bruto  taxa  líquido  status      │
-├──────────────────────────────────────────────────────────┤
-│ Saques (histórico)                                        │
-│  data  valor  status  conta destino                       │
-└──────────────────────────────────────────────────────────┘
+supabase/migrations/<novo>.sql          (colunas novas)
+src/pages/dashboard/WebsiteEditor.tsx   (Showcase como página com header + blocos)
+src/components/website-editor/settings/ShopSubPanel.tsx (abas Sessions/Galleries + toggle grade)
+src/components/website-editor/HeaderSettingsPanel.tsx   (aceitar source = 'shop')
+src/pages/store/PublicShopPage.tsx      (renderizar header_config + blocos + filtros manuais)
+src/integrations/supabase/types.ts      (regenerado pela migration)
 ```
 
-## Fluxo de saque
+## Fora de escopo
 
-1. Botão "Solicitar saque" abre modal com valor (default = saldo disponível) e conta destino (a cadastrada no onboarding Pagar.me).
-2. Confirma → edge function cria transferência → atualiza lista.
-3. Se não houver conta bancária cadastrada, mostra CTA para completar o onboarding (`PagarmeOnboardingModal` já existe).
+- Não vira página em `pages` (slug não muda; sem novo registro).
+- Não implementa blocos novos exclusivos do Showcase — reusa o catálogo existente.
+- Sem mudanças em SEO/sitemap além do que já existe.
+- Sem refator dos componentes de bloco em si.
 
-## Detalhes técnicos
+## Entrega incremental
 
-**Edge functions novas (usando `PAGARME_API_KEY` que já existe nos secrets):**
+Será entregue em **duas etapas dentro deste turno** se possível, ou divido em dois turnos:
+1. Migration + header editável + render de blocos genéricos.
+2. Seleção manual de Sessions/Galleries + toggle "ocultar grade".
 
-- `pagarme-get-balance` — `GET /core/v5/recipients/{recipient_id}/balance` → retorna `available`, `waiting_funds`, `transferred`.
-- `pagarme-list-transactions` — `GET /core/v5/orders` filtrando por `customer_id`/metadata do fotógrafo, ou cache local na nossa tabela `bookings` filtrando `payment_provider = 'pagarme'`.
-- `pagarme-list-receivables` — `GET /core/v5/recipients/{recipient_id}/anticipation_limits` ou `/payables` para parcelas futuras.
-- `pagarme-create-withdrawal` — `POST /core/v5/recipients/{recipient_id}/withdrawals` com `amount`.
-- `pagarme-list-withdrawals` — `GET /core/v5/recipients/{recipient_id}/withdrawals`.
-
-Todas: validam o usuário via JWT, lêem `photographers.pagarme_recipient_id` (já existente no onboarding) com service role e chamam a Pagar.me com o secret. CORS padrão do projeto.
-
-**Frontend:**
-
-- `src/pages/dashboard/FinancePagarme.tsx` — página principal.
-- `src/components/dashboard/PagarmeWithdrawModal.tsx` — modal de saque.
-- Reuso de `KpiCard`/estilos do `FinanceDashboard`.
-- React Query com `staleTime: 30s` (regra do projeto).
-- Valores em centavos, exibidos em BRL via `Intl.NumberFormat('pt-BR', { currency: 'BRL' })`.
-
-**Sem alterações de schema** — `photographers.pagarme_recipient_id` já existe; não é preciso persistir saldo (sempre buscar ao vivo).
-
-## Pontos a confirmar
-
-1. Você já tem **`pagarme_recipient_id`** salvo no onboarding do fotógrafo? (vou assumir que sim — está no `PagarmeOnboardingModal`).
-2. O saque deve permitir **valor parcial** ou só "sacar tudo"?
-3. Quer também um **gráfico de evolução** (últimos 6 meses) como no `FinanceDashboard`, ou manter mais enxuto nesta primeira versão?
+Se o turno ficar grande demais, paro após (1) e confirmo antes de seguir para (2).
