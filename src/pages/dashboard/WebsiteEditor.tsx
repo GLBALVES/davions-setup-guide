@@ -2169,6 +2169,8 @@ const PagesPanel = ({
   shopSortOrder,
   onShopChange,
   onShopSettings,
+  shopHeaderConfig,
+  onShopHeaderChange,
   onActiveSlideChange,
   resetNonce,
 }: {
@@ -2198,6 +2200,8 @@ const PagesPanel = ({
   shopSortOrder?: number;
   onShopChange?: (patch: { shop_in_menu?: boolean; shop_sort_order?: number }) => void;
   onShopSettings?: () => void;
+  shopHeaderConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null;
+  onShopHeaderChange?: (cfg: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null) => void;
   /** Notifies parent of which slide is currently being edited in the header slider sub-panel. */
   onActiveSlideChange?: (slideId: string | null) => void;
   /** Bumped by the parent every time the user clicks a sidebar tab; resets nested sub-screens. */
@@ -2238,6 +2242,17 @@ const PagesPanel = ({
 
   const selectPage = (id: string, pagesList?: SitePage[]) => {
     setActivePage(id);
+    if (id === SHOP_VIRTUAL_ID) {
+      setEditingSectionsPageId(null);
+      onActiveSectionsChange([]);
+      onSelectBlock(null);
+      onActivePageChange({
+        id: SHOP_VIRTUAL_ID,
+        showHeaderFooter: true,
+        headerConfig: shopHeaderConfig ?? null,
+      });
+      return;
+    }
     const allP = flattenPages(pagesList || pages);
     const page = allP.find((p) => p.id === id);
     if (page?.type === "page") {
@@ -2647,6 +2662,42 @@ const PagesPanel = ({
 
   // If editing a section (e.g. header slider)
   if (editingSection === "header-slider") {
+    // Showcase header (virtual page) — persists into site.shop_header_config
+    if (activePage === SHOP_VIRTUAL_ID) {
+      return (
+        <HeaderSliderPanel
+          onBack={() => { setEditingSection(null); onActiveSlideChange?.(null); }}
+          value={shopHeaderConfig ?? null}
+          onChange={(next) => {
+            onShopHeaderChange?.(next);
+            onHeaderConfigChange?.(next);
+          }}
+          photographerId={photographerId}
+          onActiveSlideChange={onActiveSlideChange}
+          currentPageId={SHOP_VIRTUAL_ID}
+          currentPageLabel={shopLabel || "Showcase"}
+          allPages={allPages}
+          sharedPagesCount={1}
+          onCopyHeaderFromPage={(sourceId) => {
+            const src = allPages.find((p) => p.id === sourceId);
+            if (!src?.headerConfig) return;
+            const cloned = JSON.parse(JSON.stringify(src.headerConfig));
+            delete cloned.groupId;
+            onShopHeaderChange?.(cloned);
+            onHeaderConfigChange?.(cloned);
+          }}
+          onShareHeaderWithPage={() => {
+            // Sharing the showcase header with regular pages is not supported yet.
+          }}
+          onUnshareHeader={() => {
+            if (!shopHeaderConfig) return;
+            const { groupId, ...rest } = shopHeaderConfig as any;
+            onShopHeaderChange?.(rest);
+            onHeaderConfigChange?.(rest);
+          }}
+        />
+      );
+    }
     const activeP = allPages.find((p) => p.id === activePage);
     const sharedCount = countPagesInGroup(activeP?.headerConfig?.groupId);
     return (
@@ -2870,7 +2921,7 @@ const PagesPanel = ({
             const newIdx = orderedIds.indexOf(SHOP_VIRTUAL_ID);
             if (newIdx >= 0) onShopChange({ shop_sort_order: newIdx });
           },
-          onSettings: onShopSettings,
+          onSettings: () => { selectPage(SHOP_VIRTUAL_ID); onShopSettings?.(); },
         } : null}
         blogExtra={showBlog && onBlogChange ? {
           label: blogLabel || "Blog",
@@ -5194,7 +5245,9 @@ const WebsiteEditor = () => {
       shopInMenu={(site as any)?.shop_in_menu !== false}
       shopSortOrder={typeof (site as any)?.shop_sort_order === "number" ? (site as any).shop_sort_order : 1}
       onShopChange={(patch) => updateSite(patch)}
-      onShopSettings={() => { setActiveTab("settings"); setPendingSettingsSub("shop"); setShowcasePreview(true); }}
+      onShopSettings={() => { setActiveTab("settings"); setPendingSettingsSub("shop"); }}
+      shopHeaderConfig={(site as any)?.shop_header_config ?? null}
+      onShopHeaderChange={(cfg) => updateSite({ shop_header_config: cfg } as any)}
       onActiveSlideChange={setEditorActiveSlideId}
       resetNonce={tabResetNonce}
     />,
