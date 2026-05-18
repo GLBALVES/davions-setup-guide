@@ -22,6 +22,7 @@ export default function SettingsPanel({
   openSubKey,
   onSubKeyHandled,
   resetNonce,
+  storeSlug,
 }: {
   photographerId: string | null;
   site: Record<string, any> | null;
@@ -30,6 +31,7 @@ export default function SettingsPanel({
   onSubKeyHandled?: () => void;
   /** Bumped by the parent every time the user clicks a sidebar tab; resets nested sub-screens. */
   resetNonce?: number;
+  storeSlug?: string | null;
 }) {
   const navigate = useNavigate();
   const [view, setView] = useState<SubView>(null);
