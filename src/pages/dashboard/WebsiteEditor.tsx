@@ -5358,6 +5358,24 @@ const WebsiteEditor = () => {
       onShopSettings={() => { setActiveTab("settings"); setPendingSettingsSub("shop"); }}
       shopHeaderConfig={(site as any)?.shop_header_config ?? null}
       onShopHeaderChange={(cfg) => updateSite({ shop_header_config: cfg } as any)}
+      shopBlocksAbove={Array.isArray((site as any)?.shop_blocks_above) ? (site as any).shop_blocks_above : []}
+      shopBlocksBelow={Array.isArray((site as any)?.shop_blocks_below) ? (site as any).shop_blocks_below : []}
+      shopShowDefaultGrid={(site as any)?.shop_show_default_grid !== false}
+      shopGridConfig={{
+        layout: (site as any)?.shop_layout ?? "grid-3",
+        showSessions: (site as any)?.shop_show_sessions !== false,
+        showGalleries: (site as any)?.shop_show_galleries !== false,
+        showPrice: (site as any)?.shop_show_price !== false,
+        limit: (site as any)?.shop_limit ?? 0,
+        title: (site as any)?.shop_title ?? undefined,
+        subtitle: (site as any)?.shop_description ?? undefined,
+      }}
+      onShopBlocksChange={(patch) => {
+        const next: Record<string, any> = {};
+        if (patch.above) next.shop_blocks_above = patch.above;
+        if (patch.below) next.shop_blocks_below = patch.below;
+        updateSite(next);
+      }}
       onActiveSlideChange={setEditorActiveSlideId}
       resetNonce={tabResetNonce}
     />,
