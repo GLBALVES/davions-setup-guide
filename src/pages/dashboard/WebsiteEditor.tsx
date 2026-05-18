@@ -2090,7 +2090,7 @@ const DndPagesArea = ({
               if (id === SHOP_VIRTUAL_ID && shopExtra) {
                 return (
                   <SortableRow key={id} id={id}>
-                    <VirtualRow icon={ShoppingBag} label={shopExtra.label} href={shopExtra.href} openTitle="Open Showcase" onSettings={shopExtra.onSettings} />
+                    <VirtualRow icon={ShoppingBag} label={shopExtra.label} href={shopExtra.href} openTitle="Open Showcase" active={activePage === SHOP_VIRTUAL_ID} onSelect={shopExtra.onSelect} onSettings={shopExtra.onSettings} />
                   </SortableRow>
                 );
               }
