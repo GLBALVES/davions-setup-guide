@@ -2757,6 +2757,7 @@ export type Database = {
           site_colors: Json
           site_headline: string | null
           site_hero_image_url: string | null
+          site_language: string | null
           site_pages_initialized: boolean | null
           site_sections_order: Json | null
           site_subheadline: string | null
@@ -2889,6 +2890,7 @@ export type Database = {
           site_colors?: Json
           site_headline?: string | null
           site_hero_image_url?: string | null
+          site_language?: string | null
           site_pages_initialized?: boolean | null
           site_sections_order?: Json | null
           site_subheadline?: string | null
@@ -3021,6 +3023,7 @@ export type Database = {
           site_colors?: Json
           site_headline?: string | null
           site_hero_image_url?: string | null
+          site_language?: string | null
           site_pages_initialized?: boolean | null
           site_sections_order?: Json | null
           site_subheadline?: string | null

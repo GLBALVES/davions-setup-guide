@@ -4,7 +4,6 @@ import SEOHead from "@/components/SEOHead";
 import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/PreviewHeader";
 import SectionRenderer, { type PageSection } from "@/components/store/SectionRenderer";
 import DavionsFloatingBadge from "@/components/store/DavionsFloatingBadge";
-import PublicLanguageSwitcher from "@/components/store/PublicLanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteTypography } from "@/components/website-editor/useSiteTypography";
 import { useExternalFonts } from "@/components/website-editor/useExternalFonts";
@@ -2262,7 +2261,14 @@ function MiloTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
 
 export default function PublicSiteRenderer(props: Props) {
   const { photographer, site, subPageTitle, subPageDescription, subPageData, emptyState } = props;
-  const { lang } = useLanguage();
+  const { lang, setLang } = useLanguage();
+
+  // Force the public site to render in the language configured by the
+  // photographer (Site Settings → Language). Visitor preference is ignored.
+  const forcedLang = (site as any)?.site_language as "en" | "pt" | "es" | null | undefined;
+  useEffect(() => {
+    if (forcedLang && forcedLang !== lang) setLang(forcedLang);
+  }, [forcedLang, lang, setLang]);
 
   const seoUrl = props.seoUrl;
   const displayName = site?.tagline || photographer?.business_name || photographer?.full_name || photographer?.email || "";
@@ -2449,7 +2455,6 @@ export default function PublicSiteRenderer(props: Props) {
           </div>
           <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} navLinks={derived.navLinks} photographerEmail={props.photographer?.email ?? null} storeSlug={props.photographer?.store_slug ?? null} />
         </div>
-        <PublicLanguageSwitcher />
         <DavionsFloatingBadge hidden={!!site?.hide_branding} />
       </>
     );
@@ -2494,7 +2499,6 @@ export default function PublicSiteRenderer(props: Props) {
           </main>
           <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} navLinks={derived.navLinks} photographerEmail={props.photographer?.email ?? null} />
         </div>
-        <PublicLanguageSwitcher />
         <DavionsFloatingBadge hidden={!!site?.hide_branding} />
       </>
     );
@@ -2548,7 +2552,6 @@ export default function PublicSiteRenderer(props: Props) {
           </div>
           <SharedFooter site={site} showContact={true} displayName={derived.displayName} logoUrl={site?.logo_url ?? null} navLinks={derived.navLinks} photographerEmail={props.photographer?.email ?? null} />
         </div>
-        <PublicLanguageSwitcher />
         <DavionsFloatingBadge hidden={!!site?.hide_branding} />
       </>
     );
@@ -2592,7 +2595,6 @@ export default function PublicSiteRenderer(props: Props) {
         jsonLd={homeJsonLd}
       />
       {templateEl}
-      <PublicLanguageSwitcher />
         <DavionsFloatingBadge hidden={!!site?.hide_branding} />
     </>
   );
