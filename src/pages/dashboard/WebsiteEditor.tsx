@@ -2921,7 +2921,7 @@ const PagesPanel = ({
             const newIdx = orderedIds.indexOf(SHOP_VIRTUAL_ID);
             if (newIdx >= 0) onShopChange({ shop_sort_order: newIdx });
           },
-          onSettings: onShopSettings,
+          onSettings: () => { selectPage(SHOP_VIRTUAL_ID); onShopSettings?.(); },
         } : null}
         blogExtra={showBlog && onBlogChange ? {
           label: blogLabel || "Blog",
