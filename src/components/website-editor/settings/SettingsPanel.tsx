@@ -22,6 +22,7 @@ export default function SettingsPanel({
   openSubKey,
   onSubKeyHandled,
   resetNonce,
+  storeSlug,
 }: {
   photographerId: string | null;
   site: Record<string, any> | null;
@@ -30,6 +31,7 @@ export default function SettingsPanel({
   onSubKeyHandled?: () => void;
   /** Bumped by the parent every time the user clicks a sidebar tab; resets nested sub-screens. */
   resetNonce?: number;
+  storeSlug?: string | null;
 }) {
   const navigate = useNavigate();
   const [view, setView] = useState<SubView>(null);
@@ -88,7 +90,7 @@ export default function SettingsPanel({
             {view === "drafts" && <DraftsSubPanel photographerId={photographerId} />}
             {view === "trash" && <TrashSubPanel photographerId={photographerId} />}
             {view === "forms" && <FormSubmissionsSubPanel photographerId={photographerId} />}
-            {view === "shop" && <ShopSubPanel site={site} onSiteChange={onSiteChange} storeSlug={(site as any)?.store_slug ?? null} />}
+            {view === "shop" && <ShopSubPanel site={site} onSiteChange={onSiteChange} storeSlug={storeSlug ?? (site as any)?.store_slug ?? null} />}
           </div>
         </div>
         <LegalModal open={legalOpen} onOpenChange={setLegalOpen} site={site} onSiteChange={onSiteChange} />
