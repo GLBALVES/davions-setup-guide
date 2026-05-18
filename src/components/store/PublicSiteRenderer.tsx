@@ -2262,7 +2262,14 @@ function MiloTemplate({ props, derived }: { props: Props; derived: ReturnType<ty
 
 export default function PublicSiteRenderer(props: Props) {
   const { photographer, site, subPageTitle, subPageDescription, subPageData, emptyState } = props;
-  const { lang } = useLanguage();
+  const { lang, setLang } = useLanguage();
+
+  // Force the public site to render in the language configured by the
+  // photographer (Site Settings → Language). Visitor preference is ignored.
+  const forcedLang = (site as any)?.site_language as "en" | "pt" | "es" | null | undefined;
+  useEffect(() => {
+    if (forcedLang && forcedLang !== lang) setLang(forcedLang);
+  }, [forcedLang, lang, setLang]);
 
   const seoUrl = props.seoUrl;
   const displayName = site?.tagline || photographer?.business_name || photographer?.full_name || photographer?.email || "";
