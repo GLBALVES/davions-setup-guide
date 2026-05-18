@@ -162,6 +162,10 @@ export default function PublicShopPage({ mode }: { mode: "store" | "custom-domai
   const layout = ((site as any)?.shop_layout as "grid-3" | "grid-4" | "grid-2-feature") || "grid-3";
   const showSessionsCol = (site as any)?.shop_show_sessions !== false;
   const showGalleriesCol = (site as any)?.shop_show_galleries !== false;
+  const showFiltersCol = (site as any)?.shop_show_filters !== false;
+  const showPriceCol = (site as any)?.shop_show_price !== false;
+  const orderCol = ((site as any)?.shop_order as "manual" | "price-asc" | "price-desc") || "manual";
+  const limitCol = typeof (site as any)?.shop_limit === "number" ? (site as any).shop_limit : 0;
 
   const seoUrl =
     typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}` : "";
