@@ -137,10 +137,12 @@ export default function ShopSubPanel({
   site,
   onSiteChange,
   storeSlug,
+  photographerId,
 }: {
   site: Record<string, any> | null;
   onSiteChange: (patch: Record<string, any>) => void;
   storeSlug?: string | null;
+  photographerId?: string | null;
 }) {
   const { lang } = useLanguage();
   const d = getShopDefaults(lang);
@@ -154,8 +156,94 @@ export default function ShopSubPanel({
   const layout = (site?.shop_layout as string) || "grid-3";
   const order = (site?.shop_order as string) || "manual";
   const limit = typeof site?.shop_limit === "number" ? site!.shop_limit : 0;
+  const showDefaultGrid = site?.shop_show_default_grid !== false;
+  const manualSessions: string[] = Array.isArray(site?.shop_manual_sessions) ? site!.shop_manual_sessions : [];
+  const manualGalleries: string[] = Array.isArray(site?.shop_manual_galleries) ? site!.shop_manual_galleries : [];
+  const blocksAbove: PageSection[] = Array.isArray(site?.shop_blocks_above) ? site!.shop_blocks_above : [];
+  const blocksBelow: PageSection[] = Array.isArray(site?.shop_blocks_below) ? site!.shop_blocks_below : [];
 
   const publicUrl = storeSlug ? `/vitrine/${storeSlug}/shop` : "/shop";
+
+  // ── Load sessions & galleries for manual pickers ───────────────────────────
+  const [allSessions, setAllSessions] = useState<Array<{ id: string; title: string }>>([]);
+  const [allGalleries, setAllGalleries] = useState<Array<{ id: string; title: string }>>([]);
+  useEffect(() => {
+    if (!photographerId) return;
+    let cancelled = false;
+    (async () => {
+      const [{ data: s }, { data: g }] = await Promise.all([
+        (supabase as any)
+          .from("sessions")
+          .select("id, title")
+          .eq("photographer_id", photographerId)
+          .eq("status", "active")
+          .neq("hide_from_store", true)
+          .order("sort_order", { ascending: true }),
+        supabase
+          .from("galleries")
+          .select("id, title")
+          .eq("photographer_id", photographerId)
+          .eq("status", "published")
+          .order("sort_order", { ascending: true }),
+      ]);
+      if (cancelled) return;
+      setAllSessions((s as any[]) ?? []);
+      setAllGalleries((g as any[]) ?? []);
+    })();
+    return () => { cancelled = true; };
+  }, [photographerId]);
+
+  // ── Block management helpers ───────────────────────────────────────────────
+  const makeBlock = (type: string, label: string): PageSection => ({
+    id: `shop-${type}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    type,
+    label,
+    props: type === "hero"
+      ? { headline: "Headline", subtitle: "Subtitle" }
+      : type === "text"
+      ? { body: "Write your text here…" }
+      : type === "cta"
+      ? { headline: "Ready to book?", buttonText: "Get in touch", buttonHref: "#" }
+      : type === "image"
+      ? { src: "", alt: "" }
+      : {},
+  });
+
+  const updateBlocks = (zone: "above" | "below", next: PageSection[]) => {
+    onSiteChange(zone === "above" ? { shop_blocks_above: next } : { shop_blocks_below: next });
+  };
+  const addBlock = (zone: "above" | "below", type: string) => {
+    const src = zone === "above" ? blocksAbove : blocksBelow;
+    updateBlocks(zone, [...src, makeBlock(type, type)]);
+  };
+  const removeBlock = (zone: "above" | "below", idx: number) => {
+    const src = zone === "above" ? blocksAbove : blocksBelow;
+    updateBlocks(zone, src.filter((_, i) => i !== idx));
+  };
+  const moveBlock = (zone: "above" | "below", idx: number, dir: -1 | 1) => {
+    const src = [...(zone === "above" ? blocksAbove : blocksBelow)];
+    const j = idx + dir;
+    if (j < 0 || j >= src.length) return;
+    [src[idx], src[j]] = [src[j], src[idx]];
+    updateBlocks(zone, src);
+  };
+
+  // ── Manual selection helpers ───────────────────────────────────────────────
+  const toggleManualSession = (id: string) => {
+    onSiteChange({
+      shop_manual_sessions: manualSessions.includes(id)
+        ? manualSessions.filter((x) => x !== id)
+        : [...manualSessions, id],
+    });
+  };
+  const toggleManualGallery = (id: string) => {
+    onSiteChange({
+      shop_manual_galleries: manualGalleries.includes(id)
+        ? manualGalleries.filter((x) => x !== id)
+        : [...manualGalleries, id],
+    });
+  };
+
 
   // Live preview iframe with debounced refresh + manual refresh
   const [previewOpen, setPreviewOpen] = useState(true);
