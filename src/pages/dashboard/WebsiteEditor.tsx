@@ -1790,22 +1790,43 @@ const VirtualRow = ({
   label,
   href,
   openTitle,
+  active,
+  onSelect,
   onSettings,
 }: {
   icon: any;
   label: string;
   href: string;
   openTitle: string;
+  active?: boolean;
+  onSelect?: () => void;
   onSettings?: () => void;
 }) => {
   return (
-    <button
-      type="button"
-      onClick={onSettings}
-      className="group w-full flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50 text-left"
+    <div
+      className={cn(
+        "group w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-left",
+        active ? "bg-muted/70" : "hover:bg-muted/50"
+      )}
     >
-      <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-      <span className="text-xs text-foreground flex-1 truncate">{label}</span>
+      <button
+        type="button"
+        onClick={onSelect ?? onSettings}
+        className="flex items-center gap-2 flex-1 min-w-0 text-left"
+      >
+        <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <span className="text-xs text-foreground flex-1 truncate">{label}</span>
+      </button>
+      {onSettings && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onSettings(); }}
+          title="Settings"
+          className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+        >
+          <Settings className="h-3.5 w-3.5" />
+        </button>
+      )}
       <a
         href={href}
         target="_blank"
@@ -1816,7 +1837,7 @@ const VirtualRow = ({
       >
         <ExternalLink className="h-3.5 w-3.5" />
       </a>
-    </button>
+    </div>
   );
 };
 
