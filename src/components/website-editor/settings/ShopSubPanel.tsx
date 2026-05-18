@@ -524,56 +524,13 @@ export default function ShopSubPanel({
             </p>
           </div>
 
-          {/* Live preview */}
-          <div className="space-y-1.5 pt-2 border-t border-border">
-            <div className="flex items-center justify-between">
-              <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">
-                {t.preview}
-              </p>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setReloadKey((k) => k + 1)}
-                  className="p-1.5 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground"
-                  title={t.refresh}
-                  aria-label={t.refresh}
-                >
-                  <RefreshCw className="h-3 w-3" />
-                </button>
-                <button
-                  onClick={() => setPreviewOpen((v) => !v)}
-                  className="p-1.5 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground"
-                  title={previewOpen ? t.hidePreview : t.showPreview}
-                  aria-label={previewOpen ? t.hidePreview : t.showPreview}
-                >
-                  {previewOpen ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                </button>
-              </div>
-            </div>
-
-            {previewOpen && (
-              <div className="rounded border border-border bg-muted/20 overflow-hidden">
-                {/* Scaled iframe — render at 1280px wide, scaled down to fit panel */}
-                <div className="relative w-full" style={{ height: 360 }}>
-                  <iframe
-                    key={reloadKey}
-                    src={iframeSrc}
-                    title="Showcase preview"
-                    className="absolute top-0 left-0 origin-top-left border-0 bg-background"
-                    style={{
-                      width: "1280px",
-                      height: `${Math.round(360 / 0.18)}px`,
-                      transform: "scale(0.18)",
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-
+          {/* Open external — canvas already shows the live preview */}
+          <div className="pt-2 border-t border-border">
             <a
               href={publicUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 w-full px-3 py-2 mt-2 text-[11px] font-medium border border-border rounded hover:bg-muted/50 transition-colors"
+              className="flex items-center justify-center gap-1.5 w-full px-3 py-2 text-[11px] font-medium border border-border rounded hover:bg-muted/50 transition-colors"
             >
               <ExternalLink className="h-3 w-3" />
               {t.openExternal}
