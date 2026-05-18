@@ -23,6 +23,7 @@ export default function SettingsPanel({
   onSubKeyHandled,
   resetNonce,
   storeSlug,
+  onShowcasePreviewChange,
 }: {
   photographerId: string | null;
   site: Record<string, any> | null;
@@ -32,6 +33,7 @@ export default function SettingsPanel({
   /** Bumped by the parent every time the user clicks a sidebar tab; resets nested sub-screens. */
   resetNonce?: number;
   storeSlug?: string | null;
+  onShowcasePreviewChange?: (open: boolean) => void;
 }) {
   const navigate = useNavigate();
   const [view, setView] = useState<SubView>(null);
@@ -45,6 +47,7 @@ export default function SettingsPanel({
     setTrackingOpen(false);
     setAdvancedOpen(false);
     setLegalOpen(false);
+    onShowcasePreviewChange?.(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetNonce]);
 
@@ -54,6 +57,7 @@ export default function SettingsPanel({
         setLegalOpen(true);
       } else {
         setView(openSubKey);
+        onShowcasePreviewChange?.(openSubKey === "shop");
       }
       onSubKeyHandled?.();
     }
@@ -76,7 +80,10 @@ export default function SettingsPanel({
         <div className="flex flex-col h-full">
           <div className="h-10 border-b border-border flex items-center px-2 shrink-0">
             <button
-              onClick={() => setView(null)}
+              onClick={() => {
+                if (view === "shop") onShowcasePreviewChange?.(false);
+                setView(null);
+              }}
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground p-1.5 rounded hover:bg-muted/50"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
@@ -108,10 +115,10 @@ export default function SettingsPanel({
         {/* SITE SETTINGS */}
         <Section title="Site Settings">
           <Item icon={Globe} label="Domain" onClick={() => navigate("/dashboard/website")} />
-          <Item icon={Store} label="Showcase" onClick={() => setView("shop")} />
-          <Item icon={Search} label="SEO Manager" onClick={() => setView("seo")} />
-          <Item icon={BookOpen} label="Blog" onClick={() => setView("blog")} />
-          <Item icon={Share2} label="Social" onClick={() => setView("social")} />
+          <Item icon={Store} label="Showcase" onClick={() => { setView("shop"); onShowcasePreviewChange?.(true); }} />
+          <Item icon={Search} label="SEO Manager" onClick={() => { setView("seo"); onShowcasePreviewChange?.(false); }} />
+          <Item icon={BookOpen} label="Blog" onClick={() => { setView("blog"); onShowcasePreviewChange?.(false); }} />
+          <Item icon={Share2} label="Social" onClick={() => { setView("social"); onShowcasePreviewChange?.(false); }} />
           <Item icon={Scale} label="Legal (Terms & Privacy)" onClick={() => setLegalOpen(true)} />
           <Item icon={BarChart3} label="Tracking & Analytics" onClick={() => setTrackingOpen(true)} />
           <Item icon={Settings2} label="Advanced" onClick={() => setAdvancedOpen(true)} />
@@ -119,9 +126,9 @@ export default function SettingsPanel({
 
         {/* TOOLS */}
         <Section title="Tools">
-          <Item icon={Inbox} label="Form Submissions" onClick={() => setView("forms")} />
-          <Item icon={FileText} label="Draft Sites" onClick={() => setView("drafts")} />
-          <Item icon={Trash2} label="Trash" onClick={() => setView("trash")} />
+          <Item icon={Inbox} label="Form Submissions" onClick={() => { setView("forms"); onShowcasePreviewChange?.(false); }} />
+          <Item icon={FileText} label="Draft Sites" onClick={() => { setView("drafts"); onShowcasePreviewChange?.(false); }} />
+          <Item icon={Trash2} label="Trash" onClick={() => { setView("trash"); onShowcasePreviewChange?.(false); }} />
         </Section>
       </div>
 

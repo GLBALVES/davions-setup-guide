@@ -5208,6 +5208,7 @@ const WebsiteEditor = () => {
       onSubKeyHandled={() => setPendingSettingsSub(null)}
       resetNonce={tabResetNonce}
       storeSlug={storeSlug}
+      onShowcasePreviewChange={setShowcasePreview}
     />,
   };
 
