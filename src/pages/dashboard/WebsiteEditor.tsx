@@ -2193,6 +2193,11 @@ const PagesPanel = ({
   onShopSettings,
   shopHeaderConfig,
   onShopHeaderChange,
+  shopBlocksAbove,
+  shopBlocksBelow,
+  shopShowDefaultGrid,
+  shopGridConfig,
+  onShopBlocksChange,
   onActiveSlideChange,
   resetNonce,
 }: {
@@ -2224,6 +2229,11 @@ const PagesPanel = ({
   onShopSettings?: () => void;
   shopHeaderConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null;
   onShopHeaderChange?: (cfg: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null) => void;
+  shopBlocksAbove?: PageSection[];
+  shopBlocksBelow?: PageSection[];
+  shopShowDefaultGrid?: boolean;
+  shopGridConfig?: Record<string, any>;
+  onShopBlocksChange?: (patch: { above?: PageSection[]; below?: PageSection[] }) => void;
   /** Notifies parent of which slide is currently being edited in the header slider sub-panel. */
   onActiveSlideChange?: (slideId: string | null) => void;
   /** Bumped by the parent every time the user clicks a sidebar tab; resets nested sub-screens. */
@@ -2262,11 +2272,25 @@ const PagesPanel = ({
 
   const getHomePageId = (list: SitePage[]) => flattenPages(list).find((p) => p.isHome)?.id ?? null;
 
+  const SHOP_SENTINEL_ID = "__shop_grid_sentinel__";
+  const buildShopSections = (): PageSection[] => {
+    const above = Array.isArray(shopBlocksAbove) ? shopBlocksAbove : [];
+    const below = Array.isArray(shopBlocksBelow) ? shopBlocksBelow : [];
+    const showGrid = shopShowDefaultGrid !== false;
+    const sentinel: PageSection = {
+      id: SHOP_SENTINEL_ID,
+      type: "shop-grid",
+      label: "Showcase Grid",
+      props: shopGridConfig ?? {},
+    };
+    return showGrid ? [...above, sentinel, ...below] : [...above, ...below];
+  };
+
   const selectPage = (id: string, pagesList?: SitePage[]) => {
     setActivePage(id);
     if (id === SHOP_VIRTUAL_ID) {
       setEditingSectionsPageId(null);
-      onActiveSectionsChange([]);
+      onActiveSectionsChange(buildShopSections());
       onSelectBlock(null);
       onActivePageChange({
         id: SHOP_VIRTUAL_ID,
@@ -2403,6 +2427,18 @@ const PagesPanel = ({
   useEffect(() => {
     const targetId = editingSectionsPageId ?? activePage;
     if (!targetId) { registerActivePageActions(null); return; }
+    if (targetId === SHOP_VIRTUAL_ID) {
+      registerActivePageActions({
+        setSections: (newSections: PageSection[]) => {
+          const idx = newSections.findIndex((s) => s.type === "shop-grid");
+          const above = idx >= 0 ? newSections.slice(0, idx) : newSections;
+          const below = idx >= 0 ? newSections.slice(idx + 1) : [];
+          onShopBlocksChange?.({ above, below });
+          onActiveSectionsChange(newSections);
+        },
+      });
+      return () => registerActivePageActions(null);
+    }
     registerActivePageActions({
       setSections: (newSections: PageSection[]) => {
         findAndUpdate(targetId, { sections: newSections });
@@ -2412,6 +2448,13 @@ const PagesPanel = ({
     return () => registerActivePageActions(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingSectionsPageId, activePage, pages]);
+
+  // Re-emit Showcase sections when shop props change (settings panel edits, etc.)
+  useEffect(() => {
+    if (activePage !== SHOP_VIRTUAL_ID) return;
+    onActiveSectionsChange(buildShopSections());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePage, shopBlocksAbove, shopBlocksBelow, shopShowDefaultGrid, shopGridConfig]);
 
   // ── Persist helpers ──
   const persistUpdate = async (id: string, patch: Record<string, any>) => {
@@ -2817,6 +2860,26 @@ const PagesPanel = ({
 
   // If editing page sections (blocks)
   if (editingSectionsPageId) {
+    if (editingSectionsPageId === SHOP_VIRTUAL_ID) {
+      const combined = buildShopSections();
+      return (
+        <PageSectionsPanel
+          pageLabel={shopLabel || "Showcase"}
+          sections={combined}
+          onBack={() => { setEditingSectionsPageId(null); onSelectBlock(null); }}
+          onEditSection={setEditingSection}
+          selectedBlockIndex={selectedBlockIndex}
+          onSelectBlock={onSelectBlock}
+          onSectionsChange={(newSections) => {
+            const idx = newSections.findIndex((s) => s.type === "shop-grid");
+            const above = idx >= 0 ? newSections.slice(0, idx) : newSections;
+            const below = idx >= 0 ? newSections.slice(idx + 1) : [];
+            onShopBlocksChange?.({ above, below });
+            onActiveSectionsChange(newSections);
+          }}
+        />
+      );
+    }
     const targetPage = allPages.find((p) => p.id === editingSectionsPageId);
     if (targetPage && targetPage.type === "page") {
       return (
@@ -5295,6 +5358,24 @@ const WebsiteEditor = () => {
       onShopSettings={() => { setActiveTab("settings"); setPendingSettingsSub("shop"); }}
       shopHeaderConfig={(site as any)?.shop_header_config ?? null}
       onShopHeaderChange={(cfg) => updateSite({ shop_header_config: cfg } as any)}
+      shopBlocksAbove={Array.isArray((site as any)?.shop_blocks_above) ? (site as any).shop_blocks_above : []}
+      shopBlocksBelow={Array.isArray((site as any)?.shop_blocks_below) ? (site as any).shop_blocks_below : []}
+      shopShowDefaultGrid={(site as any)?.shop_show_default_grid !== false}
+      shopGridConfig={{
+        layout: (site as any)?.shop_layout ?? "grid-3",
+        showSessions: (site as any)?.shop_show_sessions !== false,
+        showGalleries: (site as any)?.shop_show_galleries !== false,
+        showPrice: (site as any)?.shop_show_price !== false,
+        limit: (site as any)?.shop_limit ?? 0,
+        title: (site as any)?.shop_title ?? undefined,
+        subtitle: (site as any)?.shop_description ?? undefined,
+      }}
+      onShopBlocksChange={(patch) => {
+        const next: Record<string, any> = {};
+        if (patch.above) next.shop_blocks_above = patch.above;
+        if (patch.below) next.shop_blocks_below = patch.below;
+        updateSite(next);
+      }}
       onActiveSlideChange={setEditorActiveSlideId}
       resetNonce={tabResetNonce}
     />,
