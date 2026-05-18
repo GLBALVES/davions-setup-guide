@@ -245,27 +245,7 @@ export default function ShopSubPanel({
   };
 
 
-  // Live preview iframe with debounced refresh + manual refresh
-  const [previewOpen, setPreviewOpen] = useState(true);
-  const [reloadKey, setReloadKey] = useState(0);
-  const debounceRef = useRef<number | null>(null);
 
-  // Build a "signature" of preview-affecting fields. When it changes, reload.
-  const previewSignature = useMemo(() => JSON.stringify({
-    enabled, showSessions, showGalleries, showFilters, showPrice, layout, order, limit,
-    title: site?.shop_title ?? "", desc: site?.shop_description ?? "",
-  }), [enabled, showSessions, showGalleries, showFilters, showPrice, layout, order, limit, site?.shop_title, site?.shop_description]);
-
-  useEffect(() => {
-    if (!previewOpen || !enabled) return;
-    if (debounceRef.current) window.clearTimeout(debounceRef.current);
-    debounceRef.current = window.setTimeout(() => setReloadKey((k) => k + 1), 600);
-    return () => {
-      if (debounceRef.current) window.clearTimeout(debounceRef.current);
-    };
-  }, [previewSignature, previewOpen, enabled]);
-
-  const iframeSrc = `${publicUrl}?preview=1&_=${reloadKey}`;
 
   return (
     <div className="p-4 space-y-5 overflow-y-auto h-full">
