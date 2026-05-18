@@ -184,10 +184,12 @@ export default function PublicShopPage({ mode }: { mode: "store" | "custom-domai
         sessions={sessions}
         galleries={galleries}
         layout={layout}
-        showFilters
-        showPrice
+        showFilters={showFiltersCol}
+        showPrice={showPriceCol}
         showSessions={showSessionsCol}
         showGalleries={showGalleriesCol}
+        order={orderCol}
+        limit={limitCol}
         sessionHref={(s) =>
           mode === "custom-domain" ? `/book/${s.slug ?? s.id}` : `/vitrine/${slug}/${s.slug ?? s.id}`
         }
