@@ -2169,6 +2169,8 @@ const PagesPanel = ({
   shopSortOrder,
   onShopChange,
   onShopSettings,
+  shopHeaderConfig,
+  onShopHeaderChange,
   onActiveSlideChange,
   resetNonce,
 }: {
