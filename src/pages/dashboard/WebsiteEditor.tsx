@@ -2699,7 +2699,7 @@ const PagesPanel = ({
           currentPageId={SHOP_VIRTUAL_ID}
           currentPageLabel={shopLabel || "Showcase"}
           allPages={allPages}
-          sharedPagesCount={1}
+          sharedPagesCount={countPagesInGroup((shopHeaderConfig as any)?.groupId) + ((shopHeaderConfig as any)?.groupId ? 1 : 0)}
           onCopyHeaderFromPage={(sourceId) => {
             const src = allPages.find((p) => p.id === sourceId);
             if (!src?.headerConfig) return;
@@ -2708,8 +2708,26 @@ const PagesPanel = ({
             onShopHeaderChange?.(cloned);
             onHeaderConfigChange?.(cloned);
           }}
-          onShareHeaderWithPage={() => {
-            // Sharing the showcase header with regular pages is not supported yet.
+          onShareHeaderWithPage={(otherId) => {
+            const target = allPages.find((p) => p.id === otherId);
+            if (!target) return;
+            // If the showcase already has a header, treat it as the source; otherwise
+            // pull the target page's header into the showcase.
+            if (shopHeaderConfig) {
+              const groupId = (shopHeaderConfig as any).groupId || crypto.randomUUID();
+              const shared: HeaderConfig = { ...JSON.parse(JSON.stringify(shopHeaderConfig)), groupId };
+              if (!(shopHeaderConfig as any).groupId) {
+                onShopHeaderChange?.(shared);
+                onHeaderConfigChange?.(shared);
+              }
+              findAndUpdate(otherId, { headerConfig: shared });
+            } else if (target.headerConfig) {
+              const groupId = target.headerConfig.groupId || crypto.randomUUID();
+              const shared: HeaderConfig = { ...JSON.parse(JSON.stringify(target.headerConfig)), groupId };
+              if (!target.headerConfig.groupId) findAndUpdate(otherId, { headerConfig: shared });
+              onShopHeaderChange?.(shared);
+              onHeaderConfigChange?.(shared);
+            }
           }}
           onUnshareHeader={() => {
             if (!shopHeaderConfig) return;
