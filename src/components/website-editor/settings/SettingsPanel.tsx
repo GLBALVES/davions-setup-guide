@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Globe, Search, BookOpen, Share2, BarChart3, Settings2, Inbox, FileText, Trash2, Scale, Store } from "lucide-react";
+import { ChevronLeft, ChevronRight, Globe, Search, BookOpen, Share2, BarChart3, Settings2, Inbox, FileText, Trash2, Scale, Store, Languages } from "lucide-react";
 import { cn } from "@/lib/utils";
 import TrackingModal from "./TrackingModal";
 import AdvancedModal from "./AdvancedModal";
