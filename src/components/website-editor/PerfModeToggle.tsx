@@ -43,21 +43,8 @@ export default function PerfModeToggle() {
 
   const Icon = override === "lite" ? ZapOff : override === "full" ? Zap : Gauge;
 
-  return (
-    <div className="fixed bottom-4 right-4 z-[55] pointer-events-auto">
-      <button
-        type="button"
-        onClick={cycle}
-        className={cn(
-          "flex items-center gap-2 px-3 py-2 rounded-full",
-          "bg-foreground text-background shadow-lg hover:opacity-90 transition",
-          "text-[11px] font-medium",
-        )}
-        title="Performance mode: Auto / Full / Lite. Lite disables blur, 3D tilt, ken-burns and heavy parallax."
-      >
-        <Icon className="h-3.5 w-3.5" />
-        Perf: {label}
-      </button>
-    </div>
-  );
+  // Floating toggle removed per UX request. Component returns null so existing
+  // imports/usages don't break; performance mode still works via Auto detection.
+  void cycle; void label; void Icon;
+  return null;
 }
