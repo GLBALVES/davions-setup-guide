@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ExternalLink, RefreshCw, Eye, EyeOff } from "lucide-react";
+import { ExternalLink, RefreshCw, Eye, EyeOff, Plus, Trash2, ArrowUp, ArrowDown, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getShopDefaults } from "@/lib/shop-defaults";
+import { supabase } from "@/integrations/supabase/client";
+import type { PageSection } from "@/components/store/SectionRenderer";
 
 const LAYOUT_OPTIONS: { value: "grid-3" | "grid-4" | "grid-2-feature"; label: string }[] = [
   { value: "grid-3", label: "3 cols" },
