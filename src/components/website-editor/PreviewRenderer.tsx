@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import CanvasAddSection from "@/components/website-editor/CanvasAddSection";
 import QuickAddPopover from "@/components/website-editor/QuickAddPopover";
 import PreviewHeader, { type HeaderConfig } from "@/components/website-editor/PreviewHeader";
+import seloIcon from "@/assets/davions-selo.png";
 
 import {
   DndContext, PointerSensor, KeyboardSensor, useSensor, useSensors,
@@ -1171,7 +1172,7 @@ export default function PreviewRenderer({
           style={{ fontFamily: "Inter, system-ui, sans-serif" }}
           onClick={(e) => e.stopPropagation()}
         >
-          <img src="/favicon.png" alt="" className="h-3.5 w-3.5 rounded-sm object-contain" />
+          <img src={seloIcon} alt="" className="h-3.5 w-3.5 rounded-full object-contain" />
           <span>Made with <span className="font-semibold">Davions</span></span>
         </a>
       )}
