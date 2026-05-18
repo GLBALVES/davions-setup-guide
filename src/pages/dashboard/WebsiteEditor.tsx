@@ -5170,7 +5170,7 @@ const WebsiteEditor = () => {
       shopInMenu={(site as any)?.shop_in_menu !== false}
       shopSortOrder={typeof (site as any)?.shop_sort_order === "number" ? (site as any).shop_sort_order : 1}
       onShopChange={(patch) => updateSite(patch)}
-      onShopSettings={() => { setActiveTab("settings"); setPendingSettingsSub("shop"); }}
+      onShopSettings={() => { setActiveTab("settings"); setPendingSettingsSub("shop"); setShowcasePreview(true); }}
       onActiveSlideChange={setEditorActiveSlideId}
       resetNonce={tabResetNonce}
     />,
