@@ -115,6 +115,10 @@ export default function SettingsPanel({
         {/* SITE SETTINGS */}
         <Section title="Site Settings">
           <Item icon={Globe} label="Domain" onClick={() => navigate("/dashboard/website")} />
+          <LanguageItem
+            value={(site as any)?.site_language ?? null}
+            onChange={(v) => onSiteChange({ site_language: v })}
+          />
           <Item icon={Store} label="Showcase" onClick={() => { setView("shop"); onShowcasePreviewChange?.(true); }} />
           <Item icon={Search} label="SEO Manager" onClick={() => { setView("seo"); onShowcasePreviewChange?.(false); }} />
           <Item icon={BookOpen} label="Blog" onClick={() => { setView("blog"); onShowcasePreviewChange?.(false); }} />
