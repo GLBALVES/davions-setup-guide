@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ExternalLink, RefreshCw, Eye, EyeOff, Plus, Trash2, ArrowUp, ArrowDown, Info } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ExternalLink, Plus, Trash2, ArrowUp, ArrowDown, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
