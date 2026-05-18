@@ -3,7 +3,7 @@
  * shown on every published page unless the photographer has hidden it via
  * Footer settings (hide_branding = true).
  */
-import davionsBadge from "@/assets/davions-badge-v3.png";
+import { Camera } from "lucide-react";
 
 export default function DavionsFloatingBadge({ hidden }: { hidden?: boolean }) {
   if (hidden) return null;
@@ -14,14 +14,10 @@ export default function DavionsFloatingBadge({ hidden }: { hidden?: boolean }) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Made with Davions"
-      className="fixed bottom-4 right-4 z-[60] inline-flex items-center gap-2 rounded-full bg-primary px-2.5 py-1.5 text-primary-foreground shadow-lg transition-opacity hover:opacity-95"
+      className="fixed bottom-4 right-4 z-[60] inline-flex items-center gap-2 rounded-full bg-primary pl-1.5 pr-3 py-1.5 text-primary-foreground shadow-lg transition-opacity hover:opacity-95"
     >
-      <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-foreground">
-        <img
-          src={davionsBadge}
-          alt=""
-          className="h-5 w-5 object-contain"
-        />
+      <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-foreground">
+        <Camera className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
       </span>
       <span className="whitespace-nowrap text-xs font-medium text-primary-foreground">
         Made with Davions
