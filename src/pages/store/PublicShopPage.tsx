@@ -11,6 +11,7 @@ import PublicSiteRenderer, {
   Photographer,
 } from "@/components/store/PublicSiteRenderer";
 import ShopGrid from "@/components/store/ShopGrid";
+import SectionRenderer, { type PageSection } from "@/components/store/SectionRenderer";
 import { buildPublicSiteNavLinks } from "@/lib/site-navigation";
 import { DEFAULT_HEADER_CONFIG, type HeaderConfig } from "@/components/website-editor/PreviewHeader";
 
@@ -151,13 +152,12 @@ export default function PublicShopPage({ mode }: { mode: "store" | "custom-domai
       ? [baseNavLinks[0], shopLink, ...baseNavLinks.slice(1)]
       : [shopLink];
 
-  // Header WITHOUT slides — only the menu (mirrors the legal pages UX)
-  const pageHeaderConfig: HeaderConfig = {
-    ...DEFAULT_HEADER_CONFIG,
-    slides: [],
-    height: "0",
-    overlayOpacity: 0,
-  };
+  // Header: use custom shop_header_config when configured, otherwise the
+  // legacy menu-only header (no slides).
+  const customHeader = (site as any)?.shop_header_config as HeaderConfig | null | undefined;
+  const pageHeaderConfig: HeaderConfig = customHeader
+    ? { ...DEFAULT_HEADER_CONFIG, ...customHeader }
+    : { ...DEFAULT_HEADER_CONFIG, slides: [], height: "0", overlayOpacity: 0 };
 
   const layout = ((site as any)?.shop_layout as "grid-3" | "grid-4" | "grid-2-feature") || "grid-3";
   const showSessionsCol = (site as any)?.shop_show_sessions !== false;
@@ -166,35 +166,66 @@ export default function PublicShopPage({ mode }: { mode: "store" | "custom-domai
   const showPriceCol = (site as any)?.shop_show_price !== false;
   const orderCol = ((site as any)?.shop_order as "manual" | "price-asc" | "price-desc") || "manual";
   const limitCol = typeof (site as any)?.shop_limit === "number" ? (site as any).shop_limit : 0;
+  const showDefaultGrid = (site as any)?.shop_show_default_grid !== false;
+  const manualSessionIds = ((site as any)?.shop_manual_sessions as string[] | null) ?? [];
+  const manualGalleryIds = ((site as any)?.shop_manual_galleries as string[] | null) ?? [];
+  const blocksAbove = (((site as any)?.shop_blocks_above as PageSection[] | null) ?? []) as PageSection[];
+  const blocksBelow = (((site as any)?.shop_blocks_below as PageSection[] | null) ?? []) as PageSection[];
+
+  // Filter & order sessions/galleries based on manual selection
+  const filteredSessions = manualSessionIds.length
+    ? manualSessionIds
+        .map((id) => sessions.find((s) => s.id === id))
+        .filter(Boolean) as Session[]
+    : sessions;
+  const filteredGalleries = manualGalleryIds.length
+    ? manualGalleryIds
+        .map((id) => galleries.find((g) => g.id === id))
+        .filter(Boolean) as Array<Gallery & { price_per_photo?: number | null }>
+    : galleries;
 
   const seoUrl =
     typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}` : "";
 
   const shopBody = (
     <div className="max-w-6xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
-      <header className="text-center mb-10 sm:mb-14">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-extralight tracking-[0.08em] uppercase mb-3">
-          {(site as any)?.shop_title || d.pageTitle}
-        </h1>
-        <p className="text-sm font-light text-muted-foreground max-w-xl mx-auto">
-          {(site as any)?.shop_description || d.pageDescription}
-        </p>
-      </header>
-      <ShopGrid
-        sessions={sessions}
-        galleries={galleries}
-        layout={layout}
-        showFilters={showFiltersCol}
-        showPrice={showPriceCol}
-        showSessions={showSessionsCol}
-        showGalleries={showGalleriesCol}
-        order={orderCol}
-        limit={limitCol}
-        sessionHref={(s) =>
-          mode === "custom-domain" ? `/book/${s.slug ?? s.id}` : `/vitrine/${slug}/${s.slug ?? s.id}`
-        }
-        galleryHref={(g) => `/gallery/${g.slug ?? g.id}`}
-      />
+      {blocksAbove.length > 0 && (
+        <div className="mb-10">
+          <SectionRenderer sections={blocksAbove} photographerId={photographer.id} />
+        </div>
+      )}
+      {showDefaultGrid && (
+        <>
+          <header className="text-center mb-10 sm:mb-14">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extralight tracking-[0.08em] uppercase mb-3">
+              {(site as any)?.shop_title || d.pageTitle}
+            </h1>
+            <p className="text-sm font-light text-muted-foreground max-w-xl mx-auto">
+              {(site as any)?.shop_description || d.pageDescription}
+            </p>
+          </header>
+          <ShopGrid
+            sessions={filteredSessions}
+            galleries={filteredGalleries}
+            layout={layout}
+            showFilters={showFiltersCol}
+            showPrice={showPriceCol}
+            showSessions={showSessionsCol}
+            showGalleries={showGalleriesCol}
+            order={orderCol}
+            limit={limitCol}
+            sessionHref={(s) =>
+              mode === "custom-domain" ? `/book/${s.slug ?? s.id}` : `/vitrine/${slug}/${s.slug ?? s.id}`
+            }
+            galleryHref={(g) => `/gallery/${g.slug ?? g.id}`}
+          />
+        </>
+      )}
+      {blocksBelow.length > 0 && (
+        <div className="mt-10">
+          <SectionRenderer sections={blocksBelow} photographerId={photographer.id} />
+        </div>
+      )}
     </div>
   );
 

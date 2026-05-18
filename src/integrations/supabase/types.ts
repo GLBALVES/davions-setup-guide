@@ -2732,11 +2732,17 @@ export type Database = {
           seo_title: string | null
           sessions_bg_color: string | null
           sessions_text_color: string | null
+          shop_blocks_above: Json
+          shop_blocks_below: Json
           shop_description: string | null
+          shop_header_config: Json | null
           shop_in_menu: boolean
           shop_layout: string
           shop_limit: number
+          shop_manual_galleries: string[]
+          shop_manual_sessions: string[]
           shop_order: string
+          shop_show_default_grid: boolean
           shop_show_filters: boolean
           shop_show_galleries: boolean
           shop_show_price: boolean
@@ -2858,11 +2864,17 @@ export type Database = {
           seo_title?: string | null
           sessions_bg_color?: string | null
           sessions_text_color?: string | null
+          shop_blocks_above?: Json
+          shop_blocks_below?: Json
           shop_description?: string | null
+          shop_header_config?: Json | null
           shop_in_menu?: boolean
           shop_layout?: string
           shop_limit?: number
+          shop_manual_galleries?: string[]
+          shop_manual_sessions?: string[]
           shop_order?: string
+          shop_show_default_grid?: boolean
           shop_show_filters?: boolean
           shop_show_galleries?: boolean
           shop_show_price?: boolean
@@ -2984,11 +2996,17 @@ export type Database = {
           seo_title?: string | null
           sessions_bg_color?: string | null
           sessions_text_color?: string | null
+          shop_blocks_above?: Json
+          shop_blocks_below?: Json
           shop_description?: string | null
+          shop_header_config?: Json | null
           shop_in_menu?: boolean
           shop_layout?: string
           shop_limit?: number
+          shop_manual_galleries?: string[]
+          shop_manual_sessions?: string[]
           shop_order?: string
+          shop_show_default_grid?: boolean
           shop_show_filters?: boolean
           shop_show_galleries?: boolean
           shop_show_price?: boolean

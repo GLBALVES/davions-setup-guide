@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ExternalLink, RefreshCw, Eye, EyeOff } from "lucide-react";
+import { ExternalLink, RefreshCw, Eye, EyeOff, Plus, Trash2, ArrowUp, ArrowDown, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getShopDefaults } from "@/lib/shop-defaults";
+import { supabase } from "@/integrations/supabase/client";
+import type { PageSection } from "@/components/store/SectionRenderer";
 
 const LAYOUT_OPTIONS: { value: "grid-3" | "grid-4" | "grid-2-feature"; label: string }[] = [
   { value: "grid-3", label: "3 cols" },
@@ -135,10 +137,12 @@ export default function ShopSubPanel({
   site,
   onSiteChange,
   storeSlug,
+  photographerId,
 }: {
   site: Record<string, any> | null;
   onSiteChange: (patch: Record<string, any>) => void;
   storeSlug?: string | null;
+  photographerId?: string | null;
 }) {
   const { lang } = useLanguage();
   const d = getShopDefaults(lang);
@@ -152,8 +156,94 @@ export default function ShopSubPanel({
   const layout = (site?.shop_layout as string) || "grid-3";
   const order = (site?.shop_order as string) || "manual";
   const limit = typeof site?.shop_limit === "number" ? site!.shop_limit : 0;
+  const showDefaultGrid = site?.shop_show_default_grid !== false;
+  const manualSessions: string[] = Array.isArray(site?.shop_manual_sessions) ? site!.shop_manual_sessions : [];
+  const manualGalleries: string[] = Array.isArray(site?.shop_manual_galleries) ? site!.shop_manual_galleries : [];
+  const blocksAbove: PageSection[] = Array.isArray(site?.shop_blocks_above) ? site!.shop_blocks_above : [];
+  const blocksBelow: PageSection[] = Array.isArray(site?.shop_blocks_below) ? site!.shop_blocks_below : [];
 
   const publicUrl = storeSlug ? `/vitrine/${storeSlug}/shop` : "/shop";
+
+  // ── Load sessions & galleries for manual pickers ───────────────────────────
+  const [allSessions, setAllSessions] = useState<Array<{ id: string; title: string }>>([]);
+  const [allGalleries, setAllGalleries] = useState<Array<{ id: string; title: string }>>([]);
+  useEffect(() => {
+    if (!photographerId) return;
+    let cancelled = false;
+    (async () => {
+      const [{ data: s }, { data: g }] = await Promise.all([
+        (supabase as any)
+          .from("sessions")
+          .select("id, title")
+          .eq("photographer_id", photographerId)
+          .eq("status", "active")
+          .neq("hide_from_store", true)
+          .order("sort_order", { ascending: true }),
+        supabase
+          .from("galleries")
+          .select("id, title")
+          .eq("photographer_id", photographerId)
+          .eq("status", "published")
+          .order("sort_order", { ascending: true }),
+      ]);
+      if (cancelled) return;
+      setAllSessions((s as any[]) ?? []);
+      setAllGalleries((g as any[]) ?? []);
+    })();
+    return () => { cancelled = true; };
+  }, [photographerId]);
+
+  // ── Block management helpers ───────────────────────────────────────────────
+  const makeBlock = (type: string, label: string): PageSection => ({
+    id: `shop-${type}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    type,
+    label,
+    props: type === "hero"
+      ? { headline: "Headline", subtitle: "Subtitle" }
+      : type === "text"
+      ? { body: "Write your text here…" }
+      : type === "cta"
+      ? { headline: "Ready to book?", buttonText: "Get in touch", buttonHref: "#" }
+      : type === "image"
+      ? { src: "", alt: "" }
+      : {},
+  });
+
+  const updateBlocks = (zone: "above" | "below", next: PageSection[]) => {
+    onSiteChange(zone === "above" ? { shop_blocks_above: next } : { shop_blocks_below: next });
+  };
+  const addBlock = (zone: "above" | "below", type: string) => {
+    const src = zone === "above" ? blocksAbove : blocksBelow;
+    updateBlocks(zone, [...src, makeBlock(type, type)]);
+  };
+  const removeBlock = (zone: "above" | "below", idx: number) => {
+    const src = zone === "above" ? blocksAbove : blocksBelow;
+    updateBlocks(zone, src.filter((_, i) => i !== idx));
+  };
+  const moveBlock = (zone: "above" | "below", idx: number, dir: -1 | 1) => {
+    const src = [...(zone === "above" ? blocksAbove : blocksBelow)];
+    const j = idx + dir;
+    if (j < 0 || j >= src.length) return;
+    [src[idx], src[j]] = [src[j], src[idx]];
+    updateBlocks(zone, src);
+  };
+
+  // ── Manual selection helpers ───────────────────────────────────────────────
+  const toggleManualSession = (id: string) => {
+    onSiteChange({
+      shop_manual_sessions: manualSessions.includes(id)
+        ? manualSessions.filter((x) => x !== id)
+        : [...manualSessions, id],
+    });
+  };
+  const toggleManualGallery = (id: string) => {
+    onSiteChange({
+      shop_manual_galleries: manualGalleries.includes(id)
+        ? manualGalleries.filter((x) => x !== id)
+        : [...manualGalleries, id],
+    });
+  };
+
 
   // Live preview iframe with debounced refresh + manual refresh
   const [previewOpen, setPreviewOpen] = useState(true);
@@ -317,6 +407,121 @@ export default function ShopSubPanel({
               className="h-8 text-xs"
             />
             <p className="text-[10px] text-muted-foreground">{t.limitHint}</p>
+          </div>
+
+          {/* Default grid toggle */}
+          <div className="flex items-center justify-between rounded-md border border-border bg-muted/20 px-3 py-2.5">
+            <div className="min-w-0">
+              <Label className="text-xs font-medium block">
+                {lang === "pt" ? "Mostrar grade automática" : lang === "es" ? "Mostrar cuadrícula automática" : "Show default grid"}
+              </Label>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                {lang === "pt"
+                  ? "Desative para usar somente blocos personalizados."
+                  : lang === "es"
+                  ? "Desactiva para usar solo bloques personalizados."
+                  : "Disable to use only custom blocks."}
+              </p>
+            </div>
+            <Switch
+              checked={showDefaultGrid}
+              onCheckedChange={(v) => onSiteChange({ shop_show_default_grid: v })}
+            />
+          </div>
+
+          {/* Manual Sessions selection */}
+          <div className="space-y-1.5 pt-1">
+            <Label className="text-xs">
+              {lang === "pt" ? "Sessões manuais (vazio = todas)" : lang === "es" ? "Sesiones manuales (vacío = todas)" : "Manual sessions (empty = all)"}
+            </Label>
+            <div className="max-h-40 overflow-y-auto rounded border border-border bg-muted/10 divide-y divide-border">
+              {allSessions.length === 0 && (
+                <p className="text-[10px] text-muted-foreground px-2 py-1.5 italic">—</p>
+              )}
+              {allSessions.map((s) => (
+                <label key={s.id} className="flex items-center gap-2 px-2 py-1.5 text-[11px] cursor-pointer hover:bg-muted/30">
+                  <input
+                    type="checkbox"
+                    checked={manualSessions.includes(s.id)}
+                    onChange={() => toggleManualSession(s.id)}
+                    className="h-3 w-3"
+                  />
+                  <span className="truncate">{s.title}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Manual Galleries selection */}
+          <div className="space-y-1.5">
+            <Label className="text-xs">
+              {lang === "pt" ? "Galerias manuais (vazio = todas)" : lang === "es" ? "Galerías manuales (vacío = todas)" : "Manual galleries (empty = all)"}
+            </Label>
+            <div className="max-h-40 overflow-y-auto rounded border border-border bg-muted/10 divide-y divide-border">
+              {allGalleries.length === 0 && (
+                <p className="text-[10px] text-muted-foreground px-2 py-1.5 italic">—</p>
+              )}
+              {allGalleries.map((g) => (
+                <label key={g.id} className="flex items-center gap-2 px-2 py-1.5 text-[11px] cursor-pointer hover:bg-muted/30">
+                  <input
+                    type="checkbox"
+                    checked={manualGalleries.includes(g.id)}
+                    onChange={() => toggleManualGallery(g.id)}
+                    className="h-3 w-3"
+                  />
+                  <span className="truncate">{g.title}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Custom blocks (above / below) */}
+          {(["above", "below"] as const).map((zone) => {
+            const list = zone === "above" ? blocksAbove : blocksBelow;
+            const zoneLabel = zone === "above"
+              ? (lang === "pt" ? "Blocos acima da grade" : lang === "es" ? "Bloques arriba de la cuadrícula" : "Blocks above grid")
+              : (lang === "pt" ? "Blocos abaixo da grade" : lang === "es" ? "Bloques debajo de la cuadrícula" : "Blocks below grid");
+            return (
+              <div key={zone} className="space-y-1.5 pt-1">
+                <Label className="text-xs">{zoneLabel}</Label>
+                <div className="space-y-1">
+                  {list.map((b, idx) => (
+                    <div key={b.id} className="flex items-center gap-1 rounded border border-border bg-muted/10 px-2 py-1.5">
+                      <span className="flex-1 truncate text-[11px]">
+                        <span className="text-muted-foreground">{b.type}</span> · {b.label}
+                      </span>
+                      <button onClick={() => moveBlock(zone, idx, -1)} className="p-1 text-muted-foreground hover:text-foreground" title="Up"><ArrowUp className="h-3 w-3" /></button>
+                      <button onClick={() => moveBlock(zone, idx, 1)} className="p-1 text-muted-foreground hover:text-foreground" title="Down"><ArrowDown className="h-3 w-3" /></button>
+                      <button onClick={() => removeBlock(zone, idx)} className="p-1 text-muted-foreground hover:text-destructive" title="Remove"><Trash2 className="h-3 w-3" /></button>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {["hero", "text", "image", "cta"].map((tp) => (
+                    <button
+                      key={tp}
+                      onClick={() => addBlock(zone, tp)}
+                      className="flex items-center gap-1 px-2 py-1 text-[10px] uppercase tracking-wide border border-border rounded hover:bg-muted/40"
+                    >
+                      <Plus className="h-2.5 w-2.5" />
+                      {tp}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Header config info */}
+          <div className="flex gap-2 rounded-md border border-border bg-muted/20 px-3 py-2.5">
+            <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              {lang === "pt"
+                ? "O cabeçalho da Showcase usa o cabeçalho global por padrão. Para customizar (slides, altura, sobreposição) edite shop_header_config diretamente — UI dedicada em breve."
+                : lang === "es"
+                ? "El encabezado de Showcase usa el encabezado global por defecto. Para personalizar edita shop_header_config — UI dedicada próximamente."
+                : "Showcase header uses the global header by default. To customize (slides, height, overlay) edit shop_header_config directly — dedicated UI coming next."}
+            </p>
           </div>
 
           {/* Live preview */}
