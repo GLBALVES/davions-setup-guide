@@ -29,6 +29,7 @@ export type SectionType =
   | "embed"
   | "logo-strip"
   | "shop"
+  | "shop-grid"
   | "image-links"
   | "text-links"
   | "image-grid-links";
