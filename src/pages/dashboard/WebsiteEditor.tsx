@@ -2831,6 +2831,44 @@ const PagesPanel = ({
   // show its settings panel directly in the sidebar.
   if (selectedBlockIndex !== null) {
     const targetPageId = editingSectionsPageId ?? activePage;
+    // ── Showcase (virtual page) ─────────────────────────────────────────────
+    if (targetPageId === SHOP_VIRTUAL_ID) {
+      const sections = buildShopSections();
+      const section = sections[selectedBlockIndex];
+      if (section) {
+        // The non-removable "Showcase Grid" sentinel routes to shop settings.
+        if (section.type === "shop-grid") {
+          onSelectBlock(null);
+          onShopSettings?.();
+          return null;
+        }
+        const persist = (next: PageSection[]) => {
+          const idx = next.findIndex((s) => s.type === "shop-grid");
+          const above = idx >= 0 ? next.slice(0, idx) : next;
+          const below = idx >= 0 ? next.slice(idx + 1) : [];
+          onShopBlocksChange?.({ above, below });
+          onActiveSectionsChange(next);
+        };
+        const blockSettings: BlockSettings = (section.props?.blockSettings as BlockSettings) || {};
+        return (
+          <BlockSettingsPanel
+            section={section}
+            settings={blockSettings}
+            onUpdate={(s) => {
+              const next = [...sections];
+              next[selectedBlockIndex] = { ...section, props: { ...section.props, blockSettings: s } };
+              persist(next);
+            }}
+            onUpdateProps={(newProps) => {
+              const next = [...sections];
+              next[selectedBlockIndex] = { ...section, props: newProps };
+              persist(next);
+            }}
+            onBack={() => onSelectBlock(null)}
+          />
+        );
+      }
+    }
     const targetPage = allPages.find((p) => p.id === targetPageId);
     const sections = targetPage?.sections || [];
     const section = sections[selectedBlockIndex];
