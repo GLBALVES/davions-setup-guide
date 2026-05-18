@@ -118,7 +118,7 @@ export default function SettingsPanel({
             value={(site as any)?.site_language ?? null}
             onChange={(v) => onSiteChange({ site_language: v })}
           />
-          <Item icon={Store} label="Showcase" onClick={() => { setView("shop"); onShowcasePreviewChange?.(true); }} />
+          <Item icon={Store} label="Showcase" onClick={() => { setView("shop"); onShowcasePreviewChange?.(false); }} />
           <Item icon={Search} label="SEO Manager" onClick={() => { setView("seo"); onShowcasePreviewChange?.(false); }} />
           <Item icon={BookOpen} label="Blog" onClick={() => { setView("blog"); onShowcasePreviewChange?.(false); }} />
           <Item icon={Share2} label="Social" onClick={() => { setView("social"); onShowcasePreviewChange?.(false); }} />
