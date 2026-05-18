@@ -2272,11 +2272,25 @@ const PagesPanel = ({
 
   const getHomePageId = (list: SitePage[]) => flattenPages(list).find((p) => p.isHome)?.id ?? null;
 
+  const SHOP_SENTINEL_ID = "__shop_grid_sentinel__";
+  const buildShopSections = (): PageSection[] => {
+    const above = Array.isArray(shopBlocksAbove) ? shopBlocksAbove : [];
+    const below = Array.isArray(shopBlocksBelow) ? shopBlocksBelow : [];
+    const showGrid = shopShowDefaultGrid !== false;
+    const sentinel: PageSection = {
+      id: SHOP_SENTINEL_ID,
+      type: "shop-grid",
+      label: "Showcase Grid",
+      props: shopGridConfig ?? {},
+    };
+    return showGrid ? [...above, sentinel, ...below] : [...above, ...below];
+  };
+
   const selectPage = (id: string, pagesList?: SitePage[]) => {
     setActivePage(id);
     if (id === SHOP_VIRTUAL_ID) {
       setEditingSectionsPageId(null);
-      onActiveSectionsChange([]);
+      onActiveSectionsChange(buildShopSections());
       onSelectBlock(null);
       onActivePageChange({
         id: SHOP_VIRTUAL_ID,
