@@ -2193,6 +2193,11 @@ const PagesPanel = ({
   onShopSettings,
   shopHeaderConfig,
   onShopHeaderChange,
+  shopBlocksAbove,
+  shopBlocksBelow,
+  shopShowDefaultGrid,
+  shopGridConfig,
+  onShopBlocksChange,
   onActiveSlideChange,
   resetNonce,
 }: {
