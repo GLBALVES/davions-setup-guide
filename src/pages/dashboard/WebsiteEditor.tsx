@@ -5540,7 +5540,6 @@ const WebsiteEditor = () => {
                 </div>
               </div>
               <iframe
-                key={showcasePreviewKey}
                 src={`/vitrine/${storeSlug}/shop?preview=1&_=${showcasePreviewKey}`}
                 title="Showcase live preview"
                 className="flex-1 w-full border-0 bg-background"
