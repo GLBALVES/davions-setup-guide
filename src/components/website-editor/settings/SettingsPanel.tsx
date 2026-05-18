@@ -57,7 +57,6 @@ export default function SettingsPanel({
         setLegalOpen(true);
       } else {
         setView(openSubKey);
-        onShowcasePreviewChange?.(openSubKey === "shop");
       }
       onSubKeyHandled?.();
     }
