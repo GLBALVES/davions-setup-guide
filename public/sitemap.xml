@@ -6,6 +6,21 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://davions.com/vitrine/aliana</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://davions.com/vitrine/aliana/shop</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://davions.com/vitrine/aliana/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://davions.com/vitrine/fernandoschell</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -88,7 +103,31 @@
   </url>
   <url>
     <loc>https://davions.com/vitrine/palomaschell/page/maternity</loc>
-    <lastmod>2026-05-16T01:37:19.722Z</lastmod>
+    <lastmod>2026-05-19T05:47:14.436Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://davions.com/vitrine/aliana/page/contact</loc>
+    <lastmod>2026-05-15T00:56:55.435Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://davions.com/vitrine/aliana/page/blog</loc>
+    <lastmod>2026-05-15T00:56:55.434Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://davions.com/vitrine/fernandoschell/page/contact</loc>
+    <lastmod>2026-05-19T00:05:46.127Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://davions.com/vitrine/fernandoschell/page/blog</loc>
+    <lastmod>2026-05-19T00:05:46.127Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -100,7 +139,7 @@
   </url>
   <url>
     <loc>https://davions.com/vitrine/priscillafelix/page/blog</loc>
-    <lastmod>2026-05-13T20:07:29.266Z</lastmod>
+    <lastmod>2026-05-18T13:49:31.205Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
