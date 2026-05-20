@@ -295,7 +295,23 @@ const SessionDetailPage = () => {
   const customDomainSlug = useCustomDomainSlug();
   const backPath = customDomainSlug ? "/" : `/vitrine/${slug ?? customDomainSlug}`;
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+
+  // ──────────────────────────────────────────────
+  // View mode: "product" = sales page only,
+  //            "booking" = full booking flow (slots → form → addons → review).
+  // Derived from URL path so deep-linking works and the back button is correct.
+  // ──────────────────────────────────────────────
+  const isBookingRoute =
+    location.pathname.endsWith("/book") ||
+    location.pathname.endsWith("/checkout");
+  const productUrl = customDomainSlug
+    ? `/book/${sessionSlug}`
+    : `/vitrine/${slug}/${sessionSlug}`;
+  const bookingUrl = customDomainSlug
+    ? `/book/${sessionSlug}/checkout`
+    : `/vitrine/${slug}/${sessionSlug}/book`;
 
   const [session, setSession] = useState<SessionDetail | null>(null);
   const [photographer, setPhotographer] = useState<PhotographerInfo | null>(null);
@@ -308,7 +324,15 @@ const SessionDetailPage = () => {
   const [sliderIndex, setSliderIndex] = useState(0);
   const sliderTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [loading, setLoading] = useState(true);
-  const [step, setStep] = useState<BookingStep>("product");
+  const [step, setStep] = useState<BookingStep>(isBookingRoute ? "slots" : "product");
+
+  // Keep step in sync if the URL changes (e.g. CTA click or browser back).
+  useEffect(() => {
+    if (isBookingRoute && step === "product") setStep("slots");
+    if (!isBookingRoute && step !== "product") setStep("product");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBookingRoute]);
+
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [calendarMonth, setCalendarMonth] = useState<Date>(startOfToday());
