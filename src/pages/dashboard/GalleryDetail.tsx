@@ -791,7 +791,7 @@ const GalleryDetail = () => {
     setProjectsListLoading(true);
     const { data } = await supabase
       .from("client_projects")
-      .select("id, title, client_name, client_email, stage, shoot_date")
+      .select("id, title, client_name, client_email, stage, shoot_date, booking_id")
       .order("created_at", { ascending: false });
     setProjectsList(
       (data ?? []).map((p: any) => ({
