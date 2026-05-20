@@ -802,6 +802,7 @@ const GalleryDetail = () => {
         client_email: p.client_email ?? null,
         stage: p.stage,
         shoot_date: p.shoot_date ?? null,
+        booking_id: p.booking_id ?? null,
       }))
     );
     setProjectsListLoading(false);
