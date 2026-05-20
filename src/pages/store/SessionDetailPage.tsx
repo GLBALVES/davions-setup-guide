@@ -1025,7 +1025,7 @@ const SessionDetailPage = () => {
           />
           <div className="max-w-3xl mx-auto px-6 py-10 text-center">
             <Button size="lg" onClick={() => navigate(bookingUrl)}>
-              {t("bookThisSession") || "Book this session"}
+              Book this session
             </Button>
           </div>
         </div>
