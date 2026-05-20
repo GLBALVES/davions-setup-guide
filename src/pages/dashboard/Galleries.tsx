@@ -124,7 +124,7 @@ const Galleries = () => {
       .select(`
         id, title, slug, category, status, created_at, sort_order, cover_image_url, expires_at, booking_id, project_id,
         bookings ( client_name, client_email, sessions ( title ) ),
-        client_projects ( title )
+        client_projects ( title, client_name, client_email )
       `)
       .eq("photographer_id", photographerId)
       .order("sort_order", { ascending: true });
