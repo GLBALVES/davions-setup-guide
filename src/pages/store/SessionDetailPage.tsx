@@ -421,6 +421,8 @@ const SessionDetailPage = () => {
       if (photographerData) {
         setPhotographer({ ...photographerData, logo_url: siteData?.logo_url ?? null } as PhotographerInfo);
       }
+      const psSections = Array.isArray((siteData as any)?.product_page_sections) ? (siteData as any).product_page_sections : [];
+      setProductPageSections(psSections);
 
       const [{ data: extrasData }, { data: bonusData }, { data: customFieldData }] = await Promise.all([
         supabase
