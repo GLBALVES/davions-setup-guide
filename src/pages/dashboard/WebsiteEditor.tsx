@@ -1923,6 +1923,10 @@ const DndPagesArea = ({
     if (blogExtra.inMenu) menuIds = injectAt(menuIds, blogExtra.sortOrder, BLOG_VIRTUAL_ID);
     else notMenuIds = injectAt(notMenuIds, blogExtra.sortOrder, BLOG_VIRTUAL_ID);
   }
+  if (productExtra) {
+    if (productExtra.inMenu) menuIds = injectAt(menuIds, productExtra.sortOrder, PRODUCT_VIRTUAL_ID);
+    else notMenuIds = injectAt(notMenuIds, productExtra.sortOrder, PRODUCT_VIRTUAL_ID);
+  }
 
   const zoneOf = (id: string): DndZone | null => {
     if (menuIds.includes(id)) return "menu";
