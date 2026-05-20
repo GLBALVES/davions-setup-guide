@@ -3024,6 +3024,22 @@ const PagesPanel = ({
         />
       );
     }
+    if (editingSectionsPageId === PRODUCT_VIRTUAL_ID) {
+      return (
+        <PageSectionsPanel
+          pageLabel={productLabel || "Product Page"}
+          sections={productSections || []}
+          onBack={() => { setEditingSectionsPageId(null); onSelectBlock(null); }}
+          onEditSection={setEditingSection}
+          selectedBlockIndex={selectedBlockIndex}
+          onSelectBlock={onSelectBlock}
+          onSectionsChange={(newSections) => {
+            onProductSectionsChange?.(newSections);
+            onActiveSectionsChange(newSections);
+          }}
+        />
+      );
+    }
     const targetPage = allPages.find((p) => p.id === editingSectionsPageId);
     if (targetPage && targetPage.type === "page") {
       return (
