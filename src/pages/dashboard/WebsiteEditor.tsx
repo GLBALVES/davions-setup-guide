@@ -1784,6 +1784,7 @@ const DroppableZone = ({
 
 const SHOP_VIRTUAL_ID = "__shop__";
 const BLOG_VIRTUAL_ID = "__blog__";
+const PRODUCT_VIRTUAL_ID = "__product__";
 
 const VirtualRow = ({
   icon: Icon,
