@@ -44,10 +44,6 @@ interface Booking {
   session_id: string;
 }
 
-interface Session {
-  id: string;
-  title: string;
-}
 
 interface Watermark {
   id: string;
@@ -94,8 +90,7 @@ export function CreateGalleryDialog({
   // Bookings / clients
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selectedBookingId, setSelectedBookingId] = useState<string>("");
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [selectedSessionId, setSelectedSessionId] = useState<string>("");
+
 
   // Watermarks (proof only)
   const [watermarks, setWatermarks] = useState<Watermark[]>([]);
@@ -123,8 +118,6 @@ export function CreateGalleryDialog({
     }
 
     setCoverFile(null);
-    setSessions([]);
-    setSelectedSessionId("");
 
     const fetchData = async () => {
       const [bookingsRes, gallerySettingsRes] = await Promise.all([
@@ -167,35 +160,6 @@ export function CreateGalleryDialog({
 
     fetchData();
   }, [open, user]);
-
-  // When booking selected, load its session
-  useEffect(() => {
-    if (!selectedBookingId) {
-      setSessions([]);
-      setSelectedSessionId("");
-      return;
-    }
-
-    const booking = bookings.find((b) => b.id === selectedBookingId);
-    if (!booking) return;
-
-    const fetchSession = async () => {
-      const { data } = await supabase
-        .from("sessions")
-        .select("id, title")
-        .eq("id", booking.session_id)
-        .maybeSingle();
-      if (data) {
-        setSessions([data as Session]);
-        setSelectedSessionId(data.id);
-      } else {
-        setSessions([]);
-        setSelectedSessionId("");
-      }
-    };
-
-    fetchSession();
-  }, [selectedBookingId, bookings]);
 
   const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -283,12 +247,6 @@ export function CreateGalleryDialog({
 
     setLoading(false);
   };
-
-  // Unique clients
-  const uniqueClients = bookings.reduce<Booking[]>((acc, b) => {
-    if (!acc.find((x) => x.client_email === b.client_email)) acc.push(b);
-    return acc;
-  }, []);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
