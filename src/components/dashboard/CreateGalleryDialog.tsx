@@ -362,25 +362,6 @@ export function CreateGalleryDialog({
             />
           </div>
 
-          {/* Client */}
-          <div className="flex flex-col gap-2">
-            <Label className="text-xs tracking-widests uppercase text-muted-foreground font-light">
-              Client
-            </Label>
-            <Select value={selectedBookingId} onValueChange={setSelectedBookingId}>
-              <SelectTrigger className="rounded-none border-border focus:ring-0">
-                <SelectValue placeholder={uniqueClients.length === 0 ? "No bookings yet" : "Select client…"} />
-              </SelectTrigger>
-              <SelectContent className="rounded-none">
-                {uniqueClients.map((b) => (
-                  <SelectItem key={b.id} value={b.id}>
-                    {b.client_name}
-                    <span className="ml-2 text-muted-foreground text-xs">{b.client_email}</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
 
           {/* Session — auto-populated from booking */}
           <div className="flex flex-col gap-2">
