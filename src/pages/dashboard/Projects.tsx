@@ -1656,10 +1656,10 @@ const Projects = () => {
           }
         }
 
-        // Auto-advance "post_production" → "final_gallery" when a final gallery is linked
+        // Auto-advance to "final_gallery" when a final gallery is linked (from any stage except final/archived)
         const toFinalGallery: string[] = [];
         for (const p of (allProjects as any[])) {
-          if (p.stage !== "post_production") continue;
+          if (p.stage === "final_gallery" || p.stage === "archived") continue;
           if ((p.booking_id && finalGalleryBookings.has(p.booking_id)) || finalByProject.has(p.id)) {
             toFinalGallery.push(p.id);
           }
