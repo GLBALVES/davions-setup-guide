@@ -2351,6 +2351,17 @@ const PagesPanel = ({
       });
       return;
     }
+    if (id === PRODUCT_VIRTUAL_ID) {
+      setEditingSectionsPageId(null);
+      onActiveSectionsChange(productSections || []);
+      onSelectBlock(null);
+      onActivePageChange({
+        id: PRODUCT_VIRTUAL_ID,
+        showHeaderFooter: true,
+        headerConfig: productHeaderConfig ?? null,
+      });
+      return;
+    }
     const allP = flattenPages(pagesList || pages);
     const page = allP.find((p) => p.id === id);
     if (page?.type === "page") {
