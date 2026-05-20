@@ -164,6 +164,7 @@ const App = () => {
                 <Route path="/vitrine/:slug/privacy" element={<PublicLegalPage kind="privacy" mode="store" />} />
                 <Route path="/vitrine/:slug/page/:pagePath" element={<SiteSubPage />} />
                 <Route path="/vitrine/:slug/:sessionSlug" element={<SessionDetailPage />} />
+                <Route path="/vitrine/:slug/:sessionSlug/book" element={<SessionDetailPage />} />
                 {/* Legacy /store/* → redirect to /vitrine/* (backward compatibility) */}
                 <Route path="/store/*" element={<LegacyStoreRedirect />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />
