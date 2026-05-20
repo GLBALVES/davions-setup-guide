@@ -5583,6 +5583,15 @@ const WebsiteEditor = () => {
         if (patch.below) next.shop_blocks_below = patch.below;
         updateSite(next);
       }}
+      productLabel={(site as any)?.product_page_title || "Product Page"}
+      productHref={storeSlug ? `/vitrine/${storeSlug}` : "#"}
+      productInMenu={Boolean((site as any)?.product_page_in_menu)}
+      productSortOrder={typeof (site as any)?.product_page_sort_order === "number" ? (site as any).product_page_sort_order : 99}
+      onProductChange={(patch) => updateSite(patch as any)}
+      productHeaderConfig={(site as any)?.product_page_header_config ?? null}
+      onProductHeaderChange={(cfg) => updateSite({ product_page_header_config: cfg } as any)}
+      productSections={Array.isArray((site as any)?.product_page_sections) ? (site as any).product_page_sections : []}
+      onProductSectionsChange={(sections) => updateSite({ product_page_sections: sections } as any)}
       onActiveSlideChange={setEditorActiveSlideId}
       resetNonce={tabResetNonce}
     />,
