@@ -398,12 +398,10 @@ function KanbanCard({
   // Human-readable gallery expiry label
   const galleryExpiryLabel = (() => {
     if (!effectiveGalleryExpiry || !galleryExpiryStatus) return null;
-    const d = parseISO(effectiveGalleryExpiry);
     const now = new Date();
-    if (isPast(d)) return p_t.galleryExpired;
-    const h = differenceInHours(d, now);
-    if (h < 24) return p_t.galleryExpiresHours(h);
-    const days = Math.ceil(h / 24);
+    const days = calendarDaysLeft(effectiveGalleryExpiry, now);
+    if (days < 0) return p_t.galleryExpired;
+    if (days === 0) return p_t.galleryExpiresHours(0);
     return p_t.galleryExpiresDays(days);
   })();
 
@@ -640,15 +638,10 @@ function KanbanCard({
           // Label text (days/hours/min left)
           const label = (() => {
             if (!deadline) return null;
-            const d = parseISO(deadline);
             const now = new Date();
-            if (isPast(d)) return null;
-            const diffMs = d.getTime() - now.getTime();
-            const mins = Math.round(diffMs / 60000);
-            if (mins < 60) return `${Math.max(0, mins)}m`;
-            const h = differenceInHours(d, now);
-            if (h < 24) return `${h}h`;
-            return `${differenceInDays(d, now)}d`;
+            const days = calendarDaysLeft(deadline, now);
+            if (days < 0) return null;
+            return days === 0 ? "0d" : `${days}d`;
           })();
           const labelColorClass = DEADLINE_BADGE[status] ?? "text-muted-foreground";
           // Clamp so the label doesn't overflow: min 0, max ~92% to leave room for text
