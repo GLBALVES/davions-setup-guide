@@ -2277,6 +2277,15 @@ const PagesPanel = ({
   shopShowDefaultGrid?: boolean;
   shopGridConfig?: Record<string, any>;
   onShopBlocksChange?: (patch: { above?: PageSection[]; below?: PageSection[] }) => void;
+  productLabel?: string;
+  productHref?: string;
+  productInMenu?: boolean;
+  productSortOrder?: number;
+  onProductChange?: (patch: { product_page_in_menu?: boolean; product_page_sort_order?: number }) => void;
+  productHeaderConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null;
+  onProductHeaderChange?: (cfg: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null) => void;
+  productSections?: PageSection[];
+  onProductSectionsChange?: (sections: PageSection[]) => void;
   /** Notifies parent of which slide is currently being edited in the header slider sub-panel. */
   onActiveSlideChange?: (slideId: string | null) => void;
   /** Bumped by the parent every time the user clicks a sidebar tab; resets nested sub-screens. */
