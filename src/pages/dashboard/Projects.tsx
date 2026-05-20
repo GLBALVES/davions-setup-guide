@@ -82,6 +82,7 @@ interface ClientProject {
   location?: string | null;
   description?: string | null;
   is_paused?: boolean;
+  session_duration_minutes?: number | null;
 }
 
 const STAGES: { key: Stage; label: string; color: string }[] = [
