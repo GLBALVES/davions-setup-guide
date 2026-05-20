@@ -114,6 +114,7 @@ interface Gallery {
   expires_at: string | null;
   price_per_photo: number;
   client_name?: string | null;
+  client_email?: string | null;
   session_title?: string | null;
   booked_date?: string | null;
 }
