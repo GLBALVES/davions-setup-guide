@@ -2005,8 +2005,12 @@ const DndPagesArea = ({
         const newBlogIdx = reordered.indexOf(BLOG_VIRTUAL_ID);
         if (newBlogIdx !== blogExtra.sortOrder) blogExtra.onReorder(toZone, reordered);
       }
+      if (productExtra && productExtra.inMenu === (toZone === "menu") && reordered.includes(PRODUCT_VIRTUAL_ID)) {
+        const newProductIdx = reordered.indexOf(PRODUCT_VIRTUAL_ID);
+        if (newProductIdx !== productExtra.sortOrder) productExtra.onReorder(toZone, reordered);
+      }
       // Update real pages order (without the virtual ids)
-      const pagesOnly = reordered.filter((id) => id !== SHOP_VIRTUAL_ID && id !== BLOG_VIRTUAL_ID);
+      const pagesOnly = reordered.filter((id) => id !== SHOP_VIRTUAL_ID && id !== BLOG_VIRTUAL_ID && id !== PRODUCT_VIRTUAL_ID);
       if (pagesOnly.length > 0) onReorder(toZone, pagesOnly);
     } else {
       // Cross-zone move (visibility toggle)
@@ -2014,6 +2018,8 @@ const DndPagesArea = ({
         shopExtra.onMove(toZone);
       } else if (isBlogActive && blogExtra) {
         blogExtra.onMove(toZone);
+      } else if (isProductActive && productExtra) {
+        productExtra.onMove(toZone);
       } else {
         onMove(activeId, toZone);
       }
