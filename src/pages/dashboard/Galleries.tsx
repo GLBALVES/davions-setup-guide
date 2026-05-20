@@ -256,7 +256,7 @@ const Galleries = () => {
       draft: base.filter((gal) => gal.status === "draft" && !(gal.expires_at && new Date(gal.expires_at) < now)).length,
       published: base.filter((gal) => gal.status === "published" && !(gal.expires_at && new Date(gal.expires_at) < now)).length,
       expired: base.filter((gal) => gal.expires_at && new Date(gal.expires_at) < now).length,
-      unassigned: base.filter((gal) => !gal.booking_id).length,
+      unassigned: base.filter((gal) => !gal.booking_id && !gal.client_name).length,
     };
   }, [galleries, type]);
 
