@@ -1776,7 +1776,8 @@ const Projects = () => {
         if (p.shoot_date && p.shoot_time) {
           const start = new Date(`${p.shoot_date}T${p.shoot_time}`);
           if (!isNaN(start.getTime())) {
-            sessionEnd = start; // advance when session starts
+            const durationMin = p.session_duration_minutes ?? 0;
+            sessionEnd = new Date(start.getTime() + durationMin * 60 * 1000);
           }
         } else if (p.shoot_date) {
           const d = new Date(p.shoot_date + "T23:59:59");
