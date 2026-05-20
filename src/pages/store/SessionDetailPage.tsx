@@ -414,7 +414,7 @@ const SessionDetailPage = () => {
           .single(),
         supabase
           .from("photographer_site")
-          .select("logo_url")
+          .select("logo_url, product_page_sections, product_page_header_config")
           .eq("photographer_id", s.photographer_id)
           .maybeSingle(),
       ]);
