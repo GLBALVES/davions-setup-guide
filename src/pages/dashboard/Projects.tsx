@@ -133,6 +133,11 @@ function calendarDaysLeft(deadline: string, now = new Date()): number {
 function getDeadlineStatus(deadline: string | null | undefined): "overdue" | "urgent" | "warning" | "ok" | null {
   if (!deadline) return null;
   const now = new Date();
+  // If the deadline has a time component, treat the moment as the cutoff
+  if (deadline.length > 10) {
+    const dt = parseISO(deadline);
+    if (!isNaN(dt.getTime()) && dt.getTime() <= now.getTime()) return "overdue";
+  }
   const daysLeft = calendarDaysLeft(deadline, now);
   if (daysLeft < 0) return "overdue";
   if (daysLeft <= 1) return "urgent";
@@ -389,9 +394,17 @@ function KanbanCard({
   const deadlineLabel = (() => {
     if (!effectiveDeadline) return null;
     const now = new Date();
+    if (effectiveDeadline.length > 10) {
+      const dt = parseISO(effectiveDeadline);
+      if (!isNaN(dt.getTime()) && dt.getTime() <= now.getTime()) return p_t.deadlineOverdue;
+    }
     const days = calendarDaysLeft(effectiveDeadline, now);
     if (days < 0) return p_t.deadlineOverdue;
-    if (days === 0) return p_t.deadlineHoursLeft(0);
+    if (days === 0) {
+      const dt = effectiveDeadline.length > 10 ? parseISO(effectiveDeadline) : parseLocalDateOnly(effectiveDeadline);
+      const hoursLeft = Math.max(0, Math.ceil((dt.getTime() - now.getTime()) / (1000 * 60 * 60)));
+      return p_t.deadlineHoursLeft(hoursLeft);
+    }
     return p_t.deadlineDaysLeft(days);
   })();
 
@@ -399,9 +412,17 @@ function KanbanCard({
   const galleryExpiryLabel = (() => {
     if (!effectiveGalleryExpiry || !galleryExpiryStatus) return null;
     const now = new Date();
+    if (effectiveGalleryExpiry.length > 10) {
+      const dt = parseISO(effectiveGalleryExpiry);
+      if (!isNaN(dt.getTime()) && dt.getTime() <= now.getTime()) return p_t.galleryExpired;
+    }
     const days = calendarDaysLeft(effectiveGalleryExpiry, now);
     if (days < 0) return p_t.galleryExpired;
-    if (days === 0) return p_t.galleryExpiresHours(0);
+    if (days === 0) {
+      const dt = effectiveGalleryExpiry.length > 10 ? parseISO(effectiveGalleryExpiry) : parseLocalDateOnly(effectiveGalleryExpiry);
+      const hoursLeft = Math.max(0, Math.ceil((dt.getTime() - now.getTime()) / (1000 * 60 * 60)));
+      return p_t.galleryExpiresHours(hoursLeft);
+    }
     return p_t.galleryExpiresDays(days);
   })();
 
@@ -639,6 +660,10 @@ function KanbanCard({
           const label = (() => {
             if (!deadline) return null;
             const now = new Date();
+            if (deadline.length > 10) {
+              const dt = parseISO(deadline);
+              if (!isNaN(dt.getTime()) && dt.getTime() <= now.getTime()) return null;
+            }
             const days = calendarDaysLeft(deadline, now);
             if (days < 0) return null;
             return days === 0 ? "0d" : `${days}d`;
