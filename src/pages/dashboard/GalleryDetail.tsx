@@ -872,7 +872,14 @@ const GalleryDetail = () => {
         } catch { /* email failure shouldn't block */ }
       }
 
-      setGallery({ ...gallery, project_id: project.id, status: "published" });
+      setGallery({
+        ...gallery,
+        project_id: project.id,
+        status: "published",
+        booking_id: gallery.booking_id ?? project.booking_id ?? null,
+        client_name: gallery.client_name ?? project.client_name ?? null,
+        client_email: gallery.client_email ?? project.client_email ?? null,
+      });
       setLinkedProjectTitle(project.title);
       toast({
         title: "Gallery attached",
