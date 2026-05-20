@@ -315,6 +315,7 @@ const SessionDetailPage = () => {
 
   const [session, setSession] = useState<SessionDetail | null>(null);
   const [photographer, setPhotographer] = useState<PhotographerInfo | null>(null);
+  const [productPageSections, setProductPageSections] = useState<any[]>([]);
   const [generatedSlots, setGeneratedSlots] = useState<GeneratedSlot[]>([]);
   const [campaignSlots, setCampaignSlots] = useState<CampaignSlotDef[]>([]);
   const [isCampaign, setIsCampaign] = useState(false);
