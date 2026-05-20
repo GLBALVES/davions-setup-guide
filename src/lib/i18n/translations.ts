@@ -287,6 +287,7 @@ export const translations = {
       galleryExpiresDays: (d: number) => `${d}d to expire`,
       galleryPrefix: "Gallery:",
       sessionPassed: "Session passed",
+      sessionInProgress: "Photographing",
       sessionInHours: (h: number) => `${h}h to session`,
       sessionInDays: (d: number) => `${d}d to session`,
       // Column deadline popovers
