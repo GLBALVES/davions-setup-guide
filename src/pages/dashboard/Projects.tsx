@@ -1672,11 +1672,12 @@ const Projects = () => {
         const cat: "proof" | "final" =
           p.stage === "final_gallery" ? "final" : "proof";
         const pickCover = (c: "proof" | "final") =>
-          (coverByProject[c][p.id] ?? null) ??
-          (p.booking_id ? (coverByBooking[c][p.booking_id] ?? null) : null);
+          coverByProject[c][p.id] ??
+          (p.booking_id ? coverByBooking[c][p.booking_id] ?? null : null);
         const pickExpiry = (c: "proof" | "final") =>
-          (expiryByProject[c][p.id] ?? null) ??
-          (p.booking_id ? (expiryByBooking[c][p.booking_id] ?? null) : null);
+          expiryByProject[c][p.id] ??
+          (p.booking_id ? expiryByBooking[c][p.booking_id] ?? null : null);
+
         // Prefer the category for the stage; fall back to the other if missing.
         const cover = pickCover(cat) ?? pickCover(cat === "final" ? "proof" : "final");
         const expiry = pickExpiry(cat) ?? pickExpiry(cat === "final" ? "proof" : "final");
