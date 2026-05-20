@@ -136,7 +136,8 @@ export function CreateGalleryDialog({
         (supabase as any)
           .from("gallery_settings")
           .select("key, value")
-          .eq("photographer_id", user.id),
+          .eq("photographer_id", user.id)
+          .in("key", ["default_expiry_days", "proof_expiry_days", "final_expiry_days"]),
       ]);
 
       let watermarksRes: { data: Watermark[] | null } = { data: null };
