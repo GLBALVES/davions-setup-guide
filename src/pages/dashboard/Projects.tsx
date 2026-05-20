@@ -14,7 +14,7 @@ import { Plus, X, Pencil, GripVertical, Calendar as CalendarIcon, User, LayoutGr
 import { Calendar } from "@/components/ui/calendar";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { differenceInDays, differenceInHours, isPast, parseISO } from "date-fns";
+import { differenceInCalendarDays, differenceInDays, differenceInHours, isPast, parseISO } from "date-fns";
 import { ProjectsSkeleton } from "@/components/dashboard/skeletons/ProjectsSkeleton";
 import {
   Dialog,
@@ -115,12 +115,26 @@ const STAGE_COLORS: Record<Stage, string> = {
 
 
 // ── Deadline helpers ─────────────────────────────────────────────────────────
+function parseLocalDateOnly(value: string): Date {
+  return parseISO(`${value.substring(0, 10)}T00:00:00`);
+}
+
+function formatLocalDateOnly(value: Date): string {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}T00:00:00`;
+}
+
+function calendarDaysLeft(deadline: string, now = new Date()): number {
+  return differenceInCalendarDays(parseLocalDateOnly(deadline), now);
+}
+
 function getDeadlineStatus(deadline: string | null | undefined): "overdue" | "urgent" | "warning" | "ok" | null {
   if (!deadline) return null;
-  const d = parseISO(deadline);
   const now = new Date();
-  if (isPast(d)) return "overdue";
-  const daysLeft = Math.ceil(differenceInHours(d, now) / 24);
+  const daysLeft = calendarDaysLeft(deadline, now);
+  if (daysLeft < 0) return "overdue";
   if (daysLeft <= 1) return "urgent";
   if (daysLeft <= 3) return "warning";
   return "ok";
@@ -260,11 +274,11 @@ function KanbanCard({
     if (project.gallery_deadline) return project.gallery_deadline;
     if (shotDeadlineDays != null && project.shoot_date) {
       try {
-        const shoot = new Date(project.shoot_date);
+        const shoot = parseLocalDateOnly(project.shoot_date);
         if (!isNaN(shoot.getTime())) {
           const d = new Date(shoot);
           d.setDate(d.getDate() + shotDeadlineDays);
-          return d.toISOString();
+          return formatLocalDateOnly(d);
         }
       } catch { /* ignore */ }
     }
@@ -277,11 +291,11 @@ function KanbanCard({
     if (project.gallery_deadline) return project.gallery_deadline;
     if (postProdDeadlineDays != null && project.shoot_date) {
       try {
-        const shoot = new Date(project.shoot_date);
+        const shoot = parseLocalDateOnly(project.shoot_date);
         if (!isNaN(shoot.getTime())) {
           const d = new Date(shoot);
           d.setDate(d.getDate() + postProdDeadlineDays);
-          return d.toISOString();
+          return formatLocalDateOnly(d);
         }
       } catch { /* ignore */ }
     }
@@ -298,11 +312,11 @@ function KanbanCard({
     const days = project.stage === "proof_gallery" ? proofDeadlineDays : finalDeadlineDays;
     if (days != null && project.shoot_date) {
       try {
-        const shoot = new Date(project.shoot_date);
+        const shoot = parseLocalDateOnly(project.shoot_date);
         if (!isNaN(shoot.getTime())) {
           const d = new Date(shoot);
           d.setDate(d.getDate() + days);
-          return d.toISOString();
+          return formatLocalDateOnly(d);
         }
       } catch { /* ignore */ }
     }
@@ -374,24 +388,20 @@ function KanbanCard({
   // Human-readable deadline label
   const deadlineLabel = (() => {
     if (!effectiveDeadline) return null;
-    const d = parseISO(effectiveDeadline);
     const now = new Date();
-    if (isPast(d)) return p_t.deadlineOverdue;
-    const h = differenceInHours(d, now);
-    if (h < 24) return p_t.deadlineHoursLeft(h);
-    const days = Math.ceil(h / 24);
+    const days = calendarDaysLeft(effectiveDeadline, now);
+    if (days < 0) return p_t.deadlineOverdue;
+    if (days === 0) return p_t.deadlineHoursLeft(0);
     return p_t.deadlineDaysLeft(days);
   })();
 
   // Human-readable gallery expiry label
   const galleryExpiryLabel = (() => {
     if (!effectiveGalleryExpiry || !galleryExpiryStatus) return null;
-    const d = parseISO(effectiveGalleryExpiry);
     const now = new Date();
-    if (isPast(d)) return p_t.galleryExpired;
-    const h = differenceInHours(d, now);
-    if (h < 24) return p_t.galleryExpiresHours(h);
-    const days = Math.ceil(h / 24);
+    const days = calendarDaysLeft(effectiveGalleryExpiry, now);
+    if (days < 0) return p_t.galleryExpired;
+    if (days === 0) return p_t.galleryExpiresHours(0);
     return p_t.galleryExpiresDays(days);
   })();
 
@@ -628,15 +638,10 @@ function KanbanCard({
           // Label text (days/hours/min left)
           const label = (() => {
             if (!deadline) return null;
-            const d = parseISO(deadline);
             const now = new Date();
-            if (isPast(d)) return null;
-            const diffMs = d.getTime() - now.getTime();
-            const mins = Math.round(diffMs / 60000);
-            if (mins < 60) return `${Math.max(0, mins)}m`;
-            const h = differenceInHours(d, now);
-            if (h < 24) return `${h}h`;
-            return `${differenceInDays(d, now)}d`;
+            const days = calendarDaysLeft(deadline, now);
+            if (days < 0) return null;
+            return days === 0 ? "0d" : `${days}d`;
           })();
           const labelColorClass = DEADLINE_BADGE[status] ?? "text-muted-foreground";
           // Clamp so the label doesn't overflow: min 0, max ~92% to leave room for text
