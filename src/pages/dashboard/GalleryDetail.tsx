@@ -840,9 +840,13 @@ const GalleryDetail = () => {
     if (!gallery || !project) return;
     setAttachingProject(true);
     try {
+      const updatePayload: any = { project_id: project.id, status: "published" };
+      if (project.booking_id && !(gallery as any).booking_id) {
+        updatePayload.booking_id = project.booking_id;
+      }
       const { error } = await supabase
         .from("galleries")
-        .update({ project_id: project.id, status: "published" } as any)
+        .update(updatePayload)
         .eq("id", gallery.id);
       if (error) throw error;
 
