@@ -14,7 +14,7 @@ import { Plus, X, Pencil, GripVertical, Calendar as CalendarIcon, User, LayoutGr
 import { Calendar } from "@/components/ui/calendar";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { differenceInDays, differenceInHours, isPast, parseISO } from "date-fns";
+import { differenceInCalendarDays, differenceInDays, differenceInHours, isPast, parseISO } from "date-fns";
 import { ProjectsSkeleton } from "@/components/dashboard/skeletons/ProjectsSkeleton";
 import {
   Dialog,
@@ -115,12 +115,26 @@ const STAGE_COLORS: Record<Stage, string> = {
 
 
 // ── Deadline helpers ─────────────────────────────────────────────────────────
+function parseLocalDateOnly(value: string): Date {
+  return parseISO(`${value.substring(0, 10)}T00:00:00`);
+}
+
+function formatLocalDateOnly(value: Date): string {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}T00:00:00`;
+}
+
+function calendarDaysLeft(deadline: string, now = new Date()): number {
+  return differenceInCalendarDays(parseLocalDateOnly(deadline), now);
+}
+
 function getDeadlineStatus(deadline: string | null | undefined): "overdue" | "urgent" | "warning" | "ok" | null {
   if (!deadline) return null;
-  const d = parseISO(deadline);
   const now = new Date();
-  if (isPast(d)) return "overdue";
-  const daysLeft = Math.ceil(differenceInHours(d, now) / 24);
+  const daysLeft = calendarDaysLeft(deadline, now);
+  if (daysLeft < 0) return "overdue";
   if (daysLeft <= 1) return "urgent";
   if (daysLeft <= 3) return "warning";
   return "ok";
