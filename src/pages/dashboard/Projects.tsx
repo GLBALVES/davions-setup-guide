@@ -131,6 +131,19 @@ function calendarDaysLeft(deadline: string, now = new Date()): number {
   return differenceInCalendarDays(parseLocalDateOnly(deadline), now);
 }
 
+function getSessionEndDateTime(shootDate: string | null | undefined, shootTime: string | null | undefined, durationMinutes: number | null | undefined): Date | null {
+  if (!shootDate) return null;
+  const datePart = shootDate.substring(0, 10);
+  const timePart = shootTime && /^\d{1,2}:\d{2}/.test(shootTime) ? shootTime.slice(0, 5) : null;
+  if (!timePart) {
+    const endOfDay = new Date(`${datePart}T23:59:59`);
+    return isNaN(endOfDay.getTime()) ? null : endOfDay;
+  }
+  const start = new Date(`${datePart}T${timePart}:00`);
+  if (isNaN(start.getTime())) return null;
+  return new Date(start.getTime() + (durationMinutes ?? 60) * 60 * 1000);
+}
+
 function getDeadlineStatus(deadline: string | null | undefined): "overdue" | "urgent" | "warning" | "ok" | null {
   if (!deadline) return null;
   const now = new Date();
@@ -349,9 +362,7 @@ function KanbanCard({
 
   // Session end = start + duration (fallback 60 min)
   const sessionEndDateTime = (() => {
-    if (!shootDateTime) return null;
-    const mins = project.session_duration_minutes ?? 60;
-    return new Date(shootDateTime.getTime() + mins * 60 * 1000);
+    return getSessionEndDateTime(project.shoot_date, project.shoot_time, project.session_duration_minutes);
   })();
 
   const upcomingSessionStatus = (() => {
@@ -361,7 +372,7 @@ function KanbanCard({
     const now = new Date();
     // Currently being photographed
     if (sessionEndDateTime && now >= shootDateTime && now < sessionEndDateTime) return "in_progress";
-    if (isPast(shootDateTime)) return "overdue";
+    if (sessionEndDateTime && now >= sessionEndDateTime) return "overdue";
     const daysUntil = differenceInDays(shootDateTime, now);
     const hoursUntil = differenceInHours(shootDateTime, now);
     if (hoursUntil < 24) return "urgent";
@@ -1811,34 +1822,13 @@ const Projects = () => {
         if (p.is_paused) continue;
 
         const booking = (p as any).bookings;
-        let sessionEnd: Date | null = null;
+        const sessionEnd = getSessionEndDateTime(
+          p.shoot_date,
+          p.shoot_time ?? booking?.session_availability?.start_time,
+          p.session_duration_minutes ?? booking?.sessions?.duration_minutes,
+        );
 
-        // Priority 1: project-level shoot_time + session_duration_minutes
-        if (p.shoot_date && p.shoot_time) {
-          const start = new Date(`${p.shoot_date}T${p.shoot_time}`);
-          if (!isNaN(start.getTime())) {
-            const durationMin = p.session_duration_minutes ?? booking?.sessions?.duration_minutes ?? 0;
-            sessionEnd = new Date(start.getTime() + durationMin * 60 * 1000);
-          }
-        }
-        // Priority 2: booking session_availability + sessions duration
-        if (!sessionEnd && p.shoot_date && booking?.session_availability?.start_time && booking?.sessions?.duration_minutes != null) {
-          const startStr = `${p.shoot_date}T${booking.session_availability.start_time}`;
-          const start = new Date(startStr);
-          if (!isNaN(start.getTime())) {
-            sessionEnd = new Date(start.getTime() + booking.sessions.duration_minutes * 60 * 1000);
-          }
-        }
-        // Fallback: end of shoot day
-        if (!sessionEnd && p.shoot_date) {
-          const d = new Date(p.shoot_date + "T23:59:59");
-          if (!isNaN(d.getTime())) sessionEnd = d;
-        }
-
-        if (sessionEnd && sessionEnd < now) {
-          // Skip auto-advance if user manually moved the card back after the session ended
-          const updatedAt = p.updated_at ? new Date(p.updated_at) : null;
-          if (updatedAt && updatedAt > sessionEnd) continue;
+        if (sessionEnd && sessionEnd <= now) {
           toAdvance.push(p.id);
         }
       }
@@ -1886,22 +1876,9 @@ const Projects = () => {
         if (p.stage !== "upcoming") continue;
         if (p.is_paused) continue;
 
-        let sessionEnd: Date | null = null;
-        if (p.shoot_date && p.shoot_time) {
-          const start = new Date(`${p.shoot_date}T${p.shoot_time}`);
-          if (!isNaN(start.getTime())) {
-            const durationMin = p.session_duration_minutes ?? 0;
-            sessionEnd = new Date(start.getTime() + durationMin * 60 * 1000);
-          }
-        } else if (p.shoot_date) {
-          const d = new Date(p.shoot_date + "T23:59:59");
-          if (!isNaN(d.getTime())) sessionEnd = d;
-        }
+        const sessionEnd = getSessionEndDateTime(p.shoot_date, p.shoot_time, p.session_duration_minutes);
 
         if (sessionEnd && sessionEnd <= now) {
-          // Skip if user manually moved the card after the session ended
-          const updatedAt = p.updated_at ? new Date(p.updated_at) : null;
-          if (updatedAt && updatedAt > sessionEnd) continue;
           toAdvance.push(p.id);
         }
       }
