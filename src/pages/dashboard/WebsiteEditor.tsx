@@ -3239,6 +3239,19 @@ const PagesPanel = ({
           },
           onSettings: onBlogSettings,
         } : null}
+        productExtra={onProductSectionsChange ? {
+          label: productLabel || "Product Page",
+          href: productHref || "#",
+          inMenu: productInMenu === true,
+          sortOrder: typeof productSortOrder === "number" ? productSortOrder : 99,
+          onMove: (toZone) => onProductChange?.({ product_page_in_menu: toZone === "menu" }),
+          onReorder: (_zone, orderedIds) => {
+            const newIdx = orderedIds.indexOf(PRODUCT_VIRTUAL_ID);
+            if (newIdx >= 0) onProductChange?.({ product_page_sort_order: newIdx });
+          },
+          onSelect: () => { selectPage(PRODUCT_VIRTUAL_ID); },
+          onSettings: () => { selectPage(PRODUCT_VIRTUAL_ID); },
+        } : null}
       />
 
       <PageTemplatePickerModal
