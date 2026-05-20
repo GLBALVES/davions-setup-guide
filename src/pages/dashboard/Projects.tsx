@@ -146,6 +146,7 @@ const DEADLINE_BAR: Record<string, string> = {
   urgent:  "bg-orange-500",
   warning: "bg-yellow-400",
   ok:      "bg-emerald-500",
+  in_progress: "bg-emerald-500",
 };
 
 const DEADLINE_BORDER: Record<string, string> = {
@@ -153,6 +154,7 @@ const DEADLINE_BORDER: Record<string, string> = {
   urgent:  "border-orange-500 shadow-[0_0_0_1px_theme(colors.orange.500)]",
   warning: "border-yellow-400 shadow-[0_0_0_1px_theme(colors.yellow.400)]",
   ok:      "border-emerald-500 shadow-[0_0_0_1px_theme(colors.emerald.500)]",
+  in_progress: "border-emerald-500 shadow-[0_0_0_1px_theme(colors.emerald.500)]",
 };
 
 const DEADLINE_BADGE: Record<string, string> = {
@@ -160,6 +162,7 @@ const DEADLINE_BADGE: Record<string, string> = {
   urgent:  "text-orange-500",
   warning: "text-yellow-500",
   ok:      "text-emerald-500",
+  in_progress: "text-emerald-500",
 };
 
 // ── Confirm Delete Button ─────────────────────────────────────────────────
