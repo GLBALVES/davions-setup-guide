@@ -1872,6 +1872,7 @@ const DndPagesArea = ({
   onMoveToFolder,
   shopExtra,
   blogExtra,
+  productExtra,
   onCopyHeader,
   onShareHeader,
 }: {
@@ -1890,6 +1891,7 @@ const DndPagesArea = ({
   onMoveToFolder: (id: string, folderId: string | null) => void;
   shopExtra?: ShopExtra | null;
   blogExtra?: BlogExtra | null;
+  productExtra?: VirtualExtra | null;
   onCopyHeader?: (sourcePageId: string, targetPageId: string) => void;
   onShareHeader?: (sourcePageId: string, otherPageId: string) => void;
 }) => {
