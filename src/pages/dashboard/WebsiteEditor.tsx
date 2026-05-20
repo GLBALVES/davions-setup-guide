@@ -2502,6 +2502,15 @@ const PagesPanel = ({
       });
       return () => registerActivePageActions(null);
     }
+    if (targetId === PRODUCT_VIRTUAL_ID) {
+      registerActivePageActions({
+        setSections: (newSections: PageSection[]) => {
+          onProductSectionsChange?.(newSections);
+          onActiveSectionsChange(newSections);
+        },
+      });
+      return () => registerActivePageActions(null);
+    }
     registerActivePageActions({
       setSections: (newSections: PageSection[]) => {
         findAndUpdate(targetId, { sections: newSections });
@@ -2518,6 +2527,13 @@ const PagesPanel = ({
     onActiveSectionsChange(buildShopSections());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePage, shopBlocksAbove, shopBlocksBelow, shopShowDefaultGrid, shopGridConfig]);
+
+  // Re-emit Product Page sections when product sections change externally
+  useEffect(() => {
+    if (activePage !== PRODUCT_VIRTUAL_ID) return;
+    onActiveSectionsChange(productSections || []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePage, productSections]);
 
   // ── Persist helpers ──
   const persistUpdate = async (id: string, patch: Record<string, any>) => {
