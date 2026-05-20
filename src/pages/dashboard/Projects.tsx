@@ -1530,7 +1530,7 @@ const Projects = () => {
     // 2. Fetch confirmed bookings that don't have a project yet
     const { data: bookings } = await supabase
       .from("bookings")
-      .select("id, client_name, client_email, booked_date, session_id, contract_html_snapshot, contract_signed_at, contract_signed_ip, contract_signed_user_agent, contract_locked, sessions(title, session_type_id)")
+      .select("id, client_name, client_email, booked_date, session_id, contract_html_snapshot, contract_signed_at, contract_signed_ip, contract_signed_user_agent, contract_locked, sessions(title, session_type_id), session_availability(start_time)")
       .eq("photographer_id", photographerId)
       .in("status", ["confirmed", "completed"]);
 
