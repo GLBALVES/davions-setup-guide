@@ -136,6 +136,7 @@ const App = () => {
                 <Route path="/" element={<CustomDomainStore />} />
                 <Route path="/page/:pagePath" element={<CustomDomainSubPage />} />
                 <Route path="/book/:sessionSlug" element={<CustomDomainSessionGateway />} />
+                <Route path="/book/:sessionSlug/checkout" element={<CustomDomainSessionGateway />} />
                 <Route path="/gallery/:slug" element={<CustomDomainGalleryGateway />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />
                 <Route path="/terms" element={<PublicLegalPage kind="terms" mode="custom-domain" />} />
@@ -163,6 +164,7 @@ const App = () => {
                 <Route path="/vitrine/:slug/privacy" element={<PublicLegalPage kind="privacy" mode="store" />} />
                 <Route path="/vitrine/:slug/page/:pagePath" element={<SiteSubPage />} />
                 <Route path="/vitrine/:slug/:sessionSlug" element={<SessionDetailPage />} />
+                <Route path="/vitrine/:slug/:sessionSlug/book" element={<SessionDetailPage />} />
                 {/* Legacy /store/* → redirect to /vitrine/* (backward compatibility) */}
                 <Route path="/store/*" element={<LegacyStoreRedirect />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />

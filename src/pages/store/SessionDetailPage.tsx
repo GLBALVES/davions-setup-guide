@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveContractVariables } from "@/pages/dashboard/ContractEditor";
 import { Button } from "@/components/ui/button";
@@ -295,7 +295,23 @@ const SessionDetailPage = () => {
   const customDomainSlug = useCustomDomainSlug();
   const backPath = customDomainSlug ? "/" : `/vitrine/${slug ?? customDomainSlug}`;
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+
+  // ──────────────────────────────────────────────
+  // View mode: "product" = sales page only,
+  //            "booking" = full booking flow (slots → form → addons → review).
+  // Derived from URL path so deep-linking works and the back button is correct.
+  // ──────────────────────────────────────────────
+  const isBookingRoute =
+    location.pathname.endsWith("/book") ||
+    location.pathname.endsWith("/checkout");
+  const productUrl = customDomainSlug
+    ? `/book/${sessionSlug}`
+    : `/vitrine/${slug}/${sessionSlug}`;
+  const bookingUrl = customDomainSlug
+    ? `/book/${sessionSlug}/checkout`
+    : `/vitrine/${slug}/${sessionSlug}/book`;
 
   const [session, setSession] = useState<SessionDetail | null>(null);
   const [photographer, setPhotographer] = useState<PhotographerInfo | null>(null);
@@ -308,7 +324,15 @@ const SessionDetailPage = () => {
   const [sliderIndex, setSliderIndex] = useState(0);
   const sliderTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [loading, setLoading] = useState(true);
-  const [step, setStep] = useState<BookingStep>("product");
+  const [step, setStep] = useState<BookingStep>(isBookingRoute ? "slots" : "product");
+
+  // Keep step in sync if the URL changes (e.g. CTA click or browser back).
+  useEffect(() => {
+    if (isBookingRoute && step === "product") setStep("slots");
+    if (!isBookingRoute && step !== "product") setStep("product");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBookingRoute]);
+
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [calendarMonth, setCalendarMonth] = useState<Date>(startOfToday());
@@ -1237,7 +1261,7 @@ const SessionDetailPage = () => {
                     {session.location && <span className="flex items-center gap-2"><MapPin className="h-3 w-3" />{session.location}</span>}
                   </div>
                   <button
-                    onClick={() => setStep("slots")}
+                    onClick={() => navigate(bookingUrl)}
                     className="w-full py-3 bg-foreground text-background text-[10px] tracking-[0.3em] uppercase hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2"
                   >
                     Book this session <ArrowRight className="h-3 w-3" />
@@ -1266,7 +1290,7 @@ const SessionDetailPage = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/50" />
 
         <button
-          onClick={() => step === "slots" ? setStep("product") : undefined}
+          onClick={() => step === "slots" ? navigate(productUrl) : undefined}
           className="absolute top-5 left-5 text-white/70 hover:text-white transition-colors z-10"
         >
           <ArrowLeft className="h-4 w-4" />
