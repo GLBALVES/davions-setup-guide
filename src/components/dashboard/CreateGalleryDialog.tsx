@@ -152,9 +152,12 @@ export function CreateGalleryDialog({
       if (bookingsRes.data) setBookings(bookingsRes.data as Booking[]);
       if (watermarksRes?.data) setWatermarks(watermarksRes.data as Watermark[]);
       if (gallerySettingsRes?.data) {
-        const expiryRow = gallerySettingsRes.data.find((r: any) => r.key === "default_expiry_days");
-        if (expiryRow?.value) {
-          const days = parseInt(expiryRow.value, 10);
+        const rows = gallerySettingsRes.data as { key: string; value: string }[];
+        const get = (k: string) => rows.find((r) => r.key === k)?.value;
+        const specific = isProof ? get("proof_expiry_days") : get("final_expiry_days");
+        const raw = specific ?? get("default_expiry_days");
+        if (raw) {
+          const days = parseInt(raw, 10);
           setDefaultExpiryDays(isNaN(days) || days <= 0 ? null : days);
         } else {
           setDefaultExpiryDays(null);
