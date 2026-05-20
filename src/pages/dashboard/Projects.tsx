@@ -1798,6 +1798,7 @@ const Projects = () => {
           location: p.location ?? null,
           description: p.description ?? null,
           client_phone: p.client_phone ?? null,
+          post_production_started_at: (p as any).post_production_started_at ?? null,
         };
       });
 
