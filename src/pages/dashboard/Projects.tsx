@@ -1316,9 +1316,10 @@ function ListView({
               </button>
             </>
           )}
-          <button className="p-1 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)} title={p_t.projectRemoved}>
-            <X className="h-3.5 w-3.5" />
-          </button>
+          <ConfirmDeleteButton
+            projectTitle={p.client_name || p.title}
+            onDelete={() => onDelete(p.id)}
+          />
         </div>
       </div>
     );
