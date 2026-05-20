@@ -162,6 +162,50 @@ const DEADLINE_BADGE: Record<string, string> = {
   ok:      "text-emerald-500",
 };
 
+// ── Confirm Delete Button ─────────────────────────────────────────────────
+function ConfirmDeleteButton({
+  projectTitle,
+  onDelete,
+  compact = false,
+}: {
+  projectTitle: string;
+  onDelete: () => void;
+  compact?: boolean;
+}) {
+  const { t } = useLanguage();
+  const p_t = t.projects;
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <button
+          className={`p-0.5 text-muted-foreground hover:text-destructive ${compact ? "" : ""}`}
+          title={p_t.projectRemoved}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <X className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} />
+        </button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{p_t.deleteProjectTitle}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {p_t.deleteProjectDesc(projectTitle)}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{(t as any).cancel ?? "Cancel"}</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {p_t.projectRemoved}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 // ── Card ────────────────────────────────────────────────────────────────────
 function KanbanCard({
   project,
