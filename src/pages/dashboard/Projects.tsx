@@ -146,6 +146,7 @@ const DEADLINE_BAR: Record<string, string> = {
   urgent:  "bg-orange-500",
   warning: "bg-yellow-400",
   ok:      "bg-emerald-500",
+  in_progress: "bg-emerald-500",
 };
 
 const DEADLINE_BORDER: Record<string, string> = {
@@ -153,6 +154,7 @@ const DEADLINE_BORDER: Record<string, string> = {
   urgent:  "border-orange-500 shadow-[0_0_0_1px_theme(colors.orange.500)]",
   warning: "border-yellow-400 shadow-[0_0_0_1px_theme(colors.yellow.400)]",
   ok:      "border-emerald-500 shadow-[0_0_0_1px_theme(colors.emerald.500)]",
+  in_progress: "border-emerald-500 shadow-[0_0_0_1px_theme(colors.emerald.500)]",
 };
 
 const DEADLINE_BADGE: Record<string, string> = {
@@ -160,6 +162,7 @@ const DEADLINE_BADGE: Record<string, string> = {
   urgent:  "text-orange-500",
   warning: "text-yellow-500",
   ok:      "text-emerald-500",
+  in_progress: "text-emerald-500",
 };
 
 // ── Confirm Delete Button ─────────────────────────────────────────────────
@@ -320,11 +323,20 @@ function KanbanCard({
     return isNaN(d.getTime()) ? null : d;
   })();
 
+  // Session end = start + duration (fallback 60 min)
+  const sessionEndDateTime = (() => {
+    if (!shootDateTime) return null;
+    const mins = project.session_duration_minutes ?? 60;
+    return new Date(shootDateTime.getTime() + mins * 60 * 1000);
+  })();
+
   const upcomingSessionStatus = (() => {
     if (project.stage !== "upcoming") return null;
     if (project.is_paused) return null;
     if (!shootDateTime) return null;
     const now = new Date();
+    // Currently being photographed
+    if (sessionEndDateTime && now >= shootDateTime && now < sessionEndDateTime) return "in_progress";
     if (isPast(shootDateTime)) return "overdue";
     const daysUntil = differenceInDays(shootDateTime, now);
     const hoursUntil = differenceInHours(shootDateTime, now);
@@ -336,6 +348,7 @@ function KanbanCard({
   const upcomingSessionLabel = (() => {
     if (!upcomingSessionStatus || !shootDateTime) return null;
     const now = new Date();
+    if (upcomingSessionStatus === "in_progress") return (p_t as any).sessionInProgress ?? "Photographing";
     if (isPast(shootDateTime)) return p_t.sessionPassed;
     const h = differenceInHours(shootDateTime, now);
     if (h < 24) {
@@ -568,6 +581,8 @@ function KanbanCard({
                 <span className={`flex items-center gap-0.5 shrink-0 font-medium ${DEADLINE_BADGE[upcomingSessionStatus]}`}>
                   {upcomingSessionStatus === "overdue"
                     ? <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+                    : upcomingSessionStatus === "in_progress"
+                    ? <Camera className="h-2.5 w-2.5 shrink-0" />
                     : <Clock className="h-2.5 w-2.5 shrink-0" />
                   }
                   <span>{upcomingSessionLabel}</span>

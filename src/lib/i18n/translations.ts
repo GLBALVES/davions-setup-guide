@@ -287,6 +287,7 @@ export const translations = {
       galleryExpiresDays: (d: number) => `${d}d to expire`,
       galleryPrefix: "Gallery:",
       sessionPassed: "Session passed",
+      sessionInProgress: "Photographing",
       sessionInHours: (h: number) => `${h}h to session`,
       sessionInDays: (d: number) => `${d}d to session`,
       // Column deadline popovers
@@ -2436,6 +2437,7 @@ export const translations = {
       galleryExpiresDays: (d: number) => `${d}d p/ expirar`,
       galleryPrefix: "Galeria:",
       sessionPassed: "Sessão passou",
+      sessionInProgress: "Fotografando",
       sessionInHours: (h: number) => `${h}h para a sessão`,
       sessionInDays: (d: number) => `${d}d para a sessão`,
       // Popovers de prazo da coluna
@@ -4539,6 +4541,7 @@ export const translations = {
       galleryExpiresDays: (d: number) => `${d}d p/ expirar`,
       galleryPrefix: "Galería:",
       sessionPassed: "Sesión pasó",
+      sessionInProgress: "Fotografiando",
       sessionInHours: (h: number) => `${h}h para la sesión`,
       sessionInDays: (d: number) => `${d}d para la sesión`,
       // Popovers de plazo de columna
