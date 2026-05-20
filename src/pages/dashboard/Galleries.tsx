@@ -195,7 +195,7 @@ const Galleries = () => {
       list = list.filter((gal) => {
         const isExpired = gal.expires_at ? new Date(gal.expires_at) < new Date() : false;
         if (statusFilter === "expired") return isExpired;
-        if (statusFilter === "unassigned") return !gal.booking_id;
+        if (statusFilter === "unassigned") return !gal.booking_id && !gal.client_name;
         if (statusFilter === "draft") return gal.status === "draft" && !isExpired;
         if (statusFilter === "published") return gal.status === "published" && !isExpired;
         return true;
