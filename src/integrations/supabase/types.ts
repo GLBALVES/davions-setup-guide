@@ -2724,7 +2724,10 @@ export type Database = {
           portfolio_text_color: string | null
           privacy_content: string | null
           product_page_header_config: Json | null
+          product_page_in_menu: boolean
           product_page_sections: Json
+          product_page_sort_order: number
+          product_page_title: string | null
           published_product_page_header_config: Json | null
           published_product_page_sections: Json | null
           quote_author: string | null
@@ -2861,7 +2864,10 @@ export type Database = {
           portfolio_text_color?: string | null
           privacy_content?: string | null
           product_page_header_config?: Json | null
+          product_page_in_menu?: boolean
           product_page_sections?: Json
+          product_page_sort_order?: number
+          product_page_title?: string | null
           published_product_page_header_config?: Json | null
           published_product_page_sections?: Json | null
           quote_author?: string | null
@@ -2998,7 +3004,10 @@ export type Database = {
           portfolio_text_color?: string | null
           privacy_content?: string | null
           product_page_header_config?: Json | null
+          product_page_in_menu?: boolean
           product_page_sections?: Json
+          product_page_sort_order?: number
+          product_page_title?: string | null
           published_product_page_header_config?: Json | null
           published_product_page_sections?: Json | null
           quote_author?: string | null

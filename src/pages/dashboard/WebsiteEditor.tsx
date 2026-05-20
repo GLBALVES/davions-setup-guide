@@ -9,7 +9,7 @@ import {
   Plus, FolderOpen, Home, Globe, EyeOff, Copy, Trash2, Type, QrCode,
   ChevronDown, ChevronRight, ArrowLeft, Search, ImagePlus, Shuffle,
   Image, Play, X, ArrowUp, ArrowDown, Settings2, GripVertical, Loader2,
-  ArrowRightToLine, ExternalLink, Newspaper, LayoutTemplate, Files, PanelsTopLeft, ShoppingBag,
+  ArrowRightToLine, ExternalLink, Newspaper, LayoutTemplate, Files, PanelsTopLeft, ShoppingBag, Package,
   Undo2, Redo2,
 } from "lucide-react";
 import { useEditorHistory, diffSitePatch } from "@/components/website-editor/useEditorHistory";
@@ -1784,6 +1784,7 @@ const DroppableZone = ({
 
 const SHOP_VIRTUAL_ID = "__shop__";
 const BLOG_VIRTUAL_ID = "__blog__";
+const PRODUCT_VIRTUAL_ID = "__product__";
 
 const VirtualRow = ({
   icon: Icon,
@@ -1871,6 +1872,7 @@ const DndPagesArea = ({
   onMoveToFolder,
   shopExtra,
   blogExtra,
+  productExtra,
   onCopyHeader,
   onShareHeader,
 }: {
@@ -1889,6 +1891,7 @@ const DndPagesArea = ({
   onMoveToFolder: (id: string, folderId: string | null) => void;
   shopExtra?: ShopExtra | null;
   blogExtra?: BlogExtra | null;
+  productExtra?: VirtualExtra | null;
   onCopyHeader?: (sourcePageId: string, targetPageId: string) => void;
   onShareHeader?: (sourcePageId: string, otherPageId: string) => void;
 }) => {
@@ -1920,6 +1923,10 @@ const DndPagesArea = ({
     if (blogExtra.inMenu) menuIds = injectAt(menuIds, blogExtra.sortOrder, BLOG_VIRTUAL_ID);
     else notMenuIds = injectAt(notMenuIds, blogExtra.sortOrder, BLOG_VIRTUAL_ID);
   }
+  if (productExtra) {
+    if (productExtra.inMenu) menuIds = injectAt(menuIds, productExtra.sortOrder, PRODUCT_VIRTUAL_ID);
+    else notMenuIds = injectAt(notMenuIds, productExtra.sortOrder, PRODUCT_VIRTUAL_ID);
+  }
 
   const zoneOf = (id: string): DndZone | null => {
     if (menuIds.includes(id)) return "menu";
@@ -1936,7 +1943,8 @@ const DndPagesArea = ({
 
     const isShopActive = activeId === SHOP_VIRTUAL_ID;
     const isBlogActive = activeId === BLOG_VIRTUAL_ID;
-    const isVirtualActive = isShopActive || isBlogActive;
+    const isProductActive = activeId === PRODUCT_VIRTUAL_ID;
+    const isVirtualActive = isShopActive || isBlogActive || isProductActive;
     const activeP = allPages.find((p) => p.id === activeId);
     const isActiveFolder = activeP?.type === "folder";
     // A child page is one that is nested under a folder (not in either top-level zone)
@@ -1997,8 +2005,12 @@ const DndPagesArea = ({
         const newBlogIdx = reordered.indexOf(BLOG_VIRTUAL_ID);
         if (newBlogIdx !== blogExtra.sortOrder) blogExtra.onReorder(toZone, reordered);
       }
+      if (productExtra && productExtra.inMenu === (toZone === "menu") && reordered.includes(PRODUCT_VIRTUAL_ID)) {
+        const newProductIdx = reordered.indexOf(PRODUCT_VIRTUAL_ID);
+        if (newProductIdx !== productExtra.sortOrder) productExtra.onReorder(toZone, reordered);
+      }
       // Update real pages order (without the virtual ids)
-      const pagesOnly = reordered.filter((id) => id !== SHOP_VIRTUAL_ID && id !== BLOG_VIRTUAL_ID);
+      const pagesOnly = reordered.filter((id) => id !== SHOP_VIRTUAL_ID && id !== BLOG_VIRTUAL_ID && id !== PRODUCT_VIRTUAL_ID);
       if (pagesOnly.length > 0) onReorder(toZone, pagesOnly);
     } else {
       // Cross-zone move (visibility toggle)
@@ -2006,6 +2018,8 @@ const DndPagesArea = ({
         shopExtra.onMove(toZone);
       } else if (isBlogActive && blogExtra) {
         blogExtra.onMove(toZone);
+      } else if (isProductActive && productExtra) {
+        productExtra.onMove(toZone);
       } else {
         onMove(activeId, toZone);
       }
@@ -2035,6 +2049,13 @@ const DndPagesArea = ({
                 return (
                   <SortableRow key={id} id={id}>
                     <VirtualRow icon={Newspaper} label={blogExtra.label} href={blogExtra.href} openTitle="Open Blog" active={activePage === BLOG_VIRTUAL_ID} onSelect={blogExtra.onSelect} onSettings={blogExtra.onSettings} />
+                  </SortableRow>
+                );
+              }
+              if (id === PRODUCT_VIRTUAL_ID && productExtra) {
+                return (
+                  <SortableRow key={id} id={id}>
+                    <VirtualRow icon={Package} label={productExtra.label} href={productExtra.href} openTitle="Open Product Page" active={activePage === PRODUCT_VIRTUAL_ID} onSelect={productExtra.onSelect} onSettings={productExtra.onSettings} />
                   </SortableRow>
                 );
               }
@@ -2101,6 +2122,13 @@ const DndPagesArea = ({
                   </SortableRow>
                 );
               }
+              if (id === PRODUCT_VIRTUAL_ID && productExtra) {
+                return (
+                  <SortableRow key={id} id={id}>
+                    <VirtualRow icon={Package} label={productExtra.label} href={productExtra.href} openTitle="Open Product Page" active={activePage === PRODUCT_VIRTUAL_ID} onSelect={productExtra.onSelect} onSettings={productExtra.onSettings} />
+                  </SortableRow>
+                );
+              }
               const page = nonMenuPages.find((p) => p.id === id);
               if (!page) return null;
               return page.type === "folder" ? (
@@ -2152,6 +2180,12 @@ const DndPagesArea = ({
             <Newspaper className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="truncate">{blogExtra.label}</span>
           </div>
+        ) : dragId === PRODUCT_VIRTUAL_ID && productExtra ? (
+          <div className="px-3 py-2 rounded-md bg-background border border-primary shadow-lg text-sm font-medium text-foreground flex items-center gap-2 max-w-[240px]">
+            <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+            <Package className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="truncate">{productExtra.label}</span>
+          </div>
         ) : activeDrag ? (
           <div className="px-3 py-2 rounded-md bg-background border border-primary shadow-lg text-sm font-medium text-foreground flex items-center gap-2 max-w-[240px]">
             <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
@@ -2198,6 +2232,15 @@ const PagesPanel = ({
   shopShowDefaultGrid,
   shopGridConfig,
   onShopBlocksChange,
+  productLabel,
+  productHref,
+  productInMenu,
+  productSortOrder,
+  onProductChange,
+  productHeaderConfig,
+  onProductHeaderChange,
+  productSections,
+  onProductSectionsChange,
   onActiveSlideChange,
   resetNonce,
 }: {
@@ -2234,6 +2277,15 @@ const PagesPanel = ({
   shopShowDefaultGrid?: boolean;
   shopGridConfig?: Record<string, any>;
   onShopBlocksChange?: (patch: { above?: PageSection[]; below?: PageSection[] }) => void;
+  productLabel?: string;
+  productHref?: string;
+  productInMenu?: boolean;
+  productSortOrder?: number;
+  onProductChange?: (patch: { product_page_in_menu?: boolean; product_page_sort_order?: number }) => void;
+  productHeaderConfig?: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null;
+  onProductHeaderChange?: (cfg: import("@/components/website-editor/PreviewRenderer").HeaderConfig | null) => void;
+  productSections?: PageSection[];
+  onProductSectionsChange?: (sections: PageSection[]) => void;
   /** Notifies parent of which slide is currently being edited in the header slider sub-panel. */
   onActiveSlideChange?: (slideId: string | null) => void;
   /** Bumped by the parent every time the user clicks a sidebar tab; resets nested sub-screens. */
@@ -2296,6 +2348,17 @@ const PagesPanel = ({
         id: SHOP_VIRTUAL_ID,
         showHeaderFooter: true,
         headerConfig: shopHeaderConfig ?? null,
+      });
+      return;
+    }
+    if (id === PRODUCT_VIRTUAL_ID) {
+      setEditingSectionsPageId(null);
+      onActiveSectionsChange(productSections || []);
+      onSelectBlock(null);
+      onActivePageChange({
+        id: PRODUCT_VIRTUAL_ID,
+        showHeaderFooter: true,
+        headerConfig: productHeaderConfig ?? null,
       });
       return;
     }
@@ -2439,6 +2502,15 @@ const PagesPanel = ({
       });
       return () => registerActivePageActions(null);
     }
+    if (targetId === PRODUCT_VIRTUAL_ID) {
+      registerActivePageActions({
+        setSections: (newSections: PageSection[]) => {
+          onProductSectionsChange?.(newSections);
+          onActiveSectionsChange(newSections);
+        },
+      });
+      return () => registerActivePageActions(null);
+    }
     registerActivePageActions({
       setSections: (newSections: PageSection[]) => {
         findAndUpdate(targetId, { sections: newSections });
@@ -2455,6 +2527,13 @@ const PagesPanel = ({
     onActiveSectionsChange(buildShopSections());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePage, shopBlocksAbove, shopBlocksBelow, shopShowDefaultGrid, shopGridConfig]);
+
+  // Re-emit Product Page sections when product sections change externally
+  useEffect(() => {
+    if (activePage !== PRODUCT_VIRTUAL_ID) return;
+    onActiveSectionsChange(productSections || []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePage, productSections]);
 
   // ── Persist helpers ──
   const persistUpdate = async (id: string, patch: Record<string, any>) => {
@@ -2787,6 +2866,40 @@ const PagesPanel = ({
         />
       );
     }
+    // Product Page header (virtual page) — persists into site.product_page_header_config
+    if (activePage === PRODUCT_VIRTUAL_ID) {
+      return (
+        <HeaderSliderPanel
+          onBack={() => { setEditingSection(null); onActiveSlideChange?.(null); }}
+          value={productHeaderConfig ?? null}
+          onChange={(next) => {
+            onProductHeaderChange?.(next);
+            onHeaderConfigChange?.(next);
+          }}
+          photographerId={photographerId}
+          onActiveSlideChange={onActiveSlideChange}
+          currentPageId={PRODUCT_VIRTUAL_ID}
+          currentPageLabel={productLabel || "Product Page"}
+          allPages={allPages}
+          sharedPagesCount={1}
+          onCopyHeaderFromPage={(sourceId) => {
+            const src = allPages.find((p) => p.id === sourceId);
+            if (!src?.headerConfig) return;
+            const cloned = JSON.parse(JSON.stringify(src.headerConfig));
+            delete cloned.groupId;
+            onProductHeaderChange?.(cloned);
+            onHeaderConfigChange?.(cloned);
+          }}
+          onShareHeaderWithPage={() => {}}
+          onUnshareHeader={() => {
+            if (!productHeaderConfig) return;
+            const { groupId, ...rest } = productHeaderConfig as any;
+            onProductHeaderChange?.(rest);
+            onHeaderConfigChange?.(rest);
+          }}
+        />
+      );
+    }
     const activeP = allPages.find((p) => p.id === activePage);
     const sharedCount = countPagesInGroup(activeP?.headerConfig?.groupId);
     return (
@@ -2869,6 +2982,33 @@ const PagesPanel = ({
         );
       }
     }
+    // ── Product Page (virtual page) ──
+    if (targetPageId === PRODUCT_VIRTUAL_ID) {
+      const sections = productSections || [];
+      const section = sections[selectedBlockIndex];
+      if (section) {
+        const blockSettings: BlockSettings = (section.props?.blockSettings as BlockSettings) || {};
+        return (
+          <BlockSettingsPanel
+            section={section}
+            settings={blockSettings}
+            onUpdate={(s) => {
+              const next = [...sections];
+              next[selectedBlockIndex] = { ...section, props: { ...section.props, blockSettings: s } };
+              onProductSectionsChange?.(next);
+              onActiveSectionsChange(next);
+            }}
+            onUpdateProps={(newProps) => {
+              const next = [...sections];
+              next[selectedBlockIndex] = { ...section, props: newProps };
+              onProductSectionsChange?.(next);
+              onActiveSectionsChange(next);
+            }}
+            onBack={() => onSelectBlock(null)}
+          />
+        );
+      }
+    }
     const targetPage = allPages.find((p) => p.id === targetPageId);
     const sections = targetPage?.sections || [];
     const section = sections[selectedBlockIndex];
@@ -2913,6 +3053,22 @@ const PagesPanel = ({
             const above = idx >= 0 ? newSections.slice(0, idx) : newSections;
             const below = idx >= 0 ? newSections.slice(idx + 1) : [];
             onShopBlocksChange?.({ above, below });
+            onActiveSectionsChange(newSections);
+          }}
+        />
+      );
+    }
+    if (editingSectionsPageId === PRODUCT_VIRTUAL_ID) {
+      return (
+        <PageSectionsPanel
+          pageLabel={productLabel || "Product Page"}
+          sections={productSections || []}
+          onBack={() => { setEditingSectionsPageId(null); onSelectBlock(null); }}
+          onEditSection={setEditingSection}
+          selectedBlockIndex={selectedBlockIndex}
+          onSelectBlock={onSelectBlock}
+          onSectionsChange={(newSections) => {
+            onProductSectionsChange?.(newSections);
             onActiveSectionsChange(newSections);
           }}
         />
@@ -3082,6 +3238,19 @@ const PagesPanel = ({
             if (newIdx >= 0) onBlogChange({ blog_sort_order: newIdx });
           },
           onSettings: onBlogSettings,
+        } : null}
+        productExtra={onProductSectionsChange ? {
+          label: productLabel || "Product Page",
+          href: productHref || "#",
+          inMenu: productInMenu === true,
+          sortOrder: typeof productSortOrder === "number" ? productSortOrder : 99,
+          onMove: (toZone) => onProductChange?.({ product_page_in_menu: toZone === "menu" }),
+          onReorder: (_zone, orderedIds) => {
+            const newIdx = orderedIds.indexOf(PRODUCT_VIRTUAL_ID);
+            if (newIdx >= 0) onProductChange?.({ product_page_sort_order: newIdx });
+          },
+          onSelect: () => { selectPage(PRODUCT_VIRTUAL_ID); },
+          onSettings: () => { selectPage(PRODUCT_VIRTUAL_ID); },
         } : null}
       />
 
@@ -5414,6 +5583,15 @@ const WebsiteEditor = () => {
         if (patch.below) next.shop_blocks_below = patch.below;
         updateSite(next);
       }}
+      productLabel={(site as any)?.product_page_title || "Product Page"}
+      productHref={storeSlug ? `/vitrine/${storeSlug}` : "#"}
+      productInMenu={Boolean((site as any)?.product_page_in_menu)}
+      productSortOrder={typeof (site as any)?.product_page_sort_order === "number" ? (site as any).product_page_sort_order : 99}
+      onProductChange={(patch) => updateSite(patch as any)}
+      productHeaderConfig={(site as any)?.product_page_header_config ?? null}
+      onProductHeaderChange={(cfg) => updateSite({ product_page_header_config: cfg } as any)}
+      productSections={Array.isArray((site as any)?.product_page_sections) ? (site as any).product_page_sections : []}
+      onProductSectionsChange={(sections) => updateSite({ product_page_sections: sections } as any)}
       onActiveSlideChange={setEditorActiveSlideId}
       resetNonce={tabResetNonce}
     />,

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import SectionRenderer from "@/components/store/SectionRenderer";
 import { resolveContractVariables } from "@/pages/dashboard/ContractEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -315,6 +316,7 @@ const SessionDetailPage = () => {
 
   const [session, setSession] = useState<SessionDetail | null>(null);
   const [photographer, setPhotographer] = useState<PhotographerInfo | null>(null);
+  const [productPageSections, setProductPageSections] = useState<any[]>([]);
   const [generatedSlots, setGeneratedSlots] = useState<GeneratedSlot[]>([]);
   const [campaignSlots, setCampaignSlots] = useState<CampaignSlotDef[]>([]);
   const [isCampaign, setIsCampaign] = useState(false);
@@ -414,13 +416,15 @@ const SessionDetailPage = () => {
           .single(),
         supabase
           .from("photographer_site")
-          .select("logo_url")
+          .select("logo_url, product_page_sections, product_page_header_config")
           .eq("photographer_id", s.photographer_id)
           .maybeSingle(),
       ]);
       if (photographerData) {
         setPhotographer({ ...photographerData, logo_url: siteData?.logo_url ?? null } as PhotographerInfo);
       }
+      const psSections = Array.isArray((siteData as any)?.product_page_sections) ? (siteData as any).product_page_sections : [];
+      setProductPageSections(psSections);
 
       const [{ data: extrasData }, { data: bonusData }, { data: customFieldData }] = await Promise.all([
         supabase
@@ -1012,7 +1016,22 @@ const SessionDetailPage = () => {
     <div className="min-h-screen bg-[hsl(var(--muted))]" style={{ backgroundColor: "#f5f2ee" }}>
 
       {/* ══════════════ PRODUCT PAGE (step: product) ══════════════ */}
-      {step === "product" && (
+      {step === "product" && productPageSections.length > 0 && (
+        <div className="bg-background">
+          <SectionRenderer
+            sections={productPageSections as any}
+            accentColor={undefined as any}
+            photographerId={session?.photographer_id ?? null}
+          />
+          <div className="max-w-3xl mx-auto px-6 py-10 text-center">
+            <Button size="lg" onClick={() => navigate(bookingUrl)}>
+              Book this session
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {step === "product" && productPageSections.length === 0 && (
         <>
           {/* ── Hero slider: full-width crossfade ── */}
           {(() => {
