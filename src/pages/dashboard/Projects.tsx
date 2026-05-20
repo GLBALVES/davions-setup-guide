@@ -453,13 +453,10 @@ function KanbanCard({
             >
               <Archive className="h-3 w-3" />
             </button>
-            <button
-              className="p-0.5 text-muted-foreground hover:text-destructive"
-              onClick={(e) => { e.stopPropagation(); onDelete(project.id); }}
-              title={p_t.projectRemoved}
-            >
-              <X className="h-3 w-3" />
-            </button>
+            <ConfirmDeleteButton
+              projectTitle={project.client_name || project.title}
+              onDelete={() => onDelete(project.id)}
+            />
           </div>
         </div>
 
