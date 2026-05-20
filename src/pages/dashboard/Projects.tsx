@@ -24,6 +24,17 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -150,6 +161,50 @@ const DEADLINE_BADGE: Record<string, string> = {
   warning: "text-yellow-500",
   ok:      "text-emerald-500",
 };
+
+// ── Confirm Delete Button ─────────────────────────────────────────────────
+function ConfirmDeleteButton({
+  projectTitle,
+  onDelete,
+  compact = false,
+}: {
+  projectTitle: string;
+  onDelete: () => void;
+  compact?: boolean;
+}) {
+  const { t } = useLanguage();
+  const p_t = t.projects;
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <button
+          className={`p-0.5 text-muted-foreground hover:text-destructive ${compact ? "" : ""}`}
+          title={p_t.projectRemoved}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <X className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} />
+        </button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{p_t.deleteProjectTitle}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {p_t.deleteProjectDesc(projectTitle)}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{(t as any).cancel ?? "Cancel"}</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {p_t.projectRemoved}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
 // ── Card ────────────────────────────────────────────────────────────────────
 function KanbanCard({
@@ -398,13 +453,10 @@ function KanbanCard({
             >
               <Archive className="h-3 w-3" />
             </button>
-            <button
-              className="p-0.5 text-muted-foreground hover:text-destructive"
-              onClick={(e) => { e.stopPropagation(); onDelete(project.id); }}
-              title={p_t.projectRemoved}
-            >
-              <X className="h-3 w-3" />
-            </button>
+            <ConfirmDeleteButton
+              projectTitle={project.client_name || project.title}
+              onDelete={() => onDelete(project.id)}
+            />
           </div>
         </div>
 
@@ -1264,9 +1316,10 @@ function ListView({
               </button>
             </>
           )}
-          <button className="p-1 text-muted-foreground hover:text-destructive" onClick={() => onDelete(p.id)} title={p_t.projectRemoved}>
-            <X className="h-3.5 w-3.5" />
-          </button>
+          <ConfirmDeleteButton
+            projectTitle={p.client_name || p.title}
+            onDelete={() => onDelete(p.id)}
+          />
         </div>
       </div>
     );
@@ -1348,9 +1401,11 @@ function ArchivedKanbanSection({
                   <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={(e) => { e.stopPropagation(); onUnarchive(p.id); }} title={p_t.showArchived}>
                     <ArchiveRestore className="h-3 w-3" />
                   </button>
-                  <button className="p-0.5 text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); onDelete(p.id); }} title={p_t.projectRemoved}>
-                    <X className="h-3 w-3" />
-                  </button>
+                  <ConfirmDeleteButton
+                    projectTitle={p.client_name || p.title}
+                    onDelete={() => onDelete(p.id)}
+                    compact
+                  />
                 </div>
               </div>
               {p.client_name && (
