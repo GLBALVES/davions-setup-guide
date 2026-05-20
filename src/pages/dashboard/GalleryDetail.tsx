@@ -126,6 +126,7 @@ interface ClientProject {
   client_email: string | null;
   stage: string;
   shoot_date: string | null;
+  booking_id?: string | null;
 }
 
 interface Photo {
