@@ -94,6 +94,7 @@ interface ClientProject {
   description?: string | null;
   is_paused?: boolean;
   session_duration_minutes?: number | null;
+  post_production_started_at?: string | null;
 }
 
 const STAGES: { key: Stage; label: string; color: string }[] = [
