@@ -94,6 +94,7 @@ interface ClientProject {
   description?: string | null;
   is_paused?: boolean;
   session_duration_minutes?: number | null;
+  post_production_started_at?: string | null;
 }
 
 const STAGES: { key: Stage; label: string; color: string }[] = [
@@ -291,18 +292,22 @@ function KanbanCard({
   })();
 
   // Compute effective deadline for "post_production" stage
+  // Counts from when the project entered the post_production column
   const postProdEffectiveDeadline = (() => {
     if (project.stage !== "post_production") return null;
     if (project.gallery_deadline) return project.gallery_deadline;
-    if (postProdDeadlineDays != null && project.shoot_date) {
-      try {
-        const shoot = parseLocalDateOnly(project.shoot_date);
-        if (!isNaN(shoot.getTime())) {
-          const d = new Date(shoot);
-          d.setDate(d.getDate() + postProdDeadlineDays);
-          return formatLocalDateOnly(d);
-        }
-      } catch { /* ignore */ }
+    if (postProdDeadlineDays != null) {
+      const anchorStr = project.post_production_started_at ?? project.updated_at ?? project.created_at;
+      if (anchorStr) {
+        try {
+          const anchor = new Date(anchorStr);
+          if (!isNaN(anchor.getTime())) {
+            const d = new Date(anchor);
+            d.setDate(d.getDate() + postProdDeadlineDays);
+            return formatLocalDateOnly(d);
+          }
+        } catch { /* ignore */ }
+      }
     }
     return null;
   })();
@@ -1793,6 +1798,7 @@ const Projects = () => {
           location: p.location ?? null,
           description: p.description ?? null,
           client_phone: p.client_phone ?? null,
+          post_production_started_at: (p as any).post_production_started_at ?? null,
         };
       });
 
