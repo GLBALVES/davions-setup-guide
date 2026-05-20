@@ -119,8 +119,8 @@ function getDeadlineStatus(deadline: string | null | undefined): "overdue" | "ur
   if (!deadline) return null;
   const d = parseISO(deadline);
   const now = new Date();
-  const daysLeft = differenceInDays(d, now);
   if (isPast(d)) return "overdue";
+  const daysLeft = Math.ceil(differenceInHours(d, now) / 24);
   if (daysLeft <= 1) return "urgent";
   if (daysLeft <= 3) return "warning";
   return "ok";
