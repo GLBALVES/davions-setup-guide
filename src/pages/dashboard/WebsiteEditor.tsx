@@ -2866,6 +2866,40 @@ const PagesPanel = ({
         />
       );
     }
+    // Product Page header (virtual page) — persists into site.product_page_header_config
+    if (activePage === PRODUCT_VIRTUAL_ID) {
+      return (
+        <HeaderSliderPanel
+          onBack={() => { setEditingSection(null); onActiveSlideChange?.(null); }}
+          value={productHeaderConfig ?? null}
+          onChange={(next) => {
+            onProductHeaderChange?.(next);
+            onHeaderConfigChange?.(next);
+          }}
+          photographerId={photographerId}
+          onActiveSlideChange={onActiveSlideChange}
+          currentPageId={PRODUCT_VIRTUAL_ID}
+          currentPageLabel={productLabel || "Product Page"}
+          allPages={allPages}
+          sharedPagesCount={1}
+          onCopyHeaderFromPage={(sourceId) => {
+            const src = allPages.find((p) => p.id === sourceId);
+            if (!src?.headerConfig) return;
+            const cloned = JSON.parse(JSON.stringify(src.headerConfig));
+            delete cloned.groupId;
+            onProductHeaderChange?.(cloned);
+            onHeaderConfigChange?.(cloned);
+          }}
+          onShareHeaderWithPage={() => {}}
+          onUnshareHeader={() => {
+            if (!productHeaderConfig) return;
+            const { groupId, ...rest } = productHeaderConfig as any;
+            onProductHeaderChange?.(rest);
+            onHeaderConfigChange?.(rest);
+          }}
+        />
+      );
+    }
     const activeP = allPages.find((p) => p.id === activePage);
     const sharedCount = countPagesInGroup(activeP?.headerConfig?.groupId);
     return (
