@@ -1290,7 +1290,7 @@ const SessionDetailPage = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/50" />
 
         <button
-          onClick={() => step === "slots" ? setStep("product") : undefined}
+          onClick={() => step === "slots" ? navigate(productUrl) : setStep("slots")}
           className="absolute top-5 left-5 text-white/70 hover:text-white transition-colors z-10"
         >
           <ArrowLeft className="h-4 w-4" />
