@@ -136,6 +136,7 @@ const App = () => {
                 <Route path="/" element={<CustomDomainStore />} />
                 <Route path="/page/:pagePath" element={<CustomDomainSubPage />} />
                 <Route path="/book/:sessionSlug" element={<CustomDomainSessionGateway />} />
+                <Route path="/book/:sessionSlug/checkout" element={<CustomDomainSessionGateway />} />
                 <Route path="/gallery/:slug" element={<CustomDomainGalleryGateway />} />
                 <Route path="/booking-success" element={<BookingSuccess />} />
                 <Route path="/terms" element={<PublicLegalPage kind="terms" mode="custom-domain" />} />
