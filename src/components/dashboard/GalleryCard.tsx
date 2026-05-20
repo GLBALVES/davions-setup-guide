@@ -286,7 +286,7 @@ export function GalleryCard({ gallery, onEdit, onDelete, onAssigned, compact = f
   const isExpired = gallery.expires_at ? new Date(gallery.expires_at) < new Date() : false;
   const isDraft = gallery.status === "draft";
   const isPublished = gallery.status === "published";
-  const isUnassigned = !gallery.booking_id;
+  const isUnassigned = !gallery.booking_id && !gallery.client_name;
 
   // Expiry urgency for published galleries approaching expiration
   const expiryUrgency: "critical" | "warning" | "soon" | null = (() => {
