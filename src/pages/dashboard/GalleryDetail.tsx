@@ -850,13 +850,25 @@ const GalleryDetail = () => {
         .eq("id", gallery.id);
       if (error) throw error;
 
-      const stageOrder = ["lead", "upcoming_session", "shot", "proof_gallery", "post_production", "final_gallery", "archived"];
-      const currentIdx = stageOrder.indexOf(project.stage);
-      const proofIdx = stageOrder.indexOf("proof_gallery");
-      if (currentIdx < proofIdx) {
+      // Advance project stage based on the gallery category:
+      // - final gallery → move to "final_gallery" (unless already final/archived)
+      // - proof gallery → move to "proof_gallery" only if not already past it
+      const isFinal = (gallery.category || "").toLowerCase() === "final";
+      let targetStage: string | null = null;
+      if (isFinal) {
+        if (project.stage !== "final_gallery" && project.stage !== "archived") {
+          targetStage = "final_gallery";
+        }
+      } else {
+        const stageOrder = ["lead", "upcoming_session", "shot", "proof_gallery", "post_production", "final_gallery", "archived"];
+        const currentIdx = stageOrder.indexOf(project.stage);
+        const proofIdx = stageOrder.indexOf("proof_gallery");
+        if (currentIdx < proofIdx) targetStage = "proof_gallery";
+      }
+      if (targetStage) {
         await supabase
           .from("client_projects")
-          .update({ stage: "proof_gallery" })
+          .update({ stage: targetStage })
           .eq("id", project.id);
       }
 
