@@ -355,10 +355,11 @@ const GalleryDetail = () => {
         *,
         bookings (
           client_name,
+          client_email,
           booked_date,
           sessions ( title )
         ),
-        client_projects ( title )
+        client_projects ( title, client_name, client_email, shoot_date )
       `)
       .eq("id", id)
       .single();
@@ -367,9 +368,10 @@ const GalleryDetail = () => {
       const projectTitle = raw.client_projects?.title ?? null;
       setGallery({
         ...raw,
-        client_name: raw.bookings?.client_name ?? null,
+        client_name: raw.bookings?.client_name ?? raw.client_projects?.client_name ?? null,
+        client_email: raw.bookings?.client_email ?? raw.client_projects?.client_email ?? null,
         session_title: raw.bookings?.sessions?.title ?? null,
-        booked_date: raw.bookings?.booked_date ?? null,
+        booked_date: raw.bookings?.booked_date ?? raw.client_projects?.shoot_date ?? null,
       } as Gallery);
       setLinkedProjectTitle(projectTitle);
       setAccessCode(raw.access_code ?? "");
