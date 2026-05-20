@@ -660,6 +660,10 @@ function KanbanCard({
           const label = (() => {
             if (!deadline) return null;
             const now = new Date();
+            if (deadline.length > 10) {
+              const dt = parseISO(deadline);
+              if (!isNaN(dt.getTime()) && dt.getTime() <= now.getTime()) return null;
+            }
             const days = calendarDaysLeft(deadline, now);
             if (days < 0) return null;
             return days === 0 ? "0d" : `${days}d`;
