@@ -151,8 +151,8 @@ const Galleries = () => {
           booking_id: gal.booking_id ?? null,
           project_id: gal.project_id ?? null,
           project_title: gal.client_projects?.title ?? null,
-          client_name: gal.bookings?.client_name ?? null,
-          client_email: gal.bookings?.client_email ?? null,
+          client_name: gal.bookings?.client_name ?? gal.client_projects?.client_name ?? null,
+          client_email: gal.bookings?.client_email ?? gal.client_projects?.client_email ?? null,
           session_title: (gal.bookings as any)?.sessions?.title ?? null,
         }))
       );
