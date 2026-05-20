@@ -312,11 +312,11 @@ function KanbanCard({
     const days = project.stage === "proof_gallery" ? proofDeadlineDays : finalDeadlineDays;
     if (days != null && project.shoot_date) {
       try {
-        const shoot = new Date(project.shoot_date);
+        const shoot = parseLocalDateOnly(project.shoot_date);
         if (!isNaN(shoot.getTime())) {
           const d = new Date(shoot);
           d.setDate(d.getDate() + days);
-          return d.toISOString();
+          return formatLocalDateOnly(d);
         }
       } catch { /* ignore */ }
     }
@@ -388,12 +388,10 @@ function KanbanCard({
   // Human-readable deadline label
   const deadlineLabel = (() => {
     if (!effectiveDeadline) return null;
-    const d = parseISO(effectiveDeadline);
     const now = new Date();
-    if (isPast(d)) return p_t.deadlineOverdue;
-    const h = differenceInHours(d, now);
-    if (h < 24) return p_t.deadlineHoursLeft(h);
-    const days = Math.ceil(h / 24);
+    const days = calendarDaysLeft(effectiveDeadline, now);
+    if (days < 0) return p_t.deadlineOverdue;
+    if (days === 0) return p_t.deadlineHoursLeft(0);
     return p_t.deadlineDaysLeft(days);
   })();
 
