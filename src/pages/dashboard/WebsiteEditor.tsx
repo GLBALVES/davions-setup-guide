@@ -2052,6 +2052,13 @@ const DndPagesArea = ({
                   </SortableRow>
                 );
               }
+              if (id === PRODUCT_VIRTUAL_ID && productExtra) {
+                return (
+                  <SortableRow key={id} id={id}>
+                    <VirtualRow icon={Package} label={productExtra.label} href={productExtra.href} openTitle="Open Product Page" active={activePage === PRODUCT_VIRTUAL_ID} onSelect={productExtra.onSelect} onSettings={productExtra.onSettings} />
+                  </SortableRow>
+                );
+              }
               const page = menuPages.find((p) => p.id === id);
               if (!page) return null;
               return page.type === "folder" ? (
