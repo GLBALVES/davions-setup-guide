@@ -321,26 +321,6 @@ export function CreateGalleryDialog({
           </div>
 
 
-          {/* Session — auto-populated from booking */}
-          <div className="flex flex-col gap-2">
-            <Label className="text-xs tracking-widests uppercase text-muted-foreground font-light">
-              Session
-            </Label>
-            {!selectedBookingId ? (
-              <div className="h-10 border border-dashed border-border flex items-center px-3 text-xs text-muted-foreground/60">
-                Select a client first
-              </div>
-            ) : sessions.length === 0 ? (
-              <div className="h-10 border border-border flex items-center px-3 text-xs text-muted-foreground animate-pulse">
-                Loading…
-              </div>
-            ) : (
-              <div className="h-10 border border-border bg-muted/30 flex items-center px-3 text-sm">
-                {sessions[0]?.title ?? "—"}
-              </div>
-            )}
-          </div>
-
           {/* Watermark — only for proof galleries */}
           {isProof && (
             <div className="flex flex-col gap-2">
