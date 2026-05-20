@@ -101,17 +101,25 @@ Deno.serve(async (req) => {
     const slug = await uniqueSlug(auth.supabase, baseSlug, auth.userId);
     const access_code = generateAccessCode();
 
-    // Read default expiry from gallery_settings
-    const { data: settingsData } = await auth.supabase
+    // Read expiry settings based on gallery type (proof vs final)
+    const category = gallery_type ?? "proof";
+    const isProof = category === "proof";
+    const { data: settingsRows } = await auth.supabase
       .from("gallery_settings")
-      .select("value")
+      .select("key, value")
       .eq("photographer_id", auth.userId)
-      .eq("key", "default_expiry_days")
-      .maybeSingle();
+      .in("key", ["default_expiry_days", "proof_expiry_days", "final_expiry_days"]);
+
+    const getSetting = (key: string): string | undefined =>
+      (settingsRows ?? []).find((r: { key: string; value: string }) => r.key === key)?.value;
+
+    const expiryValue =
+      (isProof ? getSetting("proof_expiry_days") : getSetting("final_expiry_days")) ??
+      getSetting("default_expiry_days");
 
     let expires_at: string | null = null;
-    if (settingsData?.value) {
-      const days = parseInt(settingsData.value, 10);
+    if (expiryValue) {
+      const days = parseInt(expiryValue, 10);
       if (!isNaN(days) && days > 0) {
         const d = new Date(Date.now() + days * 86400000);
         d.setHours(23, 59, 59, 999);
