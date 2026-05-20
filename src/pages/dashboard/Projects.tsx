@@ -1401,9 +1401,11 @@ function ArchivedKanbanSection({
                   <button className="p-0.5 text-muted-foreground hover:text-foreground" onClick={(e) => { e.stopPropagation(); onUnarchive(p.id); }} title={p_t.showArchived}>
                     <ArchiveRestore className="h-3 w-3" />
                   </button>
-                  <button className="p-0.5 text-muted-foreground hover:text-destructive" onClick={(e) => { e.stopPropagation(); onDelete(p.id); }} title={p_t.projectRemoved}>
-                    <X className="h-3 w-3" />
-                  </button>
+                  <ConfirmDeleteButton
+                    projectTitle={p.client_name || p.title}
+                    onDelete={() => onDelete(p.id)}
+                    compact
+                  />
                 </div>
               </div>
               {p.client_name && (
