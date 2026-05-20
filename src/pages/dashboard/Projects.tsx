@@ -1687,6 +1687,7 @@ const Projects = () => {
           ...p,
           shoot_time: p.shoot_time ?? availStartTime,
           session_title: (p.bookings as any)?.sessions?.title ?? null,
+          session_duration_minutes: (p.bookings as any)?.sessions?.duration_minutes ?? null,
           gallery_cover_url: coverFromProject ?? coverFromBooking,
           gallery_deadline: p.gallery_deadline ?? null,
           gallery_expires_at: expiryFromProject ?? expiryFromBooking,
