@@ -1016,7 +1016,22 @@ const SessionDetailPage = () => {
     <div className="min-h-screen bg-[hsl(var(--muted))]" style={{ backgroundColor: "#f5f2ee" }}>
 
       {/* ══════════════ PRODUCT PAGE (step: product) ══════════════ */}
-      {step === "product" && (
+      {step === "product" && productPageSections.length > 0 && (
+        <div className="bg-background">
+          <SectionRenderer
+            sections={productPageSections as any}
+            accentColor={undefined as any}
+            photographerId={session?.photographer_id ?? null}
+          />
+          <div className="max-w-3xl mx-auto px-6 py-10 text-center">
+            <Button size="lg" onClick={() => navigate(bookingUrl)}>
+              {t("bookThisSession") || "Book this session"}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {step === "product" && productPageSections.length === 0 && (
         <>
           {/* ── Hero slider: full-width crossfade ── */}
           {(() => {
