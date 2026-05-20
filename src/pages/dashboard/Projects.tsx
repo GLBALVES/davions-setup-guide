@@ -1523,7 +1523,7 @@ const Projects = () => {
     // 1. Fetch existing projects
     const { data: existingProjects, error } = await supabase
       .from("client_projects" as any)
-      .select("*, bookings(sessions(title), client_name, client_email, booked_date, session_id)")
+      .select("*, bookings(session_availability(start_time), sessions(title), client_name, client_email, booked_date, session_id)")
       .eq("photographer_id", photographerId)
       .order("position", { ascending: true });
 
