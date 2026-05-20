@@ -1822,34 +1822,13 @@ const Projects = () => {
         if (p.is_paused) continue;
 
         const booking = (p as any).bookings;
-        let sessionEnd: Date | null = null;
+        const sessionEnd = getSessionEndDateTime(
+          p.shoot_date,
+          p.shoot_time ?? booking?.session_availability?.start_time,
+          p.session_duration_minutes ?? booking?.sessions?.duration_minutes,
+        );
 
-        // Priority 1: project-level shoot_time + session_duration_minutes
-        if (p.shoot_date && p.shoot_time) {
-          const start = new Date(`${p.shoot_date}T${p.shoot_time}`);
-          if (!isNaN(start.getTime())) {
-            const durationMin = p.session_duration_minutes ?? booking?.sessions?.duration_minutes ?? 0;
-            sessionEnd = new Date(start.getTime() + durationMin * 60 * 1000);
-          }
-        }
-        // Priority 2: booking session_availability + sessions duration
-        if (!sessionEnd && p.shoot_date && booking?.session_availability?.start_time && booking?.sessions?.duration_minutes != null) {
-          const startStr = `${p.shoot_date}T${booking.session_availability.start_time}`;
-          const start = new Date(startStr);
-          if (!isNaN(start.getTime())) {
-            sessionEnd = new Date(start.getTime() + booking.sessions.duration_minutes * 60 * 1000);
-          }
-        }
-        // Fallback: end of shoot day
-        if (!sessionEnd && p.shoot_date) {
-          const d = new Date(p.shoot_date + "T23:59:59");
-          if (!isNaN(d.getTime())) sessionEnd = d;
-        }
-
-        if (sessionEnd && sessionEnd < now) {
-          // Skip auto-advance if user manually moved the card back after the session ended
-          const updatedAt = p.updated_at ? new Date(p.updated_at) : null;
-          if (updatedAt && updatedAt > sessionEnd) continue;
+        if (sessionEnd && sessionEnd <= now) {
           toAdvance.push(p.id);
         }
       }
@@ -1897,22 +1876,9 @@ const Projects = () => {
         if (p.stage !== "upcoming") continue;
         if (p.is_paused) continue;
 
-        let sessionEnd: Date | null = null;
-        if (p.shoot_date && p.shoot_time) {
-          const start = new Date(`${p.shoot_date}T${p.shoot_time}`);
-          if (!isNaN(start.getTime())) {
-            const durationMin = p.session_duration_minutes ?? 0;
-            sessionEnd = new Date(start.getTime() + durationMin * 60 * 1000);
-          }
-        } else if (p.shoot_date) {
-          const d = new Date(p.shoot_date + "T23:59:59");
-          if (!isNaN(d.getTime())) sessionEnd = d;
-        }
+        const sessionEnd = getSessionEndDateTime(p.shoot_date, p.shoot_time, p.session_duration_minutes);
 
         if (sessionEnd && sessionEnd <= now) {
-          // Skip if user manually moved the card after the session ended
-          const updatedAt = p.updated_at ? new Date(p.updated_at) : null;
-          if (updatedAt && updatedAt > sessionEnd) continue;
           toAdvance.push(p.id);
         }
       }
