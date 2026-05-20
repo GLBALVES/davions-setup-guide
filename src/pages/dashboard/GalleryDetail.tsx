@@ -114,6 +114,7 @@ interface Gallery {
   expires_at: string | null;
   price_per_photo: number;
   client_name?: string | null;
+  client_email?: string | null;
   session_title?: string | null;
   booked_date?: string | null;
 }
@@ -125,6 +126,7 @@ interface ClientProject {
   client_email: string | null;
   stage: string;
   shoot_date: string | null;
+  booking_id?: string | null;
 }
 
 interface Photo {
@@ -355,10 +357,11 @@ const GalleryDetail = () => {
         *,
         bookings (
           client_name,
+          client_email,
           booked_date,
           sessions ( title )
         ),
-        client_projects ( title )
+        client_projects ( title, client_name, client_email, shoot_date )
       `)
       .eq("id", id)
       .single();
@@ -367,9 +370,10 @@ const GalleryDetail = () => {
       const projectTitle = raw.client_projects?.title ?? null;
       setGallery({
         ...raw,
-        client_name: raw.bookings?.client_name ?? null,
+        client_name: raw.bookings?.client_name ?? raw.client_projects?.client_name ?? null,
+        client_email: raw.bookings?.client_email ?? raw.client_projects?.client_email ?? null,
         session_title: raw.bookings?.sessions?.title ?? null,
-        booked_date: raw.bookings?.booked_date ?? null,
+        booked_date: raw.bookings?.booked_date ?? raw.client_projects?.shoot_date ?? null,
       } as Gallery);
       setLinkedProjectTitle(projectTitle);
       setAccessCode(raw.access_code ?? "");
@@ -788,7 +792,7 @@ const GalleryDetail = () => {
     setProjectsListLoading(true);
     const { data } = await supabase
       .from("client_projects")
-      .select("id, title, client_name, client_email, stage, shoot_date")
+      .select("id, title, client_name, client_email, stage, shoot_date, booking_id")
       .order("created_at", { ascending: false });
     setProjectsList(
       (data ?? []).map((p: any) => ({
@@ -798,6 +802,7 @@ const GalleryDetail = () => {
         client_email: p.client_email ?? null,
         stage: p.stage,
         shoot_date: p.shoot_date ?? null,
+        booking_id: p.booking_id ?? null,
       }))
     );
     setProjectsListLoading(false);
@@ -835,9 +840,13 @@ const GalleryDetail = () => {
     if (!gallery || !project) return;
     setAttachingProject(true);
     try {
+      const updatePayload: any = { project_id: project.id, status: "published" };
+      if (project.booking_id && !(gallery as any).booking_id) {
+        updatePayload.booking_id = project.booking_id;
+      }
       const { error } = await supabase
         .from("galleries")
-        .update({ project_id: project.id, status: "published" } as any)
+        .update(updatePayload)
         .eq("id", gallery.id);
       if (error) throw error;
 
@@ -863,7 +872,14 @@ const GalleryDetail = () => {
         } catch { /* email failure shouldn't block */ }
       }
 
-      setGallery({ ...gallery, project_id: project.id, status: "published" });
+      setGallery({
+        ...gallery,
+        project_id: project.id,
+        status: "published",
+        booking_id: gallery.booking_id ?? project.booking_id ?? null,
+        client_name: gallery.client_name ?? project.client_name ?? null,
+        client_email: gallery.client_email ?? project.client_email ?? null,
+      });
       setLinkedProjectTitle(project.title);
       toast({
         title: "Gallery attached",
