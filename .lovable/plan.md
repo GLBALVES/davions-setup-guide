@@ -1,75 +1,87 @@
 ## Objetivo
 
-Transformar a página **Showcase** em uma página "quase normal" do editor: header editável (com opção de copiar/compartilhar header de outra página, igual às outras páginas) e blocos arrastáveis (Sessions selecionadas, Galleries selecionadas, e blocos genéricos — texto, imagem, vídeo, CTA, etc.) renderizados acima e abaixo da grade automática de produtos.
+Hoje, ao clicar em um produto na Vitrine, o usuário cai direto no `SessionDetailPage`, que é o fluxo completo de booking (com um passo inicial de "produto"). Vamos separar isso em duas etapas:
 
-Mantém-se a rota especial `/vitrine/{slug}/shop` (sem virar slug livre na tabela `pages`).
+1. **Página de Detalhes do Produto** — uma página de vendas editável pelo fotógrafo no editor de site, com blocos arrastáveis. É um **template único** aplicado a todas as sessões, alimentado automaticamente pelos dados de cada sessão.
+2. **Página de Booking** — o fluxo atual (escolher horário → form → addons → review → pagamento), acessado via CTA da página de detalhes.
 
-## Backend (migration)
+## Mudanças
 
-Adicionar colunas em `photographer_site`:
-
-- `shop_header_config jsonb` — mesma forma do `header_config` das páginas. Quando `null`, herda o header global do site (comportamento atual).
-- `shop_blocks_above jsonb default '[]'::jsonb` — array de blocos (mesmo schema dos blocos de páginas normais) renderizados antes da grade.
-- `shop_blocks_below jsonb default '[]'::jsonb` — array renderizado depois da grade.
-- `shop_show_default_grid boolean default true` — permite ocultar a grade automática se o usuário quiser usar só blocos manuais.
-- `shop_manual_sessions uuid[] default '{}'` — quando preenchido, a grade lista somente essas sessões (na ordem fornecida).
-- `shop_manual_galleries uuid[] default '{}'` — idem para galerias.
-
-Nada disso requer RLS nova (a tabela já tem políticas).
-
-## Editor (frontend)
-
-### 1. Header editável no Showcase
-- Tratar `__shop__` como uma página com `headerConfig` derivado de `site.shop_header_config`.
-- Quando o usuário abre o Showcase no editor, mostrar o `HeaderSettingsPanel` existente (mesma UI usada nas páginas) e permitir:
-  - editar slides / overlay / menu
-  - **compartilhar** header com outra página (`shareHeaderWithPage`)
-  - **copiar** header independente de outra página (`copyHeaderFromPage`)
-- Persistir em `photographer_site.shop_header_config` em vez da tabela `pages`.
-
-### 2. Renderizar blocos no canvas
-- Mostrar o `PreviewRenderer` no canvas do editor com:
-  - Header preview (usando `shop_header_config`)
-  - `shop_blocks_above`
-  - Grade automática (placeholder visual no editor; iframe real continua sendo a verdade final)
-  - `shop_blocks_below`
-- Reutilizar `AddBlockPicker`, `BlockToolbar`, `BlockSettingsPanel` para inserir/editar/remover/reordenar blocos.
-- Substituir o overlay de iframe atual por esse render direto (mais rápido, sem reload).
-
-### 3. Seleção manual de Sessions / Galleries
-Novo painel (`ShopSubPanel` reaproveitado / estendido) com 3 abas:
-- **Layout** (já existe: layout, filtros, preço, order, limit) + toggle "Mostrar grade automática".
-- **Sessions** — checklist arrastável das sessões publicadas. Se vazio = automático (comportamento atual). Se preenchido = só essas, nessa ordem.
-- **Galleries** — idem para galerias.
-
-### 4. Renderer público (`PublicShopPage.tsx`)
-- Ler `shop_header_config` e passar como `pageHeaderConfig` (igual SiteSubPage).
-- Renderizar `shop_blocks_above` antes do título/grade e `shop_blocks_below` depois, usando o mesmo componente que renderiza blocos em páginas normais.
-- Se `shop_show_default_grid === false`, omitir a grade.
-- Se `shop_manual_sessions`/`shop_manual_galleries` tiverem itens, filtrar a query por esses ids e ordenar conforme o array.
-
-## Arquivos afetados
+### 1. Rotas
 
 ```text
-supabase/migrations/<novo>.sql          (colunas novas)
-src/pages/dashboard/WebsiteEditor.tsx   (Showcase como página com header + blocos)
-src/components/website-editor/settings/ShopSubPanel.tsx (abas Sessions/Galleries + toggle grade)
-src/components/website-editor/HeaderSettingsPanel.tsx   (aceitar source = 'shop')
-src/pages/store/PublicShopPage.tsx      (renderizar header_config + blocos + filtros manuais)
-src/integrations/supabase/types.ts      (regenerado pela migration)
+/vitrine/:slug/:sessionSlug          → NOVO: Página de Detalhes (sales page editável)
+/vitrine/:slug/:sessionSlug/book     → NOVO: Fluxo de Booking (extraído do SessionDetailPage)
 ```
 
-## Fora de escopo
+Mesmo padrão para custom domain (`/:sessionSlug` e `/:sessionSlug/book`).
 
-- Não vira página em `pages` (slug não muda; sem novo registro).
-- Não implementa blocos novos exclusivos do Showcase — reusa o catálogo existente.
-- Sem mudanças em SEO/sitemap além do que já existe.
-- Sem refator dos componentes de bloco em si.
+### 2. Editor de Site — nova página virtual "Página do Produto"
 
-## Entrega incremental
+Igual ao que fizemos para a Vitrine: aparece no `PagesPanel` como uma página virtual não removível ao lado de "Vitrine". O fotógrafo arrasta blocos numa única página template que é renderizada para qualquer sessão.
 
-Será entregue em **duas etapas dentro deste turno** se possível, ou divido em dois turnos:
-1. Migration + header editável + render de blocos genéricos.
-2. Seleção manual de Sessions/Galleries + toggle "ocultar grade".
+Persistência em `photographer_site`:
+- `product_page_sections` (jsonb) — array de blocos
+- `product_page_header_config` (jsonb) — header próprio (compartilhável com outras páginas via o sistema de groupId já criado)
 
-Se o turno ficar grande demais, paro após (1) e confirmo antes de seguir para (2).
+### 3. Novos blocos especiais "do produto"
+
+Blocos que puxam dados da sessão atual automaticamente:
+
+- **Product Hero** — cover + título + tagline + preço + duração + botão CTA
+- **Product Gallery** — masonry/slider com `portfolio_photos`
+- **Product Info** — duração, número de fotos, local
+- **Product Description** — descrição longa
+- **Product Bonuses** — lista de bônus
+- **Product Extras** — exibe os add-ons (apenas vitrine, não selecionáveis aqui)
+- **Product CTA** — botão grande "Reservar agora" que leva ao booking
+
+Todos os blocos já existentes (texto, imagem, FAQ, depoimentos, etc.) continuam disponíveis para enriquecer a página de vendas.
+
+### 4. Booking CTA em qualquer botão
+
+No painel de configuração de **qualquer bloco com botão** (Hero genérico, CTA, etc.), adicionar opção:
+- `action: "book-current-product"` — quando renderizado dentro da página do produto, o botão navega para `/.../{sessionSlug}/book` mantendo a sessão atual em contexto.
+
+### 5. Refactor do SessionDetailPage
+
+- Extrair o passo `"product"` (atualmente nas linhas ~991-1240) e remover dele a navegação para `"slots"`.
+- A nova página de detalhes (`ProductDetailsPage`) faz o fetch dos dados da sessão e renderiza os `product_page_sections` do `photographer_site` passando a sessão como contexto para os blocos especiais.
+- O `SessionDetailPage` existente vira `SessionBookingPage`, mantendo apenas os passos `slots`, `form`, `addons`, `review` — acessado em `/.../{sessionSlug}/book`.
+
+### 6. Template padrão (seed)
+
+Para fotógrafos que ainda não personalizaram, criar um template default em código com:
+1. Product Hero
+2. Product Gallery
+3. Product Description
+4. Product Bonuses
+5. Product CTA
+
+Assim a página já funciona "out of the box" e replica o visual atual do passo "product".
+
+## Arquivos afetados (principais)
+
+- **DB migration**: adicionar `product_page_sections` e `product_page_header_config` em `photographer_site`.
+- **`src/App.tsx`**: nova rota `/vitrine/:slug/:sessionSlug/book` + custom domain equivalente.
+- **`src/pages/store/SessionDetailPage.tsx`**: dividir em `ProductDetailsPage.tsx` (novo) + `SessionBookingPage.tsx` (renomeado, sem step "product").
+- **`src/pages/dashboard/WebsiteEditor.tsx`**: adicionar página virtual "Página do Produto" no `PagesPanel`, com lógica de persist similar à Vitrine.
+- **`src/components/website-editor/page-templates.ts`**: novos `SectionType` (`product-hero`, `product-gallery`, etc.) + template default.
+- **`src/components/store/SectionRenderer.tsx`**: renderers dos novos blocos, recebendo a `session` via context/props.
+- **`src/components/website-editor/settings/`**: painéis de edição dos novos blocos + opção "abrir booking" em botões.
+- **`src/components/store/ShopGrid.tsx`** + `PublicSiteRenderer.tsx`: nenhum change no `sessionHref` (já aponta para `/:sessionSlug` que agora será a página de detalhes).
+
+## i18n
+
+Adicionar strings PT/EN/ES para nomes dos novos blocos, labels do editor e CTAs padrão.
+
+## Ordem de execução sugerida
+
+1. Migration + tipos
+2. Refactor de rotas e split do SessionDetailPage (booking continua funcionando como hoje sob `/book`)
+3. Página virtual "Produto" no editor com template default
+4. Blocos especiais + renderers
+5. Opção "abrir booking" nos botões genéricos
+6. Polimento e i18n
+
+Posso começar pelo passo 1 (migration + split de rotas) e seguir incrementalmente. Confirma?
