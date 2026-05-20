@@ -131,6 +131,19 @@ function calendarDaysLeft(deadline: string, now = new Date()): number {
   return differenceInCalendarDays(parseLocalDateOnly(deadline), now);
 }
 
+function getSessionEndDateTime(shootDate: string | null | undefined, shootTime: string | null | undefined, durationMinutes: number | null | undefined): Date | null {
+  if (!shootDate) return null;
+  const datePart = shootDate.substring(0, 10);
+  const timePart = shootTime && /^\d{1,2}:\d{2}/.test(shootTime) ? shootTime.slice(0, 5) : null;
+  if (!timePart) {
+    const endOfDay = new Date(`${datePart}T23:59:59`);
+    return isNaN(endOfDay.getTime()) ? null : endOfDay;
+  }
+  const start = new Date(`${datePart}T${timePart}:00`);
+  if (isNaN(start.getTime())) return null;
+  return new Date(start.getTime() + (durationMinutes ?? 60) * 60 * 1000);
+}
+
 function getDeadlineStatus(deadline: string | null | undefined): "overdue" | "urgent" | "warning" | "ok" | null {
   if (!deadline) return null;
   const now = new Date();
