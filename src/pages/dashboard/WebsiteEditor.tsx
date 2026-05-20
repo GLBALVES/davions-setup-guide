@@ -1943,7 +1943,8 @@ const DndPagesArea = ({
 
     const isShopActive = activeId === SHOP_VIRTUAL_ID;
     const isBlogActive = activeId === BLOG_VIRTUAL_ID;
-    const isVirtualActive = isShopActive || isBlogActive;
+    const isProductActive = activeId === PRODUCT_VIRTUAL_ID;
+    const isVirtualActive = isShopActive || isBlogActive || isProductActive;
     const activeP = allPages.find((p) => p.id === activeId);
     const isActiveFolder = activeP?.type === "folder";
     // A child page is one that is nested under a folder (not in either top-level zone)
