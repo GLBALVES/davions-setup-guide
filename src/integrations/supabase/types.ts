@@ -1095,6 +1095,7 @@ export type Database = {
           notes: string | null
           photographer_id: string
           position: number
+          post_production_started_at: string | null
           session_type: string | null
           shoot_date: string | null
           shoot_time: string | null
@@ -1121,6 +1122,7 @@ export type Database = {
           notes?: string | null
           photographer_id: string
           position?: number
+          post_production_started_at?: string | null
           session_type?: string | null
           shoot_date?: string | null
           shoot_time?: string | null
@@ -1147,6 +1149,7 @@ export type Database = {
           notes?: string | null
           photographer_id?: string
           position?: number
+          post_production_started_at?: string | null
           session_type?: string | null
           shoot_date?: string | null
           shoot_time?: string | null
