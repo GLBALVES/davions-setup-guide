@@ -1981,7 +1981,16 @@ const Projects = () => {
       reordered = arrayMove(stageItems, oldIndex, newIndex);
     }
 
-    const updates = reordered.map((p, i) => ({ ...p, stage: newStage, position: i }));
+    const enteredPostProduction = activeProj.stage !== "post_production" && newStage === "post_production";
+    const postProductionStartedAt = enteredPostProduction ? new Date().toISOString() : null;
+    const updates = reordered.map((p, i) => ({
+      ...p,
+      stage: newStage,
+      position: i,
+      ...(p.id === activeProj.id && enteredPostProduction
+        ? { post_production_started_at: postProductionStartedAt, gallery_deadline: null }
+        : {}),
+    }));
     setProjects((prev) => {
       const others = prev.filter((p) => p.stage !== newStage && p.id !== active.id);
       return [...others, ...updates];
@@ -1992,7 +2001,13 @@ const Projects = () => {
       updates.map((p) =>
         supabase
           .from("client_projects" as any)
-          .update({ stage: p.stage, position: p.position } as any)
+          .update({
+            stage: p.stage,
+            position: p.position,
+            ...(p.id === activeProj.id && enteredPostProduction
+              ? { post_production_started_at: postProductionStartedAt, gallery_deadline: null }
+              : {}),
+          } as any)
           .eq("id", p.id)
       )
     );
