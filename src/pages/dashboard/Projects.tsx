@@ -274,11 +274,11 @@ function KanbanCard({
     if (project.gallery_deadline) return project.gallery_deadline;
     if (shotDeadlineDays != null && project.shoot_date) {
       try {
-        const shoot = new Date(project.shoot_date);
+        const shoot = parseLocalDateOnly(project.shoot_date);
         if (!isNaN(shoot.getTime())) {
           const d = new Date(shoot);
           d.setDate(d.getDate() + shotDeadlineDays);
-          return d.toISOString();
+          return formatLocalDateOnly(d);
         }
       } catch { /* ignore */ }
     }
@@ -291,11 +291,11 @@ function KanbanCard({
     if (project.gallery_deadline) return project.gallery_deadline;
     if (postProdDeadlineDays != null && project.shoot_date) {
       try {
-        const shoot = new Date(project.shoot_date);
+        const shoot = parseLocalDateOnly(project.shoot_date);
         if (!isNaN(shoot.getTime())) {
           const d = new Date(shoot);
           d.setDate(d.getDate() + postProdDeadlineDays);
-          return d.toISOString();
+          return formatLocalDateOnly(d);
         }
       } catch { /* ignore */ }
     }
