@@ -82,6 +82,7 @@ interface ClientProject {
   location?: string | null;
   description?: string | null;
   is_paused?: boolean;
+  session_duration_minutes?: number | null;
 }
 
 const STAGES: { key: Stage; label: string; color: string }[] = [
@@ -1686,6 +1687,7 @@ const Projects = () => {
           ...p,
           shoot_time: p.shoot_time ?? availStartTime,
           session_title: (p.bookings as any)?.sessions?.title ?? null,
+          session_duration_minutes: (p.bookings as any)?.sessions?.duration_minutes ?? null,
           gallery_cover_url: coverFromProject ?? coverFromBooking,
           gallery_deadline: p.gallery_deadline ?? null,
           gallery_expires_at: expiryFromProject ?? expiryFromBooking,
@@ -1774,7 +1776,8 @@ const Projects = () => {
         if (p.shoot_date && p.shoot_time) {
           const start = new Date(`${p.shoot_date}T${p.shoot_time}`);
           if (!isNaN(start.getTime())) {
-            sessionEnd = start; // advance when session starts
+            const durationMin = p.session_duration_minutes ?? 0;
+            sessionEnd = new Date(start.getTime() + durationMin * 60 * 1000);
           }
         } else if (p.shoot_date) {
           const d = new Date(p.shoot_date + "T23:59:59");
