@@ -1807,15 +1807,24 @@ const Projects = () => {
         const booking = (p as any).bookings;
         let sessionEnd: Date | null = null;
 
-        if (p.shoot_date && booking?.session_availability?.start_time && booking?.sessions?.duration_minutes != null) {
-          // Precise: shoot_date + booking start_time + duration_minutes
+        // Priority 1: project-level shoot_time + session_duration_minutes
+        if (p.shoot_date && p.shoot_time) {
+          const start = new Date(`${p.shoot_date}T${p.shoot_time}`);
+          if (!isNaN(start.getTime())) {
+            const durationMin = p.session_duration_minutes ?? booking?.sessions?.duration_minutes ?? 0;
+            sessionEnd = new Date(start.getTime() + durationMin * 60 * 1000);
+          }
+        }
+        // Priority 2: booking session_availability + sessions duration
+        if (!sessionEnd && p.shoot_date && booking?.session_availability?.start_time && booking?.sessions?.duration_minutes != null) {
           const startStr = `${p.shoot_date}T${booking.session_availability.start_time}`;
           const start = new Date(startStr);
           if (!isNaN(start.getTime())) {
             sessionEnd = new Date(start.getTime() + booking.sessions.duration_minutes * 60 * 1000);
           }
-        } else if (p.shoot_date) {
-          // Fallback for manually created projects: end of shoot day
+        }
+        // Fallback: end of shoot day
+        if (!sessionEnd && p.shoot_date) {
           const d = new Date(p.shoot_date + "T23:59:59");
           if (!isNaN(d.getTime())) sessionEnd = d;
         }
