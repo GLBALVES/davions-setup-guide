@@ -182,7 +182,7 @@ function ConfirmDeleteButton({
       <AlertDialogTrigger asChild>
         <button
           className={`p-0.5 text-muted-foreground hover:text-destructive ${compact ? "" : ""}`}
-          title={p_t.projectRemoved}
+          title={p_t.removeProject}
           onClick={(e) => e.stopPropagation()}
         >
           <X className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} />
@@ -201,7 +201,7 @@ function ConfirmDeleteButton({
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {p_t.projectRemoved}
+            {p_t.removeProject}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
