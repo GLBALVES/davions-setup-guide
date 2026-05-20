@@ -323,11 +323,20 @@ function KanbanCard({
     return isNaN(d.getTime()) ? null : d;
   })();
 
+  // Session end = start + duration (fallback 60 min)
+  const sessionEndDateTime = (() => {
+    if (!shootDateTime) return null;
+    const mins = project.session_duration_minutes ?? 60;
+    return new Date(shootDateTime.getTime() + mins * 60 * 1000);
+  })();
+
   const upcomingSessionStatus = (() => {
     if (project.stage !== "upcoming") return null;
     if (project.is_paused) return null;
     if (!shootDateTime) return null;
     const now = new Date();
+    // Currently being photographed
+    if (sessionEndDateTime && now >= shootDateTime && now < sessionEndDateTime) return "in_progress";
     if (isPast(shootDateTime)) return "overdue";
     const daysUntil = differenceInDays(shootDateTime, now);
     const hoursUntil = differenceInHours(shootDateTime, now);
@@ -339,6 +348,7 @@ function KanbanCard({
   const upcomingSessionLabel = (() => {
     if (!upcomingSessionStatus || !shootDateTime) return null;
     const now = new Date();
+    if (upcomingSessionStatus === "in_progress") return (p_t as any).sessionInProgress ?? "Photographing";
     if (isPast(shootDateTime)) return p_t.sessionPassed;
     const h = differenceInHours(shootDateTime, now);
     if (h < 24) {
