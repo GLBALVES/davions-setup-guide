@@ -2948,6 +2948,33 @@ const PagesPanel = ({
         );
       }
     }
+    // ── Product Page (virtual page) ──
+    if (targetPageId === PRODUCT_VIRTUAL_ID) {
+      const sections = productSections || [];
+      const section = sections[selectedBlockIndex];
+      if (section) {
+        const blockSettings: BlockSettings = (section.props?.blockSettings as BlockSettings) || {};
+        return (
+          <BlockSettingsPanel
+            section={section}
+            settings={blockSettings}
+            onUpdate={(s) => {
+              const next = [...sections];
+              next[selectedBlockIndex] = { ...section, props: { ...section.props, blockSettings: s } };
+              onProductSectionsChange?.(next);
+              onActiveSectionsChange(next);
+            }}
+            onUpdateProps={(newProps) => {
+              const next = [...sections];
+              next[selectedBlockIndex] = { ...section, props: newProps };
+              onProductSectionsChange?.(next);
+              onActiveSectionsChange(next);
+            }}
+            onBack={() => onSelectBlock(null)}
+          />
+        );
+      }
+    }
     const targetPage = allPages.find((p) => p.id === targetPageId);
     const sections = targetPage?.sections || [];
     const section = sections[selectedBlockIndex];
