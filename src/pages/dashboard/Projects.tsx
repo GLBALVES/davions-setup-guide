@@ -133,6 +133,11 @@ function calendarDaysLeft(deadline: string, now = new Date()): number {
 function getDeadlineStatus(deadline: string | null | undefined): "overdue" | "urgent" | "warning" | "ok" | null {
   if (!deadline) return null;
   const now = new Date();
+  // If the deadline has a time component, treat the moment as the cutoff
+  if (deadline.length > 10) {
+    const dt = parseISO(deadline);
+    if (!isNaN(dt.getTime()) && dt.getTime() <= now.getTime()) return "overdue";
+  }
   const daysLeft = calendarDaysLeft(deadline, now);
   if (daysLeft < 0) return "overdue";
   if (daysLeft <= 1) return "urgent";
