@@ -1261,7 +1261,7 @@ const SessionDetailPage = () => {
                     {session.location && <span className="flex items-center gap-2"><MapPin className="h-3 w-3" />{session.location}</span>}
                   </div>
                   <button
-                    onClick={() => setStep("slots")}
+                    onClick={() => navigate(bookingUrl)}
                     className="w-full py-3 bg-foreground text-background text-[10px] tracking-[0.3em] uppercase hover:bg-foreground/90 transition-colors flex items-center justify-center gap-2"
                   >
                     Book this session <ArrowRight className="h-3 w-3" />
