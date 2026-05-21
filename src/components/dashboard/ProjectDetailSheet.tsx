@@ -3116,6 +3116,7 @@ function ProjectBriefingSubsection({
 }) {
   const [open, setOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [selectedBriefingId, setSelectedBriefingId] = useState<string>("");
   const queryClient = useQueryClient();
 
