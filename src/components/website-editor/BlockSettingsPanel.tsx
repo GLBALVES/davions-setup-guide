@@ -1267,22 +1267,6 @@ export const BlockSettingsPanel = ({
 
         <div className="border-t border-border" />
 
-        {/* ── Color Scheme ── */}
-        <div className="px-4 pt-4 pb-2">
-          <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">Color Scheme</p>
-        </div>
-        <div className="px-4 pb-4">
-          <Select value={s.colorScheme ?? "auto"} onValueChange={(v) => update({ colorScheme: v as BlockSettings["colorScheme"] })}>
-            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="auto">Auto (inherit)</SelectItem>
-              <SelectItem value="light">Light</SelectItem>
-              <SelectItem value="dark">Dark</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="border-t border-border" />
 
         {/* ── Animation ── */}
         <div className="px-4 pt-4 pb-2">
