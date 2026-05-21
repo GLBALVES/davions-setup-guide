@@ -660,7 +660,13 @@ export default function InlineFormatToolbar() {
         {showColor && (
           <div
             className="absolute top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg p-2 w-64"
-            onMouseDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => {
+              // preventDefault stops the contenteditable from losing focus
+              // (critical on macOS Safari/Chrome where focus loss collapses
+              // the text selection before our color handler runs).
+              e.preventDefault();
+              e.stopPropagation();
+            }}
             onPointerDown={(e) => e.stopPropagation()}
           >
             <SitePaletteColorOptions
@@ -670,6 +676,7 @@ export default function InlineFormatToolbar() {
             />
           </div>
         )}
+
       </div>
 
       <div className="w-px h-5 bg-border mx-0.5" />
