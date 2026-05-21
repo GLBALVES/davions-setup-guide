@@ -936,6 +936,8 @@ const SessionForm = () => {
       .update({
         confirmation_email_body: confirmationEmailBody,
         reminder_days: reminderDays,
+        followup_months: followupEnabled ? Number(followupMonths) || null : null,
+        followup_template_id: followupEnabled && followupTemplateId ? followupTemplateId : null,
       } as any)
       .eq("id", sessionId);
 
