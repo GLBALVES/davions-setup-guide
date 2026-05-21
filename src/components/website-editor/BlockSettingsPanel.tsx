@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, AlignLeft, AlignRight, AlignCenter, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -1081,23 +1081,52 @@ export const BlockSettingsPanel = ({
               {Array.isArray((section.props as any)?.buttons) && (section.props as any).buttons.length > 0 && (
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">Buttons Position</label>
-                  <Select
-                    value={(section.props as any)?.buttonsAlign || "inherit"}
-                    onValueChange={(v) => onUpdateProps({ buttonsAlign: v === "inherit" ? undefined : v })}
-                  >
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="z-[60]">
-                      <SelectItem value="inherit">Inherit from text align</SelectItem>
-                      <SelectItem value="start">Left</SelectItem>
-                      <SelectItem value="center">Center</SelectItem>
-                      <SelectItem value="end">Right</SelectItem>
-                      <SelectItem value="between">Space Between</SelectItem>
-                      <SelectItem value="around">Space Around</SelectItem>
-                      <SelectItem value="evenly">Space Evenly</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center gap-1">
+                    {[
+                      { value: "inherit", label: "Inherit", icon: Link2 },
+                      { value: "start", label: "Left", icon: AlignLeft },
+                      { value: "center", label: "Center", icon: AlignCenter },
+                      { value: "end", label: "Right", icon: AlignRight },
+                      { value: "between", label: "Space Between", icon: () => (
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="1" y="3" width="4" height="10" rx="1" />
+                          <rect x="11" y="3" width="4" height="10" rx="1" />
+                        </svg>
+                      )},
+                      { value: "around", label: "Space Around", icon: () => (
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="2" y="3" width="3" height="10" rx="1" />
+                          <rect x="11" y="3" width="3" height="10" rx="1" />
+                        </svg>
+                      )},
+                      { value: "evenly", label: "Space Evenly", icon: () => (
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="1" y="4" width="3" height="8" rx="1" />
+                          <rect x="6" y="4" width="3" height="8" rx="1" />
+                          <rect x="11" y="4" width="3" height="8" rx="1" />
+                        </svg>
+                      )},
+                    ].map((opt) => {
+                      const isActive = ((section.props as any)?.buttonsAlign || "inherit") === opt.value;
+                      const Icon = opt.icon;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          title={opt.label}
+                          onClick={() => onUpdateProps({ buttonsAlign: opt.value === "inherit" ? undefined : opt.value })}
+                          className={cn(
+                            "h-8 w-8 flex items-center justify-center rounded-md border transition-colors",
+                            isActive
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-background text-muted-foreground border-border hover:border-muted-foreground/50 hover:text-foreground"
+                          )}
+                        >
+                          <Icon size={16} />
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
