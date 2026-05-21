@@ -80,11 +80,25 @@ function fireInput(host: HTMLElement) {
 
 /** Wrap every text node within the current selection in <span style="..."> so
  * the styling applies across multiple block elements (e.g. several <p>). */
-function applyInlineStyle(host: HTMLElement, styles: Partial<CSSStyleDeclaration>) {
+function applyInlineStyle(
+  host: HTMLElement,
+  styles: Partial<CSSStyleDeclaration>,
+  explicitRange?: Range | null,
+) {
+  // On macOS Safari/Chrome, clicking inside a floating popover (e.g. the color
+  // picker) blurs the contenteditable and `window.getSelection()` may report a
+  // collapsed/empty selection by the time our handler runs. When the caller
+  // passes an explicit Range (snapshot of the user's last real selection) we
+  // use it directly instead of relying on the live selection.
   const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-  const range = sel.getRangeAt(0);
-  if (!host.contains(range.commonAncestorContainer)) return;
+  let range: Range | null = null;
+  if (explicitRange && !explicitRange.collapsed && host.contains(explicitRange.commonAncestorContainer)) {
+    range = explicitRange;
+  } else if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+    const r = sel.getRangeAt(0);
+    if (host.contains(r.commonAncestorContainer)) range = r;
+  }
+  if (!range) return null;
 
   const applyStyles = (el: HTMLElement) => {
     Object.entries(styles).forEach(([k, v]) => {
@@ -113,9 +127,6 @@ function applyInlineStyle(host: HTMLElement, styles: Partial<CSSStyleDeclaration
     }
     if (node.nodeType === Node.ELEMENT_NODE) {
       const el = node as HTMLElement;
-      // For pre-existing spans inside the selection, also apply the new style
-      // directly so we don't end up with redundant nested wrappers fighting
-      // each other.
       if (el.tagName === "SPAN") applyStyles(el);
       Array.from(node.childNodes).forEach(wrapTextNodes);
     }
@@ -125,20 +136,29 @@ function applyInlineStyle(host: HTMLElement, styles: Partial<CSSStyleDeclaration
   // Re-insert at the (now-collapsed) range position.
   range.insertNode(fragment);
 
-  // Re-select the inserted range so subsequent toolbar actions keep working.
+  // Re-select the inserted range so subsequent toolbar actions keep working,
+  // and return the new range so callers can snapshot it.
+  let newRange: Range | null = null;
   if (wrappedSpans.length > 0) {
-    const newRange = document.createRange();
+    newRange = document.createRange();
     newRange.setStartBefore(wrappedSpans[0]);
     newRange.setEndAfter(wrappedSpans[wrappedSpans.length - 1]);
-    sel.removeAllRanges();
-    sel.addRange(newRange);
+    if (sel) {
+      try {
+        host.focus({ preventScroll: true } as FocusOptions);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+      } catch {
+        /* macOS Safari may throw if focus didn't transfer — non-fatal */
+      }
+    }
   }
 
-  // Merge adjacent text nodes so future edits feel natural.
   host.normalize();
-
   fireInput(host);
+  return newRange;
 }
+
 
 function execSimple(host: HTMLElement, command: string, value?: string) {
   try {
