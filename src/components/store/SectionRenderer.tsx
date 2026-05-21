@@ -32,33 +32,44 @@ interface SectionRendererProps {
 }
 
 // ─── Site button variant helper ────────────────────────────────────────────
-// Reads CSS vars set by WebsiteEditor (Style → Buttons → Variants) so blocks
-// render buttons consistently across the site. Style mode (solid/outline/
-// underline) is driven 100% by CSS vars + html[data-site-btn-*-style] rules
-// in index.css — no per-element data-style is needed, so changes reflect
-// instantly without React re-rendering each block.
+// 3 fixed button types: filled, outline, text. Style is baked into the CSS
+// class for each variant — no per-element data-style needed. Tokens are
+// emitted by WebsiteEditor's design panel.
 
-export function siteButtonProps(variant: "primary" | "secondary" = "primary"): {
+export type SiteBtnVariant = "filled" | "outline" | "text";
+
+/** Migrate legacy variant values (primary→filled, secondary→outline). */
+export function normalizeBtnVariant(v: any): SiteBtnVariant {
+  if (v === "outline" || v === "text" || v === "filled") return v;
+  if (v === "secondary") return "outline";
+  return "filled";
+}
+
+export function siteButtonProps(variant: SiteBtnVariant = "filled"): {
   style: React.CSSProperties;
   className: string;
 } {
   const v = variant;
-  const bgVar = `var(--site-btn-${v}-bg, ${v === "primary" ? "#000000" : "#ffffff"})`;
-  const fgVar = `var(--site-btn-${v}-fg, ${v === "primary" ? "#ffffff" : "#000000"})`;
-  const borderColorVar = `var(--site-btn-${v}-border-color, ${v === "primary" ? "#000000" : "#ffffff"})`;
+  if (v === "text") {
+    return {
+      style: { height: "auto" } as React.CSSProperties,
+      className: `site-btn site-btn-text`,
+    };
+  }
+  const defaultBg = v === "filled" ? "#000000" : "#ffffff";
+  const defaultFg = v === "filled" ? "#ffffff" : "#000000";
+  const bgVar = `var(--site-btn-${v}-bg, ${defaultBg})`;
+  const fgVar = `var(--site-btn-${v}-fg, ${defaultFg})`;
+  const borderColorVar = `var(--site-btn-${v}-border-color, ${defaultBg})`;
   const borderWidthVar = `var(--site-btn-${v}-border-width, 1px)`;
   return {
     style: {
-      backgroundColor: bgVar,
+      backgroundColor: v === "outline" ? "transparent" : bgVar,
       color: fgVar,
-      // Always render a border in the configured color so Outline mode is
-      // visible (CSS rules override background to transparent for outline).
       borderStyle: "solid",
       borderWidth: borderWidthVar,
       borderColor: borderColorVar,
-      // Per-variant shape wins; falls back to global default shape token.
       borderRadius: `var(--site-btn-${v}-radius, var(--site-btn-radius, 2px))`,
-      // Global size tokens — sync from Style → Buttons → Size.
       height: "var(--site-btn-height, auto)",
       paddingLeft: "var(--site-btn-pad-x, 1.5rem)",
       paddingRight: "var(--site-btn-pad-x, 1.5rem)",
@@ -68,25 +79,22 @@ export function siteButtonProps(variant: "primary" | "secondary" = "primary"): {
 }
 
 // ─── Reusable site CTA link ────────────────────────────────────────────────
-// Renders an <a> styled with the global Style → Buttons tokens (variant,
-// shape, size, colors, border, hover). Use everywhere a CTA links out so
-// hard-coded Tailwind buttons never diverge from the design system.
 export function SiteCtaLink({
   href,
-  variant = "primary",
+  variant = "filled",
   newTab,
   className,
   children,
   onClick,
 }: {
   href?: string;
-  variant?: "primary" | "secondary";
+  variant?: SiteBtnVariant | "primary" | "secondary";
   newTab?: boolean;
   className?: string;
   children: React.ReactNode;
   onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 }) {
-  const btn = siteButtonProps(variant);
+  const btn = siteButtonProps(normalizeBtnVariant(variant));
   return (
     <a
       href={href || "#"}
@@ -102,19 +110,15 @@ export function SiteCtaLink({
 }
 
 // ─── Block Button schema ────────────────────────────────────────────────────
-// Multi-button per item with backwards-compatible fallback to legacy fields
-// (ctaText/ctaLink for Hero/Image+Text/Text+Image; buttonText/buttonLink for CTA).
 export type BlockButton = {
   id?: string;
   text: string;
   link?: string;
-  variant?: "primary" | "secondary";
+  variant?: SiteBtnVariant;
   newTab?: boolean;
 };
 
-/** Normalize legacy single-button fields into a `buttons[]` array.
- *  Order of precedence: explicit `buttons[]` > `ctaText`/`ctaLink` > `buttonText`/`buttonLink`.
- *  Returns [] when nothing is configured (caller decides placeholder behavior). */
+/** Normalize legacy single-button fields into a `buttons[]` array. */
 export function resolveBlockButtons(props: any): BlockButton[] {
   if (Array.isArray(props?.buttons) && props.buttons.length > 0) {
     return props.buttons
@@ -123,18 +127,17 @@ export function resolveBlockButtons(props: any): BlockButton[] {
         id: b.id,
         text: b.text || "",
         link: b.link || "",
-        variant: b.variant === "secondary" ? "secondary" : "primary",
+        variant: normalizeBtnVariant(b.variant),
         newTab: !!b.newTab,
       }));
   }
-  // Legacy single-button fallback.
   const legacyText = props?.ctaText || props?.buttonText;
   const legacyLink = props?.ctaLink || props?.buttonLink;
   if (legacyText || legacyLink) {
     return [{
       text: legacyText || "",
       link: legacyLink || "",
-      variant: props?.buttonVariant === "secondary" ? "secondary" : "primary",
+      variant: normalizeBtnVariant(props?.buttonVariant),
       newTab: false,
     }];
   }
