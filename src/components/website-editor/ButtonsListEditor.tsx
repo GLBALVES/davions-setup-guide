@@ -64,7 +64,7 @@ export function ButtonsList({ buttons, onChange, label = "Buttons", compact = fa
       {
         text: "",
         link: "",
-        variant: buttons.length === 0 ? "primary" : "secondary",
+        variant: buttons.length === 0 ? "filled" : "outline",
         newTab: false,
       },
     ]);
