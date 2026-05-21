@@ -1153,22 +1153,6 @@ export const BlockSettingsPanel = ({
           <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">Spacing</p>
         </div>
         <div className="px-4 pb-4 space-y-3">
-          <div className="flex gap-1.5">
-            {PADDING_PRESETS.map((p) => (
-              <button
-                key={p.label}
-                onClick={() => update({ paddingTop: p.top, paddingBottom: p.bottom, paddingLeft: p.left, paddingRight: p.right })}
-                className={cn(
-                  "flex-1 px-2 py-1.5 rounded-md text-[10px] font-medium border transition-colors",
-                  s.paddingTop === p.top && s.paddingBottom === p.bottom && s.paddingLeft === p.left && s.paddingRight === p.right
-                    ? "bg-primary/10 border-primary/30 text-primary"
-                    : "border-border text-muted-foreground hover:bg-muted/50"
-                )}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">Top: {s.paddingTop ?? 48}px</label>
