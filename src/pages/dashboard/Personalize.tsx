@@ -1953,7 +1953,11 @@ const Personalize = () => {
                   {/* ── TEMPLATES TAB ── */}
                   <TabsContent value="templates" className="mt-0 flex flex-col gap-8">
                     <WorkflowEmailTemplates />
+                    <div className="border-t border-border pt-8">
+                      <FollowupEmailTemplates />
+                    </div>
                   </TabsContent>
+
 
                 </Tabs>
               }
