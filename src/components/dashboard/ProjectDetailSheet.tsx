@@ -3167,6 +3167,21 @@ function ProjectBriefingSubsection({
               <Clock className="h-3 w-3" /> Pendente
             </span>
           )}
+          <button
+            onClick={async () => {
+              const url = `${window.location.origin}/booking-success?booking=${bookingId}&session=${data.sessionId}`;
+              try {
+                await navigator.clipboard.writeText(url);
+                toast.success("Link do briefing copiado");
+              } catch {
+                toast.error("Não foi possível copiar o link");
+              }
+            }}
+            title="Compartilhar briefing"
+            className="inline-flex items-center justify-center h-7 w-7 rounded-sm border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+          >
+            <Share2 className="h-3.5 w-3.5" />
+          </button>
         </div>
       )}
       {data && bookingId && (
