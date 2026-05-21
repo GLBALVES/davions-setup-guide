@@ -157,13 +157,19 @@ function BlockButtons({
   editMode: boolean;
   onChange: (next: BlockButton[]) => void;
   marginTop?: string | number;
-  align?: "start" | "center" | "end";
+  align?: "start" | "center" | "end" | "between" | "around" | "evenly";
 }) {
   // In edit mode: only show buttons if there are actual configured buttons
   // In preview mode: only show buttons if there are actual buttons
   const list = buttons.filter((b) => b.text || b.link);
   if (list.length === 0) return null;
-  const justify = align === "center" ? "center" : align === "end" ? "flex-end" : "flex-start";
+  const justify =
+    align === "center" ? "center"
+    : align === "end" ? "flex-end"
+    : align === "between" ? "space-between"
+    : align === "around" ? "space-around"
+    : align === "evenly" ? "space-evenly"
+    : "flex-start";
   return (
     <div
       className="flex flex-wrap gap-3"
