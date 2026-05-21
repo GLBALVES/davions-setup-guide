@@ -1514,6 +1514,7 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
         bookingId={(project as any).booking_id ?? null}
         sessionType={(project as any).session_type ?? null}
         photographerId={photographerId}
+        briefings={briefings}
         labelTitle={tp.briefingsSubsection}
         emptyText={tp.noBriefings}
       />
