@@ -604,6 +604,25 @@ export default function InlineFormatToolbar({ externalFonts = [] }: { externalFo
         </button>
         {showFont && (
           <div className="absolute top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg py-1 min-w-[180px] max-h-[280px] overflow-y-auto">
+            {externalFonts.length > 0 && (
+              <>
+                <div className="px-3 py-1 text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                  Custom
+                </div>
+                {externalFonts.map((f) => (
+                  <button
+                    key={`ext-${f.id}`}
+                    type="button"
+                    onMouseDown={guard(() => onApplyFont(buildExternalStack(f)))}
+                    className="w-full text-left px-3 py-1.5 hover:bg-muted text-foreground"
+                    style={{ fontFamily: buildExternalStack(f) }}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+                <div className="my-1 border-t border-border" />
+              </>
+            )}
             {FONT_PRESETS.map((f) => (
               <button
                 key={f.id}
