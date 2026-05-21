@@ -99,6 +99,12 @@ const subMinsFromTime = (time: string, mins: number): string => {
   return format(addMinutes(base, -mins), "HH:mm");
 };
 
+// Default confirmation email body (mirrors WorkflowEmailTemplates → "1 · Boas-vindas (sessão fechada)")
+const DEFAULT_CONFIRMATION_EMAIL_HTML = `<p>Olá {{client_name}},</p>
+<p>Que alegria ter você com a gente! Sua sessão <strong>{{session_type}}</strong> está confirmada para o dia <strong>{{shoot_date}}</strong>.</p>
+<p>Em breve enviaremos mais informações sobre os preparativos. Se tiver qualquer dúvida, é só responder este email.</p>
+<p>Com carinho,<br/>{{photographer_name}}<br/>{{studio_name}}</p>`;
+
 // ────────────────────────────────────────────
 // Component
 // ────────────────────────────────────────────
