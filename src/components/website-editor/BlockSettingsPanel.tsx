@@ -233,25 +233,8 @@ function TextContentEditor({ props, onChange }: { props: any; onChange: (p: any)
 }
 
 function ImageTextContentEditor({ props, onChange, photographerId }: { props: any; onChange: (p: any) => void; photographerId?: string | null }) {
-  // Unified content: merge legacy title into body so it's a single rich-text area.
-  const initialBody = (() => {
-    const body = props.body || "";
-    const title = props.title || "";
-    if (!title) return body;
-    const isHtml = /<[a-z][\s\S]*>/i.test(body);
-    const bodyHtml = isHtml ? body : body.replace(/\n/g, "<br />");
-    return `<h2>${title}</h2>${bodyHtml}`;
-  })();
   return (
     <div className="space-y-3">
-      <Field label="Content">
-        <RichTextField
-          multiline
-          value={initialBody}
-          onChange={(v) => onChange({ ...props, body: v, title: "" })}
-          placeholder="Write your content here… Use the floating toolbar to set Heading, Bold, Color…"
-        />
-      </Field>
       <Field label="Image">
         <ImageUploadField
           value={props.image}
@@ -264,6 +247,7 @@ function ImageTextContentEditor({ props, onChange, photographerId }: { props: an
     </div>
   );
 }
+
 
 function CtaContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
   return (
