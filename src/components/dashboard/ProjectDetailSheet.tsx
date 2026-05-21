@@ -1512,6 +1512,7 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
       {/* ── Briefings sub-section ────────────────────────────────────────── */}
       <ProjectBriefingSubsection
         bookingId={(project as any).booking_id ?? null}
+        sessionType={(project as any).session_type ?? null}
         photographerId={photographerId}
         labelTitle={tp.briefingsSubsection}
         emptyText={tp.noBriefings}
@@ -3099,11 +3100,13 @@ export function ProjectDetailSheet({
 
 function ProjectBriefingSubsection({
   bookingId,
+  sessionType,
   photographerId,
   labelTitle,
   emptyText,
 }: {
   bookingId: string | null;
+  sessionType?: string | null;
   photographerId: string;
   labelTitle: string;
   emptyText: string;
@@ -3111,35 +3114,56 @@ function ProjectBriefingSubsection({
   const [open, setOpen] = useState(false);
 
   const { data } = useQuery({
-    queryKey: ["project-briefing-status", bookingId],
+    queryKey: ["project-briefing-status", bookingId, sessionType, photographerId],
     queryFn: async () => {
-      if (!bookingId) return null;
-      const { data: booking } = await (supabase as any)
-        .from("bookings")
-        .select("session_id")
-        .eq("id", bookingId)
-        .maybeSingle();
-      if (!booking?.session_id) return null;
+      let sessionId: string | null = null;
+
+      if (bookingId) {
+        const { data: booking } = await (supabase as any)
+          .from("bookings")
+          .select("session_id")
+          .eq("id", bookingId)
+          .maybeSingle();
+        sessionId = booking?.session_id ?? null;
+      }
+
+      // Fallback: resolve session via session_type (for app-created projects without booking)
+      if (!sessionId && sessionType && photographerId) {
+        const { data: sess } = await (supabase as any)
+          .from("sessions")
+          .select("id")
+          .eq("photographer_id", photographerId)
+          .eq("title", sessionType)
+          .limit(1)
+          .maybeSingle();
+        sessionId = sess?.id ?? null;
+      }
+
+      if (!sessionId) return null;
+
       const { data: session } = await (supabase as any)
         .from("sessions")
         .select("briefing_id")
-        .eq("id", booking.session_id)
+        .eq("id", sessionId)
         .maybeSingle();
       if (!session?.briefing_id) return null;
-      const [{ data: brief }, { data: resp }] = await Promise.all([
-        (supabase as any).from("briefings").select("id, name").eq("id", session.briefing_id).maybeSingle(),
-        (supabase as any)
-          .from("booking_briefing_responses")
-          .select("submitted_at")
-          .eq("booking_id", bookingId)
-          .eq("briefing_id", session.briefing_id)
-          .maybeSingle(),
-      ]);
+
+      const briefPromise = (supabase as any).from("briefings").select("id, name").eq("id", session.briefing_id).maybeSingle();
+      const respPromise = bookingId
+        ? (supabase as any)
+            .from("booking_briefing_responses")
+            .select("submitted_at")
+            .eq("booking_id", bookingId)
+            .eq("briefing_id", session.briefing_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null });
+      const [{ data: brief }, { data: resp }] = await Promise.all([briefPromise, respPromise]);
       if (!brief) return null;
-      return { id: brief.id as string, name: brief.name as string, answered: !!resp, sessionId: booking.session_id as string };
+      return { id: brief.id as string, name: brief.name as string, answered: !!resp, sessionId };
     },
-    enabled: !!bookingId && !!photographerId,
+    enabled: !!photographerId && (!!bookingId || !!sessionType),
   });
+
 
   return (
     <div className="flex flex-col gap-1.5">
