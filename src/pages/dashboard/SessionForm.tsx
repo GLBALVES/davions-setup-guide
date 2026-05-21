@@ -167,6 +167,10 @@ const SessionForm = () => {
   interface EmailTemplateOption { id: string; name: string; subject: string; html_content: string; stage_trigger: string; }
   const [emailTemplates, setEmailTemplates] = useState<EmailTemplateOption[]>([]);
   const [selectedEmailTemplateId, setSelectedEmailTemplateId] = useState<string>("default");
+  // ── Followup ──
+  const [followupEnabled, setFollowupEnabled] = useState(false);
+  const [followupMonths, setFollowupMonths] = useState<string>("6");
+  const [followupTemplateId, setFollowupTemplateId] = useState<string>("");
 
   // ── Booking Rules step ──
   const [bookingNoticeDays, setBookingNoticeDays] = useState("1");
@@ -547,10 +551,17 @@ const SessionForm = () => {
     }
 
     // Load confirmation settings
-    const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[]; booking_notice_days?: number; booking_window_days?: number; contract_text?: string | null; contract_id?: string | null; briefing_id?: string | null; virtual_block_percent?: number };
+    const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[]; booking_notice_days?: number; booking_window_days?: number; contract_text?: string | null; contract_id?: string | null; briefing_id?: string | null; virtual_block_percent?: number; followup_months?: number | null; followup_template_id?: string | null };
     const bodyHtml = sAny3.confirmation_email_body ?? "";
     setConfirmationEmailBody(bodyHtml);
     setReminderDays(sAny3.reminder_days ?? []);
+    if (sAny3.followup_months && sAny3.followup_months > 0) {
+      setFollowupEnabled(true);
+      setFollowupMonths(String(sAny3.followup_months));
+      setFollowupTemplateId(sAny3.followup_template_id ?? "");
+    } else {
+      setFollowupEnabled(false);
+    }
     setBookingNoticeDays(String(sAny3.booking_notice_days ?? 1));
     setBookingWindowDays(String(sAny3.booking_window_days ?? 60));
     setVirtualBlockPercent(String(sAny3.virtual_block_percent ?? 0));
@@ -925,6 +936,8 @@ const SessionForm = () => {
       .update({
         confirmation_email_body: confirmationEmailBody,
         reminder_days: reminderDays,
+        followup_months: followupEnabled ? Number(followupMonths) || null : null,
+        followup_template_id: followupEnabled && followupTemplateId ? followupTemplateId : null,
       } as any)
       .eq("id", sessionId);
 
@@ -2854,7 +2867,68 @@ const SessionForm = () => {
                         </p>
                       )}
                     </div>
+
+                    {/* ── Followup ── */}
+                    <div className="flex flex-col gap-3 border border-border p-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                          <p className="text-[10px] tracking-widest uppercase text-muted-foreground">Followup</p>
+                        </div>
+                        <Switch checked={followupEnabled} onCheckedChange={setFollowupEnabled} />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">
+                        Envia automaticamente um email com uma oferta meses depois da sessão para reativar o cliente.
+                      </p>
+
+                      {followupEnabled && (
+                        <div className="flex flex-col gap-3 pt-1">
+                          <div className="flex flex-col gap-1.5">
+                            <Label className="text-[10px] tracking-widest uppercase text-muted-foreground font-light">
+                              Enviar após (meses)
+                            </Label>
+                            <Input
+                              type="number"
+                              min="1"
+                              step="1"
+                              value={followupMonths}
+                              onChange={(e) => setFollowupMonths(e.target.value)}
+                              className="h-9 w-32 text-sm font-light"
+                            />
+                          </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <Label className="text-[10px] tracking-widest uppercase text-muted-foreground font-light">
+                              Template do email
+                            </Label>
+                            <select
+                              value={followupTemplateId}
+                              onChange={(e) => setFollowupTemplateId(e.target.value)}
+                              className="h-9 w-full px-3 text-sm font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                            >
+                              <option value="">Selecione um template…</option>
+                              {emailTemplates.map((t) => (
+                                <option key={t.id} value={t.id}>{t.name || t.stage_trigger}</option>
+                              ))}
+                            </select>
+                            {emailTemplates.length === 0 && (
+                              <p className="text-[10px] text-muted-foreground">
+                                Nenhum template salvo ainda. Crie em{" "}
+                                <button
+                                  type="button"
+                                  className="underline hover:no-underline"
+                                  onClick={() => navigate("/dashboard/personalize")}
+                                >
+                                  Personalize → Workflow Emails
+                                </button>.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </section>
+
 
                   {/* Step 6 Actions */}
                   <div className="flex items-center justify-between border-t border-border pt-6">
