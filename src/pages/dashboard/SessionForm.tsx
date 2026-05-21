@@ -319,11 +319,23 @@ const SessionForm = () => {
     if (data) setBriefingTemplates(data as BriefingTemplate[]);
   }, [user]);
 
+  const fetchEmailTemplates = useCallback(async () => {
+    if (!photographerId && !user) return;
+    const pid = photographerId ?? user?.id;
+    const { data } = await (supabase as any)
+      .from("workflow_email_templates")
+      .select("id, name, subject, html_content, stage_trigger")
+      .eq("photographer_id", pid)
+      .order("created_at", { ascending: true });
+    if (data) setEmailTemplates(data as EmailTemplateOption[]);
+  }, [photographerId, user]);
+
 
   useEffect(() => {
     fetchSessionTypes();
     fetchContractTemplates();
     fetchBriefingTemplates();
+    fetchEmailTemplates();
     if (user) {
       // Fetch store_slug (columns that actually exist on photographers table)
       supabase
