@@ -907,7 +907,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function getContentEditor(type: string, props: any, onChange: (p: any) => void, photographerId?: string | null) {
   switch (type) {
     case "hero": return <HeroContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
-    case "text": return null;
+    case "text": return <TextContentEditor props={props} onChange={onChange} />;
     case "image-text":
     case "text-image": return <ImageTextContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
     case "cta": return <CtaContentEditor props={props} onChange={onChange} />;
