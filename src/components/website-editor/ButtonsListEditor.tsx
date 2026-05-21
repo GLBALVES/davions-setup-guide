@@ -123,15 +123,16 @@ export function ButtonsList({ buttons, onChange, label = "Buttons", compact = fa
             />
             <div className="flex items-center gap-2">
               <Select
-                value={b.variant || "primary"}
+                value={normalizeVariant(b.variant)}
                 onValueChange={(v) => updateAt(i, { variant: v as any })}
               >
                 <SelectTrigger className="h-8 text-xs flex-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="primary">Primary</SelectItem>
-                  <SelectItem value="secondary">Secondary</SelectItem>
+                  <SelectItem value="outline">Outline</SelectItem>
+                  <SelectItem value="filled">Filled</SelectItem>
+                  <SelectItem value="text">Text</SelectItem>
                 </SelectContent>
               </Select>
               <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer shrink-0">
