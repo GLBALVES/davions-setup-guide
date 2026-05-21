@@ -1114,7 +1114,7 @@ export const BlockSettingsPanel = ({
                           key={opt.value}
                           type="button"
                           title={opt.label}
-                          onClick={() => onUpdateProps({ buttonsAlign: opt.value === "inherit" ? undefined : opt.value })}
+                          onClick={() => onUpdateProps({ ...(section.props || {}), buttonsAlign: opt.value === "inherit" ? undefined : opt.value })}
                           className={cn(
                             "h-8 w-8 flex items-center justify-center rounded-md border transition-colors",
                             isActive
