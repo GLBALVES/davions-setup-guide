@@ -1076,8 +1076,30 @@ export const BlockSettingsPanel = ({
             <div className="px-4 pt-4 pb-2">
               <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">Buttons</p>
             </div>
-            <div className="px-4 pb-4">
+            <div className="px-4 pb-4 space-y-3">
               <ButtonsListEditor props={section.props || {}} onChange={onUpdateProps} />
+              {Array.isArray((section.props as any)?.buttons) && (section.props as any).buttons.length > 0 && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Buttons Position</label>
+                  <Select
+                    value={(section.props as any)?.buttonsAlign || "inherit"}
+                    onValueChange={(v) => onUpdateProps({ buttonsAlign: v === "inherit" ? undefined : v })}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="z-[60]">
+                      <SelectItem value="inherit">Inherit from text align</SelectItem>
+                      <SelectItem value="start">Left</SelectItem>
+                      <SelectItem value="center">Center</SelectItem>
+                      <SelectItem value="end">Right</SelectItem>
+                      <SelectItem value="between">Space Between</SelectItem>
+                      <SelectItem value="around">Space Around</SelectItem>
+                      <SelectItem value="evenly">Space Evenly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             <div className="border-t border-border" />
           </>
