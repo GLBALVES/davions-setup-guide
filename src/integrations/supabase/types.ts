@@ -3814,6 +3814,8 @@ export type Database = {
           deposit_type: string
           description: string | null
           duration_minutes: number
+          followup_months: number | null
+          followup_template_id: string | null
           hide_from_store: boolean
           id: string
           location: string | null
@@ -3855,6 +3857,8 @@ export type Database = {
           deposit_type?: string
           description?: string | null
           duration_minutes?: number
+          followup_months?: number | null
+          followup_template_id?: string | null
           hide_from_store?: boolean
           id?: string
           location?: string | null
@@ -3896,6 +3900,8 @@ export type Database = {
           deposit_type?: string
           description?: string | null
           duration_minutes?: number
+          followup_months?: number | null
+          followup_template_id?: string | null
           hide_from_store?: boolean
           id?: string
           location?: string | null
