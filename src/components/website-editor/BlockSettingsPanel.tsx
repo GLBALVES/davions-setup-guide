@@ -1331,46 +1331,6 @@ export const BlockSettingsPanel = ({
             </div>
           )}
 
-          {/* Per-element effects */}
-          <div className="mt-5 space-y-3">
-            <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">
-              Per-element Effects
-            </p>
-            {(
-              [
-                { key: "textScrollEffect", label: "Text" },
-                { key: "imageScrollEffect", label: "Image" },
-                { key: "buttonsScrollEffect", label: "Buttons" },
-              ] as const
-            ).map(({ key, label }) => (
-              <div key={key} className="flex items-center gap-2">
-                <label className="text-[11px] font-medium text-muted-foreground w-16 shrink-0">{label}</label>
-                <Select
-                  value={(s as any)[key] ?? "none"}
-                  onValueChange={(v) => update({ [key]: v } as Partial<BlockSettings>)}
-                >
-                  <SelectTrigger className="h-8 text-xs flex-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="fade-on-scroll">Fade</SelectItem>
-                    <SelectItem value="fly-in-left">Fly In Left</SelectItem>
-                    <SelectItem value="fly-in-right">Fly In Right</SelectItem>
-                    <SelectItem value="fly-in-up">Fly In Up</SelectItem>
-                    <SelectItem value="blur-in">Blur In</SelectItem>
-                    <SelectItem value="rotate-in">Rotate In</SelectItem>
-                    <SelectItem value="zoom-on-scroll">Zoom</SelectItem>
-                    <SelectItem value="reveal">Reveal</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            ))}
-            <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
-              Apply different motions to text, images, and buttons inside this block.
-              They share the section's Intensity & Speed.
-            </p>
-          </div>
         </div>
       </div>
     </div>
