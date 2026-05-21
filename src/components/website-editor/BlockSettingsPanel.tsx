@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, AlignLeft, AlignRight, AlignCenter, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
