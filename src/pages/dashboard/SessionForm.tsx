@@ -2687,6 +2687,46 @@ const SessionForm = () => {
                         <p className="text-[10px] tracking-widest uppercase text-muted-foreground">Confirmation Email Message</p>
                       </div>
 
+                      {/* Escolher template */}
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-[10px] tracking-widest uppercase text-muted-foreground font-light">
+                          Escolher template
+                        </Label>
+                        <select
+                          value={selectedEmailTemplateId}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSelectedEmailTemplateId(val);
+                            let html = "";
+                            if (val === "default") {
+                              html = DEFAULT_CONFIRMATION_EMAIL_HTML;
+                            } else if (val === "blank") {
+                              html = "";
+                            } else {
+                              const tpl = emailTemplates.find((t) => t.id === val);
+                              html = tpl?.html_content ?? "";
+                            }
+                            setConfirmationEmailBody(html);
+                            editor?.commands.setContent(html || "<p></p>");
+                          }}
+                          className="h-9 w-full px-3 text-sm font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                        >
+                          <option value="default">1 · Boas-vindas (sessão fechada) — padrão</option>
+                          <option value="blank">Em branco</option>
+                          {emailTemplates.length > 0 && (
+                            <optgroup label="Meus templates salvos">
+                              {emailTemplates.map((t) => (
+                                <option key={t.id} value={t.id}>{t.name || t.stage_trigger}</option>
+                              ))}
+                            </optgroup>
+                          )}
+                        </select>
+                        <p className="text-[10px] text-muted-foreground">
+                          Carrega o texto do template no editor. Você pode editar livremente — o email não fica vinculado ao template.
+                        </p>
+                      </div>
+
+
                       {/* Rich text toolbar */}
                       <div className="flex items-center gap-1 border border-border p-1 flex-wrap">
                         {[
