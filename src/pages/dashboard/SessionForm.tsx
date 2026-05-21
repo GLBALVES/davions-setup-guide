@@ -551,10 +551,17 @@ const SessionForm = () => {
     }
 
     // Load confirmation settings
-    const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[]; booking_notice_days?: number; booking_window_days?: number; contract_text?: string | null; contract_id?: string | null; briefing_id?: string | null; virtual_block_percent?: number };
+    const sAny3 = s as unknown as { confirmation_email_body?: string; reminder_days?: number[]; booking_notice_days?: number; booking_window_days?: number; contract_text?: string | null; contract_id?: string | null; briefing_id?: string | null; virtual_block_percent?: number; followup_months?: number | null; followup_template_id?: string | null };
     const bodyHtml = sAny3.confirmation_email_body ?? "";
     setConfirmationEmailBody(bodyHtml);
     setReminderDays(sAny3.reminder_days ?? []);
+    if (sAny3.followup_months && sAny3.followup_months > 0) {
+      setFollowupEnabled(true);
+      setFollowupMonths(String(sAny3.followup_months));
+      setFollowupTemplateId(sAny3.followup_template_id ?? "");
+    } else {
+      setFollowupEnabled(false);
+    }
     setBookingNoticeDays(String(sAny3.booking_notice_days ?? 1));
     setBookingWindowDays(String(sAny3.booking_window_days ?? 60));
     setVirtualBlockPercent(String(sAny3.virtual_block_percent ?? 0));
