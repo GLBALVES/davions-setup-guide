@@ -3955,41 +3955,52 @@ const VariantPresets = ({
   site: PreviewSiteConfig | null;
   onSiteChange: (patch: Partial<Record<string, any>>) => void;
 }) => {
+  type VKey = "outline" | "filled" | "text";
   const variants = ((site as any)?.buttonVariants as any) || {};
-  const [openMap, setOpenMap] = useState<Record<"primary" | "secondary", boolean>>({
-    primary: true,
-    secondary: false,
+  const [openMap, setOpenMap] = useState<Record<VKey, boolean>>({
+    outline: true,
+    filled: false,
+    text: false,
   });
-  const toggleOpen = (k: "primary" | "secondary") =>
+  const toggleOpen = (k: VKey) =>
     setOpenMap((m) => ({ ...m, [k]: !m[k] }));
 
-  const updateVariant = (key: "primary" | "secondary", patch: Record<string, any>) => {
+  // Migrate legacy primary/secondary keys → filled/outline (read-side only).
+  const readVariant = (key: VKey) => {
+    if (variants[key]) return variants[key];
+    if (key === "filled" && variants.primary) return variants.primary;
+    if (key === "outline" && variants.secondary) return variants.secondary;
+    return {};
+  };
+
+  const updateVariant = (key: VKey, patch: Record<string, any>) => {
+    const defaults: Record<VKey, any> = {
+      filled: { shape: "square", bg: "#000000", fg: "#ffffff", borderColor: "", borderWidth: 1, hoverBg: "", hoverFg: "", hoverBorderColor: "" },
+      outline: { shape: "square", bg: "#000000", fg: "#000000", borderColor: "", borderWidth: 1, hoverBg: "", hoverFg: "", hoverBorderColor: "" },
+      text: { bg: "#000000", fg: "#000000", hoverFg: "" },
+    };
     const next = {
-      primary: {
-        style: "solid", shape: "square",
-        bg: "#000000", fg: "#ffffff",
-        borderColor: "", borderWidth: 1,
-        hoverBg: "", hoverFg: "", hoverBorderColor: "",
-        ...(variants.primary || {}),
-      },
-      secondary: {
-        style: "outline", shape: "square",
-        bg: "#ffffff", fg: "#000000",
-        borderColor: "", borderWidth: 1,
-        hoverBg: "", hoverFg: "", hoverBorderColor: "",
-        ...(variants.secondary || {}),
-      },
+      filled: { ...defaults.filled, ...readVariant("filled") },
+      outline: { ...defaults.outline, ...readVariant("outline") },
+      text: { ...defaults.text, ...readVariant("text") },
     };
     next[key] = { ...next[key], ...patch };
     onSiteChange({ button_variants: next });
   };
 
-  const VariantBlock = ({ label, vKey, accent }: { label: string; vKey: "primary" | "secondary"; accent: string }) => {
-    const v = variants[vKey] || {};
-    const style = v.style || (vKey === "primary" ? "solid" : "outline");
+  const VariantBlock = ({
+    label,
+    vKey,
+    accent,
+  }: {
+    label: string;
+    vKey: VKey;
+    accent: string;
+  }) => {
+    const v = readVariant(vKey);
     const shape = v.shape || "square";
-    const bg = v.bg || (vKey === "primary" ? "#000000" : "#ffffff");
-    const fg = v.fg || (vKey === "primary" ? "#ffffff" : "#000000");
+    const bg = v.bg || "#000000";
+    const fg = v.fg || (vKey === "filled" ? "#ffffff" : "#000000");
     const borderColor = v.borderColor || bg;
     const borderWidth = typeof v.borderWidth === "number" ? v.borderWidth : 1;
     const hoverBg = v.hoverBg || "";
@@ -3997,11 +4008,11 @@ const VariantPresets = ({
     const hoverBorderColor = v.hoverBorderColor || "";
     const radius = shape === "pill" ? "9999px" : shape === "rounded" ? "8px" : "2px";
     const isOpen = openMap[vKey];
-    const styleLabel = style === "solid" ? "Fill" : style === "outline" ? "Outline" : "Text";
+    const supportsShape = vKey !== "text";
+    const supportsBorder = vKey === "outline" || vKey === "filled";
 
     return (
       <div className="rounded-md border border-border bg-card/30">
-        {/* Header — clickable to toggle collapse */}
         <button
           type="button"
           onClick={() => toggleOpen(vKey)}
@@ -4020,18 +4031,15 @@ const VariantPresets = ({
               aria-hidden
             />
             <span className="text-xs font-medium text-foreground truncate">{label}</span>
-            <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider truncate">
-              · {styleLabel}
-            </span>
           </div>
           <span
             className="px-3 py-1.5 text-[10px] tracking-[0.2em] uppercase shrink-0"
             style={{
-              backgroundColor: style === "solid" ? bg : "transparent",
-              color: style === "solid" ? fg : bg,
-              border: style === "outline" ? `${borderWidth}px solid ${borderColor}` : "none",
-              borderBottom: style === "underline" ? `${borderWidth}px solid ${borderColor}` : undefined,
-              borderRadius: style === "underline" ? 0 : radius,
+              backgroundColor: vKey === "filled" ? bg : "transparent",
+              color: vKey === "filled" ? fg : bg,
+              border: vKey === "outline" ? `${borderWidth}px solid ${borderColor}` : "none",
+              borderBottom: vKey === "text" ? `1px solid ${bg}` : undefined,
+              borderRadius: vKey === "text" ? 0 : radius,
             }}
           >
             Sample
@@ -4042,152 +4050,117 @@ const VariantPresets = ({
           <div className="px-3 pb-3 space-y-3">
             <div className="h-px bg-border/60" />
 
-            {/* Fill */}
-            <div className="space-y-2">
-              <p className="text-[11px] text-muted-foreground">Fill</p>
-              <div className="grid grid-cols-3 gap-2">
-                {(["square", "rounded", "pill"] as const).map((sh) => {
-                  const active = style === "solid" && shape === sh;
-                  return (
-                    <button
-                      key={`v-solid-${sh}`}
-                      type="button"
-                      onClick={() => updateVariant(vKey, { style: "solid", shape: sh })}
-                      className={`h-10 w-full transition-all ${
-                        active ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "hover:opacity-80"
-                      }`}
-                      style={{
-                        backgroundColor: bg,
-                        border: "none",
-                        borderRadius: sh === "pill" ? "9999px" : sh === "rounded" ? "8px" : "2px",
-                      }}
-                      aria-label={`Fill ${sh}`}
-                    />
-                  );
-                })}
+            {supportsShape && (
+              <div className="space-y-2">
+                <p className="text-[11px] text-muted-foreground">Shape</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["square", "rounded", "pill"] as const).map((sh) => {
+                    const active = shape === sh;
+                    return (
+                      <button
+                        key={`shape-${sh}`}
+                        type="button"
+                        onClick={() => updateVariant(vKey, { shape: sh })}
+                        className={`h-10 w-full transition-all ${
+                          active ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "hover:opacity-80"
+                        }`}
+                        style={{
+                          backgroundColor: vKey === "filled" ? bg : "transparent",
+                          border: vKey === "outline" ? `1px solid ${bg}` : vKey === "filled" ? "none" : `1px dashed ${bg}`,
+                          borderRadius: sh === "pill" ? "9999px" : sh === "rounded" ? "8px" : "2px",
+                        }}
+                        aria-label={`Shape ${sh}`}
+                      />
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-
-            {/* Outline */}
-            <div className="space-y-2">
-              <p className="text-[11px] text-muted-foreground">Outline</p>
-              <div className="grid grid-cols-3 gap-2">
-                {(["square", "rounded", "pill"] as const).map((sh) => {
-                  const active = style === "outline" && shape === sh;
-                  return (
-                    <button
-                      key={`v-outline-${sh}`}
-                      type="button"
-                      onClick={() => updateVariant(vKey, { style: "outline", shape: sh })}
-                      className={`h-10 w-full transition-all ${
-                        active ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "hover:opacity-80"
-                      }`}
-                      style={{
-                        backgroundColor: "transparent",
-                        border: `1px solid ${bg}`,
-                        borderRadius: sh === "pill" ? "9999px" : sh === "rounded" ? "8px" : "2px",
-                      }}
-                      aria-label={`Outline ${sh}`}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Text */}
-            <div className="space-y-2">
-              <p className="text-[11px] text-muted-foreground">Text</p>
-              <button
-                type="button"
-                onClick={() => updateVariant(vKey, { style: "underline" })}
-                className={`h-10 px-4 flex items-center justify-center transition-all ${
-                  style === "underline"
-                    ? "ring-2 ring-foreground ring-offset-2 ring-offset-background"
-                    : "hover:opacity-80"
-                }`}
-                style={{ color: bg, backgroundColor: "transparent" }}
-                aria-label="Text"
-              >
-                <span className="text-xs font-medium tracking-wide">Sample</span>
-              </button>
-            </div>
+            )}
 
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Background</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  {vKey === "filled" ? "Background" : "Color"}
+                </p>
                 <div className="flex items-center gap-2">
-                  <SitePalettePicker value={bg} onChange={(v) => updateVariant(vKey, { bg: v })} className="h-9 w-9" />
+                  <SitePalettePicker value={bg} onChange={(val) => updateVariant(vKey, { bg: val })} className="h-9 w-9" />
                   <Input value={bg} onChange={(e) => updateVariant(vKey, { bg: e.target.value })} className="h-9 text-xs flex-1" />
                 </div>
               </div>
-              <div className="space-y-1">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Text</p>
-                <div className="flex items-center gap-2">
-                  <SitePalettePicker value={fg} onChange={(v) => updateVariant(vKey, { fg: v })} className="h-9 w-9" />
-                  <Input value={fg} onChange={(e) => updateVariant(vKey, { fg: e.target.value })} className="h-9 text-xs flex-1" />
+              {vKey === "filled" && (
+                <div className="space-y-1">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Text</p>
+                  <div className="flex items-center gap-2">
+                    <SitePalettePicker value={fg} onChange={(val) => updateVariant(vKey, { fg: val })} className="h-9 w-9" />
+                    <Input value={fg} onChange={(e) => updateVariant(vKey, { fg: e.target.value })} className="h-9 text-xs flex-1" />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
-            {/* Border */}
-            <div className="h-px bg-border/60" />
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Border</p>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Color</p>
-                <div className="flex items-center gap-2">
-                  <SitePalettePicker
-                    value={borderColor}
-                    onChange={(v) => updateVariant(vKey, { borderColor: v })}
-                    className="h-9 w-9"
-                  />
-                  <Input
-                    value={v.borderColor || ""}
-                    placeholder="auto (uses BG)"
-                    onChange={(e) => updateVariant(vKey, { borderColor: e.target.value })}
-                    className="h-9 text-xs flex-1"
-                  />
+            {supportsBorder && (
+              <>
+                <div className="h-px bg-border/60" />
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Border</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Color</p>
+                    <div className="flex items-center gap-2">
+                      <SitePalettePicker
+                        value={borderColor}
+                        onChange={(val) => updateVariant(vKey, { borderColor: val })}
+                        className="h-9 w-9"
+                      />
+                      <Input
+                        value={v.borderColor || ""}
+                        placeholder="auto"
+                        onChange={(e) => updateVariant(vKey, { borderColor: e.target.value })}
+                        className="h-9 text-xs flex-1"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Width (px)</p>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={8}
+                      value={borderWidth}
+                      onChange={(e) => updateVariant(vKey, { borderWidth: Math.max(0, Number(e.target.value) || 0) })}
+                      className="h-9 text-xs"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Width (px)</p>
-                <Input
-                  type="number"
-                  min={0}
-                  max={8}
-                  value={borderWidth}
-                  onChange={(e) => updateVariant(vKey, { borderWidth: Math.max(0, Number(e.target.value) || 0) })}
-                  className="h-9 text-xs"
-                />
-              </div>
-            </div>
+              </>
+            )}
 
-            {/* Hover */}
             <div className="h-px bg-border/60" />
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Hover</p>
             <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">BG</p>
-                <div className="flex items-center gap-2">
-                  <SitePalettePicker
-                    value={hoverBg || bg}
-                    onChange={(v) => updateVariant(vKey, { hoverBg: v })}
-                    className="h-9 w-9"
-                  />
-                  <Input
-                    value={v.hoverBg || ""}
-                    placeholder="auto"
-                    onChange={(e) => updateVariant(vKey, { hoverBg: e.target.value })}
-                    className="h-9 text-xs flex-1"
-                  />
+              {vKey !== "text" && (
+                <div className="space-y-1">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">BG</p>
+                  <div className="flex items-center gap-2">
+                    <SitePalettePicker
+                      value={hoverBg || bg}
+                      onChange={(val) => updateVariant(vKey, { hoverBg: val })}
+                      className="h-9 w-9"
+                    />
+                    <Input
+                      value={v.hoverBg || ""}
+                      placeholder="auto"
+                      onChange={(e) => updateVariant(vKey, { hoverBg: e.target.value })}
+                      className="h-9 text-xs flex-1"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="space-y-1">
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Text</p>
                 <div className="flex items-center gap-2">
                   <SitePalettePicker
                     value={hoverFg || fg}
-                    onChange={(v) => updateVariant(vKey, { hoverFg: v })}
+                    onChange={(val) => updateVariant(vKey, { hoverFg: val })}
                     className="h-9 w-9"
                   />
                   <Input
@@ -4198,22 +4171,24 @@ const VariantPresets = ({
                   />
                 </div>
               </div>
-              <div className="space-y-1 col-span-2">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Border</p>
-                <div className="flex items-center gap-2">
-                  <SitePalettePicker
-                    value={hoverBorderColor || borderColor}
-                    onChange={(v) => updateVariant(vKey, { hoverBorderColor: v })}
-                    className="h-9 w-9"
-                  />
-                  <Input
-                    value={v.hoverBorderColor || ""}
-                    placeholder="auto"
-                    onChange={(e) => updateVariant(vKey, { hoverBorderColor: e.target.value })}
-                    className="h-9 text-xs flex-1"
-                  />
+              {supportsBorder && (
+                <div className="space-y-1 col-span-2">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Border</p>
+                  <div className="flex items-center gap-2">
+                    <SitePalettePicker
+                      value={hoverBorderColor || borderColor}
+                      onChange={(val) => updateVariant(vKey, { hoverBorderColor: val })}
+                      className="h-9 w-9"
+                    />
+                    <Input
+                      value={v.hoverBorderColor || ""}
+                      placeholder="auto"
+                      onChange={(e) => updateVariant(vKey, { hoverBorderColor: e.target.value })}
+                      className="h-9 text-xs flex-1"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         )}
@@ -4223,8 +4198,9 @@ const VariantPresets = ({
 
   return (
     <div className="space-y-3">
-      <VariantBlock label="Primary" vKey="primary" accent="hsl(var(--foreground))" />
-      <VariantBlock label="Secondary" vKey="secondary" accent="hsl(var(--muted-foreground))" />
+      <VariantBlock label="Outline" vKey="outline" accent="hsl(var(--foreground))" />
+      <VariantBlock label="Filled" vKey="filled" accent="hsl(var(--foreground))" />
+      <VariantBlock label="Text" vKey="text" accent="hsl(var(--muted-foreground))" />
     </div>
   );
 };
@@ -4876,8 +4852,9 @@ const WebsiteEditor = () => {
           buttonHeight: raw.button_height ?? 14,
           buttonWidth: raw.button_width ?? 30,
           buttonVariants: raw.button_variants || {
-            primary: { style: "solid", shape: "square", bg: "#000000", fg: "#ffffff" },
-            secondary: { style: "outline", shape: "square", bg: "#ffffff", fg: "#000000" },
+            filled: { shape: "square", bg: "#000000", fg: "#ffffff" },
+            outline: { shape: "square", bg: "#000000", fg: "#000000" },
+            text: { bg: "#000000", fg: "#000000" },
           },
           displayName: (ph as any)?.business_name || (ph as any)?.full_name || "Studio",
         });
@@ -4956,14 +4933,22 @@ const WebsiteEditor = () => {
     root.style.setProperty("--site-btn-pad-x", padX);
     root.style.setProperty("--site-btn-style", s.buttonStyle || "solid");
 
-    // Per-variant tokens (Primary / Secondary)
+    // Per-variant tokens (Outline / Filled / Text). Legacy primary/secondary
+    // keys are migrated read-side: primary→filled, secondary→outline.
     const variants = s.buttonVariants || {};
+    const readVariant = (key: "filled" | "outline" | "text") => {
+      if (variants[key]) return variants[key];
+      if (key === "filled" && variants.primary) return variants.primary;
+      if (key === "outline" && variants.secondary) return variants.secondary;
+      return {};
+    };
     const radiusFor = (sh?: string) => sh === "pill" ? "9999px" : sh === "rounded" ? "8px" : "2px";
-    (["primary", "secondary"] as const).forEach((key) => {
-      const v = variants[key] || {};
-      const styleMode = v.style || (key === "primary" ? "solid" : "outline");
-      const bg = v.bg || (key === "primary" ? "#000000" : "#ffffff");
-      const fg = v.fg || (key === "primary" ? "#ffffff" : "#000000");
+    (["filled", "outline", "text"] as const).forEach((key) => {
+      const v = readVariant(key);
+      const defaultBg = "#000000";
+      const defaultFg = key === "filled" ? "#ffffff" : "#000000";
+      const bg = v.bg || defaultBg;
+      const fg = v.fg || defaultFg;
       const borderColor = v.borderColor || bg;
       const borderWidth = typeof v.borderWidth === "number" ? v.borderWidth : 1;
       const hoverBg = v.hoverBg || bg;
@@ -4977,11 +4962,6 @@ const WebsiteEditor = () => {
       root.style.setProperty(`--site-btn-${key}-hover-fg`, hoverFg);
       root.style.setProperty(`--site-btn-${key}-hover-border-color`, hoverBorderColor);
       root.style.setProperty(`--site-btn-${key}-radius`, radiusFor(v.shape));
-      root.style.setProperty(`--site-btn-${key}-style`, styleMode);
-      // Mirror style mode as a data attribute on <html> so CSS rules can
-      // react instantly to Solid/Outline/Underline changes without React
-      // having to re-render every block.
-      root.setAttribute(`data-site-btn-${key}-style`, styleMode);
     });
   }, [site?.buttonStyle, site?.buttonShape, site?.buttonSize, site?.buttonHeight, site?.buttonWidth, site?.buttonVariants]);
 

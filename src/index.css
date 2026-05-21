@@ -134,6 +134,8 @@
 
 
 /* ─── Site Buttons (Style → Buttons → Variants) ──────────────────────────── */
+/* 3 fixed variant types: filled, outline, text. Each variant's style is
+   built into its CSS rules — no per-element data-style switching. */
 .site-btn {
   display: inline-block;
   padding: 0.75rem 2rem;
@@ -146,50 +148,35 @@
   text-decoration: none;
   line-height: 1.2;
 }
-/* Hover: per-variant background / text / border tokens. Use !important so
-   inline styles don't win on hover. */
-.site-btn-primary:hover {
-  background-color: var(--site-btn-primary-hover-bg, var(--site-btn-primary-bg, #000000)) !important;
-  color: var(--site-btn-primary-hover-fg, var(--site-btn-primary-fg, #ffffff)) !important;
-  border-color: var(--site-btn-primary-hover-border-color, var(--site-btn-primary-border-color, var(--site-btn-primary-bg, #000000))) !important;
+
+/* ── Filled ── solid background, optional border */
+.site-btn-filled {
+  background-color: var(--site-btn-filled-bg, #000000);
+  color: var(--site-btn-filled-fg, #ffffff);
+  border-color: var(--site-btn-filled-border-color, var(--site-btn-filled-bg, #000000));
+}
+.site-btn-filled:hover {
+  background-color: var(--site-btn-filled-hover-bg, var(--site-btn-filled-bg, #000000)) !important;
+  color: var(--site-btn-filled-hover-fg, var(--site-btn-filled-fg, #ffffff)) !important;
+  border-color: var(--site-btn-filled-hover-border-color, var(--site-btn-filled-border-color, var(--site-btn-filled-bg, #000000))) !important;
   opacity: 1;
 }
-.site-btn-secondary:hover {
-  background-color: var(--site-btn-secondary-hover-bg, var(--site-btn-secondary-bg, #ffffff)) !important;
-  color: var(--site-btn-secondary-hover-fg, var(--site-btn-secondary-fg, #000000)) !important;
-  border-color: var(--site-btn-secondary-hover-border-color, var(--site-btn-secondary-border-color, var(--site-btn-secondary-bg, #ffffff))) !important;
+
+/* ── Outline ── transparent bg, colored border + text */
+.site-btn-outline {
+  background-color: transparent !important;
+  color: var(--site-btn-outline-fg, var(--site-btn-outline-bg, #000000));
+  border-color: var(--site-btn-outline-border-color, var(--site-btn-outline-bg, #000000));
+}
+.site-btn-outline:hover {
+  background-color: var(--site-btn-outline-hover-bg, transparent) !important;
+  color: var(--site-btn-outline-hover-fg, var(--site-btn-outline-fg, var(--site-btn-outline-bg, #000000))) !important;
+  border-color: var(--site-btn-outline-hover-border-color, var(--site-btn-outline-border-color, var(--site-btn-outline-bg, #000000))) !important;
   opacity: 1;
 }
-/* Solid is the default style emitted by siteButtonProps inline style. */
-/* Outline: transparent bg, colored border + text. Selectors include both
-   the per-element data-style attribute (set on first render) AND the global
-   <html data-site-btn-*-style> attribute (updated live by the editor) so
-   variant changes reflect instantly without re-rendering each block. */
-.site-btn.site-btn-outline-primary,
-.site-btn-primary[data-style="outline"],
-html[data-site-btn-primary-style="outline"] .site-btn-primary {
-  background-color: transparent !important;
-  color: var(--site-btn-primary-bg, #000000) !important;
-}
-.site-btn-secondary[data-style="outline"],
-html[data-site-btn-secondary-style="outline"] .site-btn-secondary {
-  background-color: transparent !important;
-  color: var(--site-btn-secondary-bg, #ffffff) !important;
-}
-/* Outline + hover: keep transparent unless user defined a hover BG. */
-html[data-site-btn-primary-style="outline"] .site-btn-primary:hover {
-  background-color: var(--site-btn-primary-hover-bg, transparent) !important;
-  color: var(--site-btn-primary-hover-fg, var(--site-btn-primary-bg, #000000)) !important;
-}
-html[data-site-btn-secondary-style="outline"] .site-btn-secondary:hover {
-  background-color: var(--site-btn-secondary-hover-bg, transparent) !important;
-  color: var(--site-btn-secondary-hover-fg, var(--site-btn-secondary-bg, #ffffff)) !important;
-}
-/* Underline: transparent bg, no border, underlined text */
-.site-btn-primary[data-style="underline"],
-.site-btn-secondary[data-style="underline"],
-html[data-site-btn-primary-style="underline"] .site-btn-primary,
-html[data-site-btn-secondary-style="underline"] .site-btn-secondary {
+
+/* ── Text ── transparent, no border, underlined */
+.site-btn-text {
   background-color: transparent !important;
   border: none !important;
   border-radius: 0 !important;
@@ -197,21 +184,10 @@ html[data-site-btn-secondary-style="underline"] .site-btn-secondary {
   padding-left: 0 !important;
   padding-right: 0 !important;
   height: auto !important;
+  color: var(--site-btn-text-fg, var(--site-btn-text-bg, #000000));
 }
-.site-btn-primary[data-style="underline"],
-html[data-site-btn-primary-style="underline"] .site-btn-primary {
-  color: var(--site-btn-primary-bg, #000000) !important;
-}
-.site-btn-secondary[data-style="underline"],
-html[data-site-btn-secondary-style="underline"] .site-btn-secondary {
-  color: var(--site-btn-secondary-bg, #ffffff) !important;
-}
-/* Underline hover: keep transparent BG; allow custom hover text color. */
-html[data-site-btn-primary-style="underline"] .site-btn-primary:hover {
+.site-btn-text:hover {
   background-color: transparent !important;
-  color: var(--site-btn-primary-hover-fg, var(--site-btn-primary-bg, #000000)) !important;
-}
-html[data-site-btn-secondary-style="underline"] .site-btn-secondary:hover {
-  background-color: transparent !important;
-  color: var(--site-btn-secondary-hover-fg, var(--site-btn-secondary-bg, #ffffff)) !important;
+  color: var(--site-btn-text-hover-fg, var(--site-btn-text-fg, var(--site-btn-text-bg, #000000))) !important;
+  opacity: 1;
 }

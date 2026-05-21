@@ -12,9 +12,15 @@ export type BlockBtn = {
   id?: string;
   text: string;
   link?: string;
-  variant?: "primary" | "secondary";
+  variant?: "filled" | "outline" | "text";
   newTab?: boolean;
 };
+
+function normalizeVariant(v: any): "filled" | "outline" | "text" {
+  if (v === "filled" || v === "outline" || v === "text") return v;
+  if (v === "secondary") return "outline";
+  return "filled";
+}
 
 /** Migrate legacy single-button fields (ctaText/ctaLink/buttonText/buttonLink/buttonVariant)
  *  into the new buttons[] array. Safe to call on any object. */
@@ -26,7 +32,7 @@ export function migrateLegacyToButtons(props: any): BlockBtn[] {
   return [{
     text: text || "",
     link: link || "",
-    variant: props?.buttonVariant === "secondary" ? "secondary" : "primary",
+    variant: normalizeVariant(props?.buttonVariant),
     newTab: false,
   }];
 }
@@ -58,7 +64,7 @@ export function ButtonsList({ buttons, onChange, label = "Buttons", compact = fa
       {
         text: "",
         link: "",
-        variant: buttons.length === 0 ? "primary" : "secondary",
+        variant: buttons.length === 0 ? "filled" : "outline",
         newTab: false,
       },
     ]);
@@ -117,15 +123,16 @@ export function ButtonsList({ buttons, onChange, label = "Buttons", compact = fa
             />
             <div className="flex items-center gap-2">
               <Select
-                value={b.variant || "primary"}
+                value={normalizeVariant(b.variant)}
                 onValueChange={(v) => updateAt(i, { variant: v as any })}
               >
                 <SelectTrigger className="h-8 text-xs flex-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="primary">Primary</SelectItem>
-                  <SelectItem value="secondary">Secondary</SelectItem>
+                  <SelectItem value="outline">Outline</SelectItem>
+                  <SelectItem value="filled">Filled</SelectItem>
+                  <SelectItem value="text">Text</SelectItem>
                 </SelectContent>
               </Select>
               <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground cursor-pointer shrink-0">
