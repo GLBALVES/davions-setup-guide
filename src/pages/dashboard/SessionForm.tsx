@@ -320,15 +320,14 @@ const SessionForm = () => {
   }, [user]);
 
   const fetchEmailTemplates = useCallback(async () => {
-    if (!photographerId && !user) return;
-    const pid = photographerId ?? user?.id;
+    if (!user) return;
     const { data } = await (supabase as any)
       .from("workflow_email_templates")
       .select("id, name, subject, html_content, stage_trigger")
-      .eq("photographer_id", pid)
+      .eq("photographer_id", user.id)
       .order("created_at", { ascending: true });
     if (data) setEmailTemplates(data as EmailTemplateOption[]);
-  }, [photographerId, user]);
+  }, [user]);
 
 
   useEffect(() => {
