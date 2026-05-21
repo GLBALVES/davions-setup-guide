@@ -305,6 +305,7 @@ export default function InlineFormatToolbar() {
       /* noop */
     }
     document.execCommand("foreColor", false, color);
+    setCurrentColor(color);
     // Re-snapshot the live selection so the next pick keeps painting the same
     // text — important while dragging in the color wheel or clicking multiple
     // swatches in sequence.
