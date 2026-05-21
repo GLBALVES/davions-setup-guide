@@ -217,6 +217,7 @@ function TextContentEditor({ props, onChange }: { props: any; onChange: (p: any)
           placeholder="Write your content here… Use the floating toolbar to set Heading, Bold, Color…"
         />
       </Field>
+      <ButtonsListEditor props={props} onChange={onChange} />
     </div>
   );
 }
@@ -237,13 +238,7 @@ function ImageTextContentEditor({ props, onChange, photographerId }: { props: an
   );
 }
 
-function TextContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
-  return (
-    <div className="space-y-3">
-      <ButtonsListEditor props={props} onChange={onChange} />
-    </div>
-  );
-}
+
 
 
 function CtaContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
