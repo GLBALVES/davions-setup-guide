@@ -335,12 +335,23 @@ const SessionForm = () => {
     if (data) setEmailTemplates(data as EmailTemplateOption[]);
   }, [user]);
 
+  const fetchFollowupTemplates = useCallback(async () => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from("followup_email_templates")
+      .select("id, name, subject, html_content")
+      .eq("photographer_id", user.id)
+      .order("created_at", { ascending: true });
+    if (data) setFollowupTemplates(data as FollowupTemplateOption[]);
+  }, [user]);
+
 
   useEffect(() => {
     fetchSessionTypes();
     fetchContractTemplates();
     fetchBriefingTemplates();
     fetchEmailTemplates();
+    fetchFollowupTemplates();
     if (user) {
       // Fetch store_slug (columns that actually exist on photographers table)
       supabase
