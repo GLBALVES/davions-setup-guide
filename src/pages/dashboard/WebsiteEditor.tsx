@@ -3985,6 +3985,13 @@ const VariantPresets = ({
   onSiteChange: (patch: Partial<Record<string, any>>) => void;
 }) => {
   const variants = ((site as any)?.buttonVariants as any) || {};
+  const [openMap, setOpenMap] = useState<Record<"primary" | "secondary", boolean>>({
+    primary: true,
+    secondary: false,
+  });
+  const toggleOpen = (k: "primary" | "secondary") =>
+    setOpenMap((m) => ({ ...m, [k]: !m[k] }));
+
   const updateVariant = (key: "primary" | "secondary", patch: Record<string, any>) => {
     const next = {
       primary: {
@@ -4018,18 +4025,33 @@ const VariantPresets = ({
     const hoverFg = v.hoverFg || "";
     const hoverBorderColor = v.hoverBorderColor || "";
     const radius = shape === "pill" ? "9999px" : shape === "rounded" ? "8px" : "2px";
+    const isOpen = openMap[vKey];
+    const styleLabel = style === "solid" ? "Fill" : style === "outline" ? "Outline" : "Text";
 
     return (
-      <div className="rounded-md border border-border bg-card/30 p-3 space-y-3">
-        {/* Header with live preview */}
-        <div className="flex items-center justify-between gap-3">
+      <div className="rounded-md border border-border bg-card/30">
+        {/* Header — clickable to toggle collapse */}
+        <button
+          type="button"
+          onClick={() => toggleOpen(vKey)}
+          className="w-full flex items-center justify-between gap-3 p-3 text-left hover:bg-muted/30 transition-colors rounded-md"
+          aria-expanded={isOpen}
+        >
           <div className="flex items-center gap-2 min-w-0">
+            <ChevronDown
+              className={`h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform ${
+                isOpen ? "" : "-rotate-90"
+              }`}
+            />
             <span
               className="h-2 w-2 rounded-full shrink-0"
               style={{ backgroundColor: accent }}
               aria-hidden
             />
             <span className="text-xs font-medium text-foreground truncate">{label}</span>
+            <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider truncate">
+              · {styleLabel}
+            </span>
           </div>
           <span
             className="px-3 py-1.5 text-[10px] tracking-[0.2em] uppercase shrink-0"
@@ -4043,184 +4065,187 @@ const VariantPresets = ({
           >
             Sample
           </span>
-        </div>
+        </button>
 
-        <div className="h-px bg-border/60" />
+        {isOpen && (
+          <div className="px-3 pb-3 space-y-3">
+            <div className="h-px bg-border/60" />
 
-        {/* Shape swatches — same pattern as Default Shape, but per-variant */}
-        <div className="space-y-2">
-          <p className="text-[11px] text-muted-foreground">Solid</p>
-          <div className="grid grid-cols-3 gap-2">
-            {(["square", "rounded", "pill"] as const).map((sh) => {
-              const active = style === "solid" && shape === sh;
-              return (
-                <button
-                  key={`v-solid-${sh}`}
-                  type="button"
-                  onClick={() => updateVariant(vKey, { style: "solid", shape: sh })}
-                  className={`h-10 w-full transition-all ${
-                    active ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "hover:opacity-80"
-                  }`}
-                  style={{
-                    backgroundColor: bg,
-                    border: "none",
-                    borderRadius: sh === "pill" ? "9999px" : sh === "rounded" ? "8px" : "2px",
-                  }}
-                  aria-label={`Solid ${sh}`}
-                />
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-[11px] text-muted-foreground">Outline</p>
-          <div className="grid grid-cols-3 gap-2">
-            {(["square", "rounded", "pill"] as const).map((sh) => {
-              const active = style === "outline" && shape === sh;
-              return (
-                <button
-                  key={`v-outline-${sh}`}
-                  type="button"
-                  onClick={() => updateVariant(vKey, { style: "outline", shape: sh })}
-                  className={`h-10 w-full transition-all ${
-                    active ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "hover:opacity-80"
-                  }`}
-                  style={{
-                    backgroundColor: "transparent",
-                    border: `1px solid ${bg}`,
-                    borderRadius: sh === "pill" ? "9999px" : sh === "rounded" ? "8px" : "2px",
-                  }}
-                  aria-label={`Outline ${sh}`}
-                />
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-[11px] text-muted-foreground">Underline</p>
-          <button
-            type="button"
-            onClick={() => updateVariant(vKey, { style: "underline" })}
-            className={`h-10 w-1/3 flex items-end justify-center transition-all ${
-              style === "underline" ? "opacity-100" : "opacity-60 hover:opacity-100"
-            }`}
-          >
-            <span
-              className="block w-full h-px"
-              style={{
-                backgroundColor: bg,
-                outline: style === "underline" ? "1px solid hsl(var(--foreground))" : "none",
-                outlineOffset: 4,
-              }}
-            />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Background</p>
-            <div className="flex items-center gap-2">
-              <SitePalettePicker value={bg} onChange={(v) => updateVariant(vKey, { bg: v })} className="h-9 w-9" />
-              <Input value={bg} onChange={(e) => updateVariant(vKey, { bg: e.target.value })} className="h-9 text-xs flex-1" />
+            {/* Fill */}
+            <div className="space-y-2">
+              <p className="text-[11px] text-muted-foreground">Fill</p>
+              <div className="grid grid-cols-3 gap-2">
+                {(["square", "rounded", "pill"] as const).map((sh) => {
+                  const active = style === "solid" && shape === sh;
+                  return (
+                    <button
+                      key={`v-solid-${sh}`}
+                      type="button"
+                      onClick={() => updateVariant(vKey, { style: "solid", shape: sh })}
+                      className={`h-10 w-full transition-all ${
+                        active ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "hover:opacity-80"
+                      }`}
+                      style={{
+                        backgroundColor: bg,
+                        border: "none",
+                        borderRadius: sh === "pill" ? "9999px" : sh === "rounded" ? "8px" : "2px",
+                      }}
+                      aria-label={`Fill ${sh}`}
+                    />
+                  );
+                })}
+              </div>
             </div>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Text</p>
-            <div className="flex items-center gap-2">
-              <SitePalettePicker value={fg} onChange={(v) => updateVariant(vKey, { fg: v })} className="h-9 w-9" />
-              <Input value={fg} onChange={(e) => updateVariant(vKey, { fg: e.target.value })} className="h-9 text-xs flex-1" />
-            </div>
-          </div>
-        </div>
 
-        {/* Border */}
-        <div className="h-px bg-border/60" />
-        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Border</p>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Color</p>
-            <div className="flex items-center gap-2">
-              <SitePalettePicker
-                value={borderColor}
-                onChange={(v) => updateVariant(vKey, { borderColor: v })}
-                className="h-9 w-9"
-              />
-              <Input
-                value={v.borderColor || ""}
-                placeholder="auto (uses BG)"
-                onChange={(e) => updateVariant(vKey, { borderColor: e.target.value })}
-                className="h-9 text-xs flex-1"
-              />
+            {/* Outline */}
+            <div className="space-y-2">
+              <p className="text-[11px] text-muted-foreground">Outline</p>
+              <div className="grid grid-cols-3 gap-2">
+                {(["square", "rounded", "pill"] as const).map((sh) => {
+                  const active = style === "outline" && shape === sh;
+                  return (
+                    <button
+                      key={`v-outline-${sh}`}
+                      type="button"
+                      onClick={() => updateVariant(vKey, { style: "outline", shape: sh })}
+                      className={`h-10 w-full transition-all ${
+                        active ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "hover:opacity-80"
+                      }`}
+                      style={{
+                        backgroundColor: "transparent",
+                        border: `1px solid ${bg}`,
+                        borderRadius: sh === "pill" ? "9999px" : sh === "rounded" ? "8px" : "2px",
+                      }}
+                      aria-label={`Outline ${sh}`}
+                    />
+                  );
+                })}
+              </div>
             </div>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Width (px)</p>
-            <Input
-              type="number"
-              min={0}
-              max={8}
-              value={borderWidth}
-              onChange={(e) => updateVariant(vKey, { borderWidth: Math.max(0, Number(e.target.value) || 0) })}
-              className="h-9 text-xs"
-            />
-          </div>
-        </div>
 
-        {/* Hover */}
-        <div className="h-px bg-border/60" />
-        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Hover</p>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">BG</p>
-            <div className="flex items-center gap-2">
-              <SitePalettePicker
-                value={hoverBg || bg}
-                onChange={(v) => updateVariant(vKey, { hoverBg: v })}
-                className="h-9 w-9"
-              />
-              <Input
-                value={v.hoverBg || ""}
-                placeholder="auto"
-                onChange={(e) => updateVariant(vKey, { hoverBg: e.target.value })}
-                className="h-9 text-xs flex-1"
-              />
+            {/* Text */}
+            <div className="space-y-2">
+              <p className="text-[11px] text-muted-foreground">Text</p>
+              <button
+                type="button"
+                onClick={() => updateVariant(vKey, { style: "underline" })}
+                className={`h-10 px-4 flex items-center justify-center transition-all ${
+                  style === "underline"
+                    ? "ring-2 ring-foreground ring-offset-2 ring-offset-background"
+                    : "hover:opacity-80"
+                }`}
+                style={{ color: bg, backgroundColor: "transparent" }}
+                aria-label="Text"
+              >
+                <span className="text-xs font-medium tracking-wide">Sample</span>
+              </button>
             </div>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Text</p>
-            <div className="flex items-center gap-2">
-              <SitePalettePicker
-                value={hoverFg || fg}
-                onChange={(v) => updateVariant(vKey, { hoverFg: v })}
-                className="h-9 w-9"
-              />
-              <Input
-                value={v.hoverFg || ""}
-                placeholder="auto"
-                onChange={(e) => updateVariant(vKey, { hoverFg: e.target.value })}
-                className="h-9 text-xs flex-1"
-              />
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Background</p>
+                <div className="flex items-center gap-2">
+                  <SitePalettePicker value={bg} onChange={(v) => updateVariant(vKey, { bg: v })} className="h-9 w-9" />
+                  <Input value={bg} onChange={(e) => updateVariant(vKey, { bg: e.target.value })} className="h-9 text-xs flex-1" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Text</p>
+                <div className="flex items-center gap-2">
+                  <SitePalettePicker value={fg} onChange={(v) => updateVariant(vKey, { fg: v })} className="h-9 w-9" />
+                  <Input value={fg} onChange={(e) => updateVariant(vKey, { fg: e.target.value })} className="h-9 text-xs flex-1" />
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="space-y-1 col-span-2">
+
+            {/* Border */}
+            <div className="h-px bg-border/60" />
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Border</p>
-            <div className="flex items-center gap-2">
-              <SitePalettePicker
-                value={hoverBorderColor || borderColor}
-                onChange={(v) => updateVariant(vKey, { hoverBorderColor: v })}
-                className="h-9 w-9"
-              />
-              <Input
-                value={v.hoverBorderColor || ""}
-                placeholder="auto"
-                onChange={(e) => updateVariant(vKey, { hoverBorderColor: e.target.value })}
-                className="h-9 text-xs flex-1"
-              />
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Color</p>
+                <div className="flex items-center gap-2">
+                  <SitePalettePicker
+                    value={borderColor}
+                    onChange={(v) => updateVariant(vKey, { borderColor: v })}
+                    className="h-9 w-9"
+                  />
+                  <Input
+                    value={v.borderColor || ""}
+                    placeholder="auto (uses BG)"
+                    onChange={(e) => updateVariant(vKey, { borderColor: e.target.value })}
+                    className="h-9 text-xs flex-1"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Width (px)</p>
+                <Input
+                  type="number"
+                  min={0}
+                  max={8}
+                  value={borderWidth}
+                  onChange={(e) => updateVariant(vKey, { borderWidth: Math.max(0, Number(e.target.value) || 0) })}
+                  className="h-9 text-xs"
+                />
+              </div>
+            </div>
+
+            {/* Hover */}
+            <div className="h-px bg-border/60" />
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Hover</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">BG</p>
+                <div className="flex items-center gap-2">
+                  <SitePalettePicker
+                    value={hoverBg || bg}
+                    onChange={(v) => updateVariant(vKey, { hoverBg: v })}
+                    className="h-9 w-9"
+                  />
+                  <Input
+                    value={v.hoverBg || ""}
+                    placeholder="auto"
+                    onChange={(e) => updateVariant(vKey, { hoverBg: e.target.value })}
+                    className="h-9 text-xs flex-1"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Text</p>
+                <div className="flex items-center gap-2">
+                  <SitePalettePicker
+                    value={hoverFg || fg}
+                    onChange={(v) => updateVariant(vKey, { hoverFg: v })}
+                    className="h-9 w-9"
+                  />
+                  <Input
+                    value={v.hoverFg || ""}
+                    placeholder="auto"
+                    onChange={(e) => updateVariant(vKey, { hoverFg: e.target.value })}
+                    className="h-9 text-xs flex-1"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1 col-span-2">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Border</p>
+                <div className="flex items-center gap-2">
+                  <SitePalettePicker
+                    value={hoverBorderColor || borderColor}
+                    onChange={(v) => updateVariant(vKey, { hoverBorderColor: v })}
+                    className="h-9 w-9"
+                  />
+                  <Input
+                    value={v.hoverBorderColor || ""}
+                    placeholder="auto"
+                    onChange={(e) => updateVariant(vKey, { hoverBorderColor: e.target.value })}
+                    className="h-9 text-xs flex-1"
+                  />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     );
   };
@@ -4232,6 +4257,7 @@ const VariantPresets = ({
     </div>
   );
 };
+
 
 const SITE_TEMPLATES_LABELS: Record<string, string> = {
   editorial: "Rosa",
