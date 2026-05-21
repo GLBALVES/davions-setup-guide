@@ -187,6 +187,7 @@ export default function InlineFormatToolbar() {
   const [showSize, setShowSize] = useState(false);
   const [showBlock, setShowBlock] = useState(false);
   const [customSize, setCustomSize] = useState<string>("");
+  const [currentColor, setCurrentColor] = useState<string>("#000000");
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   // Snapshot of the user's selection range. Updated on every valid selection
   // change so we can restore it before applying a format — important because
@@ -232,6 +233,26 @@ export default function InlineFormatToolbar() {
     // Snapshot for later restoration (the popovers / native pickers can steal
     // focus and collapse the selection before our apply handler runs).
     savedRangeRef.current = range.cloneRange();
+    // Reflect the selection's current foreground color in the picker swatch.
+    try {
+      const node = range.startContainer;
+      const el = (node.nodeType === 1 ? node : node.parentElement) as HTMLElement | null;
+      if (el) {
+        const rgb = getComputedStyle(el).color;
+        const m = rgb.match(/rgba?\(([^)]+)\)/);
+        if (m) {
+          const [r, g, b] = m[1].split(",").map((s) => parseInt(s.trim(), 10));
+          const hex =
+            "#" +
+            [r, g, b]
+              .map((n) => Math.max(0, Math.min(255, n)).toString(16).padStart(2, "0"))
+              .join("");
+          setCurrentColor(hex);
+        }
+      }
+    } catch {
+      /* noop */
+    }
   }, []);
 
   // While any popover is open we must NOT close the toolbar from a
@@ -304,6 +325,7 @@ export default function InlineFormatToolbar() {
       /* noop */
     }
     document.execCommand("foreColor", false, color);
+    setCurrentColor(color);
     // Re-snapshot the live selection so the next pick keeps painting the same
     // text — important while dragging in the color wheel or clicking multiple
     // swatches in sequence.
@@ -684,7 +706,7 @@ export default function InlineFormatToolbar() {
             onPointerDown={(e) => e.stopPropagation()}
           >
             <SitePaletteColorOptions
-              value="#000000"
+              value={currentColor}
               onChange={(v) => onApplyColor(v, false)}
               onCommit={() => setShowColor(false)}
             />
