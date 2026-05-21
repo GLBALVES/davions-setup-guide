@@ -91,22 +91,6 @@ export interface RichTextFieldProps {
   inputClassName?: string;
 }
 
-
-
-/** Parse a CSS color (named/hex/rgb) to a normalized #rrggbb hex. */
-function normalizeColor(c?: string): string | undefined {
-  if (!c || typeof document === "undefined") return undefined;
-  const probe = document.createElement("div");
-  probe.style.color = c;
-  document.body.appendChild(probe);
-  const computed = getComputedStyle(probe).color;
-  document.body.removeChild(probe);
-  const m = computed.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-  if (!m) return c;
-  const [r, g, b] = [m[1], m[2], m[3]].map((n) => Number(n).toString(16).padStart(2, "0"));
-  return `#${r}${g}${b}`.toUpperCase();
-}
-
 export function RichTextField({
   value,
   onChange,
