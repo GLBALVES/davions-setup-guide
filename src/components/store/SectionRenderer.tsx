@@ -611,7 +611,7 @@ function TextBlock(props: any) {
           buttons={buttons}
           editMode={c.editMode}
           onChange={(next) => c.set("buttons", next)}
-          align={align === "left" ? "start" : align === "right" ? "end" : "center"}
+          align={props.buttonsAlign || (align === "left" ? "start" : align === "right" ? "end" : "center")}
         />
       </div>
     </section>
