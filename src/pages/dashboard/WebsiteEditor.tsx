@@ -4010,6 +4010,12 @@ const VariantPresets = ({
     const isOpen = openMap[vKey];
     const supportsShape = vKey !== "text";
     const supportsBorder = vKey === "outline" || vKey === "filled";
+    const [hovered, setHovered] = useState(false);
+
+    // Resolve effective hover values (fallback to base when not set).
+    const effBg = hovered ? (hoverBg || bg) : bg;
+    const effFg = hovered ? (hoverFg || fg) : fg;
+    const effBorderColor = hovered ? (hoverBorderColor || borderColor) : borderColor;
 
     return (
       <div className="rounded-md border border-border bg-card/30">
@@ -4033,12 +4039,14 @@ const VariantPresets = ({
             <span className="text-xs font-medium text-foreground truncate">{label}</span>
           </div>
           <span
-            className="px-3 py-1.5 text-[10px] tracking-[0.2em] uppercase shrink-0"
+            onMouseEnter={(e) => { e.stopPropagation(); setHovered(true); }}
+            onMouseLeave={() => setHovered(false)}
+            className="px-3 py-1.5 text-[10px] tracking-[0.2em] uppercase shrink-0 transition-colors duration-200"
             style={{
-              backgroundColor: vKey === "filled" ? bg : "transparent",
-              color: vKey === "filled" ? fg : bg,
-              border: vKey === "outline" ? `${borderWidth}px solid ${borderColor}` : "none",
-              borderBottom: vKey === "text" ? `1px solid ${bg}` : undefined,
+              backgroundColor: vKey === "filled" ? effBg : "transparent",
+              color: vKey === "filled" ? effFg : effBg,
+              border: vKey === "outline" ? `${borderWidth}px solid ${effBorderColor}` : "none",
+              borderBottom: vKey === "text" ? `1px solid ${effBg}` : undefined,
               borderRadius: vKey === "text" ? 0 : radius,
             }}
           >
