@@ -5847,7 +5847,7 @@ const WebsiteEditor = () => {
           </div>
         )}
 
-        <InlineFormatToolbar />
+        <InlineFormatToolbar externalFonts={_siteExternalFonts} />
 
         <div className="flex-1 min-h-0 relative">
           <PreviewRenderer

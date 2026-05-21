@@ -5,10 +5,11 @@ import {
   Heading1, Heading2, Heading3, Quote, List, ListOrdered,
   AlignLeft, AlignCenter, AlignRight, Link as LinkIcon, ChevronDown,
 } from "lucide-react";
-import { FONT_PRESETS } from "@/components/website-editor/site-fonts";
+import { FONT_PRESETS, type ExternalFontEntry, buildExternalStack } from "@/components/website-editor/site-fonts";
 import { cn } from "@/lib/utils";
 import { SitePaletteColorOptions } from "@/components/website-editor/SitePalettePicker";
 import { ELEMENT_GROUPS, type ElementKey } from "@/components/website-editor/font-templates";
+
 
 /**
  * Map each design-system element key to the block tag we should produce via
@@ -179,7 +180,7 @@ function clearSelectionFormatting(host: HTMLElement) {
   }
 }
 
-export default function InlineFormatToolbar() {
+export default function InlineFormatToolbar({ externalFonts = [] }: { externalFonts?: ExternalFontEntry[] }) {
   const [pos, setPos] = useState<ToolbarPosition | null>(null);
   const [host, setHost] = useState<HTMLElement | null>(null);
   const [showColor, setShowColor] = useState(false);
@@ -603,6 +604,25 @@ export default function InlineFormatToolbar() {
         </button>
         {showFont && (
           <div className="absolute top-full mt-1 left-0 bg-background border border-border rounded-md shadow-lg py-1 min-w-[180px] max-h-[280px] overflow-y-auto">
+            {externalFonts.length > 0 && (
+              <>
+                <div className="px-3 py-1 text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                  Custom
+                </div>
+                {externalFonts.map((f) => (
+                  <button
+                    key={`ext-${f.id}`}
+                    type="button"
+                    onMouseDown={guard(() => onApplyFont(buildExternalStack(f)))}
+                    className="w-full text-left px-3 py-1.5 hover:bg-muted text-foreground"
+                    style={{ fontFamily: buildExternalStack(f) }}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+                <div className="my-1 border-t border-border" />
+              </>
+            )}
             {FONT_PRESETS.map((f) => (
               <button
                 key={f.id}
