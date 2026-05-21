@@ -99,6 +99,12 @@ const subMinsFromTime = (time: string, mins: number): string => {
   return format(addMinutes(base, -mins), "HH:mm");
 };
 
+// Default confirmation email body (mirrors WorkflowEmailTemplates → "1 · Boas-vindas (sessão fechada)")
+const DEFAULT_CONFIRMATION_EMAIL_HTML = `<p>Olá {{client_name}},</p>
+<p>Que alegria ter você com a gente! Sua sessão <strong>{{session_type}}</strong> está confirmada para o dia <strong>{{shoot_date}}</strong>.</p>
+<p>Em breve enviaremos mais informações sobre os preparativos. Se tiver qualquer dúvida, é só responder este email.</p>
+<p>Com carinho,<br/>{{photographer_name}}<br/>{{studio_name}}</p>`;
+
 // ────────────────────────────────────────────
 // Component
 // ────────────────────────────────────────────
@@ -155,8 +161,12 @@ const SessionForm = () => {
   const [sessionBonuses, setSessionBonuses] = useState<string[]>([]);
 
   // ── Confirmation step ──
-  const [confirmationEmailBody, setConfirmationEmailBody] = useState("");
+  const [confirmationEmailBody, setConfirmationEmailBody] = useState(isEdit ? "" : DEFAULT_CONFIRMATION_EMAIL_HTML);
   const [reminderDays, setReminderDays] = useState<number[]>([]);
+  // Workflow email templates available to choose from
+  interface EmailTemplateOption { id: string; name: string; subject: string; html_content: string; stage_trigger: string; }
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplateOption[]>([]);
+  const [selectedEmailTemplateId, setSelectedEmailTemplateId] = useState<string>("default");
 
   // ── Booking Rules step ──
   const [bookingNoticeDays, setBookingNoticeDays] = useState("1");
@@ -309,11 +319,22 @@ const SessionForm = () => {
     if (data) setBriefingTemplates(data as BriefingTemplate[]);
   }, [user]);
 
+  const fetchEmailTemplates = useCallback(async () => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from("workflow_email_templates")
+      .select("id, name, subject, html_content, stage_trigger")
+      .eq("photographer_id", user.id)
+      .order("created_at", { ascending: true });
+    if (data) setEmailTemplates(data as EmailTemplateOption[]);
+  }, [user]);
+
 
   useEffect(() => {
     fetchSessionTypes();
     fetchContractTemplates();
     fetchBriefingTemplates();
+    fetchEmailTemplates();
     if (user) {
       // Fetch store_slug (columns that actually exist on photographers table)
       supabase
@@ -2665,6 +2686,46 @@ const SessionForm = () => {
                         <Mail className="h-3.5 w-3.5 text-muted-foreground" />
                         <p className="text-[10px] tracking-widest uppercase text-muted-foreground">Confirmation Email Message</p>
                       </div>
+
+                      {/* Escolher template */}
+                      <div className="flex flex-col gap-1.5">
+                        <Label className="text-[10px] tracking-widest uppercase text-muted-foreground font-light">
+                          Escolher template
+                        </Label>
+                        <select
+                          value={selectedEmailTemplateId}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSelectedEmailTemplateId(val);
+                            let html = "";
+                            if (val === "default") {
+                              html = DEFAULT_CONFIRMATION_EMAIL_HTML;
+                            } else if (val === "blank") {
+                              html = "";
+                            } else {
+                              const tpl = emailTemplates.find((t) => t.id === val);
+                              html = tpl?.html_content ?? "";
+                            }
+                            setConfirmationEmailBody(html);
+                            editor?.commands.setContent(html || "<p></p>");
+                          }}
+                          className="h-9 w-full px-3 text-sm font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                        >
+                          <option value="default">1 · Boas-vindas (sessão fechada) — padrão</option>
+                          <option value="blank">Em branco</option>
+                          {emailTemplates.length > 0 && (
+                            <optgroup label="Meus templates salvos">
+                              {emailTemplates.map((t) => (
+                                <option key={t.id} value={t.id}>{t.name || t.stage_trigger}</option>
+                              ))}
+                            </optgroup>
+                          )}
+                        </select>
+                        <p className="text-[10px] text-muted-foreground">
+                          Carrega o texto do template no editor. Você pode editar livremente — o email não fica vinculado ao template.
+                        </p>
+                      </div>
+
 
                       {/* Rich text toolbar */}
                       <div className="flex items-center gap-1 border border-border p-1 flex-wrap">
