@@ -218,7 +218,6 @@ function HeroContentEditor({ props, onChange, photographerId }: { props: any; on
 }
 
 function TextContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
-  const align = props.align || "center";
   return (
     <div className="space-y-3">
       <Field label="Content">
@@ -228,20 +227,6 @@ function TextContentEditor({ props, onChange }: { props: any; onChange: (p: any)
           onChange={(v) => onChange({ ...props, body: v, title: "", subtitle: "" })}
           placeholder="Write your content here… Use the floating toolbar to set Heading, Bold, Color…"
         />
-      </Field>
-      <Field label="Alignment">
-        <div className="flex gap-1">
-          {(["left", "center", "right"] as const).map((a) => (
-            <button
-              key={a}
-              type="button"
-              onClick={() => onChange({ ...props, align: a })}
-              className={`flex-1 h-8 text-xs rounded border capitalize ${align === a ? "bg-foreground text-background border-foreground" : "bg-background text-foreground border-border hover:bg-muted"}`}
-            >
-              {a}
-            </button>
-          ))}
-        </div>
       </Field>
     </div>
   );
