@@ -1070,6 +1070,19 @@ export const BlockSettingsPanel = ({
           );
         })()}
 
+        {/* ── Buttons (text block) ── */}
+        {section.type === "text" && (
+          <>
+            <div className="px-4 pt-4 pb-2">
+              <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">Buttons</p>
+            </div>
+            <div className="px-4 pb-4">
+              <ButtonsListEditor props={section.props || {}} onChange={onUpdateProps} />
+            </div>
+            <div className="border-t border-border" />
+          </>
+        )}
+
 
         {/* ── Background Color ── */}
         <div className="px-4 pt-4 pb-2">
