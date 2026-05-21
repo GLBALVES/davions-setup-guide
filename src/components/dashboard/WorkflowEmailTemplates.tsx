@@ -274,6 +274,11 @@ export default function WorkflowEmailTemplates() {
   const [logsSearch, setLogsSearch] = useState("");
   const [tab, setTab] = useState<"editor" | "logs">("editor");
   const [editorOpen, setEditorOpen] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+
+  const toggleGroup = (title: string) => {
+    setCollapsedGroups((prev) => ({ ...prev, [title]: !prev[title] }));
+  };
 
   const triggerMeta: Record<Trigger, { label: string; desc: string }> = {
     booking_confirmed: { label: "1 · Boas-vindas (sessão fechada)", desc: "Enviado quando o cliente confirma e paga a sessão." },
