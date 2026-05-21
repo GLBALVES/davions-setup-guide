@@ -81,16 +81,6 @@ function applyStyleToHtmlRange(
   return tpl.innerHTML;
 }
 
-/** Apply a tag (b/i/u) over a plain-text range using the same DOM-walk approach. */
-function applyTagToHtmlRange(
-  html: string,
-  plainStart: number,
-  plainEnd: number,
-  tag: "b" | "i" | "u",
-): string {
-  const styleCss = tag === "b" ? "font-weight:bold" : tag === "i" ? "font-style:italic" : "text-decoration:underline";
-  return applyStyleToHtmlRange(html, plainStart, plainEnd, styleCss);
-}
 
 export interface RichTextFieldProps {
   value: string;
