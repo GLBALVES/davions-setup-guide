@@ -304,27 +304,83 @@ export default function InlineFormatToolbar() {
     const isRichTextHost = host.tagName === "DIV";
 
     if (isRichTextHost) {
-      execSimple(host, "formatBlock", `<${tag}>`);
       const sel = window.getSelection();
-      if (sel && sel.rangeCount > 0) {
-        let n: Node | null = sel.anchorNode;
-        while (n && n.nodeType !== 1) n = n.parentNode;
-        let el = n as HTMLElement | null;
-        while (el && el !== host) {
-          if (el.tagName === tag) {
-            el.setAttribute("data-site-typo", key);
-            el.style.removeProperty("font-family");
-            el.style.removeProperty("font-size");
-            el.style.removeProperty("font-weight");
-            el.style.removeProperty("line-height");
-            el.style.removeProperty("letter-spacing");
-            el.style.removeProperty("text-transform");
-            break;
+      const range = sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
+
+      // Collect every block-level element inside the host that intersects the
+      // current selection so we can transform each one individually (the
+      // native `formatBlock` command only touches the block at the selection
+      // start, which is why multi-paragraph selections only converted the
+      // first paragraph).
+      const BLOCK_TAGS = new Set(["P", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE", "DIV", "LI"]);
+      const blocks: HTMLElement[] = [];
+      if (range) {
+        const walker = document.createTreeWalker(host, NodeFilter.SHOW_ELEMENT, {
+          acceptNode: (n) => {
+            const el = n as HTMLElement;
+            if (el === host) return NodeFilter.FILTER_SKIP;
+            if (!BLOCK_TAGS.has(el.tagName)) return NodeFilter.FILTER_SKIP;
+            return range.intersectsNode(el) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+          },
+        });
+        let n: Node | null;
+        // eslint-disable-next-line no-cond-assign
+        while ((n = walker.nextNode())) blocks.push(n as HTMLElement);
+      }
+
+      // Filter out ancestor blocks when a descendant is also in the list, so
+      // we only transform the leaf blocks the user actually selected text in.
+      const leaves = blocks.filter(
+        (b) => !blocks.some((other) => other !== b && b.contains(other))
+      );
+
+      if (leaves.length > 1) {
+        const transformed: HTMLElement[] = [];
+        leaves.forEach((block) => {
+          const replacement = document.createElement(tag);
+          while (block.firstChild) replacement.appendChild(block.firstChild);
+          replacement.setAttribute("data-site-typo", key);
+          replacement.style.removeProperty("font-family");
+          replacement.style.removeProperty("font-size");
+          replacement.style.removeProperty("font-weight");
+          replacement.style.removeProperty("line-height");
+          replacement.style.removeProperty("letter-spacing");
+          replacement.style.removeProperty("text-transform");
+          block.replaceWith(replacement);
+          transformed.push(replacement);
+        });
+        if (sel && transformed.length > 0) {
+          const newRange = document.createRange();
+          newRange.setStartBefore(transformed[0]);
+          newRange.setEndAfter(transformed[transformed.length - 1]);
+          sel.removeAllRanges();
+          sel.addRange(newRange);
+        }
+        host.normalize();
+      } else {
+        execSimple(host, "formatBlock", `<${tag}>`);
+        const sel2 = window.getSelection();
+        if (sel2 && sel2.rangeCount > 0) {
+          let n: Node | null = sel2.anchorNode;
+          while (n && n.nodeType !== 1) n = n.parentNode;
+          let el = n as HTMLElement | null;
+          while (el && el !== host) {
+            if (el.tagName === tag) {
+              el.setAttribute("data-site-typo", key);
+              el.style.removeProperty("font-family");
+              el.style.removeProperty("font-size");
+              el.style.removeProperty("font-weight");
+              el.style.removeProperty("line-height");
+              el.style.removeProperty("letter-spacing");
+              el.style.removeProperty("text-transform");
+              break;
+            }
+            el = el.parentElement;
           }
-          el = el.parentElement;
         }
       }
     } else {
+
       // Unwrap any prior root-level data-site-typo wrapper.
       const onlyChild =
         host.children.length === 1 && host.childNodes.length === 1
