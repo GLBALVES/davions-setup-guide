@@ -313,129 +313,22 @@ export function RichTextField({
   inputClassName,
 }: RichTextFieldProps) {
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
-  const [showColor, setShowColor] = useState(false);
-  const [showFont, setShowFont] = useState(false);
-  const [showSize, setShowSize] = useState(false);
-  const [customSize, setCustomSize] = useState("");
-  const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
-
   const plainValue = useMemo(() => htmlToPlain(value || ""), [value]);
-
-  const captureSelection = () => {
-    const el = inputRef.current;
-    if (!el) return;
-    const start = el.selectionStart ?? 0;
-    const end = el.selectionEnd ?? 0;
-    setSelection({ start, end });
-  };
 
   const onPlainChange = (nextPlain: string) => {
     if (nextPlain === plainValue) return;
     onChange(nextPlain);
   };
 
-  // Determine the effective range to apply formatting to.
-  const getRange = (): { start: number; end: number } => {
-    const el = inputRef.current;
-    const len = plainValue.length;
-    if (el && document.activeElement === el) {
-      const s = el.selectionStart ?? 0;
-      const e = el.selectionEnd ?? 0;
-      if (s !== e) return { start: s, end: e };
-    }
-    if (selection && selection.start !== selection.end) return selection;
-    return { start: 0, end: len };
-  };
-
-  // Active style at the current effective range start (visual highlight).
-  const activeStyle = useMemo(() => {
-    const { start } = getRange();
-    return inspectStyleAt(value || "", start);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, selection, plainValue]);
-
-  const activeColorHex = useMemo(() => normalizeColor(activeStyle.color), [activeStyle.color]);
-  const activeFontStack = activeStyle.fontFamily;
-  const activeFontPreset = useMemo(
-    () =>
-      activeFontStack
-        ? FONT_PRESETS.find(
-            (f) =>
-              f.stack.replace(/\s|"|'/g, "").toLowerCase() ===
-              activeFontStack.replace(/\s|"|'/g, "").toLowerCase(),
-          )
-        : undefined,
-    [activeFontStack],
-  );
-  const activeFontSizePx = useMemo(() => {
-    if (!activeStyle.fontSize) return undefined;
-    const m = activeStyle.fontSize.match(/(\d+(?:\.\d+)?)px/);
-    return m ? Number(m[1]) : undefined;
-  }, [activeStyle.fontSize]);
-
-  const apply = (styleCss: string) => {
-    const { start, end } = getRange();
-    if (start === end) return;
-    const next = applyStyleToHtmlRange(value || plainValue, start, end, styleCss);
-    onChange(next);
-  };
-
-  const applyTag = (tag: "b" | "i" | "u") => {
-    const { start, end } = getRange();
-    if (start === end) return;
-    const isActive = tag === "b" ? !!activeStyle.bold : tag === "i" ? !!activeStyle.italic : !!activeStyle.underline;
-    const next = isActive
-      ? removeFormatFromHtmlRange(value || plainValue, start, end, tag)
-      : applyTagToHtmlRange(value || plainValue, start, end, tag);
-    onChange(next);
-  };
-
-  const clearFormatting = () => {
-    onChange(plainValue);
-  };
-
-  const closeAllPopovers = () => {
-    setShowColor(false);
-    setShowFont(false);
-    setShowSize(false);
-  };
-
-  const onApplyColor = (color: string, closePicker = true) => {
-    apply(`color:${color}`);
-    if (closePicker) closeAllPopovers();
-  };
-  const onApplyFont = (stack: string) => {
-    apply(`font-family:${stack}`);
-    closeAllPopovers();
-  };
-  const onApplySize = (px: number) => {
-    apply(`font-size:${px}px;line-height:1.2`);
-    closeAllPopovers();
-  };
-
-  const wrapRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    const onDocClick = (e: MouseEvent) => {
-      if (!wrapRef.current) return;
-      if (!wrapRef.current.contains(e.target as Node)) closeAllPopovers();
-    };
-    document.addEventListener("mousedown", onDocClick);
-    return () => document.removeEventListener("mousedown", onDocClick);
-  }, []);
-
   const commonInputProps = {
     value: plainValue,
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       onPlainChange(e.target.value),
-    onSelect: captureSelection,
-    onKeyUp: captureSelection,
-    onMouseUp: captureSelection,
-    onBlur: captureSelection,
     placeholder,
   };
 
   return (
-    <div ref={wrapRef} className={cn("space-y-1.5", className)}>
+    <div className={cn("space-y-1.5", className)}>
       {multiline ? (
         <textarea
           {...commonInputProps}
