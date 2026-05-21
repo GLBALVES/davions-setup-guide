@@ -78,37 +78,73 @@ function fireInput(host: HTMLElement) {
   host.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Wrap the current selection in <span style="..."> applying the given styles. */
+/** Wrap every text node within the current selection in <span style="..."> so
+ * the styling applies across multiple block elements (e.g. several <p>). */
 function applyInlineStyle(host: HTMLElement, styles: Partial<CSSStyleDeclaration>) {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
   const range = sel.getRangeAt(0);
-  // Only apply if the selection is inside our host
   if (!host.contains(range.commonAncestorContainer)) return;
 
-  try {
-    document.execCommand("styleWithCSS", false, "true");
-  } catch {
-    /* noop */
+  const applyStyles = (el: HTMLElement) => {
+    Object.entries(styles).forEach(([k, v]) => {
+      if (v != null) (el.style as any)[k] = v as string;
+    });
+  };
+
+  // Collect all text nodes that intersect the range.
+  const textNodes: Text[] = [];
+  const walker = document.createTreeWalker(
+    range.commonAncestorContainer,
+    NodeFilter.SHOW_TEXT,
+    {
+      acceptNode: (node) => {
+        if (!node.nodeValue || node.nodeValue.length === 0) return NodeFilter.FILTER_REJECT;
+        return range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      },
+    },
+  );
+  let n: Node | null;
+  // If commonAncestor is itself a text node, walker won't visit it.
+  if (range.commonAncestorContainer.nodeType === Node.TEXT_NODE) {
+    textNodes.push(range.commonAncestorContainer as Text);
+  } else {
+    while ((n = walker.nextNode())) textNodes.push(n as Text);
   }
 
-  const span = document.createElement("span");
-  Object.entries(styles).forEach(([k, v]) => {
-    if (v != null) (span.style as any)[k] = v as string;
-  });
-  try {
-    range.surroundContents(span);
-  } catch {
-    // Selection crosses element boundaries — fall back to extract+wrap
-    const frag = range.extractContents();
-    span.appendChild(frag);
-    range.insertNode(span);
+  if (textNodes.length === 0) {
+    fireInput(host);
+    return;
   }
-  // Restore selection across the wrapped span
-  const newRange = document.createRange();
-  newRange.selectNodeContents(span);
-  sel.removeAllRanges();
-  sel.addRange(newRange);
+
+  const wrappedSpans: HTMLSpanElement[] = [];
+  textNodes.forEach((textNode) => {
+    let startOffset = 0;
+    let endOffset = textNode.nodeValue!.length;
+    if (textNode === range.startContainer) startOffset = range.startOffset;
+    if (textNode === range.endContainer) endOffset = range.endOffset;
+    if (startOffset >= endOffset) return;
+
+    // Split the text node so we only wrap the selected portion.
+    let target = textNode;
+    if (endOffset < target.nodeValue!.length) target.splitText(endOffset);
+    if (startOffset > 0) target = target.splitText(startOffset);
+
+    const span = document.createElement("span");
+    applyStyles(span);
+    target.parentNode?.insertBefore(span, target);
+    span.appendChild(target);
+    wrappedSpans.push(span);
+  });
+
+  // Restore selection across the wrapped range.
+  if (wrappedSpans.length > 0) {
+    const newRange = document.createRange();
+    newRange.setStartBefore(wrappedSpans[0]);
+    newRange.setEndAfter(wrappedSpans[wrappedSpans.length - 1]);
+    sel.removeAllRanges();
+    sel.addRange(newRange);
+  }
   fireInput(host);
 }
 
