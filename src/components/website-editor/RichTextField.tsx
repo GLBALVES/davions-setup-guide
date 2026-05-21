@@ -91,55 +91,6 @@ export interface RichTextFieldProps {
   inputClassName?: string;
 }
 
-/** Inspect the HTML at plain index `plainStart` and return the inline styles
- *  applied by the closest ancestor span. Used to highlight the current
- *  font/color/size in the toolbar. */
-function inspectStyleAt(html: string, plainStart: number) {
-  const result: {
-    color?: string;
-    fontFamily?: string;
-    fontSize?: string;
-    bold?: boolean;
-    italic?: boolean;
-    underline?: boolean;
-  } = {};
-  if (!html) return result;
-  const tpl = document.createElement("template");
-  tpl.innerHTML = looksLikeHtml(html) ? html : escapeHtml(html);
-  let cursor = 0;
-  let done = false;
-  const walk = (node: Node, ancestors: HTMLElement[]) => {
-    if (done) return;
-    for (const child of Array.from(node.childNodes)) {
-      if (done) return;
-      if (child.nodeType === Node.TEXT_NODE) {
-        const text = child.nodeValue ?? "";
-        const nodeEnd = cursor + text.length;
-        if (plainStart >= cursor && plainStart <= nodeEnd) {
-          for (let i = ancestors.length - 1; i >= 0; i--) {
-            const a = ancestors[i];
-            if (a.style.color && !result.color) result.color = a.style.color;
-            if (a.style.fontFamily && !result.fontFamily) result.fontFamily = a.style.fontFamily;
-            if (a.style.fontSize && !result.fontSize) result.fontSize = a.style.fontSize;
-            const tag = a.tagName.toLowerCase();
-            const fw = a.style.fontWeight;
-            const fs = a.style.fontStyle;
-            const td = a.style.textDecoration || a.style.textDecorationLine;
-            if (!result.bold && (tag === "b" || tag === "strong" || fw === "bold" || (fw && Number(fw) >= 600))) result.bold = true;
-            if (!result.italic && (tag === "i" || tag === "em" || fs === "italic")) result.italic = true;
-            if (!result.underline && (tag === "u" || (td && td.includes("underline")))) result.underline = true;
-          }
-          done = true;
-        }
-        cursor = nodeEnd;
-      } else if (child.nodeType === Node.ELEMENT_NODE) {
-        walk(child, [...ancestors, child as HTMLElement]);
-      }
-    }
-  };
-  walk(tpl.content, []);
-  return result;
-}
 
 /** Remove a formatting tag/style across a plain-text range. Walks the DOM and
  *  unwraps spans/tags whose text overlaps the range and that match the format. */
