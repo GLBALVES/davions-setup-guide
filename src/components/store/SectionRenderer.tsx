@@ -544,7 +544,9 @@ function HeroBlock(props: any) {
 
 // ─── Text ───────────────────────────────────────────────────────────────────
 
-function TextBlock({ title, subtitle, body, align = "center", ctx, blockSettings }: any) {
+function TextBlock(props: any) {
+  const { title, subtitle, body, align = "center", ctx, blockSettings } = props;
+  const buttons = resolveBlockButtons(props);
   const c: Ctx = ctx || { editMode: false, set: () => {} };
   const alignClass =
     align === "left" ? "text-left" : align === "right" ? "text-right" : "text-center";
