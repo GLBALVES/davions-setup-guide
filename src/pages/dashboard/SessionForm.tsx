@@ -171,6 +171,8 @@ const SessionForm = () => {
   const [followupEnabled, setFollowupEnabled] = useState(false);
   const [followupMonths, setFollowupMonths] = useState<string>("6");
   const [followupTemplateId, setFollowupTemplateId] = useState<string>("");
+  interface FollowupTemplateOption { id: string; name: string; subject: string; html_content: string; }
+  const [followupTemplates, setFollowupTemplates] = useState<FollowupTemplateOption[]>([]);
 
   // ── Booking Rules step ──
   const [bookingNoticeDays, setBookingNoticeDays] = useState("1");
