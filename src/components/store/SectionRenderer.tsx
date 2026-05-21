@@ -170,8 +170,7 @@ function BlockButtons({
       style={{ marginTop, justifyContent: justify }}
     >
       {list.map((b, i) => {
-        const variant: "primary" | "secondary" = b.variant === "secondary" ? "secondary" : "primary";
-        const btn = siteButtonProps(variant);
+        const btn = siteButtonProps(normalizeBtnVariant(b.variant));
         return (
           <a
             key={b.id || i}
