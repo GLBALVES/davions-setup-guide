@@ -161,8 +161,12 @@ const SessionForm = () => {
   const [sessionBonuses, setSessionBonuses] = useState<string[]>([]);
 
   // ── Confirmation step ──
-  const [confirmationEmailBody, setConfirmationEmailBody] = useState("");
+  const [confirmationEmailBody, setConfirmationEmailBody] = useState(isEdit ? "" : DEFAULT_CONFIRMATION_EMAIL_HTML);
   const [reminderDays, setReminderDays] = useState<number[]>([]);
+  // Workflow email templates available to choose from
+  interface EmailTemplateOption { id: string; name: string; subject: string; html_content: string; stage_trigger: string; }
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplateOption[]>([]);
+  const [selectedEmailTemplateId, setSelectedEmailTemplateId] = useState<string>("default");
 
   // ── Booking Rules step ──
   const [bookingNoticeDays, setBookingNoticeDays] = useState("1");
