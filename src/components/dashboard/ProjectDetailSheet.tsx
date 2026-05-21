@@ -3136,7 +3136,7 @@ function ProjectBriefingSubsection({
           .maybeSingle(),
       ]);
       if (!brief) return null;
-      return { id: brief.id as string, name: brief.name as string, answered: !!resp };
+      return { id: brief.id as string, name: brief.name as string, answered: !!resp, sessionId: booking.session_id as string };
     },
     enabled: !!bookingId && !!photographerId,
   });
