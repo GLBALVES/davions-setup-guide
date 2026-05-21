@@ -441,63 +441,78 @@ export default function WorkflowEmailTemplates() {
       </div>
 
       {tab === "editor" && (
-        <div className="space-y-8">
+        <div className="space-y-4">
           {[
             { title: "Jornada do cliente", desc: "7 etapas automáticas do início ao fim do projeto", keys: [...JOURNEY_TRIGGERS] as Trigger[] },
             { title: "Lembretes pré-sessão", desc: "Disparados antes da data do ensaio (se ativados na sessão)", keys: [...REMINDER_TRIGGERS] as Trigger[] },
             { title: "Pagamento", desc: "Lembrete + link Stripe para o saldo restante (quando 'On the session day' está ativo)", keys: [...PAYMENT_TRIGGERS] as Trigger[] },
             { title: "Engajamento", desc: "Lembretes recorrentes para ações pendentes do cliente", keys: [...ENGAGEMENT_TRIGGERS] as Trigger[] },
-          ].map((group) => (
-            <div key={group.title}>
-              <div className="mb-3">
-                <p className="text-[11px] tracking-[0.25em] uppercase font-light">{group.title}</p>
-                <p className="text-[10px] text-muted-foreground">{group.desc}</p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {group.keys.map((trigger) => {
-                  const tpl = templates[trigger];
-                  const meta = triggerMeta[trigger];
-                  return (
-                    <button
-                      key={trigger}
-                      onClick={() => {
-                        setActiveTrigger(trigger);
-                        setEditorOpen(true);
-                      }}
-                      className="group text-left border border-border bg-background hover:border-foreground transition-colors p-4 flex flex-col gap-3 min-h-[140px]"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <Mail className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                        <span
-                          className={`inline-flex items-center gap-1.5 text-[9px] tracking-[0.2em] uppercase ${
-                            tpl?.enabled ? "text-emerald-600" : "text-muted-foreground"
-                          }`}
+          ].map((group) => {
+            const isCollapsed = !!collapsedGroups[group.title];
+            return (
+              <div key={group.title} className="border border-border">
+                <button
+                  onClick={() => toggleGroup(group.title)}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-accent/20 transition-colors"
+                >
+                  <div>
+                    <p className="text-[11px] tracking-[0.25em] uppercase font-light">{group.title}</p>
+                    <p className="text-[10px] text-muted-foreground">{group.desc}</p>
+                  </div>
+                  {isCollapsed ? (
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                  )}
+                </button>
+                {!isCollapsed && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4 pt-0">
+                    {group.keys.map((trigger) => {
+                      const tpl = templates[trigger];
+                      const meta = triggerMeta[trigger];
+                      return (
+                        <button
+                          key={trigger}
+                          onClick={() => {
+                            setActiveTrigger(trigger);
+                            setEditorOpen(true);
+                          }}
+                          className="group text-left border border-border bg-background hover:border-foreground transition-colors p-4 flex flex-col gap-3 min-h-[140px]"
                         >
-                          <span
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              tpl?.enabled ? "bg-emerald-500" : "bg-muted-foreground/30"
-                            }`}
-                          />
-                          {tpl?.enabled ? "Ativo" : "Inativo"}
-                        </span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-xs font-light leading-tight mb-1">{meta.label}</p>
-                        <p className="text-[10px] text-muted-foreground line-clamp-2">
-                          {tpl?.subject || meta.desc}
-                        </p>
-                      </div>
-                      {tpl?.auto_send && (
-                        <span className="text-[9px] tracking-wider uppercase text-muted-foreground">
-                          Envio automático
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
+                          <div className="flex items-start justify-between gap-2">
+                            <Mail className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                            <span
+                              className={`inline-flex items-center gap-1.5 text-[9px] tracking-[0.2em] uppercase ${
+                                tpl?.enabled ? "text-emerald-600" : "text-muted-foreground"
+                              }`}
+                            >
+                              <span
+                                className={`h-1.5 w-1.5 rounded-full ${
+                                  tpl?.enabled ? "bg-emerald-500" : "bg-muted-foreground/30"
+                                }`}
+                              />
+                              {tpl?.enabled ? "Ativo" : "Inativo"}
+                            </span>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-xs font-light leading-tight mb-1">{meta.label}</p>
+                            <p className="text-[10px] text-muted-foreground line-clamp-2">
+                              {tpl?.subject || meta.desc}
+                            </p>
+                          </div>
+                          {tpl?.auto_send && (
+                            <span className="text-[9px] tracking-wider uppercase text-muted-foreground">
+                              Envio automático
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
