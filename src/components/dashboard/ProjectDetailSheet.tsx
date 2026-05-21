@@ -3116,6 +3116,7 @@ function ProjectBriefingSubsection({
 }) {
   const [open, setOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [selectedBriefingId, setSelectedBriefingId] = useState<string>("");
   const queryClient = useQueryClient();
 
@@ -3268,15 +3269,7 @@ function ProjectBriefingSubsection({
             </span>
           )}
           <button
-            onClick={async () => {
-              const url = `${window.location.origin}/booking-success?booking=${bookingId}&session=${sessionId}`;
-              try {
-                await navigator.clipboard.writeText(url);
-                toast.success("Link do briefing copiado");
-              } catch {
-                toast.error("Não foi possível copiar o link");
-              }
-            }}
+            onClick={() => setShareOpen(true)}
             title="Compartilhar briefing"
             className="inline-flex items-center justify-center h-7 w-7 rounded-sm border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
           >
@@ -3292,7 +3285,96 @@ function ProjectBriefingSubsection({
           briefingId={briefing.id}
         />
       )}
+      {briefing && sessionId && (
+        <BriefingShareDialog
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          url={`${window.location.origin}/booking-success?booking=${bookingId ?? ""}&session=${sessionId}`}
+          briefingName={briefing.name}
+        />
+      )}
     </div>
+  );
+}
+
+function BriefingShareDialog({
+  open,
+  onClose,
+  url,
+  briefingName,
+}: {
+  open: boolean;
+  onClose: () => void;
+  url: string;
+  briefingName: string;
+}) {
+  const message = `Olá! Por favor preencha o briefing "${briefingName}": ${url}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copiado");
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-md z-50">
+        <DialogHeader>
+          <DialogTitle className="text-sm tracking-widest uppercase font-light">
+            Compartilhar briefing
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-center">
+            <img src={qrUrl} alt="QR Code do briefing" className="border border-border/50 rounded-md" />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Input value={url} readOnly className="text-xs flex-1" onFocus={(e) => e.currentTarget.select()} />
+            <Button variant="outline" size="sm" onClick={copyLink} className="shrink-0">
+              Copiar
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(message)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 h-10 rounded-sm border border-border/50 text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            >
+              WhatsApp
+            </a>
+            <a
+              href={`mailto:?subject=${encodeURIComponent("Briefing — " + briefingName)}&body=${encodeURIComponent(message)}`}
+              className="flex items-center justify-center gap-2 h-10 rounded-sm border border-border/50 text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            >
+              Email
+            </a>
+            <a
+              href={`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(message)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 h-10 rounded-sm border border-border/50 text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            >
+              Telegram
+            </a>
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 h-10 rounded-sm border border-border/50 text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            >
+              Abrir
+            </a>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
