@@ -180,7 +180,7 @@ function clearSelectionFormatting(host: HTMLElement) {
   }
 }
 
-export default function InlineFormatToolbar() {
+export default function InlineFormatToolbar({ externalFonts = [] }: { externalFonts?: ExternalFontEntry[] }) {
   const [pos, setPos] = useState<ToolbarPosition | null>(null);
   const [host, setHost] = useState<HTMLElement | null>(null);
   const [showColor, setShowColor] = useState(false);
