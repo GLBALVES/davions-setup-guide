@@ -686,7 +686,7 @@ export default function InlineFormatToolbar() {
             onPointerDown={(e) => e.stopPropagation()}
           >
             <SitePaletteColorOptions
-              value="#000000"
+              value={currentColor}
               onChange={(v) => onApplyColor(v, false)}
               onCommit={() => setShowColor(false)}
             />
