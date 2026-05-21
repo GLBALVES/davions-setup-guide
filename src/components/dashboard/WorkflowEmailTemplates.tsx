@@ -20,6 +20,8 @@ import {
   XCircle,
   Search,
   Settings2,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import RichTextEditor from "@/components/RichTextEditor";
 import {
