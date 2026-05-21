@@ -167,6 +167,10 @@ const SessionForm = () => {
   interface EmailTemplateOption { id: string; name: string; subject: string; html_content: string; stage_trigger: string; }
   const [emailTemplates, setEmailTemplates] = useState<EmailTemplateOption[]>([]);
   const [selectedEmailTemplateId, setSelectedEmailTemplateId] = useState<string>("default");
+  // ── Followup ──
+  const [followupEnabled, setFollowupEnabled] = useState(false);
+  const [followupMonths, setFollowupMonths] = useState<string>("6");
+  const [followupTemplateId, setFollowupTemplateId] = useState<string>("");
 
   // ── Booking Rules step ──
   const [bookingNoticeDays, setBookingNoticeDays] = useState("1");
