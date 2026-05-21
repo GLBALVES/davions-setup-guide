@@ -1514,6 +1514,7 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
         bookingId={(project as any).booking_id ?? null}
         sessionType={(project as any).session_type ?? null}
         photographerId={photographerId}
+        briefings={briefings}
         labelTitle={tp.briefingsSubsection}
         emptyText={tp.noBriefings}
       />
@@ -3102,19 +3103,26 @@ function ProjectBriefingSubsection({
   bookingId,
   sessionType,
   photographerId,
+  briefings,
   labelTitle,
   emptyText,
 }: {
   bookingId: string | null;
   sessionType?: string | null;
   photographerId: string;
+  briefings: { id: string; name: string }[];
   labelTitle: string;
   emptyText: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [selectedBriefingId, setSelectedBriefingId] = useState<string>("");
+  const queryClient = useQueryClient();
+
+  const queryKey = ["project-briefing-status", bookingId, sessionType, photographerId];
 
   const { data } = useQuery({
-    queryKey: ["project-briefing-status", bookingId, sessionType, photographerId],
+    queryKey,
     queryFn: async () => {
       let sessionId: string | null = null;
 
@@ -3127,7 +3135,6 @@ function ProjectBriefingSubsection({
         sessionId = booking?.session_id ?? null;
       }
 
-      // Fallback: resolve session via session_type (for app-created projects without booking)
       if (!sessionId && sessionType && photographerId) {
         const { data: sess } = await (supabase as any)
           .from("sessions")
@@ -3139,14 +3146,15 @@ function ProjectBriefingSubsection({
         sessionId = sess?.id ?? null;
       }
 
-      if (!sessionId) return null;
+      if (!sessionId) return { sessionId: null as string | null, briefing: null as null | { id: string; name: string; answered: boolean } };
 
       const { data: session } = await (supabase as any)
         .from("sessions")
         .select("briefing_id")
         .eq("id", sessionId)
         .maybeSingle();
-      if (!session?.briefing_id) return null;
+
+      if (!session?.briefing_id) return { sessionId, briefing: null };
 
       const briefPromise = (supabase as any).from("briefings").select("id, name").eq("id", session.briefing_id).maybeSingle();
       const respPromise = bookingId
@@ -3158,23 +3166,91 @@ function ProjectBriefingSubsection({
             .maybeSingle()
         : Promise.resolve({ data: null });
       const [{ data: brief }, { data: resp }] = await Promise.all([briefPromise, respPromise]);
-      if (!brief) return null;
-      return { id: brief.id as string, name: brief.name as string, answered: !!resp, sessionId };
+      if (!brief) return { sessionId, briefing: null };
+      return {
+        sessionId,
+        briefing: { id: brief.id as string, name: brief.name as string, answered: !!resp },
+      };
     },
     enabled: !!photographerId && (!!bookingId || !!sessionType),
   });
 
+  const sessionId = data?.sessionId ?? null;
+  const briefing = data?.briefing ?? null;
+
+  const attachMutation = useMutation({
+    mutationFn: async (briefingId: string) => {
+      if (!sessionId) throw new Error("Session not found");
+      const { error } = await (supabase as any)
+        .from("sessions")
+        .update({ briefing_id: briefingId })
+        .eq("id", sessionId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Briefing vinculado");
+      setPickerOpen(false);
+      setSelectedBriefingId("");
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (e: any) => toast.error(e?.message || "Erro ao vincular briefing"),
+  });
 
   return (
     <div className="flex flex-col gap-1.5">
       <p className="text-[10px] tracking-widest uppercase font-light text-muted-foreground">{labelTitle}</p>
-      {!data ? (
-        <p className="text-[11px] text-muted-foreground/50 italic pl-1">{emptyText}</p>
+      {!briefing ? (
+        <div className="flex flex-col gap-2">
+          <p className="text-[11px] text-muted-foreground/50 italic pl-1">{emptyText}</p>
+          {sessionId && briefings.length > 0 && (
+            pickerOpen ? (
+              <div className="flex items-center gap-2">
+                <Select value={selectedBriefingId} onValueChange={setSelectedBriefingId}>
+                  <SelectTrigger className="h-8 text-xs flex-1">
+                    <SelectValue placeholder="Selecionar briefing" />
+                  </SelectTrigger>
+                  <SelectContent className="z-[60]">
+                    {briefings.map((b) => (
+                      <SelectItem key={b.id} value={b.id} className="text-xs">{b.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-[10px] tracking-widest uppercase"
+                  disabled={!selectedBriefingId || attachMutation.isPending}
+                  onClick={() => attachMutation.mutate(selectedBriefingId)}
+                >
+                  Vincular
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 text-[10px] tracking-widest uppercase"
+                  onClick={() => { setPickerOpen(false); setSelectedBriefingId(""); }}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setPickerOpen(true)}
+                className="self-start inline-flex items-center gap-1.5 text-[10px] tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors px-2 py-1 border border-border/50 rounded-sm"
+              >
+                <Plus className="h-3 w-3" /> Adicionar briefing
+              </button>
+            )
+          )}
+          {sessionId && briefings.length === 0 && (
+            <p className="text-[10px] text-muted-foreground/60 pl-1">Nenhum briefing criado ainda.</p>
+          )}
+        </div>
       ) : (
         <div className="flex items-center gap-2.5 rounded-md border border-border/50 bg-muted/20 px-3 py-2">
           <FileText className="h-4 w-4 text-blue-500 shrink-0" />
-          <span className="flex-1 text-xs font-medium truncate">{data.name || "Untitled Briefing"}</span>
-          {data.answered ? (
+          <span className="flex-1 text-xs font-medium truncate">{briefing.name || "Untitled Briefing"}</span>
+          {briefing.answered ? (
             <>
               <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600">
                 <CheckCircle2 className="h-3 w-3" /> Respondido
@@ -3193,7 +3269,7 @@ function ProjectBriefingSubsection({
           )}
           <button
             onClick={async () => {
-              const url = `${window.location.origin}/booking-success?booking=${bookingId}&session=${data.sessionId}`;
+              const url = `${window.location.origin}/booking-success?booking=${bookingId}&session=${sessionId}`;
               try {
                 await navigator.clipboard.writeText(url);
                 toast.success("Link do briefing copiado");
@@ -3208,12 +3284,12 @@ function ProjectBriefingSubsection({
           </button>
         </div>
       )}
-      {data && bookingId && (
+      {briefing && bookingId && (
         <BriefingDialog
           open={open}
           onClose={() => setOpen(false)}
           bookingId={bookingId}
-          briefingId={data.id}
+          briefingId={briefing.id}
         />
       )}
     </div>
