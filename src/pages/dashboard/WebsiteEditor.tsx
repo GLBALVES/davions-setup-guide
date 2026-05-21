@@ -4933,14 +4933,22 @@ const WebsiteEditor = () => {
     root.style.setProperty("--site-btn-pad-x", padX);
     root.style.setProperty("--site-btn-style", s.buttonStyle || "solid");
 
-    // Per-variant tokens (Primary / Secondary)
+    // Per-variant tokens (Outline / Filled / Text). Legacy primary/secondary
+    // keys are migrated read-side: primary→filled, secondary→outline.
     const variants = s.buttonVariants || {};
+    const readVariant = (key: "filled" | "outline" | "text") => {
+      if (variants[key]) return variants[key];
+      if (key === "filled" && variants.primary) return variants.primary;
+      if (key === "outline" && variants.secondary) return variants.secondary;
+      return {};
+    };
     const radiusFor = (sh?: string) => sh === "pill" ? "9999px" : sh === "rounded" ? "8px" : "2px";
-    (["primary", "secondary"] as const).forEach((key) => {
-      const v = variants[key] || {};
-      const styleMode = v.style || (key === "primary" ? "solid" : "outline");
-      const bg = v.bg || (key === "primary" ? "#000000" : "#ffffff");
-      const fg = v.fg || (key === "primary" ? "#ffffff" : "#000000");
+    (["filled", "outline", "text"] as const).forEach((key) => {
+      const v = readVariant(key);
+      const defaultBg = "#000000";
+      const defaultFg = key === "filled" ? "#ffffff" : "#000000";
+      const bg = v.bg || defaultBg;
+      const fg = v.fg || defaultFg;
       const borderColor = v.borderColor || bg;
       const borderWidth = typeof v.borderWidth === "number" ? v.borderWidth : 1;
       const hoverBg = v.hoverBg || bg;
@@ -4954,11 +4962,6 @@ const WebsiteEditor = () => {
       root.style.setProperty(`--site-btn-${key}-hover-fg`, hoverFg);
       root.style.setProperty(`--site-btn-${key}-hover-border-color`, hoverBorderColor);
       root.style.setProperty(`--site-btn-${key}-radius`, radiusFor(v.shape));
-      root.style.setProperty(`--site-btn-${key}-style`, styleMode);
-      // Mirror style mode as a data attribute on <html> so CSS rules can
-      // react instantly to Solid/Outline/Underline changes without React
-      // having to re-render every block.
-      root.setAttribute(`data-site-btn-${key}-style`, styleMode);
     });
   }, [site?.buttonStyle, site?.buttonShape, site?.buttonSize, site?.buttonHeight, site?.buttonWidth, site?.buttonVariants]);
 
