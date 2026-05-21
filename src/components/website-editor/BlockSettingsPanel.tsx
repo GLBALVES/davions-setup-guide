@@ -150,17 +150,6 @@ const SCROLL_EFFECTS: { id: NonNullable<BlockSettings["scrollEffect"]>; label: s
   { id: "ken-burns", label: "Ken Burns", hint: "Cinematic slow zoom + pan on background" },
   { id: "bg-zoom-out", label: "BG Zoom Out", hint: "Background starts zoomed in, zooms out" },
   { id: "bg-blur-scroll", label: "BG Blur", hint: "Background sharpens as section centers" },
-  { id: "reveal", label: "Reveal", hint: "Curtain opens on scroll" },
-  { id: "split-reveal", label: "Split Reveal", hint: "Opens from center outward" },
-  { id: "zoom-on-scroll", label: "Zoom", hint: "Image scales as you scroll" },
-  { id: "fade-on-scroll", label: "Fade", hint: "Fades in & out with scroll" },
-  { id: "blur-in", label: "Blur In", hint: "Section unblurs as it enters" },
-  { id: "rotate-in", label: "Rotate In", hint: "Slight rotation entrance" },
-  { id: "skew-in", label: "Skew In", hint: "Skew straightens on entry" },
-  { id: "tilt-3d", label: "3D Tilt", hint: "Perspective tilt tied to scroll" },
-  { id: "fly-in-left", label: "Fly In Left" },
-  { id: "fly-in-right", label: "Fly In Right" },
-  { id: "fly-in-up", label: "Fly In Up" },
 ];
 
 interface BlockSettingsPanelProps {
@@ -1342,46 +1331,6 @@ export const BlockSettingsPanel = ({
             </div>
           )}
 
-          {/* Per-element effects */}
-          <div className="mt-5 space-y-3">
-            <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">
-              Per-element Effects
-            </p>
-            {(
-              [
-                { key: "textScrollEffect", label: "Text" },
-                { key: "imageScrollEffect", label: "Image" },
-                { key: "buttonsScrollEffect", label: "Buttons" },
-              ] as const
-            ).map(({ key, label }) => (
-              <div key={key} className="flex items-center gap-2">
-                <label className="text-[11px] font-medium text-muted-foreground w-16 shrink-0">{label}</label>
-                <Select
-                  value={(s as any)[key] ?? "none"}
-                  onValueChange={(v) => update({ [key]: v } as Partial<BlockSettings>)}
-                >
-                  <SelectTrigger className="h-8 text-xs flex-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="fade-on-scroll">Fade</SelectItem>
-                    <SelectItem value="fly-in-left">Fly In Left</SelectItem>
-                    <SelectItem value="fly-in-right">Fly In Right</SelectItem>
-                    <SelectItem value="fly-in-up">Fly In Up</SelectItem>
-                    <SelectItem value="blur-in">Blur In</SelectItem>
-                    <SelectItem value="rotate-in">Rotate In</SelectItem>
-                    <SelectItem value="zoom-on-scroll">Zoom</SelectItem>
-                    <SelectItem value="reveal">Reveal</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            ))}
-            <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
-              Apply different motions to text, images, and buttons inside this block.
-              They share the section's Intensity & Speed.
-            </p>
-          </div>
         </div>
       </div>
     </div>
