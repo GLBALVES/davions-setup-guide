@@ -5,10 +5,11 @@ import {
   Heading1, Heading2, Heading3, Quote, List, ListOrdered,
   AlignLeft, AlignCenter, AlignRight, Link as LinkIcon, ChevronDown,
 } from "lucide-react";
-import { FONT_PRESETS } from "@/components/website-editor/site-fonts";
+import { FONT_PRESETS, type ExternalFontEntry, buildExternalStack } from "@/components/website-editor/site-fonts";
 import { cn } from "@/lib/utils";
 import { SitePaletteColorOptions } from "@/components/website-editor/SitePalettePicker";
 import { ELEMENT_GROUPS, type ElementKey } from "@/components/website-editor/font-templates";
+
 
 /**
  * Map each design-system element key to the block tag we should produce via
