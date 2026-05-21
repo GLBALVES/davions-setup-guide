@@ -233,6 +233,26 @@ export default function InlineFormatToolbar() {
     // Snapshot for later restoration (the popovers / native pickers can steal
     // focus and collapse the selection before our apply handler runs).
     savedRangeRef.current = range.cloneRange();
+    // Reflect the selection's current foreground color in the picker swatch.
+    try {
+      const node = range.startContainer;
+      const el = (node.nodeType === 1 ? node : node.parentElement) as HTMLElement | null;
+      if (el) {
+        const rgb = getComputedStyle(el).color;
+        const m = rgb.match(/rgba?\(([^)]+)\)/);
+        if (m) {
+          const [r, g, b] = m[1].split(",").map((s) => parseInt(s.trim(), 10));
+          const hex =
+            "#" +
+            [r, g, b]
+              .map((n) => Math.max(0, Math.min(255, n)).toString(16).padStart(2, "0"))
+              .join("");
+          setCurrentColor(hex);
+        }
+      }
+    } catch {
+      /* noop */
+    }
   }, []);
 
   // While any popover is open we must NOT close the toolbar from a
