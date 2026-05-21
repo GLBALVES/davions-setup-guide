@@ -289,15 +289,29 @@ export default function InlineFormatToolbar() {
     setShowFont(false);
   };
   const onApplyColor = (color: string, closePicker = true) => {
-    // On macOS (Safari/Chrome) clicking inside the popover steals focus and
-    // collapses the host's selection. We pass the saved Range explicitly so
-    // applyInlineStyle does not depend on the live (possibly empty) selection.
+    // Use the native `foreColor` execCommand for color application: it handles
+    // multi-block selections reliably across browsers (Windows + macOS Safari/
+    // Chrome) without the fragile extractContents/insertNode dance that broke
+    // on macOS when the popover briefly stole focus from the contenteditable.
     host.focus({ preventScroll: true } as FocusOptions);
-    restoreSelection();
-    const r = applyInlineStyle(host, { color }, savedRangeRef.current);
-    // Re-snapshot the (now re-wrapped) range so subsequent picks keep
-    // painting the same text — important while dragging in the color wheel.
-    if (r) savedRangeRef.current = r.cloneRange();
+    if (!restoreSelection()) {
+      if (closePicker) setShowColor(false);
+      return;
+    }
+    try {
+      document.execCommand("styleWithCSS", false, "true");
+    } catch {
+      /* noop */
+    }
+    document.execCommand("foreColor", false, color);
+    // Re-snapshot the live selection so the next pick keeps painting the same
+    // text — important while dragging in the color wheel or clicking multiple
+    // swatches in sequence.
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+      savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+    }
+    fireInput(host);
     if (closePicker) setShowColor(false);
   };
   const onApplySize = (px: number) => {
