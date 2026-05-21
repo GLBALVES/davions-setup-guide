@@ -3920,64 +3920,6 @@ const ButtonsSubPanel = ({
 
       <div className="h-px bg-border" />
 
-      {/* ── Default Shape (legacy fallback) ───────────────────────────── */}
-      <section className="space-y-3">
-        <h4 className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-medium">
-          Default Shape
-        </h4>
-
-        <div className="space-y-2">
-          <p className="text-[11px] text-muted-foreground">Solid</p>
-          <div className="grid grid-cols-3 gap-2">
-            {(["square", "rounded", "pill"] as const).map((sh) => (
-              <Swatch
-                key={`solid-${sh}`}
-                sh={sh}
-                variant="solid"
-                active={style === "solid" && shape === sh}
-                onClick={() => onSiteChange({ button_style: "solid", button_shape: sh })}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-[11px] text-muted-foreground">Outline</p>
-          <div className="grid grid-cols-3 gap-2">
-            {(["square", "rounded", "pill"] as const).map((sh) => (
-              <Swatch
-                key={`outline-${sh}`}
-                sh={sh}
-                variant="outline"
-                active={style === "outline" && shape === sh}
-                onClick={() => onSiteChange({ button_style: "outline", button_shape: sh })}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-[11px] text-muted-foreground">Underline</p>
-          <button
-            type="button"
-            onClick={() => onSiteChange({ button_style: "underline" })}
-            className={`h-10 w-1/3 flex items-end justify-center transition-all ${
-              style === "underline" ? "opacity-100" : "opacity-60 hover:opacity-100"
-            }`}
-          >
-            <span
-              className="block w-full h-px"
-              style={{
-                backgroundColor: "#d4d4d4",
-                outline: style === "underline" ? "1px solid hsl(var(--foreground))" : "none",
-                outlineOffset: 4,
-              }}
-            />
-          </button>
-        </div>
-      </section>
-
-      <div className="h-px bg-border" />
 
       {/* ── Size ──────────────────────────────────────────────────────── */}
       <section className="space-y-3">
