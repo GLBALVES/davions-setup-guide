@@ -12,9 +12,15 @@ export type BlockBtn = {
   id?: string;
   text: string;
   link?: string;
-  variant?: "primary" | "secondary";
+  variant?: "filled" | "outline" | "text";
   newTab?: boolean;
 };
+
+function normalizeVariant(v: any): "filled" | "outline" | "text" {
+  if (v === "filled" || v === "outline" || v === "text") return v;
+  if (v === "secondary") return "outline";
+  return "filled";
+}
 
 /** Migrate legacy single-button fields (ctaText/ctaLink/buttonText/buttonLink/buttonVariant)
  *  into the new buttons[] array. Safe to call on any object. */
@@ -26,7 +32,7 @@ export function migrateLegacyToButtons(props: any): BlockBtn[] {
   return [{
     text: text || "",
     link: link || "",
-    variant: props?.buttonVariant === "secondary" ? "secondary" : "primary",
+    variant: normalizeVariant(props?.buttonVariant),
     newTab: false,
   }];
 }
