@@ -2867,7 +2867,68 @@ const SessionForm = () => {
                         </p>
                       )}
                     </div>
+
+                    {/* ── Followup ── */}
+                    <div className="flex flex-col gap-3 border border-border p-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                          <p className="text-[10px] tracking-widest uppercase text-muted-foreground">Followup</p>
+                        </div>
+                        <Switch checked={followupEnabled} onCheckedChange={setFollowupEnabled} />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">
+                        Envia automaticamente um email com uma oferta meses depois da sessão para reativar o cliente.
+                      </p>
+
+                      {followupEnabled && (
+                        <div className="flex flex-col gap-3 pt-1">
+                          <div className="flex flex-col gap-1.5">
+                            <Label className="text-[10px] tracking-widest uppercase text-muted-foreground font-light">
+                              Enviar após (meses)
+                            </Label>
+                            <Input
+                              type="number"
+                              min="1"
+                              step="1"
+                              value={followupMonths}
+                              onChange={(e) => setFollowupMonths(e.target.value)}
+                              className="h-9 w-32 text-sm font-light"
+                            />
+                          </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <Label className="text-[10px] tracking-widest uppercase text-muted-foreground font-light">
+                              Template do email
+                            </Label>
+                            <select
+                              value={followupTemplateId}
+                              onChange={(e) => setFollowupTemplateId(e.target.value)}
+                              className="h-9 w-full px-3 text-sm font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                            >
+                              <option value="">Selecione um template…</option>
+                              {emailTemplates.map((t) => (
+                                <option key={t.id} value={t.id}>{t.name || t.stage_trigger}</option>
+                              ))}
+                            </select>
+                            {emailTemplates.length === 0 && (
+                              <p className="text-[10px] text-muted-foreground">
+                                Nenhum template salvo ainda. Crie em{" "}
+                                <button
+                                  type="button"
+                                  className="underline hover:no-underline"
+                                  onClick={() => navigate("/dashboard/personalize")}
+                                >
+                                  Personalize → Workflow Emails
+                                </button>.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </section>
+
 
                   {/* Step 6 Actions */}
                   <div className="flex items-center justify-between border-t border-border pt-6">
