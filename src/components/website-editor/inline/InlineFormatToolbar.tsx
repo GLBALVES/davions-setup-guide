@@ -187,6 +187,7 @@ export default function InlineFormatToolbar() {
   const [showSize, setShowSize] = useState(false);
   const [showBlock, setShowBlock] = useState(false);
   const [customSize, setCustomSize] = useState<string>("");
+  const [currentColor, setCurrentColor] = useState<string>("#000000");
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   // Snapshot of the user's selection range. Updated on every valid selection
   // change so we can restore it before applying a format — important because
