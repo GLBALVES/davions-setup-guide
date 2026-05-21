@@ -599,6 +599,12 @@ function TextBlock(props: any) {
           }}
           className="site-rich-text site-paragraph-1 text-sm md:text-base font-light text-muted-foreground leading-relaxed [&_h1]:font-serif [&_h1]:italic [&_h1]:text-3xl [&_h1]:sm:text-4xl [&_h1]:md:text-5xl [&_h1]:text-foreground [&_h1]:mb-4 [&_h1]:leading-tight [&_h2]:font-serif [&_h2]:italic [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:md:text-4xl [&_h2]:text-foreground [&_h2]:mb-4 [&_h2]:leading-tight [&_h3]:font-serif [&_h3]:italic [&_h3]:text-xl [&_h3]:sm:text-2xl [&_h3]:text-foreground [&_h3]:mb-3 [&_blockquote]:border-l-2 [&_blockquote]:border-foreground/20 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:underline [&_a]:text-foreground"
         />
+        <BlockButtons
+          buttons={buttons}
+          editMode={c.editMode}
+          onChange={(next) => c.set("buttons", next)}
+          align={align === "left" ? "start" : align === "right" ? "end" : "center"}
+        />
       </div>
     </section>
   );
