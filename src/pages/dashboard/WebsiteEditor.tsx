@@ -4043,10 +4043,17 @@ const VariantPresets = ({
             onMouseLeave={() => setHovered(false)}
             className="px-3 py-1.5 text-[10px] tracking-[0.2em] uppercase shrink-0 transition-colors duration-200"
             style={{
-              backgroundColor: vKey === "filled" ? effBg : "transparent",
-              color: vKey === "filled" ? effFg : effBg,
+              backgroundColor:
+                vKey === "filled" ? effBg : (hovered && hoverBg ? hoverBg : "transparent"),
+              color:
+                vKey === "filled"
+                  ? effFg
+                  : (hovered ? (hoverFg || bg) : bg),
               border: vKey === "outline" ? `${borderWidth}px solid ${effBorderColor}` : "none",
-              borderBottom: vKey === "text" ? `1px solid ${effBg}` : undefined,
+              borderBottom:
+                vKey === "text"
+                  ? `1px solid ${hovered ? (hoverFg || bg) : bg}`
+                  : undefined,
               borderRadius: vKey === "text" ? 0 : radius,
             }}
           >
