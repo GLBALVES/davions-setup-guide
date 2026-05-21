@@ -268,7 +268,11 @@ const ContractEditor = () => {
   useEffect(() => {
     if (!editor || customFields.length === 0 || isNew) return;
     const html = editor.getHTML();
-    if (html.includes("[[custom_")) {
+    // Check if any unresolved [[key]] token matches a custom field key
+    const hasUnresolvedCustomToken = customFields.some((cf) =>
+      new RegExp(`\\[\\[${cf.field_key}\\]\\]`).test(html)
+    );
+    if (hasUnresolvedCustomToken) {
       const restored = restoreVariableNodes(serializeVariables(html, customFields), customFields);
       editor.commands.setContent(restored);
     }
