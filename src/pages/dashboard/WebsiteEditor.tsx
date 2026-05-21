@@ -3868,40 +3868,11 @@ const ButtonsSubPanel = ({
   onSiteChange: (patch: Partial<Record<string, any>>) => void;
 }) => {
   const s = site as any;
-  const style: "solid" | "outline" | "underline" = s?.buttonStyle || "solid";
-  const shape: "square" | "rounded" | "pill" = s?.buttonShape || "square";
   const size: "small" | "medium" | "large" | "custom" = s?.buttonSize || "medium";
   const height: number = typeof s?.buttonHeight === "number" ? s.buttonHeight : 14;
   const width: number = typeof s?.buttonWidth === "number" ? s.buttonWidth : 30;
 
-  const radiusFor = (sh: string) =>
-    sh === "pill" ? "9999px" : sh === "rounded" ? "8px" : "2px";
 
-  const Swatch = ({
-    sh,
-    active,
-    variant,
-    onClick,
-  }: {
-    sh: "square" | "rounded" | "pill";
-    active: boolean;
-    variant: "solid" | "outline";
-    onClick: () => void;
-  }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`h-10 w-full transition-all ${
-        active ? "ring-2 ring-foreground ring-offset-2 ring-offset-background" : "hover:opacity-80"
-      }`}
-      style={{
-        backgroundColor: variant === "solid" ? "#d4d4d4" : "transparent",
-        border: variant === "outline" ? "1px solid #d4d4d4" : "none",
-        borderRadius: radiusFor(sh),
-      }}
-      aria-label={`${variant} ${sh}`}
-    />
-  );
 
   return (
     <div className="space-y-5">
