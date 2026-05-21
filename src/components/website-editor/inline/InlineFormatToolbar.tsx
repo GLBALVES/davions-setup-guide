@@ -282,35 +282,32 @@ export default function InlineFormatToolbar() {
   };
 
   const onApplyFont = (stack: string) => {
+    host.focus({ preventScroll: true } as FocusOptions);
     restoreSelection();
-    applyInlineStyle(host, { fontFamily: stack });
+    const r = applyInlineStyle(host, { fontFamily: stack }, savedRangeRef.current);
+    if (r) savedRangeRef.current = r.cloneRange();
     setShowFont(false);
   };
   const onApplyColor = (color: string, closePicker = true) => {
     // On macOS (Safari/Chrome) clicking inside the popover steals focus and
-    // collapses the host's selection — and document.execCommand("foreColor")
-    // fails silently when the contenteditable isn't the active element.
-    // We bypass execCommand entirely and apply the color via direct DOM
-    // manipulation against the saved Range, which works regardless of focus.
+    // collapses the host's selection. We pass the saved Range explicitly so
+    // applyInlineStyle does not depend on the live (possibly empty) selection.
     host.focus({ preventScroll: true } as FocusOptions);
-    if (!restoreSelection()) return;
-    applyInlineStyle(host, { color });
-    // Re-snapshot the (now possibly re-wrapped) selection so the next drag
-    // tick from react-colorful keeps painting the same text range.
-    const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0) {
-      const r = sel.getRangeAt(0);
-      if (!r.collapsed && host.contains(r.commonAncestorContainer)) {
-        savedRangeRef.current = r.cloneRange();
-      }
-    }
+    restoreSelection();
+    const r = applyInlineStyle(host, { color }, savedRangeRef.current);
+    // Re-snapshot the (now re-wrapped) range so subsequent picks keep
+    // painting the same text — important while dragging in the color wheel.
+    if (r) savedRangeRef.current = r.cloneRange();
     if (closePicker) setShowColor(false);
   };
   const onApplySize = (px: number) => {
+    host.focus({ preventScroll: true } as FocusOptions);
     restoreSelection();
-    applyInlineStyle(host, { fontSize: `${px}px`, lineHeight: "1.2" });
+    const r = applyInlineStyle(host, { fontSize: `${px}px`, lineHeight: "1.2" }, savedRangeRef.current);
+    if (r) savedRangeRef.current = r.cloneRange();
     setShowSize(false);
   };
+
   const onApplyBlock = (key: ElementKey) => {
     const tag = ELEMENT_TO_TAG[key];
     // Two cases:
