@@ -92,52 +92,40 @@ function applyInlineStyle(host: HTMLElement, styles: Partial<CSSStyleDeclaration
     });
   };
 
-  // Collect all text nodes that intersect the range.
-  const textNodes: Text[] = [];
-  const walker = document.createTreeWalker(
-    range.commonAncestorContainer,
-    NodeFilter.SHOW_TEXT,
-    {
-      acceptNode: (node) => {
-        if (!node.nodeValue || node.nodeValue.length === 0) return NodeFilter.FILTER_REJECT;
-        return range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
-      },
-    },
-  );
-  let n: Node | null;
-  // If commonAncestor is itself a text node, walker won't visit it.
-  if (range.commonAncestorContainer.nodeType === Node.TEXT_NODE) {
-    textNodes.push(range.commonAncestorContainer as Text);
-  } else {
-    while ((n = walker.nextNode())) textNodes.push(n as Text);
-  }
-
-  if (textNodes.length === 0) {
-    fireInput(host);
-    return;
-  }
+  // Extract the selection. The browser splits boundary elements as needed so
+  // partial paragraphs come out as separate <p> fragments — letting us wrap
+  // each text node individually without producing invalid nested blocks.
+  const fragment = range.extractContents();
 
   const wrappedSpans: HTMLSpanElement[] = [];
-  textNodes.forEach((textNode) => {
-    let startOffset = 0;
-    let endOffset = textNode.nodeValue!.length;
-    if (textNode === range.startContainer) startOffset = range.startOffset;
-    if (textNode === range.endContainer) endOffset = range.endOffset;
-    if (startOffset >= endOffset) return;
+  const wrapTextNodes = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node as Text;
+      if (!text.nodeValue || text.nodeValue.length === 0) return;
+      const parent = node.parentNode;
+      if (!parent) return;
+      const span = document.createElement("span");
+      applyStyles(span);
+      parent.insertBefore(span, node);
+      span.appendChild(node);
+      wrappedSpans.push(span);
+      return;
+    }
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      // For pre-existing spans inside the selection, also apply the new style
+      // directly so we don't end up with redundant nested wrappers fighting
+      // each other.
+      if (el.tagName === "SPAN") applyStyles(el);
+      Array.from(node.childNodes).forEach(wrapTextNodes);
+    }
+  };
+  Array.from(fragment.childNodes).forEach(wrapTextNodes);
 
-    // Split the text node so we only wrap the selected portion.
-    let target = textNode;
-    if (endOffset < target.nodeValue!.length) target.splitText(endOffset);
-    if (startOffset > 0) target = target.splitText(startOffset);
+  // Re-insert at the (now-collapsed) range position.
+  range.insertNode(fragment);
 
-    const span = document.createElement("span");
-    applyStyles(span);
-    target.parentNode?.insertBefore(span, target);
-    span.appendChild(target);
-    wrappedSpans.push(span);
-  });
-
-  // Restore selection across the wrapped range.
+  // Re-select the inserted range so subsequent toolbar actions keep working.
   if (wrappedSpans.length > 0) {
     const newRange = document.createRange();
     newRange.setStartBefore(wrappedSpans[0]);
@@ -145,6 +133,10 @@ function applyInlineStyle(host: HTMLElement, styles: Partial<CSSStyleDeclaration
     sel.removeAllRanges();
     sel.addRange(newRange);
   }
+
+  // Merge adjacent text nodes so future edits feel natural.
+  host.normalize();
+
   fireInput(host);
 }
 
