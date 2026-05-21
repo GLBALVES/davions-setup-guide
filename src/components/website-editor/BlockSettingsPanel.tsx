@@ -1100,32 +1100,6 @@ export const BlockSettingsPanel = ({
             value={s.backgroundColor || ""}
             onChange={(v) => update({ backgroundColor: v })}
           />
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Color</label>
-            <div className="flex items-center gap-2">
-              <SitePalettePicker
-                value={s.backgroundColor || "#ffffff"}
-                onChange={(v) => update({ backgroundColor: v })}
-              />
-              <Input
-                value={s.backgroundColor || ""}
-                onChange={(e) => update({ backgroundColor: e.target.value })}
-                placeholder="#000000"
-                className="h-9 text-sm font-mono flex-1"
-              />
-              {s.backgroundColor && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-9 px-2 text-xs"
-                  onClick={() => update({ backgroundColor: "" })}
-                >
-                  Clear
-                </Button>
-              )}
-            </div>
-          </div>
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">Background Image</label>
