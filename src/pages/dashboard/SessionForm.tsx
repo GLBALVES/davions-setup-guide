@@ -171,6 +171,8 @@ const SessionForm = () => {
   const [followupEnabled, setFollowupEnabled] = useState(false);
   const [followupMonths, setFollowupMonths] = useState<string>("6");
   const [followupTemplateId, setFollowupTemplateId] = useState<string>("");
+  interface FollowupTemplateOption { id: string; name: string; subject: string; html_content: string; }
+  const [followupTemplates, setFollowupTemplates] = useState<FollowupTemplateOption[]>([]);
 
   // ── Booking Rules step ──
   const [bookingNoticeDays, setBookingNoticeDays] = useState("1");
@@ -333,12 +335,23 @@ const SessionForm = () => {
     if (data) setEmailTemplates(data as EmailTemplateOption[]);
   }, [user]);
 
+  const fetchFollowupTemplates = useCallback(async () => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from("followup_email_templates")
+      .select("id, name, subject, html_content")
+      .eq("photographer_id", user.id)
+      .order("created_at", { ascending: true });
+    if (data) setFollowupTemplates(data as FollowupTemplateOption[]);
+  }, [user]);
+
 
   useEffect(() => {
     fetchSessionTypes();
     fetchContractTemplates();
     fetchBriefingTemplates();
     fetchEmailTemplates();
+    fetchFollowupTemplates();
     if (user) {
       // Fetch store_slug (columns that actually exist on photographers table)
       supabase
@@ -2907,19 +2920,19 @@ const SessionForm = () => {
                               className="h-9 w-full px-3 text-sm font-light bg-background border border-input text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                             >
                               <option value="">Selecione um template…</option>
-                              {emailTemplates.map((t) => (
-                                <option key={t.id} value={t.id}>{t.name || t.stage_trigger}</option>
+                              {followupTemplates.map((t) => (
+                                <option key={t.id} value={t.id}>{t.name}</option>
                               ))}
                             </select>
-                            {emailTemplates.length === 0 && (
+                            {followupTemplates.length === 0 && (
                               <p className="text-[10px] text-muted-foreground">
-                                Nenhum template salvo ainda. Crie em{" "}
+                                Nenhum template de followup criado ainda. Crie em{" "}
                                 <button
                                   type="button"
                                   className="underline hover:no-underline"
                                   onClick={() => navigate("/dashboard/personalize")}
                                 >
-                                  Personalize → Workflow Emails
+                                  Personalize → Templates → Followup
                                 </button>.
                               </p>
                             )}

@@ -1858,6 +1858,36 @@ export type Database = {
         }
         Relationships: []
       }
+      followup_email_templates: {
+        Row: {
+          created_at: string
+          html_content: string
+          id: string
+          name: string
+          photographer_id: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          html_content?: string
+          id?: string
+          name?: string
+          photographer_id: string
+          subject?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          html_content?: string
+          id?: string
+          name?: string
+          photographer_id?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       form_submissions: {
         Row: {
           archived: boolean
