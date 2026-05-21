@@ -353,34 +353,5 @@ export function RichTextField({
   );
 }
 
-function ToolbarButton({
-  children,
-  onClick,
-  title,
-  active,
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-  title: string;
-  active?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      title={title}
-      onMouseDown={(e) => {
-        // Prevent stealing focus from the input so the selection is preserved.
-        e.preventDefault();
-      }}
-      onClick={onClick}
-      className={cn(
-        "p-1.5 rounded text-foreground hover:bg-muted flex items-center gap-0.5 transition-colors",
-        active && "bg-primary text-primary-foreground hover:bg-primary/90",
-      )}
-    >
-      {children}
-    </button>
-  );
-}
 
 export default RichTextField;
