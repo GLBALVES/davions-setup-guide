@@ -2,24 +2,11 @@ import { useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Field that stores a value as HTML (for inline formatting like color/font/size)
- * but displays only the plain text in the input. Formatting controls live
- * directly below the field and apply to:
- *   - the current text selection inside the input, OR
- *   - the entire value when nothing is selected.
- *
- * Use anywhere we previously rendered <Input value={props.x} /> for editable
- * site copy. Single-line by default; pass `multiline` to render a textarea.
+ * Field that stores a value as HTML but displays only the plain text
+ * in the input. Use anywhere we previously rendered <Input value={props.x} />
+ * for editable site copy. Single-line by default; pass `multiline` to render
+ * a textarea.
  */
-
-const SIZE_PRESETS: { id: string; label: string; px: number }[] = [
-  { id: "xs", label: "XS", px: 12 },
-  { id: "sm", label: "S", px: 14 },
-  { id: "md", label: "M", px: 16 },
-  { id: "lg", label: "L", px: 20 },
-  { id: "xl", label: "XL", px: 28 },
-  { id: "2xl", label: "2XL", px: 40 },
-];
 
 function looksLikeHtml(s: string): boolean {
   return /<\/?[a-z][\s\S]*>/i.test(s);
