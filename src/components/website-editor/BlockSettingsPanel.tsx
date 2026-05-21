@@ -217,6 +217,7 @@ function TextContentEditor({ props, onChange }: { props: any; onChange: (p: any)
           placeholder="Write your content here… Use the floating toolbar to set Heading, Bold, Color…"
         />
       </Field>
+      <ButtonsListEditor props={props} onChange={onChange} />
     </div>
   );
 }
@@ -236,6 +237,8 @@ function ImageTextContentEditor({ props, onChange, photographerId }: { props: an
     </div>
   );
 }
+
+
 
 
 function CtaContentEditor({ props, onChange }: { props: any; onChange: (p: any) => void }) {
@@ -907,7 +910,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function getContentEditor(type: string, props: any, onChange: (p: any) => void, photographerId?: string | null) {
   switch (type) {
     case "hero": return <HeroContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
-    case "text": return null;
+    case "text": return <TextContentEditor props={props} onChange={onChange} />;
     case "image-text":
     case "text-image": return <ImageTextContentEditor props={props} onChange={onChange} photographerId={photographerId} />;
     case "cta": return <CtaContentEditor props={props} onChange={onChange} />;
