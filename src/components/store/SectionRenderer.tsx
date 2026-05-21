@@ -1863,7 +1863,7 @@ function DividerBlock({ style = "line" }: { style?: string } = {}) {
 type ColItem =
   | { id: string; type: "text"; html: string }
   | { id: string; type: "image"; url: string; alt?: string }
-  | { id: string; type: "button"; label: string; href: string; variant?: "primary" | "secondary" }
+  | { id: string; type: "button"; label: string; href: string; variant?: SiteBtnVariant }
   | { id: string; type: "spacer"; height: number }
   | { id: string; type: "divider" };
 
@@ -1901,7 +1901,7 @@ function ColumnsBlock({ count = 2, ctx, ...rest }: any) {
     const item: ColItem =
       type === "text" ? { id: newId(), type: "text", html: "" }
       : type === "image" ? { id: newId(), type: "image", url: "" }
-      : type === "button" ? { id: newId(), type: "button", label: "Button", href: "#", variant: "primary" }
+      : type === "button" ? { id: newId(), type: "button", label: "Button", href: "#", variant: "filled" }
       : type === "spacer" ? { id: newId(), type: "spacer", height: 24 }
       : { id: newId(), type: "divider" };
     const next = columns.map((cc) => [...cc]);
@@ -2027,7 +2027,7 @@ function ColumnItemRenderer({
       if (editMode) {
         return wrap(
           <div className="space-y-1.5">
-            <SiteCtaLink href={item.href || "#"} variant={item.variant || "primary"} className="pointer-events-none">
+            <SiteCtaLink href={item.href || "#"} variant={normalizeBtnVariant(item.variant)} className="pointer-events-none">
               {item.label || "Button"}
             </SiteCtaLink>
             <div className="flex flex-col gap-1">
@@ -2046,19 +2046,20 @@ function ColumnItemRenderer({
                 className="h-7 text-xs px-2 rounded border border-border bg-background"
               />
               <select
-                value={item.variant || "primary"}
+                value={normalizeBtnVariant(item.variant)}
                 onChange={(e) => onChange({ variant: e.target.value as any } as any)}
                 className="h-7 text-xs px-2 rounded border border-border bg-background"
               >
-                <option value="primary">Primary</option>
-                <option value="secondary">Secondary</option>
+                <option value="outline">Outline</option>
+                <option value="filled">Filled</option>
+                <option value="text">Text</option>
               </select>
             </div>
           </div>
         );
       }
       return (
-        <SiteCtaLink href={item.href || "#"} variant={item.variant || "primary"}>
+        <SiteCtaLink href={item.href || "#"} variant={normalizeBtnVariant(item.variant)}>
           {item.label || "Button"}
         </SiteCtaLink>
       );
