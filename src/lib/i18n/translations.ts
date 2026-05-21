@@ -2942,7 +2942,7 @@ export const translations = {
       noContracts: "Nenhum contrato ainda. Crie um para anexar às suas sessões.",
       contractFields: "Campos adicionais do contrato",
       contractFieldsDesc: "Crie variáveis reutilizáveis (ex.: CPF, RG, Identidade) que podem ser inseridas em qualquer contrato via {{variável}}.",
-      newContractField: "Novo campo",
+      newContractField: "+ SALVAR CAMPO",
       noContractFields: "Nenhum campo adicional ainda. Adicione um para usar em todos os seus contratos.",
       contractFieldLabel: "Nome do campo",
       contractFieldLabelPlaceholder: "ex.: CPF, RG, Identidade",
