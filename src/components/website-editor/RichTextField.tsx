@@ -494,7 +494,11 @@ export function RichTextField({
             <ChevronDown className="h-3 w-3" />
           </ToolbarButton>
           {showFont && (
-            <div className="absolute z-20 top-full mt-1 right-0 bg-background border border-border rounded-md shadow-lg py-1 min-w-[180px] max-h-[260px] overflow-y-auto">
+            <div
+              onMouseDown={(e) => e.preventDefault()}
+              className="absolute z-20 top-full mt-1 right-0 bg-background border border-border rounded-md shadow-lg py-1 min-w-[180px] max-h-[260px] overflow-y-auto"
+            >
+
               {FONT_PRESETS.map((f) => {
                 const isActive = activeFontPreset?.id === f.id;
                 return (
@@ -538,7 +542,11 @@ export function RichTextField({
             <ChevronDown className="h-3 w-3" />
           </ToolbarButton>
           {showSize && (
-            <div className="absolute z-20 top-full mt-1 right-0 bg-background border border-border rounded-md shadow-lg p-2 min-w-[180px]">
+            <div
+              onMouseDown={(e) => e.preventDefault()}
+              className="absolute z-20 top-full mt-1 right-0 bg-background border border-border rounded-md shadow-lg p-2 min-w-[180px]"
+            >
+
               <div className="grid grid-cols-3 gap-1 mb-2">
                 {SIZE_PRESETS.map((s) => {
                   const isActive = activeFontSizePx === s.px;
