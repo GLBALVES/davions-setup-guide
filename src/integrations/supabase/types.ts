@@ -3190,6 +3190,50 @@ export type Database = {
         }
         Relationships: []
       }
+      photographers_private: {
+        Row: {
+          business_tax_id: string | null
+          business_tax_name: string | null
+          created_at: string
+          pagarme_kyc_status: string | null
+          pagarme_recipient_id: string | null
+          photographer_id: string
+          stripe_account_id: string | null
+          stripe_connected_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_tax_id?: string | null
+          business_tax_name?: string | null
+          created_at?: string
+          pagarme_kyc_status?: string | null
+          pagarme_recipient_id?: string | null
+          photographer_id: string
+          stripe_account_id?: string | null
+          stripe_connected_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_tax_id?: string | null
+          business_tax_name?: string | null
+          created_at?: string
+          pagarme_kyc_status?: string | null
+          pagarme_recipient_id?: string | null
+          photographer_id?: string
+          stripe_account_id?: string | null
+          stripe_connected_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photographers_private_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: true
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       photos: {
         Row: {
           created_at: string

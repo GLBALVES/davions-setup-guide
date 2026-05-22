@@ -45,17 +45,24 @@ export function PagarmePaymentBanner() {
     if (snooze && Date.now() < Number(snooze)) return;
 
     (async () => {
-      const { data } = await supabase
-        .from("photographers")
-        .select("business_country, pagarme_recipient_id")
-        .eq("id", photographerId)
-        .maybeSingle();
+      const [{ data }, { data: priv }] = await Promise.all([
+        supabase
+          .from("photographers")
+          .select("business_country")
+          .eq("id", photographerId)
+          .maybeSingle(),
+        (supabase as any)
+          .from("photographers_private")
+          .select("pagarme_recipient_id")
+          .eq("photographer_id", photographerId)
+          .maybeSingle(),
+      ]);
       if (!data) return;
       const isBR =
-        (data.business_country || "").toUpperCase() === "BR" ||
-        (data.business_country || "").toLowerCase() === "brasil" ||
-        (data.business_country || "").toLowerCase() === "brazil";
-      if (isBR && !data.pagarme_recipient_id) setShow(true);
+        ((data as any).business_country || "").toUpperCase() === "BR" ||
+        ((data as any).business_country || "").toLowerCase() === "brasil" ||
+        ((data as any).business_country || "").toLowerCase() === "brazil";
+      if (isBR && !(priv as any)?.pagarme_recipient_id) setShow(true);
     })();
   }, [photographerId, user]);
 

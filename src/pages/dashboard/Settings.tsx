@@ -270,12 +270,17 @@ const Settings = () => {
   useEffect(() => {
     if (!user || !photographerId) return;
     const fetchAll = async () => {
-      const [profileRes, watermarksRes, gallerySettingsRes] = await Promise.all([
+      const [profileRes, privateRes, watermarksRes, gallerySettingsRes] = await Promise.all([
         supabase
           .from("photographers")
-          .select("full_name, store_slug, custom_domain, hero_image_url, stripe_account_id, stripe_connected_at")
+          .select("full_name, store_slug, custom_domain, hero_image_url")
           .eq("id", photographerId)
           .single(),
+        (supabase as any)
+          .from("photographers_private")
+          .select("stripe_account_id, stripe_connected_at")
+          .eq("photographer_id", photographerId)
+          .maybeSingle(),
         (supabase as any)
           .from("watermarks")
           .select("*")
@@ -296,8 +301,10 @@ const Settings = () => {
         setCustomDomain(d.custom_domain ?? "");
         setCustomDomainInput(d.custom_domain ?? "");
         setAvatarUrl(d.hero_image_url ?? null);
-        setStripeAccountId((d as any).stripe_account_id ?? null);
-        setStripeConnectedAt((d as any).stripe_connected_at ?? null);
+      }
+      if (privateRes?.data) {
+        setStripeAccountId((privateRes.data as any).stripe_account_id ?? null);
+        setStripeConnectedAt((privateRes.data as any).stripe_connected_at ?? null);
       }
 
       if (watermarksRes.data) {
@@ -423,18 +430,24 @@ const Settings = () => {
 
   const handleSaveBusiness = async () => {
     setSavingBusiness(true);
-    const { error } = await (supabase as any).from("photographers").update({
-      business_name: businessName.trim() || null,
-      business_phone: businessPhone.trim() || null,
-      business_address: businessAddress.trim() || null,
-      business_city: businessCity.trim() || null,
-      business_country: businessCountry.trim() || null,
-      business_currency: businessCurrency.trim() || null,
-      business_tax_id: businessTaxId.trim() || null,
-    }).eq("id", photographerId ?? user!.id);
+    const targetId = photographerId ?? user!.id;
+    const [{ error }, { error: privErr }] = await Promise.all([
+      (supabase as any).from("photographers").update({
+        business_name: businessName.trim() || null,
+        business_phone: businessPhone.trim() || null,
+        business_address: businessAddress.trim() || null,
+        business_city: businessCity.trim() || null,
+        business_country: businessCountry.trim() || null,
+        business_currency: businessCurrency.trim() || null,
+      }).eq("id", targetId),
+      (supabase as any).from("photographers_private").upsert({
+        photographer_id: targetId,
+        business_tax_id: businessTaxId.trim() || null,
+      }, { onConflict: "photographer_id" }),
+    ]);
 
-    if (error) {
-      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    if (error || privErr) {
+      toast({ title: "Failed to save", description: (error || privErr)!.message, variant: "destructive" });
     } else {
       toast({ title: "Business settings saved" });
     }
@@ -605,11 +618,11 @@ const Settings = () => {
   const handleOnboardingExit = async () => {
     // Refresh the account status from DB
     if (!photographerId) return;
-    const { data } = await supabase
-      .from("photographers")
+    const { data } = await (supabase as any)
+      .from("photographers_private")
       .select("stripe_account_id, stripe_connected_at")
-      .eq("id", photographerId)
-      .single();
+      .eq("photographer_id", photographerId)
+      .maybeSingle();
     if (data) {
       setStripeAccountId((data as any).stripe_account_id ?? null);
       setStripeConnectedAt((data as any).stripe_connected_at ?? null);

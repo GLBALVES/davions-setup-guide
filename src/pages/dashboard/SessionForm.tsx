@@ -353,14 +353,20 @@ const SessionForm = () => {
     fetchEmailTemplates();
     fetchFollowupTemplates();
     if (user) {
-      // Fetch store_slug (columns that actually exist on photographers table)
-      supabase
-        .from("photographers")
-        .select("store_slug, custom_domain, stripe_account_id, business_sales_tax")
-        .eq("id", user.id)
-        .single()
-        .then(({ data }) => {
-          setStripeConfigured(Boolean(data?.stripe_account_id));
+      // Fetch store_slug + business tax from photographers, and stripe id from private table
+      Promise.all([
+        supabase
+          .from("photographers")
+          .select("store_slug, custom_domain, business_sales_tax")
+          .eq("id", user.id)
+          .single(),
+        (supabase as any)
+          .from("photographers_private")
+          .select("stripe_account_id")
+          .eq("photographer_id", user.id)
+          .maybeSingle(),
+      ]).then(([{ data }, { data: priv }]) => {
+          setStripeConfigured(Boolean((priv as any)?.stripe_account_id));
           setStoreSlug((data as any)?.store_slug ?? null);
           setCustomDomain((data as any)?.custom_domain ?? null);
           // Always store the default business tax for toggle pre-fill
