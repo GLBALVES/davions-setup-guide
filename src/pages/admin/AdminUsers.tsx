@@ -29,11 +29,16 @@ export default function AdminUsers() {
 
   useEffect(() => {
     const load = async () => {
-      const [{ data: sData }, { data: rData }] = await Promise.all([
-        (supabase as any).from("photographers").select("*").order("created_at", { ascending: false }),
+      const [{ data: sData }, { data: rData }, { data: pData }] = await Promise.all([
+        (supabase as any).from("photographers").select("id, email, full_name, business_name, business_country, business_currency, store_slug, created_at").order("created_at", { ascending: false }),
         (supabase as any).from("user_roles").select("user_id").eq("role", "admin"),
+        (supabase as any).from("photographers_private").select("photographer_id, stripe_account_id"),
       ]);
-      setStudios(sData || []);
+      const stripeMap = new Map<string, string | null>(
+        (pData || []).map((r: any) => [r.photographer_id, r.stripe_account_id])
+      );
+      const merged = (sData || []).map((s: any) => ({ ...s, stripe_account_id: stripeMap.get(s.id) ?? null }));
+      setStudios(merged);
       setAdminIds(new Set((rData || []).map((r: { user_id: string }) => r.user_id)));
       setLoading(false);
     };

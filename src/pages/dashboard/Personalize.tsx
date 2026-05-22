@@ -477,7 +477,7 @@ const Personalize = () => {
   useEffect(() => {
     if (!user || !photographerId) return;
     const fetchAll = async () => {
-      const [profileRes, siteRes, watermarksRes, gallerySettingsRes, businessRes] = await Promise.all([
+      const [profileRes, siteRes, watermarksRes, gallerySettingsRes, businessRes, privateRes] = await Promise.all([
       supabase.from("photographers").
       select("full_name, store_slug, custom_domain, bio, hero_image_url").
       eq("id", photographerId).single(),
@@ -488,8 +488,11 @@ const Personalize = () => {
       (supabase as any).from("gallery_settings").
       select("key, value").eq("photographer_id", photographerId),
       (supabase as any).from("photographers").
-      select("business_name, business_phone, business_address, business_city, business_neighborhood, business_state, business_zip, business_country, business_currency, business_tax_id, business_sales_tax, business_tax_name").
+      select("business_name, business_phone, business_address, business_city, business_neighborhood, business_state, business_zip, business_country, business_currency, business_sales_tax").
       eq("id", photographerId).single(),
+      (supabase as any).from("photographers_private").
+      select("business_tax_id, business_tax_name").
+      eq("photographer_id", photographerId).maybeSingle(),
       fetchSessionTypes(),
       fetchContracts(),
       fetchContractFields(),
@@ -574,9 +577,11 @@ const Personalize = () => {
         setBusinessZip(b.business_zip ?? "");
         setBusinessCountry(b.business_country ?? "");
         setBusinessCurrency(b.business_currency ?? "USD");
-        setBusinessTaxId(b.business_tax_id ?? "");
         setBusinessSalesTax(b.business_sales_tax != null ? String(b.business_sales_tax) : "");
-        setBusinessTaxName(b.business_tax_name ?? "");
+      }
+      if (privateRes?.data) {
+        setBusinessTaxId((privateRes.data as any).business_tax_id ?? "");
+        setBusinessTaxName((privateRes.data as any).business_tax_name ?? "");
       }
 
       setLoading(false);
@@ -706,24 +711,29 @@ const Personalize = () => {
 
   const handleSaveBusiness = async () => {
     setSavingBusiness(true);
-    const { error } = await (supabase as any).from("photographers").update({
-      full_name: fullName.trim() || null,
-      bio: bio.trim() || null,
-      business_name: businessName.trim() || null,
-      business_phone: businessPhone.trim() || null,
-      business_address: businessAddress.trim() || null,
-      business_city: businessCity.trim() || null,
-      business_neighborhood: businessNeighborhood.trim() || null,
-      business_state: businessState.trim() || null,
-      business_zip: businessZip.trim() || null,
-      business_country: businessCountry.trim() || null,
-      business_currency: businessCurrency.trim() || null,
-      business_tax_id: businessTaxId.trim() || null,
-      business_sales_tax: businessSalesTax.trim() === "" ? null : Number(businessSalesTax.replace(",", ".")),
-      business_tax_name: businessTaxName.trim() || null
-    }).eq("id", user!.id);
-    if (error) {
-      toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+    const [{ error }, { error: privErr }] = await Promise.all([
+      (supabase as any).from("photographers").update({
+        full_name: fullName.trim() || null,
+        bio: bio.trim() || null,
+        business_name: businessName.trim() || null,
+        business_phone: businessPhone.trim() || null,
+        business_address: businessAddress.trim() || null,
+        business_city: businessCity.trim() || null,
+        business_neighborhood: businessNeighborhood.trim() || null,
+        business_state: businessState.trim() || null,
+        business_zip: businessZip.trim() || null,
+        business_country: businessCountry.trim() || null,
+        business_currency: businessCurrency.trim() || null,
+        business_sales_tax: businessSalesTax.trim() === "" ? null : Number(businessSalesTax.replace(",", ".")),
+      }).eq("id", user!.id),
+      (supabase as any).from("photographers_private").upsert({
+        photographer_id: user!.id,
+        business_tax_id: businessTaxId.trim() || null,
+        business_tax_name: businessTaxName.trim() || null,
+      }, { onConflict: "photographer_id" }),
+    ]);
+    if (error || privErr) {
+      toast({ title: "Failed to save", description: (error || privErr)!.message, variant: "destructive" });
     } else {
       toast({ title: "Business settings saved" });
     }

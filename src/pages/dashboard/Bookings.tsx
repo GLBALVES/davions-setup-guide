@@ -238,11 +238,11 @@ const Bookings = () => {
         `)
         .eq("photographer_id", photographerId ?? user!.id)
         .order("created_at", { ascending: false }),
-      supabase
-        .from("photographers")
+      (supabase as any)
+        .from("photographers_private")
         .select("stripe_account_id, stripe_connected_at")
-        .eq("id", photographerId ?? user!.id)
-        .single(),
+        .eq("photographer_id", photographerId ?? user!.id)
+        .maybeSingle(),
     ]);
 
     if (bookingsRes.error) {

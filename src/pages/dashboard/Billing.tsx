@@ -159,7 +159,7 @@ const Billing = () => {
       supabase.functions.invoke("check-subscription", { headers: authHeaders }),
       supabase.functions.invoke("get-stripe-balance", { headers: authHeaders }),
       supabase.functions.invoke("get-billing-invoices", { headers: authHeaders }),
-      supabase.from("photographers").select("stripe_account_id, stripe_connected_at").eq("id", user.id).single(),
+      (supabase as any).from("photographers_private").select("stripe_account_id, stripe_connected_at").eq("photographer_id", user.id).maybeSingle(),
     ]);
 
     if (subRes.data && !subRes.error) setSub(subRes.data);

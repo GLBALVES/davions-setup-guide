@@ -73,14 +73,23 @@ export function PaymentsSettings() {
 
   const loadStatus = async () => {
     if (!photographerId) return;
-    const { data } = await supabase
-      .from("photographers")
-      .select("business_country, pagarme_recipient_id, pagarme_kyc_status, stripe_account_id, stripe_connected_at")
-      .eq("id", photographerId)
-      .maybeSingle();
+    const [{ data }, { data: priv }] = await Promise.all([
+      supabase
+        .from("photographers")
+        .select("business_country")
+        .eq("id", photographerId)
+        .maybeSingle(),
+      (supabase as any)
+        .from("photographers_private")
+        .select("pagarme_recipient_id, pagarme_kyc_status, stripe_account_id, stripe_connected_at")
+        .eq("photographer_id", photographerId)
+        .maybeSingle(),
+    ]);
     if (data) {
-      const d = data as any;
-      setBusinessCountry(d.business_country ?? "");
+      setBusinessCountry((data as any).business_country ?? "");
+    }
+    if (priv) {
+      const d = priv as any;
       setPagarmeRecipientId(d.pagarme_recipient_id ?? null);
       setPagarmeStatus(d.pagarme_kyc_status ?? null);
       setStripeAccountId(d.stripe_account_id ?? null);
@@ -392,13 +401,20 @@ export function PaymentsStatusCard({ onNavigate }: { onNavigate: () => void }) {
   useEffect(() => {
     if (!photographerId) return;
     (async () => {
-      const { data } = await supabase
-        .from("photographers")
-        .select("business_country, pagarme_recipient_id, stripe_account_id, stripe_connected_at")
-        .eq("id", photographerId)
-        .maybeSingle();
+      const [{ data }, { data: priv }] = await Promise.all([
+        supabase
+          .from("photographers")
+          .select("business_country")
+          .eq("id", photographerId)
+          .maybeSingle(),
+        (supabase as any)
+          .from("photographers_private")
+          .select("pagarme_recipient_id, stripe_account_id, stripe_connected_at")
+          .eq("photographer_id", photographerId)
+          .maybeSingle(),
+      ]);
       if (!data) { setState("none"); return; }
-      const d = data as any;
+      const d = { ...(data as any), ...((priv as any) ?? {}) };
       const isBR =
         (d.business_country || "").toUpperCase() === "BR" ||
         (d.business_country || "").toLowerCase() === "brasil" ||
