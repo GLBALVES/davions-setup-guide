@@ -3,7 +3,6 @@ import { Camera, Image, ShoppingBag, Zap, Check, ArrowRight, Globe } from "lucid
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import { CookieBanner } from "@/components/CookieBanner";
-import { WaitlistModal } from "@/components/WaitlistModal";
 import logoPrincipal from "@/assets/logo_principal_preto.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRegion, REGIONAL_PLANS } from "@/contexts/RegionContext";
