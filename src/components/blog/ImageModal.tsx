@@ -79,9 +79,12 @@ export function ImageModal({
   const saveImage = async (imageData: string | File) => {
     setIsSaving(true);
     try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const uid = userRes.user?.id;
+      if (!uid) throw new Error("Not authenticated");
       const timestamp = Date.now();
       const ext = imageData instanceof File ? imageData.name.split(".").pop() || "png" : "png";
-      const filePath = `${blogId}/${position}-${timestamp}.${ext}`;
+      const filePath = `${uid}/${blogId}/${position}-${timestamp}.${ext}`;
 
       let uploadData: Blob;
       if (imageData instanceof File) {
