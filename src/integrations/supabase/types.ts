@@ -4981,6 +4981,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_gallery_favorites_by_token: {
+        Args: { _client_token: string; _gallery_id: string }
+        Returns: {
+          photo_id: string
+        }[]
+      }
       get_my_photographer_id: { Args: never; Returns: string }
       get_photographer_busy_ranges: {
         Args: { _from_date: string; _photographer_id: string; _to_date: string }
