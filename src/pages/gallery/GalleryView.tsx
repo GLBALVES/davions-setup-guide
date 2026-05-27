@@ -557,12 +557,12 @@ const GalleryView = () => {
       });
       setPhotos(withUrls);
       const { data: favData } = await supabase
-        .from("photo_favorites")
-        .select("photo_id")
-        .eq("gallery_id", galleryId)
-        .eq("client_token", clientToken);
+        .rpc("get_gallery_favorites_by_token", {
+          _gallery_id: galleryId,
+          _client_token: clientToken,
+        });
       if (favData) {
-        const loadedFavs = new Set(favData.map((f) => f.photo_id));
+        const loadedFavs = new Set((favData as Array<{ photo_id: string }>).map((f) => f.photo_id));
         setFavorites(loadedFavs);
         // Auto-open summary if there are already favorites on load
         if (loadedFavs.size > 0) setSummaryOpen(true);
