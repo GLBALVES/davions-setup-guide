@@ -33,6 +33,7 @@ const EXACT_APP_HOSTNAMES = [
   "www.nevoxholding.com",
   "davions.com",
   "www.davions.com",
+  "app.davions.com",
   // Published Lovable app URLs
   "davions-page-builder.lovable.app",
 ];
