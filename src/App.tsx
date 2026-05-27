@@ -149,7 +149,7 @@ const App = () => {
             ) : (
               <>
                 {/* Public routes */}
-                <Route path="/" element={<PublicOnlyRoute><Index /></PublicOnlyRoute>} />
+                <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
                 <Route path="/signup" element={<PublicOnlyRoute><Signup /></PublicOnlyRoute>} />
                 <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
