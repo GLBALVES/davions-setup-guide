@@ -105,9 +105,12 @@ export const ManualPage = () => {
   };
 
   const uploadImage = async (file: File, path: string) => {
+    const { data: userRes } = await supabase.auth.getUser();
+    const uid = userRes.user?.id;
+    if (!uid) throw new Error("Not authenticated");
     const fileExt = file.name.split(".").pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-    const filePath = `blog-images/${path}/${fileName}`;
+    const filePath = `${uid}/blog-images/${path}/${fileName}`;
     const { error } = await supabase.storage.from("blog-module").upload(filePath, file);
     if (error) throw error;
     const { data } = supabase.storage.from("blog-module").getPublicUrl(filePath);
