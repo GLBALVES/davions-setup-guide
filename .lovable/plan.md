@@ -1,38 +1,47 @@
-## Problema
+## Situação atual
 
-Em `InlineFormatToolbar.tsx`, ao selecionar vários parágrafos dentro de um bloco "Text" e escolher um preset no dropdown de estilo (ex.: Banner Heading, H1, Paragraph 2), apenas o primeiro parágrafo é transformado. Os demais permanecem com a tipografia antiga.
+A função `create-invoice-payment-link` já gera o checkout (Pagar.me ou Stripe) marcando `metadata.payment_kind = "project_invoice"` e `invoice_id`. Mas **nenhum webhook trata essa baixa hoje**:
 
-## Causa
+- `pagarme-webhook` só atualiza `bookings` quando recebe `metadata.booking_id`.
+- `session-booking-webhook` (Stripe) idem — só lida com `booking_id` / `balance_due`.
 
-A função `onApplyBlock` usa `document.execCommand("formatBlock", ...)` no caminho "rich-text host". Esse comando do navegador só altera o bloco que contém o início da seleção — ele não itera sobre múltiplos blocos cobertos pela seleção. Por isso só o 1º `<p>` vira `<h1>` / recebe `data-site-typo`.
+Resultado: o pagamento entra na conta do fotógrafo, mas a `project_invoice` permanece com `status='pending'` e `paid_amount=0`. A "baixa" só acontece se o usuário marcar manualmente.
 
-## Correção
+## O que o plano vai fazer
 
-Reescrever `onApplyBlock` (apenas o ramo `isRichTextHost`) para coletar **todos os elementos de bloco** que interceptam a seleção atual e transformar cada um deles individualmente.
+Adicionar tratamento de `payment_kind === "project_invoice"` nos dois webhooks já existentes — sem criar webhook novo, sem mexer no front.
 
-### Algoritmo
+### 1) `supabase/functions/pagarme-webhook/index.ts`
 
-1. Obter `range = selection.getRangeAt(0)`.
-2. Coletar todos os blocos descendentes diretos/indiretos do `host` cujo conteúdo intercepta o range. Considerar tags de bloco: `P, H1, H2, H3, H4, H5, H6, BLOCKQUOTE, DIV, LI`. Usar `TreeWalker` filtrando por essas tags e `range.intersectsNode(node)`.
-3. Se a lista estiver vazia, cair no comportamento atual (`execSimple("formatBlock", ...)`).
-4. Para cada bloco coletado:
-   - Criar um novo elemento com a tag-alvo (`ELEMENT_TO_TAG[key]`).
-   - Mover `childNodes` do bloco original para o novo elemento.
-   - Definir `data-site-typo="<key>"` no novo elemento.
-   - Remover as propriedades inline conflitantes (`font-family`, `font-size`, `font-weight`, `line-height`, `letter-spacing`, `text-transform`) — mesma limpeza já feita hoje.
-   - Substituir (`replaceWith`) o bloco original pelo novo.
-5. Restaurar a seleção cobrindo do primeiro ao último bloco transformado (`setStartBefore` / `setEndAfter`) para que o toolbar permaneça posicionado e o usuário possa encadear outras ações.
-6. `host.normalize()` + `fireInput(host)`.
+Quando `eventType` for `charge.paid` ou `order.paid` **e** `metadata.payment_kind === "project_invoice"` **e** existir `metadata.invoice_id`:
 
-O ramo "single-line host" (quando `host.tagName !== 'DIV'`) permanece inalterado — nesse caso o host é o próprio bloco e a seleção múltipla de parágrafos não se aplica.
+- Ler `project_invoices` (amount, paid_amount, status).
+- Somar o valor recebido (em reais, dividindo `amount` do Pagar.me por 100) ao `paid_amount`.
+- Se `paid_amount >= amount` → `status = 'paid'`, `paid_at = now()`.
+- Senão → `status = 'partial'` (mantém a coluna existente).
+- Idempotência: já garantida pelo bloco existente que checa `webhook_events` por `external_id`.
 
-## Arquivo afetado
+Para `charge.payment_failed` / `order.payment_failed` com `payment_kind === "project_invoice"`: apenas logar — não mudar status (mantém `pending` para o cliente tentar de novo).
 
-- `src/components/website-editor/inline/InlineFormatToolbar.tsx` — substituir o corpo do bloco `if (isRichTextHost) { ... }` dentro de `onApplyBlock`.
+### 2) `supabase/functions/session-booking-webhook/index.ts`
 
-## Validação
+No bloco `checkout.session.completed`, antes do branch atual de `bookingId`, adicionar:
 
-1. Selecionar 3 parágrafos em um bloco Text e aplicar "Banner Heading" → todos os 3 viram H1 com `data-site-typo="banner_heading"`.
-2. Selecionar mistura de H2 + P e aplicar "Paragraph 2" → ambos viram `<p data-site-typo="paragraph_2">`.
-3. Seleção dentro de um único parágrafo continua funcionando como antes.
-4. Build passa sem erros.
+- Se `session.metadata.payment_kind === "project_invoice"` e `session.metadata.invoice_id`:
+  - Mesma lógica acima usando `session.amount_total / 100` (cents → reais, pois a tabela guarda em unidade maior).
+  - Atualizar `paid_amount`, `status`, `paid_at`.
+  - `return` cedo para não cair no fluxo de booking.
+
+### 3) Telemetria
+
+Logar via `logWebhookEvent` o resultado (já existe nos dois arquivos) com `event_type` original.
+
+## Não incluso (fora de escopo)
+
+- Não vou criar tabela nem migration — `project_invoices` já tem todas as colunas (`paid_amount`, `paid_at`, `status`, `pagarme_order_id`).
+- Não vou alterar a UI do `ProjectDetailSheet` — ela já lê esses campos.
+- Não vou adicionar realtime — o usuário recarrega/reabre o sheet para ver baixa, igual ao resto.
+
+## Observação importante sobre Stripe Connect
+
+Os pagamentos de invoice no exterior usam `stripe.checkout.sessions.create({...}, { stripeAccount })`. Para o webhook receber esses eventos, ele **precisa estar registrado como Connect webhook** (não somente account webhook). Vou validar no código se o `event.account` está presente e processar normalmente. Caso o webhook atual não esteja configurado como Connect na conta da plataforma, sinalizo no fim para você habilitar em `Developers → Webhooks → Connect` apontando para a mesma URL `session-booking-webhook`.
