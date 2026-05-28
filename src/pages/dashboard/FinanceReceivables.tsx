@@ -234,11 +234,3 @@ export default function FinanceReceivables() {
     </SidebarProvider>
   );
 }
-              )}
-            </div>
-          </main>
-        </div>
-      </div>
-    </SidebarProvider>
-  );
-}
