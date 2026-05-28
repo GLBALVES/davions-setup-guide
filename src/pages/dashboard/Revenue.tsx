@@ -453,7 +453,6 @@ export default function Revenue() {
                       })()}
                     </tbody>
 
-                    </tbody>
                   </table>
 
                 </div>
