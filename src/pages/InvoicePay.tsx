@@ -114,7 +114,9 @@ export default function InvoicePay() {
           )}
 
           {!loading && info && info.status !== "paid" && status !== "paid" && (
+            <>
               <div className="flex flex-col gap-1">
+
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
                   Descrição
                 </span>
