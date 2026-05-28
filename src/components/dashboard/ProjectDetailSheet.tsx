@@ -1882,6 +1882,7 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
 
       {/* ── Briefings sub-section ────────────────────────────────────────── */}
       <ProjectBriefingSubsection
+        projectId={project.id}
         bookingId={(project as any).booking_id ?? null}
         sessionType={(project as any).session_type ?? null}
         photographerId={photographerId}
@@ -3471,6 +3472,7 @@ export function ProjectDetailSheet({
 }
 
 function ProjectBriefingSubsection({
+  projectId,
   bookingId,
   sessionType,
   photographerId,
@@ -3478,6 +3480,7 @@ function ProjectBriefingSubsection({
   labelTitle,
   emptyText,
 }: {
+  projectId: string;
   bookingId: string | null;
   sessionType?: string | null;
   photographerId: string;
@@ -3550,25 +3553,63 @@ function ProjectBriefingSubsection({
   const sessionId = data?.sessionId ?? null;
   const briefing = data?.briefing ?? null;
 
-  const { data: photographerSite } = useQuery({
-    queryKey: ["photographer-share-domain", photographerId],
-    queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("photographers")
-        .select("custom_domain, store_slug")
-        .eq("id", photographerId)
-        .maybeSingle();
-      return data as { custom_domain: string | null; store_slug: string | null } | null;
+  const shareOrigin = "https://app.davions.com";
+
+  const ensureBookingMutation = useMutation({
+    mutationFn: async (): Promise<string> => {
+      if (bookingId) return bookingId;
+      if (!sessionId) throw new Error("Sessão não encontrada");
+
+      // Load project + session info
+      const [projRes, sessRes] = await Promise.all([
+        (supabase as any).from("client_projects").select("client_name, client_email, shoot_date, shoot_time").eq("id", projectId).single(),
+        (supabase as any).from("sessions").select("duration_minutes").eq("id", sessionId).single(),
+      ]);
+      const project = projRes.data;
+      const session = sessRes.data;
+      if (!project) throw new Error("Projeto não encontrado");
+
+      const today = new Date().toISOString().slice(0, 10);
+      const date = (project.shoot_date as string) || today;
+      const startTime = (project.shoot_time as string) || "09:00";
+      const duration = (session?.duration_minutes as number) || 60;
+      const [h, m] = startTime.split(":").map(Number);
+      const endMinutes = h * 60 + (m || 0) + duration;
+      const endTime = `${String(Math.floor(endMinutes / 60) % 24).padStart(2, "0")}:${String(endMinutes % 60).padStart(2, "0")}`;
+
+      const { data: avail, error: aErr } = await (supabase as any)
+        .from("session_availability")
+        .insert({ session_id: sessionId, photographer_id: photographerId, date, start_time: startTime, end_time: endTime, is_booked: true, spots: 1 })
+        .select("id")
+        .single();
+      if (aErr) throw aErr;
+
+      const { data: booking, error: bErr } = await (supabase as any)
+        .from("bookings")
+        .insert({
+          session_id: sessionId,
+          availability_id: avail.id,
+          photographer_id: photographerId,
+          client_name: project.client_name || "Cliente",
+          client_email: project.client_email || "cliente@sem-email.local",
+          booked_date: date,
+          status: "confirmed",
+        })
+        .select("id")
+        .single();
+      if (bErr) throw bErr;
+
+      await (supabase as any).from("client_projects").update({ booking_id: booking.id }).eq("id", projectId);
+      return booking.id as string;
     },
-    enabled: !!photographerId,
-    staleTime: 5 * 60 * 1000,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    },
   });
 
-  const shareOrigin = (() => {
-    const cd = photographerSite?.custom_domain?.trim();
-    if (cd) return `https://${cd.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
-    return "https://app.davions.com";
-  })();
+  const [pendingShareBookingId, setPendingShareBookingId] = useState<string | null>(null);
+  const effectiveBookingId = bookingId ?? pendingShareBookingId;
 
   const attachMutation = useMutation({
     mutationFn: async (briefingId: string) => {
@@ -3660,33 +3701,38 @@ function ProjectBriefingSubsection({
             </span>
           )}
           <button
-            onClick={() => {
-              if (!bookingId) {
-                toast.error("Vincule um booking ao projeto para compartilhar o briefing.");
-                return;
+            onClick={async () => {
+              try {
+                if (!bookingId) {
+                  const id = await ensureBookingMutation.mutateAsync();
+                  setPendingShareBookingId(id);
+                }
+                setShareOpen(true);
+              } catch (e: any) {
+                toast.error(e?.message || "Erro ao preparar compartilhamento");
               }
-              setShareOpen(true);
             }}
+            disabled={ensureBookingMutation.isPending}
             title="Compartilhar briefing"
-            className="inline-flex items-center justify-center h-7 w-7 rounded-sm border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            className="inline-flex items-center justify-center h-7 w-7 rounded-sm border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors disabled:opacity-50"
           >
             <Share2 className="h-3.5 w-3.5" />
           </button>
         </div>
       )}
-      {briefing && bookingId && (
+      {briefing && effectiveBookingId && (
         <BriefingDialog
           open={open}
           onClose={() => setOpen(false)}
-          bookingId={bookingId}
+          bookingId={effectiveBookingId}
           briefingId={briefing.id}
         />
       )}
-      {briefing && sessionId && bookingId && (
+      {briefing && sessionId && effectiveBookingId && (
         <BriefingShareDialog
           open={shareOpen}
           onClose={() => setShareOpen(false)}
-          url={`https://app.davions.com/booking/${bookingId}/confirm?step=briefing`}
+          url={`${shareOrigin}/booking/${effectiveBookingId}/confirm?step=briefing`}
           briefingName={briefing.name}
         />
       )}
