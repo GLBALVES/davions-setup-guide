@@ -3377,6 +3377,7 @@ export type Database = {
       project_invoices: {
         Row: {
           amount: number
+          charge_timing: string
           created_at: string
           description: string
           due_date: string | null
@@ -3393,6 +3394,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          charge_timing?: string
           created_at?: string
           description?: string
           due_date?: string | null
@@ -3409,6 +3411,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          charge_timing?: string
           created_at?: string
           description?: string
           due_date?: string | null

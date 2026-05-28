@@ -466,7 +466,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const [formItems, setFormItems] = useState<ChargeItem[]>([blankItem()]);
   const [formFeeManual, setFormFeeManual] = useState<Record<number, boolean>>({});
   const [formDue, setFormDue]         = useState("");
-  const [formDueMode, setFormDueMode] = useState<"end" | "date">("end");
+  const [formDueMode, setFormDueMode] = useState<"end" | "date" | "checkout">("end");
   const [formStatus, setFormStatus]   = useState<InvoiceStatus>("pending");
   const [formPaid, setFormPaid]       = useState("");
   const [shareInvoice, setShareInvoice] = useState<ProjectInvoice | null>(null);
@@ -664,6 +664,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         fee_amount:      totalFee,
         items:           cleanItems,
         due_date:        formDueMode === "date" && formDue ? formDue : null,
+        charge_timing:   formDueMode,
         status:          "pending",
       } as any);
       if (error) throw error;
@@ -1038,7 +1039,8 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
             <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">
               {lang === "pt" ? "Vencimento" : lang === "es" ? "Vencimiento" : "Due"}
             </Label>
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5">
+
               <button
                 type="button"
                 onClick={() => { setFormDueMode("end"); setFormDue(""); }}
@@ -1050,6 +1052,18 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                 )}
               >
                 {lang === "pt" ? "Cobrar ao final" : lang === "es" ? "Cobrar al final" : "Charge at end"}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setFormDueMode("checkout"); setFormDue(""); }}
+                className={cn(
+                  "text-[10px] px-2 py-1.5 rounded-sm border transition-colors",
+                  formDueMode === "checkout"
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {lang === "pt" ? "Cobrar no checkout" : lang === "es" ? "Cobrar en checkout" : "Charge at checkout"}
               </button>
               <button
                 type="button"
