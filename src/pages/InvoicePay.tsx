@@ -24,8 +24,6 @@ export default function InvoicePay() {
 
   useEffect(() => {
     if (!invoiceId) return;
-  useEffect(() => {
-    if (!invoiceId) return;
     (async () => {
       try {
         const { data, error } = await supabase.functions.invoke("get-invoice-public", {
