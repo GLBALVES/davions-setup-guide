@@ -162,6 +162,8 @@ export default function Revenue() {
         }));
         setRows(mapped);
       }
+      const inv = await fetchInvoiceFinance(photographerId);
+      setPaidInvoices(inv.paid);
       setLoading(false);
     };
     fetchData();
