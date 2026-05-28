@@ -466,8 +466,10 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const [formFee, setFormFee]         = useState("");
   const [formFeeManual, setFormFeeManual] = useState(false);
   const [formDue, setFormDue]         = useState("");
+  const [formDueMode, setFormDueMode] = useState<"end" | "date">("end");
   const [formStatus, setFormStatus]   = useState<InvoiceStatus>("pending");
   const [formPaid, setFormPaid]       = useState("");
+  const [shareInvoice, setShareInvoice] = useState<ProjectInvoice | null>(null);
 
   // Edit form state
   const [editDesc, setEditDesc] = useState("");
@@ -638,6 +640,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         description:     formDesc.trim() || tp.chargeDescription,
         amount:          parseFloat(formAmount) || 0,
         fee_amount:      parseFloat(formFee) || 0,
+        due_date:        formDueMode === "date" && formDue ? formDue : null,
         status:          "pending",
       } as any);
       if (error) throw error;
@@ -646,7 +649,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       queryClient.invalidateQueries({ queryKey: qKey });
       toast.success(tp.chargeAdded);
       setShowForm(false);
-      setFormDesc(""); setFormAmount(""); setFormFee(""); setFormFeeManual(false); setFormDue(""); setFormStatus("pending"); setFormPaid("");
+      setFormDesc(""); setFormAmount(""); setFormFee(""); setFormFeeManual(false); setFormDue(""); setFormDueMode("end"); setFormStatus("pending"); setFormPaid("");
     },
     onError: () => toast.error(tp.errorAddingCharge),
   });
@@ -916,13 +919,54 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
             </div>
           </div>
 
+          {/* Due mode selector */}
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">
+              {lang === "pt" ? "Vencimento" : lang === "es" ? "Vencimiento" : "Due"}
+            </Label>
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                type="button"
+                onClick={() => { setFormDueMode("end"); setFormDue(""); }}
+                className={cn(
+                  "text-[10px] px-2 py-1.5 rounded-sm border transition-colors",
+                  formDueMode === "end"
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {lang === "pt" ? "Cobrar ao final" : lang === "es" ? "Cobrar al final" : "Charge at end"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormDueMode("date")}
+                className={cn(
+                  "text-[10px] px-2 py-1.5 rounded-sm border transition-colors",
+                  formDueMode === "date"
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {lang === "pt" ? "Definir vencimento" : lang === "es" ? "Definir vencimiento" : "Set due date"}
+              </button>
+            </div>
+            {formDueMode === "date" && (
+              <Input
+                type="date"
+                value={formDue}
+                onChange={(e) => setFormDue(e.target.value)}
+                className="h-7 text-xs mt-1"
+              />
+            )}
+          </div>
+
           <div className="flex gap-2 justify-end pt-1">
             <Button variant="ghost" size="sm" className="h-7 text-xs"
-              onClick={() => { setShowForm(false); setFormDesc(""); setFormAmount(""); setFormFee(""); setFormFeeManual(false); }}>
+              onClick={() => { setShowForm(false); setFormDesc(""); setFormAmount(""); setFormFee(""); setFormFeeManual(false); setFormDue(""); setFormDueMode("end"); }}>
               {tp.chargeCancel}
             </Button>
             <Button size="sm" className="h-7 text-xs" onClick={() => addMutation.mutate()}
-              disabled={addMutation.isPending || !formAmount}>
+              disabled={addMutation.isPending || !formAmount || (formDueMode === "date" && !formDue)}>
               {addMutation.isPending ? tp.chargeSaving : tp.chargeSave}
             </Button>
           </div>
@@ -1090,6 +1134,13 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                       </button>
                     )}
                     <button
+                      onClick={() => setShareInvoice(inv)}
+                      className="text-[10px] px-2 py-0.5 rounded-sm border border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors flex items-center gap-1"
+                    >
+                      <Share2 className="h-2.5 w-2.5" />
+                      {lang === "pt" ? "Compartilhar" : lang === "es" ? "Compartir" : "Share"}
+                    </button>
+                    <button
                       onClick={() => deleteMutation.mutate(inv.id)}
                       className="ml-auto text-[10px] text-destructive/60 hover:text-destructive transition-colors"
                     >
@@ -1102,7 +1153,130 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
           );
         })}
       </div>
+
+      {shareInvoice && (
+        <InvoiceShareDialog
+          open={!!shareInvoice}
+          onClose={() => setShareInvoice(null)}
+          invoice={shareInvoice}
+          clientName={project.client_name ?? ""}
+          lang={lang}
+        />
+      )}
     </div>
+  );
+}
+
+function InvoiceShareDialog({
+  open, onClose, invoice, clientName, lang,
+}: {
+  open: boolean;
+  onClose: () => void;
+  invoice: ProjectInvoice;
+  clientName: string;
+  lang: string;
+}) {
+  const t = {
+    pt: {
+      title: "Compartilhar cobrança",
+      hello: (n: string) => n ? `Olá ${n}!` : "Olá!",
+      body: (desc: string, amt: string, due: string) =>
+        `Segue a cobrança "${desc}" no valor de ${amt}${due ? ` com vencimento em ${due}` : ""}.`,
+      copy: "Copiar mensagem",
+      copied: "Mensagem copiada",
+      copyError: "Não foi possível copiar",
+      whatsapp: "WhatsApp",
+      email: "Email",
+      sms: "SMS",
+      telegram: "Telegram",
+      emailSubject: "Cobrança",
+    },
+    es: {
+      title: "Compartir cobro",
+      hello: (n: string) => n ? `¡Hola ${n}!` : "¡Hola!",
+      body: (desc: string, amt: string, due: string) =>
+        `Aquí está el cobro "${desc}" por ${amt}${due ? ` con vencimiento el ${due}` : ""}.`,
+      copy: "Copiar mensaje",
+      copied: "Mensaje copiado",
+      copyError: "No se pudo copiar",
+      whatsapp: "WhatsApp",
+      email: "Email",
+      sms: "SMS",
+      telegram: "Telegram",
+      emailSubject: "Cobro",
+    },
+    en: {
+      title: "Share charge",
+      hello: (n: string) => n ? `Hi ${n}!` : "Hi!",
+      body: (desc: string, amt: string, due: string) =>
+        `Here is the charge "${desc}" for ${amt}${due ? `, due on ${due}` : ""}.`,
+      copy: "Copy message",
+      copied: "Message copied",
+      copyError: "Unable to copy",
+      whatsapp: "WhatsApp",
+      email: "Email",
+      sms: "SMS",
+      telegram: "Telegram",
+      emailSubject: "Charge",
+    },
+  }[lang === "pt" ? "pt" : lang === "es" ? "es" : "en"];
+
+  const fmtAmt = new Intl.NumberFormat(
+    lang === "pt" ? "pt-BR" : lang === "es" ? "es-ES" : "en-US",
+    { style: "currency", currency: "BRL" }
+  ).format(Number(invoice.amount));
+  const dueStr = invoice.due_date ? format(parseISO(invoice.due_date), "d MMM yyyy") : "";
+  const message = `${t.hello(clientName)} ${t.body(invoice.description, fmtAmt, dueStr)}`;
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(message);
+      toast.success(t.copied);
+    } catch {
+      toast.error(t.copyError);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-md z-50">
+        <DialogHeader>
+          <DialogTitle className="text-sm tracking-widest uppercase font-light">{t.title}</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          <Textarea value={message} readOnly className="text-xs min-h-[90px] resize-none" />
+          <Button variant="outline" size="sm" onClick={copy}>{t.copy}</Button>
+          <div className="grid grid-cols-2 gap-2">
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(message)}`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 h-10 rounded-sm border border-border/50 text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            >
+              {t.whatsapp}
+            </a>
+            <a
+              href={`mailto:?subject=${encodeURIComponent(t.emailSubject + " — " + invoice.description)}&body=${encodeURIComponent(message)}`}
+              className="flex items-center justify-center gap-2 h-10 rounded-sm border border-border/50 text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            >
+              {t.email}
+            </a>
+            <a
+              href={`sms:?&body=${encodeURIComponent(message)}`}
+              className="flex items-center justify-center gap-2 h-10 rounded-sm border border-border/50 text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            >
+              {t.sms}
+            </a>
+            <a
+              href={`https://t.me/share/url?url=${encodeURIComponent(message)}`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 h-10 rounded-sm border border-border/50 text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            >
+              {t.telegram}
+            </a>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
