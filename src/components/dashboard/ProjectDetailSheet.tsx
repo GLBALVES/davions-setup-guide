@@ -1134,6 +1134,13 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                       </button>
                     )}
                     <button
+                      onClick={() => setShareInvoice(inv)}
+                      className="text-[10px] px-2 py-0.5 rounded-sm border border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors flex items-center gap-1"
+                    >
+                      <Share2 className="h-2.5 w-2.5" />
+                      {lang === "pt" ? "Compartilhar" : lang === "es" ? "Compartir" : "Share"}
+                    </button>
+                    <button
                       onClick={() => deleteMutation.mutate(inv.id)}
                       className="ml-auto text-[10px] text-destructive/60 hover:text-destructive transition-colors"
                     >
