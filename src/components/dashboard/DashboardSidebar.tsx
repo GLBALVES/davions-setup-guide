@@ -220,7 +220,6 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       icon: GitBranch,
       disabled: true,
       items: [
-        { title: t.nav.kanban, icon: Columns, to: "/dashboard/workflow", permKey: "workflow" },
         { title: t.nav.recurringWorkflows, icon: RefreshCw, to: "/dashboard/recurring", permKey: "recurring" },
       ],
     },
