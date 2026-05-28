@@ -292,7 +292,7 @@ const groups: MenuGroup[] = [
     { title: "Leads", icon: UserPlus },
   ]},
   { stableKey: "Workflows", title: "Workflows", icon: GitBranch, disabled: true, items: [
-    { title: "Kanban", icon: Columns, to: "/dashboard/workflow", permKey: "workflow" },
+    
     { title: "Recurring Workflows", icon: RefreshCw, to: "/dashboard/recurring", permKey: "recurring" },
   ]},
   { stableKey: "Settings", title: "Settings", icon: Settings, items: [
