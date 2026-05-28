@@ -93,6 +93,9 @@ serve(async (req) => {
         .select("body")
         .eq("id", session.contract_id)
         .maybeSingle();
+      if (contractTemplate?.body) session.contract_text = contractTemplate.body;
+    }
+
     let briefing: any = null;
     let alreadySubmittedBriefing = false;
     if (session?.briefing_id) {
