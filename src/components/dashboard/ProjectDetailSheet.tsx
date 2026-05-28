@@ -753,7 +753,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     setFormDueMode("end");
   };
 
-  };
+
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
