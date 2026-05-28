@@ -60,7 +60,7 @@ serve(async (req) => {
       const amountPaidMajor = amountPaidCents / 100;
       const { data: inv } = await supabase
         .from("project_invoices")
-        .select("amount, paid_amount")
+        .select("amount, paid_amount, photographer_id, description, project_id")
         .eq("id", invoiceId)
         .maybeSingle();
       if (inv) {
@@ -74,6 +74,17 @@ serve(async (req) => {
             paid_at: isFullyPaid ? new Date().toISOString() : null,
           })
           .eq("id", invoiceId);
+
+        if (inv.photographer_id) {
+          await supabase.from("notifications").insert({
+            photographer_id: inv.photographer_id,
+            type: "success",
+            event: "payment_received",
+            title: `Pagamento recebido — ${amountPaidMajor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`,
+            body: `${inv.description ?? "Cobrança"} ${isFullyPaid ? "foi quitada" : "recebeu pagamento parcial"}.`,
+            metadata: { invoice_id: invoiceId, project_id: inv.project_id, amount: amountPaidMajor },
+          });
+        }
       }
       await logWebhookEvent(supabase, {
         provider: "stripe",
