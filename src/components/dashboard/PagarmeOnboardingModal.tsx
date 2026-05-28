@@ -521,7 +521,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
       {/* Titular */}
       <div className="grid grid-cols-12 gap-3">
         <Field className="col-span-12 sm:col-span-7" label={t.holderName} value={bank.holder_name} onChange={(v: string) => setBank({ ...bank, holder_name: v })} />
-        <Field className="col-span-12 sm:col-span-5" label={t.holderDoc} value={bank.holder_document} onChange={(v: string) => setBank({ ...bank, holder_document: v })} placeholder="000.000.000-00" />
+        <Field className="col-span-12 sm:col-span-5" label={t.holderDoc} value={bank.holder_document} onChange={(v: string) => setBank({ ...bank, holder_document: formatDocument(v) })} placeholder="000.000.000-00" />
       </div>
 
       {/* Banco + Agência (com dígito agrupado) */}
@@ -612,7 +612,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
               <h4 className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-light">{t.yourData}</h4>
               <div className="grid grid-cols-12 gap-3">
                 <Field className="col-span-12 sm:col-span-7" label={t.name} value={pf.name} onChange={(v: string) => setPf({ ...pf, name: v })} />
-                <Field className="col-span-12 sm:col-span-5" label={t.cpf} value={pf.document} onChange={(v: string) => setPf({ ...pf, document: v })} placeholder="000.000.000-00" />
+                <Field className="col-span-12 sm:col-span-5" label={t.cpf} value={pf.document} onChange={(v: string) => setPf({ ...pf, document: formatCPF(v) })} placeholder="000.000.000-00" />
                 <Field className="col-span-12 sm:col-span-7" label={t.motherName} value={pf.mother_name} onChange={(v: string) => setPf({ ...pf, mother_name: v })} />
                 <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pf.birthdate} onChange={(v: string) => setPf({ ...pf, birthdate: formatDateBR(v) })} placeholder="01/01/1990" />
                 <Field className="col-span-6 sm:col-span-4" label={t.monthlyIncome} value={pf.monthly_income} onChange={(v: string) => setPf({ ...pf, monthly_income: formatCurrencyBR(v) })} />
@@ -635,7 +635,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
               <h4 className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-light">{t.company}</h4>
               <div className="grid grid-cols-12 gap-3">
                 <Field className="col-span-12 sm:col-span-7" label={t.companyName} value={pj.company_name} onChange={(v: string) => setPj({ ...pj, company_name: v })} />
-                <Field className="col-span-12 sm:col-span-5" label={t.cnpj} value={pj.document} onChange={(v: string) => setPj({ ...pj, document: v })} placeholder="00.000.000/0000-00" />
+                <Field className="col-span-12 sm:col-span-5" label={t.cnpj} value={pj.document} onChange={(v: string) => setPj({ ...pj, document: formatCNPJ(v) })} placeholder="00.000.000/0000-00" />
                 <Field className="col-span-12 sm:col-span-7" label={t.tradingName} value={pj.trading_name} onChange={(v: string) => setPj({ ...pj, trading_name: v })} />
                 <Field className="col-span-6 sm:col-span-5" label={t.foundingDate} value={pj.founding_date} onChange={(v: string) => setPj({ ...pj, founding_date: formatDateBR(v) })} placeholder="01/01/2020" />
                 <Field className="col-span-12 sm:col-span-4" label={t.annualRevenue} value={pj.annual_revenue} onChange={(v: string) => setPj({ ...pj, annual_revenue: formatCurrencyBR(v) })} />
@@ -652,7 +652,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
               <h4 className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-light">{t.partner}</h4>
               <div className="grid grid-cols-12 gap-3">
                 <Field className="col-span-12 sm:col-span-7" label={t.name} value={pj.partner.name} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, name: v } })} />
-                <Field className="col-span-12 sm:col-span-5" label={t.cpf} value={pj.partner.document} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, document: v } })} />
+                <Field className="col-span-12 sm:col-span-5" label={t.cpf} value={pj.partner.document} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, document: formatCPF(v) } })} placeholder="000.000.000-00" />
                 <Field className="col-span-12 sm:col-span-7" label={t.motherName} value={pj.partner.mother_name} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, mother_name: v } })} />
                 <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pj.partner.birthdate} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, birthdate: formatDateBR(v) } })} placeholder="01/01/1990" />
                 <Field className="col-span-6 sm:col-span-4" label={t.monthlyIncome} value={pj.partner.monthly_income} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, monthly_income: formatCurrencyBR(v) } })} />
