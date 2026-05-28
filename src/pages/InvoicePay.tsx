@@ -80,7 +80,7 @@ export default function InvoicePay() {
             </div>
           )}
 
-          {!loading && error && (
+          {!loading && error && !info && (
             <div className="flex flex-col items-center gap-2 py-6 text-center">
               <AlertTriangle className="h-6 w-6 text-destructive" />
               <p className="text-sm text-foreground">{error}</p>
