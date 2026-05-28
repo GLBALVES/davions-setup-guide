@@ -331,107 +331,128 @@ export default function Revenue() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filtered.map((row) => {
-                        const payConf  = STATUS_CONFIG[row.payment_status] ?? STATUS_CONFIG["pending"];
-                        const bookConf = BOOKING_STATUS_CONFIG[row.status]  ?? BOOKING_STATUS_CONFIG["pending"];
-                        const PayIcon  = payConf.icon;
-                        const depositAmt = calcDepositAmount(row);
-                        const balance  = calcBalance(row);
-                        return (
-                          <tr key={row.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                            <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                              {format(new Date(row.booked_date || row.created_at), "MMM d, yyyy")}
-                            </td>
-                            <td className="px-4 py-3">
-                              <p className="font-normal">{row.client_name}</p>
-                              <p className="text-[10px] text-muted-foreground">{row.client_email}</p>
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap">{row.session_title}</td>
-                            <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums">{fmt(calcTotal(row))}</td>
-                            <td className="px-4 py-3 whitespace-nowrap tabular-nums">
-                              {row.deposit_enabled ? (
-                                <div className="flex flex-col gap-0.5">
-                                  <span className="font-normal">{fmt(depositAmt)}</span>
-                                  <span className="text-[10px] text-muted-foreground">
-                                    {(row.deposit_type === "percent" || row.deposit_type === "percentage")
-                                      ? `${row.deposit_amount}%`
-                                      : t.finance.fixed}
-                                  </span>
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground/40">—</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums text-foreground">{fmt(calcPaid(row))}</td>
-                            <td className="px-4 py-3 whitespace-nowrap tabular-nums text-amber-600">
-                              {calcPaid(row) > 0 ? `−${fmt(calcFee(calcPaid(row)))}` : <span className="text-muted-foreground/40">—</span>}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap tabular-nums font-normal">
-                              {calcPaid(row) > 0 ? fmt(calcNet(calcPaid(row))) : <span className="text-muted-foreground/40">—</span>}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap tabular-nums">
-                              {balance > 0 ? (
-                                <span className="flex items-center gap-1 text-amber-600">
-                                  <ArrowUpRight className="h-3 w-3" />
-                                  {fmt(balance)}
-                                </span>
-                              ) : (
-                                <span className="text-muted-foreground/50">—</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              <Badge variant={payConf.variant} className="gap-1 text-[10px] tracking-wide uppercase font-light">
-                                <PayIcon className="h-2.5 w-2.5" />
-                                {payConf.label}
-                              </Badge>
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              <span className={`text-[10px] tracking-wider uppercase ${bookConf.color}`}>
-                                {bookConf.label}
-                              </span>
-                            </td>
-                          </tr>
-
+                      {(() => {
+                        type Row =
+                          | { kind: "booking"; date: string; data: BookingRow }
+                          | { kind: "invoice"; date: string; data: PaidInvoice };
+                        const bookingRows: Row[] = filtered.map((r) => ({
+                          kind: "booking",
+                          date: r.booked_date || r.created_at,
+                          data: r,
+                        }));
+                        const invoiceRows: Row[] =
+                          paymentFilter === "all" || paymentFilter === "paid"
+                            ? paidInvoices
+                                .filter((inv) => {
+                                  if (!search) return true;
+                                  const q = search.toLowerCase();
+                                  return (
+                                    (inv.description ?? "").toLowerCase().includes(q) ||
+                                    "cobrança de projeto".includes(q)
+                                  );
+                                })
+                                .map((inv) => ({ kind: "invoice", date: inv.paid_at, data: inv }))
+                            : [];
+                        const all = [...bookingRows, ...invoiceRows].sort(
+                          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
                         );
-                      })}
-                      {(paymentFilter === "all" || paymentFilter === "paid") && paidInvoices
-                        .filter((inv) => {
-                          if (!search) return true;
-                          const q = search.toLowerCase();
-                          return (inv.description ?? "").toLowerCase().includes(q) ||
-                                 "cobrança de projeto".includes(q);
-                        })
-                        .map((inv) => {
-                          const fee = calcFee(inv.paid_cents);
-                          const net = inv.paid_cents - fee;
+                        return all.map((row) => {
+                          if (row.kind === "invoice") {
+                            const inv = row.data;
+                            const fee = calcFee(inv.paid_cents);
+                            const net = inv.paid_cents - fee;
+                            return (
+                              <tr key={`inv-${inv.id}`} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                                <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                                  {format(new Date(inv.paid_at), "MMM d, yyyy")}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <p className="font-normal text-muted-foreground italic">Cobrança de projeto</p>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap">{inv.description ?? "—"}</td>
+                                <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums">{fmt(inv.paid_cents)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap"><span className="text-muted-foreground/40">—</span></td>
+                                <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums text-foreground">{fmt(inv.paid_cents)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap tabular-nums text-amber-600">−{fmt(fee)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap tabular-nums font-normal">{fmt(net)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap"><span className="text-muted-foreground/50">—</span></td>
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                  <Badge variant="default" className="gap-1 text-[10px] tracking-wide uppercase font-light">
+                                    <CheckCircle2 className="h-2.5 w-2.5" />
+                                    {t.finance.paid}
+                                  </Badge>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                  <span className="text-[10px] tracking-wider uppercase text-green-600">Project</span>
+                                </td>
+                              </tr>
+                            );
+                          }
+                          const r = row.data;
+                          const payConf = STATUS_CONFIG[r.payment_status] ?? STATUS_CONFIG["pending"];
+                          const bookConf = BOOKING_STATUS_CONFIG[r.status] ?? BOOKING_STATUS_CONFIG["pending"];
+                          const PayIcon = payConf.icon;
+                          const depositAmt = calcDepositAmount(r);
+                          const balance = calcBalance(r);
                           return (
-                            <tr key={`inv-${inv.id}`} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                            <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                               <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                                {format(new Date(inv.paid_at), "MMM d, yyyy")}
+                                {format(new Date(r.booked_date || r.created_at), "MMM d, yyyy")}
                               </td>
                               <td className="px-4 py-3">
-                                <p className="font-normal text-muted-foreground italic">Cobrança de projeto</p>
+                                <p className="font-normal">{r.client_name}</p>
+                                <p className="text-[10px] text-muted-foreground">{r.client_email}</p>
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap">{inv.description ?? "—"}</td>
-                              <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums">{fmt(inv.paid_cents)}</td>
-                              <td className="px-4 py-3 whitespace-nowrap"><span className="text-muted-foreground/40">—</span></td>
-                              <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums text-foreground">{fmt(inv.paid_cents)}</td>
-                              <td className="px-4 py-3 whitespace-nowrap tabular-nums text-amber-600">−{fmt(fee)}</td>
-                              <td className="px-4 py-3 whitespace-nowrap tabular-nums font-normal">{fmt(net)}</td>
-                              <td className="px-4 py-3 whitespace-nowrap"><span className="text-muted-foreground/50">—</span></td>
+                              <td className="px-4 py-3 whitespace-nowrap">{r.session_title}</td>
+                              <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums">{fmt(calcTotal(r))}</td>
+                              <td className="px-4 py-3 whitespace-nowrap tabular-nums">
+                                {r.deposit_enabled ? (
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className="font-normal">{fmt(depositAmt)}</span>
+                                    <span className="text-[10px] text-muted-foreground">
+                                      {(r.deposit_type === "percent" || r.deposit_type === "percentage")
+                                        ? `${r.deposit_amount}%`
+                                        : t.finance.fixed}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground/40">—</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums text-foreground">{fmt(calcPaid(r))}</td>
+                              <td className="px-4 py-3 whitespace-nowrap tabular-nums text-amber-600">
+                                {calcPaid(r) > 0 ? `−${fmt(calcFee(calcPaid(r)))}` : <span className="text-muted-foreground/40">—</span>}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap tabular-nums font-normal">
+                                {calcPaid(r) > 0 ? fmt(calcNet(calcPaid(r))) : <span className="text-muted-foreground/40">—</span>}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap tabular-nums">
+                                {balance > 0 ? (
+                                  <span className="flex items-center gap-1 text-amber-600">
+                                    <ArrowUpRight className="h-3 w-3" />
+                                    {fmt(balance)}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground/50">—</span>
+                                )}
+                              </td>
                               <td className="px-4 py-3 whitespace-nowrap">
-                                <Badge variant="default" className="gap-1 text-[10px] tracking-wide uppercase font-light">
-                                  <CheckCircle2 className="h-2.5 w-2.5" />
-                                  {t.finance.paid}
+                                <Badge variant={payConf.variant} className="gap-1 text-[10px] tracking-wide uppercase font-light">
+                                  <PayIcon className="h-2.5 w-2.5" />
+                                  {payConf.label}
                                 </Badge>
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap">
-                                <span className="text-[10px] tracking-wider uppercase text-green-600">Project</span>
+                                <span className={`text-[10px] tracking-wider uppercase ${bookConf.color}`}>
+                                  {bookConf.label}
+                                </span>
                               </td>
                             </tr>
                           );
-                        })}
+                        });
+                      })()}
                     </tbody>
+
                   </table>
 
                 </div>
