@@ -113,3 +113,6 @@ verify_jwt = false
 
 [functions.create-pagarme-booking-checkout]
 verify_jwt = false
+
+[functions.create-invoice-payment-link]
+verify_jwt = false
