@@ -596,8 +596,8 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
                 <Field className="col-span-12 sm:col-span-7" label={t.motherName} value={pf.mother_name} onChange={(v: string) => setPf({ ...pf, mother_name: v })} />
                 <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pf.birthdate} onChange={(v: string) => setPf({ ...pf, birthdate: formatDateBR(v) })} placeholder="01/01/1990" />
                 <Field className="col-span-6 sm:col-span-4" label={t.monthlyIncome} value={pf.monthly_income} onChange={(v: string) => setPf({ ...pf, monthly_income: formatCurrencyBR(v) })} />
-                <Field className="col-span-2 sm:col-span-2" label={t.ddd} value={pf.phone.ddd} onChange={(v: string) => setPf({ ...pf, phone: { ...pf.phone, ddd: v.replace(/\D/g, "").slice(0, 2) } })} placeholder="11" />
-                <Field className="col-span-10 sm:col-span-6" label={t.phone} value={pf.phone.number} onChange={(v: string) => setPf({ ...pf, phone: { ...pf.phone, number: formatPhoneNumberBR(v) } })} placeholder="99999-9999" />
+                <PhoneField className="col-span-12 sm:col-span-8" label={t.phone} ddd={pf.phone.ddd} number={pf.phone.number} onDddChange={(v) => setPf({ ...pf, phone: { ...pf.phone, ddd: v } })} onNumberChange={(v) => setPf({ ...pf, phone: { ...pf.phone, number: v } })} />
+
               </div>
             </div>
 
