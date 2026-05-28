@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -320,29 +320,42 @@ const PhoneField = ({
   onDddChange: (v: string) => void;
   onNumberChange: (v: string) => void;
   className?: string;
-}) => (
-  <div className={`flex flex-col gap-1.5 ${className}`}>
-    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-light">{label}</Label>
-    <div className="flex items-stretch rounded-md border border-input focus-within:ring-1 focus-within:ring-ring overflow-hidden bg-background">
-      <span className="flex items-center pl-2.5 pr-1 text-xs text-muted-foreground select-none">(</span>
-      <Input
-        value={ddd}
-        onChange={(e) => onDddChange(e.target.value.replace(/\D/g, "").slice(0, 2))}
-        placeholder="11"
-        inputMode="numeric"
-        className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 w-9 text-center px-0"
-      />
-      <span className="flex items-center pl-1 pr-2.5 text-xs text-muted-foreground select-none">)</span>
-      <Input
-        value={number}
-        onChange={(e) => onNumberChange(formatPhoneNumberBR(e.target.value))}
-        placeholder="99999-9999"
-        inputMode="numeric"
-        className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 flex-1"
-      />
+}) => {
+  const numberInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDddChange = (v: string) => {
+    const digits = v.replace(/\D/g, "").slice(0, 2);
+    onDddChange(digits);
+    if (digits.length === 2 && numberInputRef.current) {
+      numberInputRef.current.focus();
+    }
+  };
+
+  return (
+    <div className={`flex flex-col gap-1.5 ${className}`}>
+      <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-light">{label}</Label>
+      <div className="flex items-stretch rounded-md border border-input focus-within:ring-1 focus-within:ring-ring overflow-hidden bg-background">
+        <span className="flex items-center pl-2.5 pr-1 text-xs text-muted-foreground select-none">(</span>
+        <Input
+          value={ddd}
+          onChange={(e) => handleDddChange(e.target.value)}
+          placeholder="11"
+          inputMode="numeric"
+          className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 w-9 text-center px-0"
+        />
+        <span className="flex items-center pl-1 pr-2.5 text-xs text-muted-foreground select-none">)</span>
+        <Input
+          ref={numberInputRef}
+          value={number}
+          onChange={(e) => onNumberChange(formatPhoneNumberBR(e.target.value))}
+          placeholder="99999-9999"
+          inputMode="numeric"
+          className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 flex-1"
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 
 const AddressBlock = ({
