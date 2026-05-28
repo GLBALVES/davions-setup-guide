@@ -455,29 +455,81 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
   const addressLabels = { zip: t.zip, street: t.street, number: t.number, complement: t.complement, neighborhood: t.neighborhood, city: t.city, state: t.state };
 
   const BankBlock = (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4 border-t border-border pt-5">
       <h4 className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-light">{t.bank}</h4>
+
+      {/* Titular */}
       <div className="grid grid-cols-12 gap-3">
         <Field className="col-span-12 sm:col-span-7" label={t.holderName} value={bank.holder_name} onChange={(v: string) => setBank({ ...bank, holder_name: v })} />
-        <Field className="col-span-12 sm:col-span-5" label={t.holderDoc} value={bank.holder_document} onChange={(v: string) => setBank({ ...bank, holder_document: v })} />
-        <Field className="col-span-4 sm:col-span-2" label={t.bankCode} value={bank.bank} onChange={(v: string) => setBank({ ...bank, bank: v })} placeholder="001" />
-        <Field className="col-span-5 sm:col-span-3" label={t.branch} value={bank.branch_number} onChange={(v: string) => setBank({ ...bank, branch_number: v })} />
-        <Field className="col-span-3 sm:col-span-2" label={t.branchDigit} value={bank.branch_check_digit} onChange={(v: string) => setBank({ ...bank, branch_check_digit: v })} />
-        <Field className="col-span-7 sm:col-span-3" label={t.account} value={bank.account_number} onChange={(v: string) => setBank({ ...bank, account_number: v })} />
-        <Field className="col-span-5 sm:col-span-2" label={t.accountDigit} value={bank.account_check_digit} onChange={(v: string) => setBank({ ...bank, account_check_digit: v })} />
-        <div className="col-span-12 flex flex-col gap-1.5">
+        <Field className="col-span-12 sm:col-span-5" label={t.holderDoc} value={bank.holder_document} onChange={(v: string) => setBank({ ...bank, holder_document: v })} placeholder="000.000.000-00" />
+      </div>
+
+      {/* Banco + Agência (com dígito agrupado) */}
+      <div className="grid grid-cols-12 gap-3">
+        <Field className="col-span-4 sm:col-span-3" label={t.bankCode} value={bank.bank} onChange={(v: string) => setBank({ ...bank, bank: v.replace(/\D/g, "").slice(0, 3) })} placeholder="001" />
+        <div className="col-span-8 sm:col-span-9 flex flex-col gap-1.5">
+          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-light">{t.branch}</Label>
+          <div className="flex items-stretch gap-0 rounded-md border border-input focus-within:ring-1 focus-within:ring-ring overflow-hidden">
+            <Input
+              value={bank.branch_number}
+              onChange={(e) => setBank({ ...bank, branch_number: e.target.value.replace(/\D/g, "").slice(0, 5) })}
+              placeholder="0000"
+              className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 flex-1"
+            />
+            <span className="flex items-center px-2 text-xs text-muted-foreground border-l border-input bg-muted/30">-</span>
+            <Input
+              value={bank.branch_check_digit}
+              onChange={(e) => setBank({ ...bank, branch_check_digit: e.target.value.replace(/\D/g, "").slice(0, 1) })}
+              placeholder="0"
+              className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 w-14 text-center"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Conta (com dígito agrupado) + Tipo */}
+      <div className="grid grid-cols-12 gap-3">
+        <div className="col-span-12 sm:col-span-7 flex flex-col gap-1.5">
+          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-light">{t.account}</Label>
+          <div className="flex items-stretch gap-0 rounded-md border border-input focus-within:ring-1 focus-within:ring-ring overflow-hidden">
+            <Input
+              value={bank.account_number}
+              onChange={(e) => setBank({ ...bank, account_number: e.target.value.replace(/\D/g, "").slice(0, 12) })}
+              placeholder="00000000"
+              className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 flex-1"
+            />
+            <span className="flex items-center px-2 text-xs text-muted-foreground border-l border-input bg-muted/30">-</span>
+            <Input
+              value={bank.account_check_digit}
+              onChange={(e) => setBank({ ...bank, account_check_digit: e.target.value.replace(/\D/g, "").slice(0, 1) })}
+              placeholder="0"
+              className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 w-14 text-center"
+            />
+          </div>
+        </div>
+        <div className="col-span-12 sm:col-span-5 flex flex-col gap-1.5">
           <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-light">{t.accountType}</Label>
-          <Select value={bank.type} onValueChange={(v) => setBank({ ...bank, type: v as "checking" | "savings" })}>
-            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-            <SelectContent className="z-[60]">
-              <SelectItem value="checking">{t.checking}</SelectItem>
-              <SelectItem value="savings">{t.savings}</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-2 h-9 rounded-md border border-input overflow-hidden text-sm">
+            <button
+              type="button"
+              onClick={() => setBank({ ...bank, type: "checking" })}
+              className={`transition-colors ${bank.type === "checking" ? "bg-foreground text-background" : "bg-background text-muted-foreground hover:bg-muted"}`}
+            >
+              {t.checking}
+            </button>
+            <button
+              type="button"
+              onClick={() => setBank({ ...bank, type: "savings" })}
+              className={`transition-colors border-l border-input ${bank.type === "savings" ? "bg-foreground text-background" : "bg-background text-muted-foreground hover:bg-muted"}`}
+            >
+              {t.savings}
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
