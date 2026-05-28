@@ -77,7 +77,6 @@ export async function fetchInvoiceFinance(photographerId: string): Promise<{
       });
     }
 
-    }
     if (inv.status === "pending" || inv.status === "partial") {
       outstanding.push({
         id: inv.id,
