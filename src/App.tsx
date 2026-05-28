@@ -28,6 +28,7 @@ import SessionDetailPage from "./pages/store/SessionDetailPage";
 import SiteSubPage from "./pages/store/SiteSubPage";
 import BookingSuccess from "./pages/BookingSuccess";
 import BookingConfirm from "./pages/BookingConfirm";
+import InvoicePay from "./pages/InvoicePay";
 import NotFound from "./pages/NotFound";
 import { useLocation } from "react-router-dom";
 
@@ -143,6 +144,7 @@ const App = () => {
                 <Route path="/shop" element={<PublicShopPage mode="custom-domain" />} />
                 <Route path="/blog" element={<PublicBlogListPage mode="custom-domain" />} />
                 <Route path="/blog/:postSlug" element={<PublicBlogPostPage mode="custom-domain" />} />
+                <Route path="/pay/invoice/:invoiceId" element={<InvoicePay />} />
                 <Route path="*" element={<CustomDomainStore />} />
               </>
             ) : (
@@ -166,8 +168,9 @@ const App = () => {
                 <Route path="/vitrine/:slug/:sessionSlug/book" element={<SessionDetailPage />} />
                 {/* Legacy /store/* → redirect to /vitrine/* (backward compatibility) */}
                 <Route path="/store/*" element={<LegacyStoreRedirect />} />
-                <Route path="/booking-success" element={<BookingSuccess />} />
                 <Route path="/booking/:bookingId/confirm" element={<BookingConfirm />} />
+                <Route path="/pay/invoice/:invoiceId" element={<InvoicePay />} />
+
 
                 {/* Public gallery view — supports both slug and UUID */}
                 <Route path="/gallery/:slug" element={<GalleryView />} />

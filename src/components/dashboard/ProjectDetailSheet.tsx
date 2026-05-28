@@ -1309,6 +1309,7 @@ function InvoiceShareDialog({
       hello: (n: string) => n ? `Olá ${n}!` : "Olá!",
       body: (desc: string, amt: string, due: string) =>
         `Segue a cobrança "${desc}" no valor de ${amt}${due ? ` com vencimento em ${due}` : ""}.`,
+      payLine: (link: string) => `Pague com segurança aqui: ${link}`,
       copy: "Copiar mensagem",
       copied: "Mensagem copiada",
       copyError: "Não foi possível copiar",
@@ -1317,12 +1318,15 @@ function InvoiceShareDialog({
       sms: "SMS",
       telegram: "Telegram",
       emailSubject: "Cobrança",
+      linkLabel: "Link de pagamento",
+      copyLink: "Copiar link",
     },
     es: {
       title: "Compartir cobro",
       hello: (n: string) => n ? `¡Hola ${n}!` : "¡Hola!",
       body: (desc: string, amt: string, due: string) =>
         `Aquí está el cobro "${desc}" por ${amt}${due ? ` con vencimiento el ${due}` : ""}.`,
+      payLine: (link: string) => `Paga de forma segura aquí: ${link}`,
       copy: "Copiar mensaje",
       copied: "Mensaje copiado",
       copyError: "No se pudo copiar",
@@ -1331,12 +1335,15 @@ function InvoiceShareDialog({
       sms: "SMS",
       telegram: "Telegram",
       emailSubject: "Cobro",
+      linkLabel: "Enlace de pago",
+      copyLink: "Copiar enlace",
     },
     en: {
       title: "Share charge",
       hello: (n: string) => n ? `Hi ${n}!` : "Hi!",
       body: (desc: string, amt: string, due: string) =>
         `Here is the charge "${desc}" for ${amt}${due ? `, due on ${due}` : ""}.`,
+      payLine: (link: string) => `Pay securely here: ${link}`,
       copy: "Copy message",
       copied: "Message copied",
       copyError: "Unable to copy",
@@ -1345,6 +1352,8 @@ function InvoiceShareDialog({
       sms: "SMS",
       telegram: "Telegram",
       emailSubject: "Charge",
+      linkLabel: "Payment link",
+      copyLink: "Copy link",
     },
   }[lang === "pt" ? "pt" : lang === "es" ? "es" : "en"];
 
@@ -1353,7 +1362,8 @@ function InvoiceShareDialog({
     { style: "currency", currency: "BRL" }
   ).format(Number(invoice.amount));
   const dueStr = invoice.due_date ? format(parseISO(invoice.due_date), "d MMM yyyy") : "";
-  const message = `${t.hello(clientName)} ${t.body(invoice.description, fmtAmt, dueStr)}`;
+  const payUrl = `${window.location.origin}/pay/invoice/${invoice.id}`;
+  const message = `${t.hello(clientName)} ${t.body(invoice.description, fmtAmt, dueStr)}\n\n${t.payLine(payUrl)}`;
 
   const copy = async () => {
     try {
@@ -1371,7 +1381,29 @@ function InvoiceShareDialog({
           <DialogTitle className="text-sm tracking-widest uppercase font-light">{t.title}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-4">
-          <Textarea value={message} readOnly className="text-xs min-h-[90px] resize-none" />
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t.linkLabel}</span>
+            <div className="flex items-center gap-2">
+              <input
+                value={payUrl}
+                readOnly
+                className="flex-1 h-8 px-2 text-xs rounded-sm border border-border/50 bg-muted/30 truncate"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 text-[10px] tracking-widest uppercase shrink-0"
+                onClick={async () => {
+                  try { await navigator.clipboard.writeText(payUrl); toast.success(t.copied); }
+                  catch { toast.error(t.copyError); }
+                }}
+              >
+                {t.copyLink}
+              </Button>
+            </div>
+          </div>
+          <Textarea value={message} readOnly className="text-xs min-h-[110px] resize-none" />
           <Button variant="outline" size="sm" onClick={copy}>{t.copy}</Button>
           <div className="grid grid-cols-2 gap-2">
             <a
