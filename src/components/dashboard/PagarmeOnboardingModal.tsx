@@ -199,6 +199,20 @@ function formatDateBR(input: string): string {
   return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
 }
 
+/** Format raw digits as BRL currency while typing */
+function formatCurrencyBR(input: string): string {
+  const digits = input.replace(/\D/g, "").slice(0, 15);
+  if (!digits) return "";
+  const cents = parseInt(digits, 10);
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(cents / 100);
+}
+
+
 
 
 interface FieldProps {
@@ -308,7 +322,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
         type: "individual",
         email,
         ...pf,
-        monthly_income: Number(pf.monthly_income),
+        monthly_income: Number(pf.monthly_income.replace(/\D/g, "")) / 100,
         bank,
       };
     } else {
@@ -336,13 +350,13 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
         document: pj.document,
         company_name: pj.company_name,
         trading_name: pj.trading_name,
-        annual_revenue: Number(pj.annual_revenue),
+        annual_revenue: Number(pj.annual_revenue.replace(/\D/g, "")) / 100,
         founding_date: pj.founding_date,
         phone: pj.phone,
         address: pj.address,
         managing_partner: {
           ...pj.partner,
-          monthly_income: Number(pj.partner.monthly_income),
+          monthly_income: Number(pj.partner.monthly_income.replace(/\D/g, "")) / 100,
         },
         bank,
       };
@@ -418,7 +432,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
                 <Field className="col-span-12 sm:col-span-5" label={t.cpf} value={pf.document} onChange={(v: string) => setPf({ ...pf, document: v })} placeholder="000.000.000-00" />
                 <Field className="col-span-12 sm:col-span-7" label={t.motherName} value={pf.mother_name} onChange={(v: string) => setPf({ ...pf, mother_name: v })} />
                 <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pf.birthdate} onChange={(v: string) => setPf({ ...pf, birthdate: formatDateBR(v) })} placeholder="01/01/1990" />
-                <Field className="col-span-6 sm:col-span-4" label={t.monthlyIncome} value={pf.monthly_income} onChange={(v: string) => setPf({ ...pf, monthly_income: v })} type="number" />
+                <Field className="col-span-6 sm:col-span-4" label={t.monthlyIncome} value={pf.monthly_income} onChange={(v: string) => setPf({ ...pf, monthly_income: formatCurrencyBR(v) })} />
                 <Field className="col-span-2 sm:col-span-2" label={t.ddd} value={pf.phone.ddd} onChange={(v: string) => setPf({ ...pf, phone: { ...pf.phone, ddd: v } })} placeholder="11" />
                 <Field className="col-span-10 sm:col-span-6" label={t.phone} value={pf.phone.number} onChange={(v: string) => setPf({ ...pf, phone: { ...pf.phone, number: v } })} placeholder="999999999" />
               </div>
@@ -441,7 +455,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
                 <Field className="col-span-12 sm:col-span-5" label={t.cnpj} value={pj.document} onChange={(v: string) => setPj({ ...pj, document: v })} placeholder="00.000.000/0000-00" />
                 <Field className="col-span-12 sm:col-span-7" label={t.tradingName} value={pj.trading_name} onChange={(v: string) => setPj({ ...pj, trading_name: v })} />
                 <Field className="col-span-6 sm:col-span-5" label={t.foundingDate} value={pj.founding_date} onChange={(v: string) => setPj({ ...pj, founding_date: formatDateBR(v) })} placeholder="01/01/2020" />
-                <Field className="col-span-12 sm:col-span-4" label={t.annualRevenue} value={pj.annual_revenue} onChange={(v: string) => setPj({ ...pj, annual_revenue: v })} type="number" />
+                <Field className="col-span-12 sm:col-span-4" label={t.annualRevenue} value={pj.annual_revenue} onChange={(v: string) => setPj({ ...pj, annual_revenue: formatCurrencyBR(v) })} />
                 <Field className="col-span-2" label={t.ddd} value={pj.phone.ddd} onChange={(v: string) => setPj({ ...pj, phone: { ...pj.phone, ddd: v } })} placeholder="11" />
                 <Field className="col-span-10 sm:col-span-6" label={t.phone} value={pj.phone.number} onChange={(v: string) => setPj({ ...pj, phone: { ...pj.phone, number: v } })} />
               </div>
@@ -458,7 +472,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
                 <Field className="col-span-12 sm:col-span-5" label={t.cpf} value={pj.partner.document} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, document: v } })} />
                 <Field className="col-span-12 sm:col-span-7" label={t.motherName} value={pj.partner.mother_name} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, mother_name: v } })} />
                 <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pj.partner.birthdate} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, birthdate: formatDateBR(v) } })} placeholder="01/01/1990" />
-                <Field className="col-span-6 sm:col-span-4" label={t.monthlyIncome} value={pj.partner.monthly_income} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, monthly_income: v } })} type="number" />
+                <Field className="col-span-6 sm:col-span-4" label={t.monthlyIncome} value={pj.partner.monthly_income} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, monthly_income: formatCurrencyBR(v) } })} />
                 <Field className="col-span-12 sm:col-span-8" label={t.email} value={pj.partner.email} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, email: v } })} type="email" />
                 <Field className="col-span-2" label={t.ddd} value={pj.partner.phone.ddd} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, phone: { ...pj.partner.phone, ddd: v } } })} />
                 <Field className="col-span-10 sm:col-span-6" label={t.phone} value={pj.partner.phone.number} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, phone: { ...pj.partner.phone, number: v } } })} />
