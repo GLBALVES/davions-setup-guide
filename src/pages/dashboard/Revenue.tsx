@@ -348,7 +348,8 @@ export default function Revenue() {
                                   const q = search.toLowerCase();
                                   return (
                                     (inv.description ?? "").toLowerCase().includes(q) ||
-                                    "cobrança de projeto".includes(q)
+                                    (inv.client_name ?? "").toLowerCase().includes(q) ||
+                                    (inv.client_email ?? "").toLowerCase().includes(q)
                                   );
                                 })
                                 .map((inv) => ({ kind: "invoice", date: inv.paid_at, data: inv }))
@@ -367,7 +368,10 @@ export default function Revenue() {
                                   {format(new Date(inv.paid_at), "MMM d, yyyy")}
                                 </td>
                                 <td className="px-4 py-3">
-                                  <p className="font-normal text-muted-foreground italic">Cobrança de projeto</p>
+                                  <p className="font-normal">{inv.client_name || "—"}</p>
+                                  {inv.client_email && (
+                                    <p className="text-[10px] text-muted-foreground">{inv.client_email}</p>
+                                  )}
                                 </td>
                                 <td className="px-4 py-3 whitespace-nowrap">{inv.description ?? "—"}</td>
                                 <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums">{fmt(inv.paid_cents)}</td>
