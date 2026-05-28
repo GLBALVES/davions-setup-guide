@@ -292,10 +292,27 @@ const AddressBlock = ({
 }: {
   value: typeof DEFAULT_ADDRESS;
   onChange: (v: typeof DEFAULT_ADDRESS) => void;
-  labels: { zip: string; street: string; number: string; complement: string; neighborhood: string; city: string; state: string };
-}) => (
+}) => {
+  const handleCepChange = async (v: string) => {
+    const masked = formatCEP(v);
+    const next = { ...value, zip_code: masked };
+    onChange(next);
+    if (masked.replace(/\D/g, "").length === 8) {
+      const found = await lookupCEP(masked);
+      if (found) {
+        onChange({
+          ...next,
+          street: found.street || next.street,
+          neighborhood: found.neighborhood || next.neighborhood,
+          city: found.city || next.city,
+          state: found.state || next.state,
+        });
+      }
+    }
+  };
+  return (
   <div className="grid grid-cols-12 gap-3">
-    <Field className="col-span-12 sm:col-span-3" label={labels.zip} value={value.zip_code} onChange={(v) => onChange({ ...value, zip_code: v })} placeholder="00000-000" />
+    <Field className="col-span-12 sm:col-span-3" label={labels.zip} value={value.zip_code} onChange={handleCepChange} placeholder="00000-000" />
     <Field className="col-span-12 sm:col-span-7" label={labels.street} value={value.street} onChange={(v) => onChange({ ...value, street: v })} />
     <Field className="col-span-6 sm:col-span-2" label={labels.number} value={value.street_number} onChange={(v) => onChange({ ...value, street_number: v })} />
     <Field className="col-span-12 sm:col-span-6" label={labels.complement} value={value.complementary} onChange={(v) => onChange({ ...value, complementary: v })} />
@@ -303,6 +320,9 @@ const AddressBlock = ({
     <Field className="col-span-8 sm:col-span-9" label={labels.city} value={value.city} onChange={(v) => onChange({ ...value, city: v })} />
     <Field className="col-span-4 sm:col-span-3" label={labels.state} value={value.state} onChange={(v) => onChange({ ...value, state: v.toUpperCase().slice(0, 2) })} placeholder="SP" />
   </div>
+  );
+};
+
 );
 
 export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuccess }: Props) {
