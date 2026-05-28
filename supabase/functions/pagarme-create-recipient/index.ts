@@ -169,10 +169,15 @@ Deno.serve(async (req) => {
       };
     }
 
+    // Pagar.me requires the bank account holder document to match the recipient
+    // document (CPF for individual, CNPJ for corporation). Force it here to
+    // avoid validation errors from minor formatting/typing differences.
+    const recipientDocument = onlyDigits(body.document);
+
     const default_bank_account = {
       holder_name: body.bank.holder_name,
       holder_type,
-      holder_document: onlyDigits(body.bank.holder_document),
+      holder_document: recipientDocument,
       bank: onlyDigits(body.bank.bank).padStart(3, "0"),
       branch_number: onlyDigits(body.bank.branch_number),
       branch_check_digit: body.bank.branch_check_digit
@@ -182,6 +187,7 @@ Deno.serve(async (req) => {
       account_check_digit: body.bank.account_check_digit,
       type: body.bank.type,
     };
+
 
     const pagarmePayload = {
       register_information,
