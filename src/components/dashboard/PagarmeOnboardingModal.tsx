@@ -503,15 +503,8 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
               value={bank.account_check_digit}
               onChange={(e) => setBank({ ...bank, account_check_digit: e.target.value.replace(/\D/g, "").slice(0, 1) })}
               placeholder="0"
-                <div className="col-span-12 sm:col-span-8 flex flex-col gap-1.5">
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-light">{t.phone}</Label>
-                  <div className="flex items-stretch rounded-md border border-input focus-within:ring-1 focus-within:ring-ring overflow-hidden">
-                    <span className="flex items-center px-2 text-xs text-muted-foreground bg-muted/30">(</span>
-                    <Input value={pf.phone.ddd} onChange={(e) => setPf({ ...pf, phone: { ...pf.phone, ddd: e.target.value.replace(/\D/g, "").slice(0, 2) } })} placeholder="11" className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 w-12 text-center px-1" />
-                    <span className="flex items-center px-2 text-xs text-muted-foreground bg-muted/30">)</span>
-                    <Input value={pf.phone.number} onChange={(e) => setPf({ ...pf, phone: { ...pf.phone, number: formatPhoneNumberBR(e.target.value) } })} placeholder="99999-9999" className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 flex-1" />
-                  </div>
-                </div>
+              className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 w-14 text-center"
+            />
 
           </div>
         </div>
