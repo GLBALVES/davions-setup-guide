@@ -1040,19 +1040,6 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
               {lang === "pt" ? "Vencimento" : lang === "es" ? "Vencimiento" : "Due"}
             </Label>
             <div className="grid grid-cols-3 gap-1.5">
-
-              <button
-                type="button"
-                onClick={() => { setFormDueMode("end"); setFormDue(""); }}
-                className={cn(
-                  "text-[10px] px-2 py-1.5 rounded-sm border transition-colors",
-                  formDueMode === "end"
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {lang === "pt" ? "Cobrar ao final" : lang === "es" ? "Cobrar al final" : "Charge at end"}
-              </button>
               <button
                 type="button"
                 onClick={() => { setFormDueMode("checkout"); setFormDue(""); }}
@@ -1064,6 +1051,18 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                 )}
               >
                 {lang === "pt" ? "Cobrar no checkout" : lang === "es" ? "Cobrar en checkout" : "Charge at checkout"}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setFormDueMode("end"); setFormDue(""); }}
+                className={cn(
+                  "text-[10px] px-2 py-1.5 rounded-sm border transition-colors",
+                  formDueMode === "end"
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {lang === "pt" ? "Cobrar instantâneo" : lang === "es" ? "Cobrar instantáneo" : "Charge instantly"}
               </button>
               <button
                 type="button"
