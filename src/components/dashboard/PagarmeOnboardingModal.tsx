@@ -197,7 +197,19 @@ function formatDateBR(input: string): string {
   if (d.length <= 2) return d;
   if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`;
   return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
+/** Format raw digits as BRL currency while typing */
+function formatCurrencyBR(input: string): string {
+  const digits = input.replace(/\D/g, "").slice(0, 15);
+  if (!digits) return "";
+  const cents = parseInt(digits, 10);
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(cents / 100);
 }
+
 
 
 
