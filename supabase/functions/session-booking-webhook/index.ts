@@ -45,6 +45,7 @@ serve(async (req) => {
     const bookingId = session.metadata?.booking_id;
     const slotId = session.metadata?.slot_id;
     const sessionId = session.metadata?.session_id;
+    const invoiceId = session.metadata?.invoice_id;
 
     // Bug fix: correctly detect deposit vs full payment
     const wasDeposit = session.metadata?.is_deposit === "true";
@@ -53,6 +54,41 @@ serve(async (req) => {
     // Actual amount captured by Stripe (cents). Locked at payment time so future
     // session price changes don't retroactively shift what the client "paid".
     const amountPaidCents = (session.amount_total ?? 0) as number;
+
+    // ── project_invoice baixa (Stripe Connect) ──
+    if (invoiceId && paymentKind === "project_invoice") {
+      const amountPaidMajor = amountPaidCents / 100;
+      const { data: inv } = await supabase
+        .from("project_invoices")
+        .select("amount, paid_amount")
+        .eq("id", invoiceId)
+        .maybeSingle();
+      if (inv) {
+        const newPaid = Number(inv.paid_amount ?? 0) + amountPaidMajor;
+        const isFullyPaid = newPaid + 0.001 >= Number(inv.amount ?? 0);
+        await supabase
+          .from("project_invoices")
+          .update({
+            paid_amount: newPaid,
+            status: isFullyPaid ? "paid" : "partial",
+            paid_at: isFullyPaid ? new Date().toISOString() : null,
+          })
+          .eq("id", invoiceId);
+      }
+      await logWebhookEvent(supabase, {
+        provider: "stripe",
+        event_type: event.type,
+        external_id: event.id,
+        status: "success",
+        payload: event,
+        duration_ms: Date.now() - startedAt,
+      });
+      return new Response(JSON.stringify({ received: true, kind: "project_invoice" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
 
     if (bookingId) {
       let totalPaidForFee = amountPaidCents;
