@@ -340,19 +340,15 @@ export default function Revenue() {
                           date: r.booked_date || r.created_at,
                           data: r,
                         }));
-                        const invoiceRows: Row[] =
-                          paymentFilter === "all" || paymentFilter === "paid"
-                            ? paidInvoices
                                 .filter((inv) => {
                                   if (!search) return true;
                                   const q = search.toLowerCase();
                                   return (
                                     (inv.description ?? "").toLowerCase().includes(q) ||
-                                    "cobrança de projeto".includes(q)
+                                    (inv.client_name ?? "").toLowerCase().includes(q) ||
+                                    (inv.client_email ?? "").toLowerCase().includes(q)
                                   );
                                 })
-                                .map((inv) => ({ kind: "invoice", date: inv.paid_at, data: inv }))
-                            : [];
                         const all = [...bookingRows, ...invoiceRows].sort(
                           (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
                         );
@@ -365,9 +361,11 @@ export default function Revenue() {
                               <tr key={`inv-${inv.id}`} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                                   {format(new Date(inv.paid_at), "MMM d, yyyy")}
-                                </td>
                                 <td className="px-4 py-3">
-                                  <p className="font-normal text-muted-foreground italic">Cobrança de projeto</p>
+                                  <p className="font-normal">{inv.client_name || "—"}</p>
+                                  {inv.client_email && (
+                                    <p className="text-[10px] text-muted-foreground">{inv.client_email}</p>
+                                  )}
                                 </td>
                                 <td className="px-4 py-3 whitespace-nowrap">{inv.description ?? "—"}</td>
                                 <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums">{fmt(inv.paid_cents)}</td>
