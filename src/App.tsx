@@ -168,8 +168,9 @@ const App = () => {
                 <Route path="/vitrine/:slug/:sessionSlug/book" element={<SessionDetailPage />} />
                 {/* Legacy /store/* → redirect to /vitrine/* (backward compatibility) */}
                 <Route path="/store/*" element={<LegacyStoreRedirect />} />
-                <Route path="/booking-success" element={<BookingSuccess />} />
                 <Route path="/booking/:bookingId/confirm" element={<BookingConfirm />} />
+                <Route path="/pay/invoice/:invoiceId" element={<InvoicePay />} />
+
 
                 {/* Public gallery view — supports both slug and UUID */}
                 <Route path="/gallery/:slug" element={<GalleryView />} />
