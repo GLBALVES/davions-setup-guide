@@ -91,6 +91,37 @@ serve(async (req) => {
     const data = event?.data ?? {};
     const metadata = data?.metadata ?? data?.charges?.[0]?.metadata ?? {};
     const bookingId: string | undefined = metadata?.booking_id;
+    const invoiceId: string | undefined = metadata?.invoice_id;
+    const paymentKindTop: string | undefined = metadata?.payment_kind;
+
+    // ── project_invoice baixa ──
+    if (invoiceId && paymentKindTop === "project_invoice") {
+      if (eventType === "charge.paid" || eventType === "order.paid") {
+        const amountPaidCents =
+          data?.amount ?? data?.paid_amount ?? data?.charges?.[0]?.amount ?? 0;
+        const amountPaidMajor = Number(amountPaidCents) / 100;
+
+        const { data: inv } = await supabase
+          .from("project_invoices")
+          .select("amount, paid_amount")
+          .eq("id", invoiceId)
+          .maybeSingle();
+        if (inv) {
+          const newPaid = Number(inv.paid_amount ?? 0) + amountPaidMajor;
+          const isFullyPaid = newPaid + 0.001 >= Number(inv.amount ?? 0);
+          await supabase
+            .from("project_invoices")
+            .update({
+              paid_amount: newPaid,
+              status: isFullyPaid ? "paid" : "partial",
+              paid_at: isFullyPaid ? new Date().toISOString() : null,
+            })
+            .eq("id", invoiceId);
+        }
+      }
+    }
+
+
 
     if (bookingId) {
       if (eventType === "charge.paid" || eventType === "order.paid") {
