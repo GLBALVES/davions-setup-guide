@@ -459,6 +459,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
 
   const addPaymentLabel = lang === "pt" ? "Adicionar pagamento" : lang === "es" ? "Agregar pago" : "Add payment";
   const editLabel = lang === "pt" ? "Editar" : lang === "es" ? "Editar" : "Edit";
+  const currencyLang: CurrencyLang = lang === "pt" ? "pt" : lang === "es" ? "es" : "en";
 
   // Form state — multiple line items
   type ChargeItem = { description: string; quantity: string; unit_price: string; fee: string };
