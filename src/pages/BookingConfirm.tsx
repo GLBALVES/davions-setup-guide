@@ -159,6 +159,8 @@ interface StepDef {
 
 const BookingConfirm = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
+  const [searchParams] = useSearchParams();
+  const briefingOnly = searchParams.get("step") === "briefing";
   const { t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
