@@ -373,7 +373,20 @@ export default function Revenue() {
                                     <p className="text-[10px] text-muted-foreground">{inv.client_email}</p>
                                   )}
                                 </td>
-                                <td className="px-4 py-3 whitespace-nowrap">{inv.description ?? "—"}</td>
+                                <td className="px-4 py-3 align-top">
+                                  {inv.items.length > 0 ? (
+                                    <ul className="space-y-0.5">
+                                      {inv.items.map((it, idx) => (
+                                        <li key={idx} className="flex gap-2 text-[11px]">
+                                          <span className="text-muted-foreground tabular-nums">{it.quantity}×</span>
+                                          <span>{it.description || "—"}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    inv.description ?? "—"
+                                  )}
+                                </td>
                                 <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums">{fmt(inv.paid_cents)}</td>
                                 <td className="px-4 py-3 whitespace-nowrap"><span className="text-muted-foreground/40">—</span></td>
                                 <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums text-foreground">{fmt(inv.paid_cents)}</td>
