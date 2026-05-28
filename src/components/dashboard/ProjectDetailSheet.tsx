@@ -3488,7 +3488,6 @@ function ProjectBriefingSubsection({
   labelTitle: string;
   emptyText: string;
 }) {
-}) {
   const [open, setOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
