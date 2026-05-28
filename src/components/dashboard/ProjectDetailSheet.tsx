@@ -466,7 +466,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const [formItems, setFormItems] = useState<ChargeItem[]>([blankItem()]);
   const [formFeeManual, setFormFeeManual] = useState<Record<number, boolean>>({});
   const [formDue, setFormDue]         = useState("");
-  const [formDueMode, setFormDueMode] = useState<"end" | "date">("end");
+  const [formDueMode, setFormDueMode] = useState<"end" | "date" | "checkout">("end");
   const [formStatus, setFormStatus]   = useState<InvoiceStatus>("pending");
   const [formPaid, setFormPaid]       = useState("");
   const [shareInvoice, setShareInvoice] = useState<ProjectInvoice | null>(null);
