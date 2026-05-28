@@ -3660,7 +3660,13 @@ function ProjectBriefingSubsection({
             </span>
           )}
           <button
-            onClick={() => setShareOpen(true)}
+            onClick={() => {
+              if (!bookingId) {
+                toast.error("Vincule um booking ao projeto para compartilhar o briefing.");
+                return;
+              }
+              setShareOpen(true);
+            }}
             title="Compartilhar briefing"
             className="inline-flex items-center justify-center h-7 w-7 rounded-sm border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
           >
