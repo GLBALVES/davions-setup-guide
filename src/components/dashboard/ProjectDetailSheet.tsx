@@ -1882,6 +1882,7 @@ function DocumentsSection({ project, photographerId }: { project: ProjectSheetDa
 
       {/* ── Briefings sub-section ────────────────────────────────────────── */}
       <ProjectBriefingSubsection
+        projectId={project.id}
         bookingId={(project as any).booking_id ?? null}
         sessionType={(project as any).session_type ?? null}
         photographerId={photographerId}
