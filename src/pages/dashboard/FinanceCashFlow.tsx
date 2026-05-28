@@ -80,6 +80,8 @@ export default function FinanceCashFlow() {
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
   const [rows, setRows] = useState<BookingRow[]>([]);
+  const [paidInvoices, setPaidInvoices] = useState<PaidInvoice[]>([]);
+  const [outstandingInvoices, setOutstandingInvoices] = useState<OutstandingInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<6 | 12>(12);
 
@@ -105,11 +107,14 @@ export default function FinanceCashFlow() {
           business_country: b.photographers?.business_country ?? null,
         })));
       }
+      const inv = await fetchInvoiceFinance(user.id);
+      setPaidInvoices(inv.paid);
+      setOutstandingInvoices(inv.outstanding);
       setLoading(false);
     })();
   }, [user]);
 
-  const months = buildMonths(rows, range);
+  const months = buildMonths(rows, paidInvoices, outstandingInvoices, range);
   const totalCollected = months.reduce((s, m) => s + m.collected, 0);
   const totalOutstanding = months.reduce((s, m) => s + m.outstanding, 0);
 
