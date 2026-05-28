@@ -1014,10 +1014,10 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                         {lang === "pt" ? "Taxa" : lang === "es" ? "Tasa" : "Fee"}
                       </Label>
                       <Input
-                        type="number" min={0} step="0.01" placeholder="0,00" value={it.fee}
+                        type="text" placeholder={currencyPlaceholder(currencyLang)} value={formatCurrencyInput(it.fee, currencyLang)}
                         onChange={(e) => {
                           setFormFeeManual((prev) => ({ ...prev, [idx]: true }));
-                          setFormItems((prev) => prev.map((p, i) => i === idx ? { ...p, fee: e.target.value } : p));
+                          setFormItems((prev) => prev.map((p, i) => i === idx ? { ...p, fee: parseCurrencyInput(e.target.value, currencyLang) } : p));
                         }}
                         className="h-7 text-xs"
                       />
