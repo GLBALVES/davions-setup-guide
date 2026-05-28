@@ -648,7 +648,6 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       : (isDepositPaid ? depositPaidCents : 0);
     return { grandTotal: grandTotalCents / 100, paid: paidCents / 100 };
   })();
-
   const addMutation = useMutation({
     mutationFn: async () => {
       const cleanItems = formItems
@@ -668,6 +667,19 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         ? (cleanItems[0].description || tp.chargeDescription)
         : `${cleanItems.length} ${(lang === "pt" ? "itens" : lang === "es" ? "ítems" : "items")}`;
 
+      if (editingInvoiceId) {
+        const { error } = await supabase.from("project_invoices" as any).update({
+          description:   summaryDesc,
+          amount:        totalAmount,
+          fee_amount:    totalFee,
+          items:         cleanItems,
+          due_date:      formDueMode === "date" && formDue ? formDue : null,
+          charge_timing: formDueMode,
+        } as any).eq("id", editingInvoiceId);
+        if (error) throw error;
+        return;
+      }
+
       const { error } = await supabase.from("project_invoices" as any).insert({
         project_id:      project.id,
         photographer_id: photographerId,
@@ -685,6 +697,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       queryClient.invalidateQueries({ queryKey: qKey });
       toast.success(tp.chargeAdded);
       setShowForm(false);
+      setEditingInvoiceId(null);
       setFormItems([blankItem()]);
       setFormFeeManual({});
       setFormDue(""); setFormDueMode("end"); setFormStatus("pending"); setFormPaid("");
@@ -706,35 +719,40 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
     onSuccess: () => queryClient.invalidateQueries({ queryKey: qKey }),
   });
 
-  const updateInvoiceMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("project_invoices" as any).update({
-        description: editDesc.trim() || tp.chargeDescription,
-        amount: parseFloat(editAmount) || 0,
-        fee_amount: parseFloat(editFee) || 0,
-        due_date: editDue || null,
-        status: editStatus,
-        paid_amount: parseFloat(editPaid) || 0,
-        paid_at: editStatus === "paid" ? new Date().toISOString() : null,
-      } as any).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: qKey });
-      setEditingInvoiceId(null);
-      toast.success(tp.chargeAdded);
-    },
-    onError: () => toast.error(tp.errorAddingCharge),
-  });
-
   const startEditInvoice = (inv: ProjectInvoice) => {
+    const items = Array.isArray(inv.items) && inv.items.length > 0
+      ? inv.items.map((it) => ({
+          description: String(it.description ?? ""),
+          quantity: String(it.quantity ?? ""),
+          unit_price: String(it.unit_price ?? ""),
+          fee: String(it.fee ?? ""),
+        }))
+      : [{
+          description: inv.description ?? "",
+          quantity: "1",
+          unit_price: String(inv.amount ?? ""),
+          fee: String(inv.fee_amount ?? ""),
+        }];
+    setFormItems(items);
+    // Mark all fees as manual so auto-compute doesn't overwrite saved values
+    const manual: Record<number, boolean> = {};
+    items.forEach((_, i) => { manual[i] = true; });
+    setFormFeeManual(manual);
+    setFormDueMode((inv.charge_timing as any) ?? (inv.due_date ? "date" : "end"));
+    setFormDue(inv.due_date ?? "");
     setEditingInvoiceId(inv.id);
-    setEditDesc(inv.description ?? "");
-    setEditAmount(String(inv.amount ?? ""));
-    setEditFee(String((inv as any).fee_amount ?? ""));
-    setEditDue(inv.due_date ?? "");
-    setEditPaid(String(inv.paid_amount ?? ""));
-    setEditStatus(inv.status);
+    setShowForm(false);
+    setExpandedId(inv.id);
+  };
+
+  const cancelEdit = () => {
+    setEditingInvoiceId(null);
+    setFormItems([blankItem()]);
+    setFormFeeManual({});
+    setFormDue("");
+    setFormDueMode("end");
+  };
+
   };
 
   const deleteMutation = useMutation({
