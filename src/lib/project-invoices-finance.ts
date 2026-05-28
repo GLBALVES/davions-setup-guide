@@ -40,21 +40,19 @@ export interface OutstandingInvoice {
 export async function fetchInvoiceFinance(photographerId: string): Promise<{
   paid: PaidInvoice[];
   outstanding: OutstandingInvoice[];
-}> {
-  const { data } = await supabase
-    .from("project_invoices")
-    .select("id, project_id, description, amount, paid_amount, status, paid_at, due_date, created_at, client_projects ( client_name, client_email )")
-    .eq("photographer_id", photographerId);
-
-  const paid: PaidInvoice[] = [];
-  const outstanding: OutstandingInvoice[] = [];
-
   for (const inv of (data ?? []) as any[]) {
     const amount_cents = Math.round(Number(inv.amount ?? 0) * 100);
     const paid_cents = Math.round(Number(inv.paid_amount ?? 0) * 100);
     const cp = inv.client_projects as { client_name?: string; client_email?: string } | null;
     const client_name = cp?.client_name ?? null;
     const client_email = cp?.client_email ?? null;
+    const rawItems = Array.isArray(inv.items) ? inv.items : [];
+    const items: InvoiceItem[] = rawItems.map((it: any) => ({
+      description: String(it?.description ?? ""),
+      quantity: Number(it?.quantity ?? 0),
+      unit_price: Number(it?.unit_price ?? 0),
+      fee: Number(it?.fee ?? 0),
+    }));
 
     if (paid_cents > 0 && inv.paid_at) {
       paid.push({
@@ -65,7 +63,10 @@ export async function fetchInvoiceFinance(photographerId: string): Promise<{
         paid_at: inv.paid_at,
         client_name,
         client_email,
+        items,
       });
+    }
+
     }
     if (inv.status === "pending" || inv.status === "partial") {
       outstanding.push({
