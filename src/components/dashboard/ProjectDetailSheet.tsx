@@ -1153,7 +1153,130 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
           );
         })}
       </div>
+
+      {shareInvoice && (
+        <InvoiceShareDialog
+          open={!!shareInvoice}
+          onClose={() => setShareInvoice(null)}
+          invoice={shareInvoice}
+          clientName={project.client_name ?? ""}
+          lang={lang}
+        />
+      )}
     </div>
+  );
+}
+
+function InvoiceShareDialog({
+  open, onClose, invoice, clientName, lang,
+}: {
+  open: boolean;
+  onClose: () => void;
+  invoice: ProjectInvoice;
+  clientName: string;
+  lang: string;
+}) {
+  const t = {
+    pt: {
+      title: "Compartilhar cobrança",
+      hello: (n: string) => n ? `Olá ${n}!` : "Olá!",
+      body: (desc: string, amt: string, due: string) =>
+        `Segue a cobrança "${desc}" no valor de ${amt}${due ? ` com vencimento em ${due}` : ""}.`,
+      copy: "Copiar mensagem",
+      copied: "Mensagem copiada",
+      copyError: "Não foi possível copiar",
+      whatsapp: "WhatsApp",
+      email: "Email",
+      sms: "SMS",
+      telegram: "Telegram",
+      emailSubject: "Cobrança",
+    },
+    es: {
+      title: "Compartir cobro",
+      hello: (n: string) => n ? `¡Hola ${n}!` : "¡Hola!",
+      body: (desc: string, amt: string, due: string) =>
+        `Aquí está el cobro "${desc}" por ${amt}${due ? ` con vencimiento el ${due}` : ""}.`,
+      copy: "Copiar mensaje",
+      copied: "Mensaje copiado",
+      copyError: "No se pudo copiar",
+      whatsapp: "WhatsApp",
+      email: "Email",
+      sms: "SMS",
+      telegram: "Telegram",
+      emailSubject: "Cobro",
+    },
+    en: {
+      title: "Share charge",
+      hello: (n: string) => n ? `Hi ${n}!` : "Hi!",
+      body: (desc: string, amt: string, due: string) =>
+        `Here is the charge "${desc}" for ${amt}${due ? `, due on ${due}` : ""}.`,
+      copy: "Copy message",
+      copied: "Message copied",
+      copyError: "Unable to copy",
+      whatsapp: "WhatsApp",
+      email: "Email",
+      sms: "SMS",
+      telegram: "Telegram",
+      emailSubject: "Charge",
+    },
+  }[lang === "pt" ? "pt" : lang === "es" ? "es" : "en"];
+
+  const fmtAmt = new Intl.NumberFormat(
+    lang === "pt" ? "pt-BR" : lang === "es" ? "es-ES" : "en-US",
+    { style: "currency", currency: "BRL" }
+  ).format(Number(invoice.amount));
+  const dueStr = invoice.due_date ? format(parseISO(invoice.due_date), "d MMM yyyy") : "";
+  const message = `${t.hello(clientName)} ${t.body(invoice.description, fmtAmt, dueStr)}`;
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(message);
+      toast.success(t.copied);
+    } catch {
+      toast.error(t.copyError);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-md z-50">
+        <DialogHeader>
+          <DialogTitle className="text-sm tracking-widest uppercase font-light">{t.title}</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          <Textarea value={message} readOnly className="text-xs min-h-[90px] resize-none" />
+          <Button variant="outline" size="sm" onClick={copy}>{t.copy}</Button>
+          <div className="grid grid-cols-2 gap-2">
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(message)}`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 h-10 rounded-sm border border-border/50 text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            >
+              {t.whatsapp}
+            </a>
+            <a
+              href={`mailto:?subject=${encodeURIComponent(t.emailSubject + " — " + invoice.description)}&body=${encodeURIComponent(message)}`}
+              className="flex items-center justify-center gap-2 h-10 rounded-sm border border-border/50 text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            >
+              {t.email}
+            </a>
+            <a
+              href={`sms:?&body=${encodeURIComponent(message)}`}
+              className="flex items-center justify-center gap-2 h-10 rounded-sm border border-border/50 text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            >
+              {t.sms}
+            </a>
+            <a
+              href={`https://t.me/share/url?url=${encodeURIComponent(message)}`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 h-10 rounded-sm border border-border/50 text-xs tracking-widest uppercase text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            >
+              {t.telegram}
+            </a>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
