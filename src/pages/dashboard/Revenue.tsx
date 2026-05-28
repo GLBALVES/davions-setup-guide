@@ -20,6 +20,7 @@ import {
 } from "recharts";
 import { getBillableTaxRate } from "@/lib/tax-utils";
 import { usePlatformFee } from "@/hooks/usePlatformFee";
+import { fetchInvoiceFinance, sumPaidByMonth, type PaidInvoice } from "@/lib/project-invoices-finance";
 
 interface BookingRow {
   id: string;
