@@ -143,6 +143,8 @@ export default function InvoicePay() {
                       );
                     })}
                   </div>
+                </div>
+              )}
 
               <div className="flex items-baseline justify-between border-t border-border/60 pt-4">
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -153,8 +155,6 @@ export default function InvoicePay() {
 
               {status === "cancelled" && (
 
-
-              {status === "cancelled" && (
                 <p className="text-xs text-amber-600 text-center">
                   Pagamento cancelado. Tente novamente quando quiser.
                 </p>
