@@ -323,7 +323,7 @@ const AddressBlock = ({
     <Field className="col-span-4 sm:col-span-3" label={labels.state} value={value.state} onChange={(v) => onChange({ ...value, state: v.toUpperCase().slice(0, 2) })} placeholder="SP" />
   </div>
   );
-};
+
 
 );
 
