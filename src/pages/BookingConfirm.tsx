@@ -693,9 +693,13 @@ const BookingConfirm = () => {
     if (contractAccepted) setContractAccepted(false);
   };
 
-  /* ── Build steps dynamically ── */
   const buildSteps = (): StepDef[] => {
     if (!session) return [];
+    if (briefingOnly) {
+      return briefing
+        ? [{ key: "briefing", label: "Briefing", icon: <ClipboardList className="h-4 w-4" /> }]
+        : [];
+    }
     const steps: StepDef[] = [
       { key: "details", label: "Details", icon: <Calendar className="h-4 w-4" /> },
       { key: "client_info", label: "Your Info", icon: <UserCircle className="h-4 w-4" /> },
@@ -710,6 +714,7 @@ const BookingConfirm = () => {
       steps.push({ key: "payment", label: "Payment", icon: <CreditCard className="h-4 w-4" /> });
     }
     return steps;
+  };
   };
 
   const steps = buildSteps();
