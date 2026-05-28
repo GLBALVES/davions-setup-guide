@@ -3679,7 +3679,7 @@ function ProjectBriefingSubsection({
       {briefing && sessionId && (
         <BriefingShareDialog
           open={shareOpen}
-          onClose={() => setShareOpen(false)}
+          url={`${shareOrigin}/booking-success?booking=${bookingId ?? ""}&session=${sessionId}`}
           url={`https://app.davions.com/booking-success?booking=${bookingId ?? ""}&session=${sessionId}`}
           briefingName={briefing.name}
         />
