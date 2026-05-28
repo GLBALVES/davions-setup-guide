@@ -279,6 +279,3 @@ export function StartSellingChecklist() {
     </AnimatePresence>
   );
 }
-    </AnimatePresence>
-  );
-}
