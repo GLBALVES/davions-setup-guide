@@ -10,6 +10,7 @@ import { ArrowDownCircle, Search, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getBillableTaxRate } from "@/lib/tax-utils";
+import { fetchInvoiceFinance, type OutstandingInvoice } from "@/lib/project-invoices-finance";
 
 interface BookingRow {
   id: string;
