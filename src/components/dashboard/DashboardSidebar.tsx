@@ -102,9 +102,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 
-const RESTRICTED_ADMINS: Record<string, string[]> = {
-  "me@palomaschell.com": ["AI", "Finance", "CRM", "Workflows", "Settings", "My Features"],
-};
+// All menus are visible to every user — no per-email restrictions.
+const RESTRICTED_ADMINS: Record<string, string[]> = {};
+
 import { useLanguage } from "@/contexts/LanguageContext";
 
 type MenuItem = {
@@ -661,15 +661,10 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   }, [user]);
 
   const translatedGroups = buildGroups(t);
+  // All menus are granted to every user — no permission/admin filtering.
+  const filterItems = (items: MenuItem[]): MenuItem[] => items;
 
-  // Filter a group's items based on permissions
-  const filterItems = (items: MenuItem[]): MenuItem[] => {
-    if (permsLoading) return items; // show all while loading
-    // Hide adminOnly items from non-admins
-    const filtered = items.filter((item) => !item.adminOnly || isAdmin);
-    if (isOwner) return filtered;      // owner sees everything (except adminOnly)
-    return filtered.filter((item) => !item.permKey || can(item.permKey));
-  };
+
 
   const [pinnedKeys, setPinnedKeys] = useState<string[]>([]);
   const [editMode, setEditMode] = useState(false);
@@ -964,10 +959,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
 
             {/* Group popovers */}
              {translatedGroups.map((group) => {
-               if (group.disabled && !isAdmin) return null;
-               if (group.adminOnly && !isAdmin) return null;
-               const restrictedKeys = RESTRICTED_ADMINS[user?.email ?? ""] ?? [];
-               if (restrictedKeys.includes(group.stableKey)) return null;
+               // All groups visible to all users.
+
                const visibleItems = filterItems(group.items);
                if (visibleItems.length === 0) return null;
               return (
@@ -1074,10 +1067,8 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
 
             {/* Regular groups */}
              {translatedGroups.map((group) => {
-               if (group.disabled && !isAdmin) return null;
-               if (group.adminOnly && !isAdmin) return null;
-               const restrictedKeys = RESTRICTED_ADMINS[user?.email ?? ""] ?? [];
-               if (restrictedKeys.includes(group.stableKey)) return null;
+               // All groups visible to all users.
+
                const visibleItems = filterItems(group.items);
                if (visibleItems.length === 0) return null;
               return (
