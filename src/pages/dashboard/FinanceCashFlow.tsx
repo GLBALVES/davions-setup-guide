@@ -11,6 +11,7 @@ import {
 import { format, startOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getBillableTaxRate } from "@/lib/tax-utils";
+import { fetchInvoiceFinance, sumPaidByMonth, sumOutstandingByMonth, type PaidInvoice, type OutstandingInvoice } from "@/lib/project-invoices-finance";
 
 interface BookingRow {
   created_at: string;
@@ -42,16 +43,21 @@ function fmt(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 }
 
-function buildMonths(rows: BookingRow[], n: number) {
+function buildMonths(
+  rows: BookingRow[],
+  paid: PaidInvoice[],
+  outstanding: OutstandingInvoice[],
+  n: number,
+) {
   const now = new Date();
   const months = eachMonthOfInterval({ start: subMonths(startOfMonth(now), n - 1), end: startOfMonth(now) });
   return months.map((m) => {
     const ms = format(m, "yyyy-MM");
     const monthRows = rows.filter((r) => (r.booked_date || r.created_at).startsWith(ms));
-    const collected = monthRows.reduce((s, r) => s + calcPaid(r), 0);
-    const outstanding = monthRows.reduce((s, r) => s + calcBalance(r), 0);
+    const collected = monthRows.reduce((s, r) => s + calcPaid(r), 0) + sumPaidByMonth(paid, ms);
+    const outstandingTotal = monthRows.reduce((s, r) => s + calcBalance(r), 0) + sumOutstandingByMonth(outstanding, ms);
     const net = collected;
-    return { month: format(m, "MMM yyyy"), label: format(m, "MMM"), collected, outstanding, net };
+    return { month: format(m, "MMM yyyy"), label: format(m, "MMM"), collected, outstanding: outstandingTotal, net };
   });
 }
 
@@ -74,6 +80,8 @@ export default function FinanceCashFlow() {
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
   const [rows, setRows] = useState<BookingRow[]>([]);
+  const [paidInvoices, setPaidInvoices] = useState<PaidInvoice[]>([]);
+  const [outstandingInvoices, setOutstandingInvoices] = useState<OutstandingInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<6 | 12>(12);
 
@@ -99,11 +107,14 @@ export default function FinanceCashFlow() {
           business_country: b.photographers?.business_country ?? null,
         })));
       }
+      const inv = await fetchInvoiceFinance(user.id);
+      setPaidInvoices(inv.paid);
+      setOutstandingInvoices(inv.outstanding);
       setLoading(false);
     })();
   }, [user]);
 
-  const months = buildMonths(rows, range);
+  const months = buildMonths(rows, paidInvoices, outstandingInvoices, range);
   const totalCollected = months.reduce((s, m) => s + m.collected, 0);
   const totalOutstanding = months.reduce((s, m) => s + m.outstanding, 0);
 

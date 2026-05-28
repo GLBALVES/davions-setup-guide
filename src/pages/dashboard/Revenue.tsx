@@ -20,6 +20,7 @@ import {
 } from "recharts";
 import { getBillableTaxRate } from "@/lib/tax-utils";
 import { usePlatformFee } from "@/hooks/usePlatformFee";
+import { fetchInvoiceFinance, sumPaidByMonth, type PaidInvoice } from "@/lib/project-invoices-finance";
 
 interface BookingRow {
   id: string;
@@ -100,6 +101,7 @@ export default function Revenue() {
   const { t } = useLanguage();
   const { feePercent } = usePlatformFee();
   const [rows, setRows] = useState<BookingRow[]>([]);
+  const [paidInvoices, setPaidInvoices] = useState<PaidInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("all");
@@ -160,6 +162,8 @@ export default function Revenue() {
         }));
         setRows(mapped);
       }
+      const inv = await fetchInvoiceFinance(photographerId);
+      setPaidInvoices(inv.paid);
       setLoading(false);
     };
     fetchData();
@@ -175,14 +179,23 @@ export default function Revenue() {
     return matchSearch && matchPayment;
   });
 
-  const totalRevenue     = rows.reduce((s, r) => s + calcPaid(r), 0);
+  const invoicesPaidTotal = paidInvoices.reduce((s, p) => s + p.paid_cents, 0);
+  const totalRevenue     = rows.reduce((s, r) => s + calcPaid(r), 0) + invoicesPaidTotal;
   const totalBalance     = rows.reduce((s, r) => s + calcBalance(r), 0);
   const totalPlatformFee = calcFee(totalRevenue);
   const totalNet         = totalRevenue - totalPlatformFee;
   const paidCount        = rows.filter((r) => r.payment_status === "paid").length;
   const pendingCount     = rows.filter((r) => r.payment_status === "pending").length;
   const avgBookingValue  = rows.length ? rows.reduce((s, r) => s + calcTotal(r), 0) / rows.length : 0;
-  const chartData        = buildMonthlyChart(rows);
+  const chartData        = buildMonthlyChart(rows).map((m, idx, arr) => {
+    // Add paid invoices for the same month bucket
+    const monthStr = (() => {
+      const now = new Date();
+      const d = new Date(now.getFullYear(), now.getMonth() - (arr.length - 1 - idx), 1);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    })();
+    return { ...m, revenue: m.revenue + sumPaidByMonth(paidInvoices, monthStr) };
+  });
 
   const fmt = (cents: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
