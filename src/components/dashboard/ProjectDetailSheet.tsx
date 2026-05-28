@@ -786,7 +786,170 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
 
   const fmt = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
 
+  // Shared body for both new and edit charge forms (items + due selector)
+  const renderInvoiceFormBody = () => (
+    <>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">
+            {lang === "pt" ? "Itens" : lang === "es" ? "Ítems" : "Items"}
+          </Label>
+          <button
+            type="button"
+            onClick={() => setFormItems((prev) => [...prev, blankItem()])}
+            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Plus className="h-3 w-3" />
+            {lang === "pt" ? "Adicionar item" : lang === "es" ? "Agregar ítem" : "Add item"}
+          </button>
+        </div>
+
+        {formItems.map((it, idx) => {
+          const lineTotal = itemLineTotal(it);
+          return (
+            <div key={idx} className="rounded-sm border border-border/40 bg-background/60 p-2 flex flex-col gap-1.5">
+              <div className="flex items-start gap-1.5">
+                <Input
+                  placeholder={tp.chargeDescriptionPlaceholder}
+                  value={it.description}
+                  maxLength={200}
+                  onChange={(e) => setFormItems((prev) => prev.map((p, i) => i === idx ? { ...p, description: e.target.value } : p))}
+                  className="h-7 text-xs flex-1"
+                />
+                {formItems.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormItems((prev) => prev.filter((_, i) => i !== idx));
+                      setFormFeeManual((prev) => {
+                        const next: Record<number, boolean> = {};
+                        Object.entries(prev).forEach(([k, v]) => {
+                          const ki = Number(k);
+                          if (ki < idx) next[ki] = v;
+                          else if (ki > idx) next[ki - 1] = v;
+                        });
+                        return next;
+                      });
+                    }}
+                    className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-sm border border-border/40 text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors"
+                    title={lang === "pt" ? "Remover" : lang === "es" ? "Eliminar" : "Remove"}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                <div className="flex flex-col gap-0.5">
+                  <Label className="text-[9px] text-muted-foreground/70 uppercase tracking-wider">
+                    {lang === "pt" ? "Qtd." : lang === "es" ? "Cant." : "Qty"}
+                  </Label>
+                  <Input
+                    type="number" min={0} step="1" value={it.quantity}
+                    onChange={(e) => setFormItems((prev) => prev.map((p, i) => i === idx ? { ...p, quantity: e.target.value } : p))}
+                    className="h-7 text-xs"
+                  />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <Label className="text-[9px] text-muted-foreground/70 uppercase tracking-wider">
+                    {lang === "pt" ? "Unitário" : lang === "es" ? "Unitario" : "Unit"}
+                  </Label>
+                  <Input
+                    type="text" placeholder={currencyPlaceholder(currencyLang)} value={formatCurrencyInput(it.unit_price, currencyLang)}
+                    onChange={(e) => setFormItems((prev) => prev.map((p, i) => i === idx ? { ...p, unit_price: parseCurrencyInput(e.target.value, currencyLang) } : p))}
+                    className="h-7 text-xs"
+                  />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <Label className="text-[9px] text-muted-foreground/70 uppercase tracking-wider">
+                    {lang === "pt" ? "Total" : lang === "es" ? "Total" : "Total"}
+                  </Label>
+                  <Input
+                    readOnly value={lineTotal ? lineTotal.toFixed(2) : ""}
+                    className="h-7 text-xs bg-muted/30"
+                  />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <Label className="text-[9px] text-muted-foreground/70 uppercase tracking-wider">
+                    {lang === "pt" ? "Taxa" : lang === "es" ? "Tasa" : "Fee"}
+                  </Label>
+                  <Input
+                    type="text" placeholder={currencyPlaceholder(currencyLang)} value={formatCurrencyInput(it.fee, currencyLang)}
+                    onChange={(e) => {
+                      setFormFeeManual((prev) => ({ ...prev, [idx]: true }));
+                      setFormItems((prev) => prev.map((p, i) => i === idx ? { ...p, fee: parseCurrencyInput(e.target.value, currencyLang) } : p));
+                    }}
+                    className="h-7 text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+
+        {formItemsTotal > 0 && (
+          <div className="flex justify-end gap-4 text-[10px] text-muted-foreground pt-0.5">
+            <span>{lang === "pt" ? "Subtotal" : lang === "es" ? "Subtotal" : "Subtotal"}: <span className="font-semibold text-foreground tabular-nums">{formItemsTotal.toFixed(2)}</span></span>
+            <span>{lang === "pt" ? "Taxas" : lang === "es" ? "Tasas" : "Fees"}: <span className="font-semibold text-foreground tabular-nums">{formItemsFeeTotal.toFixed(2)}</span></span>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">
+          {lang === "pt" ? "Vencimento" : lang === "es" ? "Vencimiento" : "Due"}
+        </Label>
+        <div className="grid grid-cols-3 gap-1.5">
+          <button
+            type="button"
+            onClick={() => { setFormDueMode("checkout"); setFormDue(""); }}
+            className={cn(
+              "text-[10px] px-2 py-1.5 rounded-sm border transition-colors",
+              formDueMode === "checkout"
+                ? "border-foreground bg-foreground text-background"
+                : "border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {lang === "pt" ? "Cobrar no checkout" : lang === "es" ? "Cobrar en checkout" : "Charge at checkout"}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setFormDueMode("end"); setFormDue(""); }}
+            className={cn(
+              "text-[10px] px-2 py-1.5 rounded-sm border transition-colors",
+              formDueMode === "end"
+                ? "border-foreground bg-foreground text-background"
+                : "border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {lang === "pt" ? "Cobrar instantâneo" : lang === "es" ? "Cobrar instantáneo" : "Charge instantly"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setFormDueMode("date")}
+            className={cn(
+              "text-[10px] px-2 py-1.5 rounded-sm border transition-colors",
+              formDueMode === "date"
+                ? "border-foreground bg-foreground text-background"
+                : "border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {lang === "pt" ? "Definir vencimento" : lang === "es" ? "Definir vencimiento" : "Set due date"}
+          </button>
+        </div>
+        {formDueMode === "date" && (
+          <Input
+            type="date"
+            value={formDue}
+            onChange={(e) => setFormDue(e.target.value)}
+            className="h-7 text-xs mt-1"
+          />
+        )}
+      </div>
+    </>
+  );
+
   return (
+
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <SectionLabel>{tp.paymentsSection}</SectionLabel>
