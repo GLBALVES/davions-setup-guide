@@ -56,8 +56,6 @@ import EmailCampaignEditor from "./pages/dashboard/EmailCampaignEditor";
 import EmailAutomatedEditor from "./pages/dashboard/EmailAutomatedEditor";
 import EmailOneoffEditor from "./pages/dashboard/EmailOneoffEditor";
 import PushNotifications from "./pages/dashboard/PushNotifications";
-import Workflows from "./pages/dashboard/Workflows";
-import WorkflowProject from "./pages/dashboard/WorkflowProject";
 import RecurringWorkflows from "./pages/dashboard/RecurringWorkflows";
 import AIAgents from "./pages/dashboard/AIAgents";
 import Chat from "./pages/dashboard/Chat";
@@ -204,8 +202,6 @@ const App = () => {
                 <Route path="/dashboard/emails/automated/:id" element={<ProtectedRoute><PermissionGate permKey="emails"><EmailAutomatedEditor /></PermissionGate></ProtectedRoute>} />
                 <Route path="/dashboard/emails/oneoff/:id" element={<ProtectedRoute><PermissionGate permKey="emails"><EmailOneoffEditor /></PermissionGate></ProtectedRoute>} />
                 <Route path="/dashboard/push" element={<ProtectedRoute><PermissionGate permKey="push"><PushNotifications /></PermissionGate></ProtectedRoute>} />
-                <Route path="/dashboard/workflow" element={<ProtectedRoute><PermissionGate permKey="workflow"><Workflows /></PermissionGate></ProtectedRoute>} />
-                <Route path="/dashboard/workflow/:projectId" element={<ProtectedRoute><PermissionGate permKey="workflow"><WorkflowProject /></PermissionGate></ProtectedRoute>} />
                 <Route path="/dashboard/recurring" element={<ProtectedRoute><PermissionGate permKey="recurring"><RecurringWorkflows /></PermissionGate></ProtectedRoute>} />
                 <Route path="/dashboard/agents" element={<ProtectedRoute><PermissionGate permKey="agents"><AIAgents /></PermissionGate></ProtectedRoute>} />
                 <Route path="/dashboard/chat" element={<ProtectedRoute><PermissionGate permKey="chat"><Chat /></PermissionGate></ProtectedRoute>} />

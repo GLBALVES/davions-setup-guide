@@ -220,7 +220,6 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       icon: GitBranch,
       disabled: true,
       items: [
-        { title: t.nav.kanban, icon: Columns, to: "/dashboard/workflow", permKey: "workflow" },
         { title: t.nav.recurringWorkflows, icon: RefreshCw, to: "/dashboard/recurring", permKey: "recurring" },
       ],
     },
@@ -293,7 +292,7 @@ const groups: MenuGroup[] = [
     { title: "Leads", icon: UserPlus },
   ]},
   { stableKey: "Workflows", title: "Workflows", icon: GitBranch, disabled: true, items: [
-    { title: "Kanban", icon: Columns, to: "/dashboard/workflow", permKey: "workflow" },
+    
     { title: "Recurring Workflows", icon: RefreshCw, to: "/dashboard/recurring", permKey: "recurring" },
   ]},
   { stableKey: "Settings", title: "Settings", icon: Settings, items: [
