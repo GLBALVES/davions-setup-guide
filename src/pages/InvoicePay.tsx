@@ -41,6 +41,8 @@ export default function InvoicePay() {
       }
     })();
   }, [invoiceId]);
+
+  const pay = async () => {
     if (!invoiceId) return;
     setRedirecting(true);
     try {
