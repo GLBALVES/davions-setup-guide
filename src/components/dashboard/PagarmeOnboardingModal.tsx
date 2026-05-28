@@ -418,7 +418,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
         </DialogHeader>
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="mt-2">
-          <TabsList className="grid grid-cols-2 w-full">
+                <Field className="col-span-6 sm:col-span-4" label={t.monthlyIncome} value={pf.monthly_income} onChange={(v: string) => setPf({ ...pf, monthly_income: formatCurrencyBR(v) })} />
             <TabsTrigger value="individual">{t.individual}</TabsTrigger>
             <TabsTrigger value="corporation">{t.corporation}</TabsTrigger>
           </TabsList>
