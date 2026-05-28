@@ -244,6 +244,7 @@ async function lookupCEP(cep: string): Promise<Partial<typeof DEFAULT_ADDRESS> |
         const ibgeRes = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/municipios/${data.ibge}`);
         const ibgeData = await ibgeRes.json();
         if (ibgeData?.nome) city = ibgeData.nome;
+
       } catch {
         // ignore
       }
@@ -284,6 +285,45 @@ const Field = ({ label, value, onChange, type = "text", placeholder = "", classN
     />
   </div>
 );
+
+const PhoneField = ({
+  label,
+  ddd,
+  number,
+  onDddChange,
+  onNumberChange,
+  className = "",
+}: {
+  label: string;
+  ddd: string;
+  number: string;
+  onDddChange: (v: string) => void;
+  onNumberChange: (v: string) => void;
+  className?: string;
+}) => (
+  <div className={`flex flex-col gap-1.5 ${className}`}>
+    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-light">{label}</Label>
+    <div className="flex items-stretch rounded-md border border-input focus-within:ring-1 focus-within:ring-ring overflow-hidden bg-background">
+      <span className="flex items-center pl-2.5 pr-1 text-xs text-muted-foreground select-none">(</span>
+      <Input
+        value={ddd}
+        onChange={(e) => onDddChange(e.target.value.replace(/\D/g, "").slice(0, 2))}
+        placeholder="11"
+        inputMode="numeric"
+        className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 w-9 text-center px-0"
+      />
+      <span className="flex items-center pl-1 pr-2.5 text-xs text-muted-foreground select-none">)</span>
+      <Input
+        value={number}
+        onChange={(e) => onNumberChange(formatPhoneNumberBR(e.target.value))}
+        placeholder="99999-9999"
+        inputMode="numeric"
+        className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 flex-1"
+      />
+    </div>
+  </div>
+);
+
 
 const AddressBlock = ({
   value,
@@ -455,29 +495,82 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
   const addressLabels = { zip: t.zip, street: t.street, number: t.number, complement: t.complement, neighborhood: t.neighborhood, city: t.city, state: t.state };
 
   const BankBlock = (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4 border-t border-border pt-5">
       <h4 className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-light">{t.bank}</h4>
+
+      {/* Titular */}
       <div className="grid grid-cols-12 gap-3">
         <Field className="col-span-12 sm:col-span-7" label={t.holderName} value={bank.holder_name} onChange={(v: string) => setBank({ ...bank, holder_name: v })} />
-        <Field className="col-span-12 sm:col-span-5" label={t.holderDoc} value={bank.holder_document} onChange={(v: string) => setBank({ ...bank, holder_document: v })} />
-        <Field className="col-span-4 sm:col-span-2" label={t.bankCode} value={bank.bank} onChange={(v: string) => setBank({ ...bank, bank: v })} placeholder="001" />
-        <Field className="col-span-5 sm:col-span-3" label={t.branch} value={bank.branch_number} onChange={(v: string) => setBank({ ...bank, branch_number: v })} />
-        <Field className="col-span-3 sm:col-span-2" label={t.branchDigit} value={bank.branch_check_digit} onChange={(v: string) => setBank({ ...bank, branch_check_digit: v })} />
-        <Field className="col-span-7 sm:col-span-3" label={t.account} value={bank.account_number} onChange={(v: string) => setBank({ ...bank, account_number: v })} />
-        <Field className="col-span-5 sm:col-span-2" label={t.accountDigit} value={bank.account_check_digit} onChange={(v: string) => setBank({ ...bank, account_check_digit: v })} />
-        <div className="col-span-12 flex flex-col gap-1.5">
+        <Field className="col-span-12 sm:col-span-5" label={t.holderDoc} value={bank.holder_document} onChange={(v: string) => setBank({ ...bank, holder_document: v })} placeholder="000.000.000-00" />
+      </div>
+
+      {/* Banco + Agência (com dígito agrupado) */}
+      <div className="grid grid-cols-12 gap-3">
+        <Field className="col-span-4 sm:col-span-3" label={t.bankCode} value={bank.bank} onChange={(v: string) => setBank({ ...bank, bank: v.replace(/\D/g, "").slice(0, 3) })} placeholder="001" />
+        <div className="col-span-8 sm:col-span-9 flex flex-col gap-1.5">
+          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-light">{t.branch}</Label>
+          <div className="flex items-stretch gap-0 rounded-md border border-input focus-within:ring-1 focus-within:ring-ring overflow-hidden">
+            <Input
+              value={bank.branch_number}
+              onChange={(e) => setBank({ ...bank, branch_number: e.target.value.replace(/\D/g, "").slice(0, 5) })}
+              placeholder="0000"
+              className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 flex-1"
+            />
+            <span className="flex items-center px-2 text-xs text-muted-foreground border-l border-input bg-muted/30">-</span>
+            <Input
+              value={bank.branch_check_digit}
+              onChange={(e) => setBank({ ...bank, branch_check_digit: e.target.value.replace(/\D/g, "").slice(0, 1) })}
+              placeholder="0"
+              className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 w-14 text-center"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Conta (com dígito agrupado) + Tipo */}
+      <div className="grid grid-cols-12 gap-3">
+        <div className="col-span-12 sm:col-span-7 flex flex-col gap-1.5">
+          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-light">{t.account}</Label>
+          <div className="flex items-stretch gap-0 rounded-md border border-input focus-within:ring-1 focus-within:ring-ring overflow-hidden">
+            <Input
+              value={bank.account_number}
+              onChange={(e) => setBank({ ...bank, account_number: e.target.value.replace(/\D/g, "").slice(0, 12) })}
+              placeholder="00000000"
+              className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 flex-1"
+            />
+            <span className="flex items-center px-2 text-xs text-muted-foreground border-l border-input bg-muted/30">-</span>
+            <Input
+              value={bank.account_check_digit}
+              onChange={(e) => setBank({ ...bank, account_check_digit: e.target.value.replace(/\D/g, "").slice(0, 1) })}
+              placeholder="0"
+              className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 w-14 text-center"
+            />
+
+          </div>
+        </div>
+        <div className="col-span-12 sm:col-span-5 flex flex-col gap-1.5">
           <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-light">{t.accountType}</Label>
-          <Select value={bank.type} onValueChange={(v) => setBank({ ...bank, type: v as "checking" | "savings" })}>
-            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-            <SelectContent className="z-[60]">
-              <SelectItem value="checking">{t.checking}</SelectItem>
-              <SelectItem value="savings">{t.savings}</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-2 h-9 rounded-md border border-input overflow-hidden text-sm">
+            <button
+              type="button"
+              onClick={() => setBank({ ...bank, type: "checking" })}
+              className={`transition-colors ${bank.type === "checking" ? "bg-foreground text-background" : "bg-background text-muted-foreground hover:bg-muted"}`}
+            >
+              {t.checking}
+            </button>
+            <button
+              type="button"
+              onClick={() => setBank({ ...bank, type: "savings" })}
+              className={`transition-colors border-l border-input ${bank.type === "savings" ? "bg-foreground text-background" : "bg-background text-muted-foreground hover:bg-muted"}`}
+            >
+              {t.savings}
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -503,8 +596,8 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
                 <Field className="col-span-12 sm:col-span-7" label={t.motherName} value={pf.mother_name} onChange={(v: string) => setPf({ ...pf, mother_name: v })} />
                 <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pf.birthdate} onChange={(v: string) => setPf({ ...pf, birthdate: formatDateBR(v) })} placeholder="01/01/1990" />
                 <Field className="col-span-6 sm:col-span-4" label={t.monthlyIncome} value={pf.monthly_income} onChange={(v: string) => setPf({ ...pf, monthly_income: formatCurrencyBR(v) })} />
-                <Field className="col-span-2 sm:col-span-2" label={t.ddd} value={pf.phone.ddd} onChange={(v: string) => setPf({ ...pf, phone: { ...pf.phone, ddd: v.replace(/\D/g, "").slice(0, 2) } })} placeholder="11" />
-                <Field className="col-span-10 sm:col-span-6" label={t.phone} value={pf.phone.number} onChange={(v: string) => setPf({ ...pf, phone: { ...pf.phone, number: formatPhoneNumberBR(v) } })} placeholder="99999-9999" />
+                <PhoneField className="col-span-12 sm:col-span-8" label={t.phone} ddd={pf.phone.ddd} number={pf.phone.number} onDddChange={(v) => setPf({ ...pf, phone: { ...pf.phone, ddd: v } })} onNumberChange={(v) => setPf({ ...pf, phone: { ...pf.phone, number: v } })} />
+
               </div>
             </div>
 
@@ -526,8 +619,8 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
                 <Field className="col-span-12 sm:col-span-7" label={t.tradingName} value={pj.trading_name} onChange={(v: string) => setPj({ ...pj, trading_name: v })} />
                 <Field className="col-span-6 sm:col-span-5" label={t.foundingDate} value={pj.founding_date} onChange={(v: string) => setPj({ ...pj, founding_date: formatDateBR(v) })} placeholder="01/01/2020" />
                 <Field className="col-span-12 sm:col-span-4" label={t.annualRevenue} value={pj.annual_revenue} onChange={(v: string) => setPj({ ...pj, annual_revenue: formatCurrencyBR(v) })} />
-                <Field className="col-span-2" label={t.ddd} value={pj.phone.ddd} onChange={(v: string) => setPj({ ...pj, phone: { ...pj.phone, ddd: v.replace(/\D/g, "").slice(0, 2) } })} placeholder="11" />
-                <Field className="col-span-10 sm:col-span-6" label={t.phone} value={pj.phone.number} onChange={(v: string) => setPj({ ...pj, phone: { ...pj.phone, number: formatPhoneNumberBR(v) } })} placeholder="99999-9999" />
+                <PhoneField className="col-span-12 sm:col-span-8" label={t.phone} ddd={pj.phone.ddd} number={pj.phone.number} onDddChange={(v) => setPj({ ...pj, phone: { ...pj.phone, ddd: v } })} onNumberChange={(v) => setPj({ ...pj, phone: { ...pj.phone, number: v } })} />
+
               </div>
             </div>
             <div className="flex flex-col gap-3">
@@ -544,8 +637,8 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
                 <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pj.partner.birthdate} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, birthdate: formatDateBR(v) } })} placeholder="01/01/1990" />
                 <Field className="col-span-6 sm:col-span-4" label={t.monthlyIncome} value={pj.partner.monthly_income} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, monthly_income: formatCurrencyBR(v) } })} />
                 <Field className="col-span-12 sm:col-span-8" label={t.email} value={pj.partner.email} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, email: v } })} type="email" />
-                <Field className="col-span-2" label={t.ddd} value={pj.partner.phone.ddd} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, phone: { ...pj.partner.phone, ddd: v.replace(/\D/g, "").slice(0, 2) } } })} />
-                <Field className="col-span-10 sm:col-span-6" label={t.phone} value={pj.partner.phone.number} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, phone: { ...pj.partner.phone, number: formatPhoneNumberBR(v) } } })} placeholder="99999-9999" />
+                <PhoneField className="col-span-12 sm:col-span-8" label={t.phone} ddd={pj.partner.phone.ddd} number={pj.partner.phone.number} onDddChange={(v) => setPj({ ...pj, partner: { ...pj.partner, phone: { ...pj.partner.phone, ddd: v } } })} onNumberChange={(v) => setPj({ ...pj, partner: { ...pj.partner, phone: { ...pj.partner.phone, number: v } } })} />
+
               </div>
               <AddressBlock labels={addressLabels} value={pj.partner.address} onChange={(v) => setPj({ ...pj, partner: { ...pj.partner, address: v } })} />
             </div>
