@@ -1038,7 +1038,9 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
           <div className="flex flex-col gap-1.5">
             <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">
               {lang === "pt" ? "Vencimento" : lang === "es" ? "Vencimiento" : "Due"}
+            </Label>
             <div className="grid grid-cols-3 gap-1.5">
+
               <button
                 type="button"
                 onClick={() => { setFormDueMode("end"); setFormDue(""); }}
