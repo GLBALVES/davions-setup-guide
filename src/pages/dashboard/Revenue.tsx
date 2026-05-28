@@ -99,6 +99,7 @@ function ChartTooltip({ active, payload, label, fmt }: any) {
 export default function Revenue() {
   const { user, signOut, photographerId } = useAuth();
   const { t } = useLanguage();
+  const { feePercent } = usePlatformFee();
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [paidInvoices, setPaidInvoices] = useState<PaidInvoice[]>([]);
   const [loading, setLoading] = useState(true);
