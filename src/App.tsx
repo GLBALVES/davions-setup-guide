@@ -59,7 +59,7 @@ import PushNotifications from "./pages/dashboard/PushNotifications";
 import Chat from "./pages/dashboard/Chat";
 import AIAgents from "./pages/dashboard/AIAgents";
 import Personalize from "./pages/dashboard/Personalize";
-import Personalize from "./pages/dashboard/Personalize";
+import CustomDomainDocs from "./pages/dashboard/CustomDomainDocs";
 import CustomDomainDocs from "./pages/dashboard/CustomDomainDocs";
 import LightroomPlugin from "./pages/dashboard/LightroomPlugin";
 import LightroomPluginHelp from "./pages/dashboard/LightroomPluginHelp";
