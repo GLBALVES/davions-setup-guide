@@ -322,7 +322,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
         type: "individual",
         email,
         ...pf,
-        monthly_income: Number(pf.monthly_income),
+        monthly_income: Number(pf.monthly_income.replace(/\D/g, "")) / 100,
         bank,
       };
     } else {
