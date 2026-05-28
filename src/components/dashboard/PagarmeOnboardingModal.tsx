@@ -255,10 +255,35 @@ function formatDocument(input: string): string {
 }
 
 /** Lookup address from ViaCEP, fallback enrich with IBGE municipalities */
-
-
-
-
+async function lookupCEP(cep: string): Promise<Partial<typeof DEFAULT_ADDRESS> | null> {
+  const digits = cep.replace(/\D/g, "");
+  if (digits.length !== 8) return null;
+  try {
+    const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+    const data = await res.json();
+    if (data?.erro) return null;
+    let city = data.localidade || "";
+    const state = data.uf || "";
+    // Enrich/verify city name via IBGE if ibge code present
+    if (data.ibge) {
+      try {
+        const ibgeRes = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/municipios/${data.ibge}`);
+        const ibgeData = await ibgeRes.json();
+        if (ibgeData?.nome) city = ibgeData.nome;
+      } catch {
+        // ignore
+      }
+    }
+    return {
+      street: data.logradouro || "",
+      neighborhood: data.bairro || "",
+      city,
+      state,
+    };
+  } catch {
+    return null;
+  }
+}
 interface FieldProps {
   label: string;
   value: string;
