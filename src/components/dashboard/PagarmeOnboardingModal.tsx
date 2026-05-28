@@ -637,8 +637,8 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
                 <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pj.partner.birthdate} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, birthdate: formatDateBR(v) } })} placeholder="01/01/1990" />
                 <Field className="col-span-6 sm:col-span-4" label={t.monthlyIncome} value={pj.partner.monthly_income} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, monthly_income: formatCurrencyBR(v) } })} />
                 <Field className="col-span-12 sm:col-span-8" label={t.email} value={pj.partner.email} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, email: v } })} type="email" />
-                <Field className="col-span-2" label={t.ddd} value={pj.partner.phone.ddd} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, phone: { ...pj.partner.phone, ddd: v.replace(/\D/g, "").slice(0, 2) } } })} />
-                <Field className="col-span-10 sm:col-span-6" label={t.phone} value={pj.partner.phone.number} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, phone: { ...pj.partner.phone, number: formatPhoneNumberBR(v) } } })} placeholder="99999-9999" />
+                <PhoneField className="col-span-12 sm:col-span-8" label={t.phone} ddd={pj.partner.phone.ddd} number={pj.partner.phone.number} onDddChange={(v) => setPj({ ...pj, partner: { ...pj.partner, phone: { ...pj.partner.phone, ddd: v } } })} onNumberChange={(v) => setPj({ ...pj, partner: { ...pj.partner, phone: { ...pj.partner.phone, number: v } } })} />
+
               </div>
               <AddressBlock labels={addressLabels} value={pj.partner.address} onChange={(v) => setPj({ ...pj, partner: { ...pj.partner, address: v } })} />
             </div>
