@@ -80,7 +80,6 @@ serve(async (req) => {
 
     const applicationFeeAmount = Math.round(amountCents * (splitPercent / 100));
     const origin = originIn || "https://davions.com";
-    const origin = originIn || "https://davions.com";
     const studioName = (photo as any).business_name || (photo as any).full_name || "Studio";
 
     // Ensure the connected account has a business name (required for Checkout)
