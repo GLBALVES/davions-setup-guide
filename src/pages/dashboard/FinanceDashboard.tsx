@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import { format, startOfMonth, eachMonthOfInterval, subMonths, isSameMonth } from "date-fns";
 import { getBillableTaxRate } from "@/lib/tax-utils";
+import { fetchInvoiceFinance, sumPaidByMonth, type PaidInvoice } from "@/lib/project-invoices-finance";
 
 interface BookingRow {
   id: string;
