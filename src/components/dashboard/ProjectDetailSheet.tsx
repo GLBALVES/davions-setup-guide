@@ -488,12 +488,8 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const formItemsFeeTotal = formItems.reduce((s, it) => s + (parseFloat(it.fee) || 0), 0);
 
   // Edit form state
-  const [editDesc, setEditDesc] = useState("");
-  const [editAmount, setEditAmount] = useState("");
-  const [editFee, setEditFee] = useState("");
-  const [editDue, setEditDue] = useState("");
-  const [editPaid, setEditPaid] = useState("");
-  const [editStatus, setEditStatus] = useState<InvoiceStatus>("pending");
+
+
 
   const qKey = ["project-invoices", project.id];
 
