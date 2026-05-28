@@ -165,14 +165,16 @@ export function StartSellingChecklist() {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="border border-border rounded-sm overflow-hidden"
+        className="border border-primary/20 rounded-sm overflow-hidden bg-primary/[0.02]"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 bg-muted/30 border-b border-border">
+        <div className="flex items-center justify-between px-5 py-4 bg-primary/[0.04] border-b border-primary/15">
           <div className="flex items-center gap-3">
-            <ShoppingBag className="h-3.5 w-3.5 text-foreground/60" />
+            <div className="h-6 w-6 flex items-center justify-center rounded-full bg-primary/10">
+              <ShoppingBag className="h-3.5 w-3.5 text-primary" />
+            </div>
             <div>
-              <p className="text-xs font-light tracking-wide">
+              <p className="text-xs font-light tracking-wide text-foreground">
                 {allDone ? t.allDone : t.title}
               </p>
               <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -185,13 +187,13 @@ export function StartSellingChecklist() {
             <div className="hidden sm:flex items-center gap-2">
               <div className="w-28 h-1 bg-border rounded-full overflow-hidden">
                 <motion.div
-                  className="h-full bg-foreground rounded-full"
+                  className="h-full bg-primary rounded-full"
                   initial={{ width: 0 }}
                   animate={{ width: `${progressPct}%` }}
                   transition={{ duration: 0.6, ease: "easeOut" }}
                 />
               </div>
-              <span className="text-[10px] text-muted-foreground tabular-nums">{progressPct}%</span>
+              <span className="text-[10px] text-primary tabular-nums font-light">{progressPct}%</span>
             </div>
 
             <button
@@ -208,7 +210,7 @@ export function StartSellingChecklist() {
         </div>
 
         {/* Steps */}
-        <div className="divide-y divide-border">
+        <div className="divide-y divide-primary/10">
           {steps.map((step, idx) => {
             const copy = t.steps[step.key];
             return (
@@ -219,17 +221,22 @@ export function StartSellingChecklist() {
                 transition={{ delay: idx * 0.07, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                 onClick={() => handleStepClick(step)}
                 disabled={step.done}
-                className={`w-full flex items-center gap-4 px-5 py-3.5 text-left transition-colors ${
+                className={`w-full flex items-center gap-4 px-5 py-3.5 text-left transition-colors relative ${
                   step.done
                     ? "opacity-50 cursor-default"
-                    : "hover:bg-muted/30 cursor-pointer group"
+                    : "hover:bg-primary/[0.03] cursor-pointer group"
                 }`}
               >
+                {/* Left accent */}
+                {!step.done && (
+                  <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-primary/60 opacity-0 group-hover:opacity-100 transition-opacity" />
+                )}
+
                 <span className="shrink-0">
                   {step.done ? (
                     <CheckCircle2 className="h-4 w-4 text-foreground" />
                   ) : (
-                    <Circle className="h-4 w-4 text-border group-hover:text-muted-foreground transition-colors" />
+                    <Circle className="h-4 w-4 text-primary/40 group-hover:text-primary transition-colors" />
                   )}
                 </span>
 
@@ -247,7 +254,7 @@ export function StartSellingChecklist() {
                 </div>
 
                 {!step.done && (
-                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0 group-hover:text-foreground transition-colors" />
+                  <ChevronRight className="h-3.5 w-3.5 text-primary/30 shrink-0 group-hover:text-primary transition-colors" />
                 )}
               </motion.button>
             );
@@ -260,9 +267,9 @@ export function StartSellingChecklist() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="px-5 py-3 bg-foreground/5 border-t border-border"
+              className="px-5 py-3 bg-primary/[0.06] border-t border-primary/15"
             >
-              <p className="text-[10px] text-muted-foreground text-center tracking-wide">
+              <p className="text-[10px] text-primary/80 text-center tracking-wide">
                 {t.allDoneMsg}
               </p>
             </motion.div>
