@@ -156,7 +156,7 @@ export default function FinanceReceivables() {
 
               {loading ? (
                 <p className="text-xs text-muted-foreground tracking-widest uppercase animate-pulse py-20 text-center">{t.common.loading}</p>
-              ) : filtered.length === 0 ? (
+              ) : isEmpty ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3 text-center border border-border">
                   <ArrowDownCircle className="h-8 w-8 text-muted-foreground/30" />
                   <p className="text-sm font-light text-muted-foreground">{t.finance.noOutstandingReceivables}</p>
@@ -200,9 +200,40 @@ export default function FinanceReceivables() {
                           </tr>
                         );
                       })}
+                      {filteredInvoices.map((inv) => (
+                        <tr key={`inv-${inv.id}`} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                          <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                            {format(new Date(inv.due_date || inv.created_at), "MMM d, yyyy")}
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="font-normal text-muted-foreground italic">Cobrança de projeto</p>
+                          </td>
+                          <td className="px-4 py-3">{inv.description ?? "—"}</td>
+                          <td className="px-4 py-3 whitespace-nowrap tabular-nums">{fmt(inv.amount_cents)}</td>
+                          <td className="px-4 py-3 whitespace-nowrap tabular-nums">{fmt(inv.paid_cents)}</td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className="flex items-center gap-1 font-normal tabular-nums text-yellow-600">
+                              <AlertCircle className="h-3 w-3" />{fmt(inv.balance_cents)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <Badge variant="outline" className="text-[10px] tracking-wide uppercase font-light">
+                              {STATUS_LABEL[inv.status] ?? inv.status}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
+              )}
+            </div>
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+}
               )}
             </div>
           </main>
