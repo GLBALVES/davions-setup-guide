@@ -1381,7 +1381,29 @@ function InvoiceShareDialog({
           <DialogTitle className="text-sm tracking-widest uppercase font-light">{t.title}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-4">
-          <Textarea value={message} readOnly className="text-xs min-h-[90px] resize-none" />
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{t.linkLabel}</span>
+            <div className="flex items-center gap-2">
+              <input
+                value={payUrl}
+                readOnly
+                className="flex-1 h-8 px-2 text-xs rounded-sm border border-border/50 bg-muted/30 truncate"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 text-[10px] tracking-widest uppercase shrink-0"
+                onClick={async () => {
+                  try { await navigator.clipboard.writeText(payUrl); toast.success(t.copied); }
+                  catch { toast.error(t.copyError); }
+                }}
+              >
+                {t.copyLink}
+              </Button>
+            </div>
+          </div>
+          <Textarea value={message} readOnly className="text-xs min-h-[110px] resize-none" />
           <Button variant="outline" size="sm" onClick={copy}>{t.copy}</Button>
           <div className="grid grid-cols-2 gap-2">
             <a
