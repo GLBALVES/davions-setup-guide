@@ -201,9 +201,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setPhotographerId(null);
     setIsOwner(null);
 
-    // Then tell Supabase to sign out (fires SIGNED_OUT event, handled above)
-    await supabase.auth.signOut();
-    initialized.current = true;
+    // Fire the Supabase sign-out in the background — don't block the UI on it.
+    // We use scope:"local" so it clears the local session even if the network
+    // request to the auth server fails (e.g. NetworkError, offline, CORS).
+    supabase.auth.signOut({ scope: "local" }).catch(() => {
+      // Network failure — local storage is already cleared, that's enough.
+    });
+
+    // Force a hard redirect to /login. This guarantees we leave the protected
+    // area even if React Router fails to re-render in some edge cases (e.g.
+    // a child component holding onto stale state, or a hung network request).
+    if (typeof window !== "undefined") {
+      window.location.replace("/login");
+    }
   };
 
   return (
