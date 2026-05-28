@@ -464,8 +464,8 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
                 <Field className="col-span-12 sm:col-span-7" label={t.tradingName} value={pj.trading_name} onChange={(v: string) => setPj({ ...pj, trading_name: v })} />
                 <Field className="col-span-6 sm:col-span-5" label={t.foundingDate} value={pj.founding_date} onChange={(v: string) => setPj({ ...pj, founding_date: formatDateBR(v) })} placeholder="01/01/2020" />
                 <Field className="col-span-12 sm:col-span-4" label={t.annualRevenue} value={pj.annual_revenue} onChange={(v: string) => setPj({ ...pj, annual_revenue: formatCurrencyBR(v) })} />
-                <Field className="col-span-2" label={t.ddd} value={pj.phone.ddd} onChange={(v: string) => setPj({ ...pj, phone: { ...pj.phone, ddd: v } })} placeholder="11" />
-                <Field className="col-span-10 sm:col-span-6" label={t.phone} value={pj.phone.number} onChange={(v: string) => setPj({ ...pj, phone: { ...pj.phone, number: v } })} />
+                <Field className="col-span-2" label={t.ddd} value={pj.phone.ddd} onChange={(v: string) => setPj({ ...pj, phone: { ...pj.phone, ddd: v.replace(/\D/g, "").slice(0, 2) } })} placeholder="11" />
+                <Field className="col-span-10 sm:col-span-6" label={t.phone} value={pj.phone.number} onChange={(v: string) => setPj({ ...pj, phone: { ...pj.phone, number: formatPhoneNumberBR(v) } })} placeholder="99999-9999" />
               </div>
             </div>
             <div className="flex flex-col gap-3">
@@ -482,8 +482,8 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
                 <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pj.partner.birthdate} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, birthdate: formatDateBR(v) } })} placeholder="01/01/1990" />
                 <Field className="col-span-6 sm:col-span-4" label={t.monthlyIncome} value={pj.partner.monthly_income} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, monthly_income: formatCurrencyBR(v) } })} />
                 <Field className="col-span-12 sm:col-span-8" label={t.email} value={pj.partner.email} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, email: v } })} type="email" />
-                <Field className="col-span-2" label={t.ddd} value={pj.partner.phone.ddd} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, phone: { ...pj.partner.phone, ddd: v } } })} />
-                <Field className="col-span-10 sm:col-span-6" label={t.phone} value={pj.partner.phone.number} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, phone: { ...pj.partner.phone, number: v } } })} />
+                <Field className="col-span-2" label={t.ddd} value={pj.partner.phone.ddd} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, phone: { ...pj.partner.phone, ddd: v.replace(/\D/g, "").slice(0, 2) } } })} />
+                <Field className="col-span-10 sm:col-span-6" label={t.phone} value={pj.partner.phone.number} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, phone: { ...pj.partner.phone, number: formatPhoneNumberBR(v) } } })} placeholder="99999-9999" />
               </div>
               <AddressBlock labels={addressLabels} value={pj.partner.address} onChange={(v) => setPj({ ...pj, partner: { ...pj.partner, address: v } })} />
             </div>
