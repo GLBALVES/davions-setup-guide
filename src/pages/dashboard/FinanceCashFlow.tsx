@@ -43,16 +43,21 @@ function fmt(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 }
 
-function buildMonths(rows: BookingRow[], n: number) {
+function buildMonths(
+  rows: BookingRow[],
+  paid: PaidInvoice[],
+  outstanding: OutstandingInvoice[],
+  n: number,
+) {
   const now = new Date();
   const months = eachMonthOfInterval({ start: subMonths(startOfMonth(now), n - 1), end: startOfMonth(now) });
   return months.map((m) => {
     const ms = format(m, "yyyy-MM");
     const monthRows = rows.filter((r) => (r.booked_date || r.created_at).startsWith(ms));
-    const collected = monthRows.reduce((s, r) => s + calcPaid(r), 0);
-    const outstanding = monthRows.reduce((s, r) => s + calcBalance(r), 0);
+    const collected = monthRows.reduce((s, r) => s + calcPaid(r), 0) + sumPaidByMonth(paid, ms);
+    const outstandingTotal = monthRows.reduce((s, r) => s + calcBalance(r), 0) + sumOutstandingByMonth(outstanding, ms);
     const net = collected;
-    return { month: format(m, "MMM yyyy"), label: format(m, "MMM"), collected, outstanding, net };
+    return { month: format(m, "MMM yyyy"), label: format(m, "MMM"), collected, outstanding: outstandingTotal, net };
   });
 }
 
