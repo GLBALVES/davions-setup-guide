@@ -121,6 +121,8 @@ export default function FinanceDashboard() {
           stripe_checkout_session_id: b.stripe_checkout_session_id ?? null,
         })));
       }
+      const inv = await fetchInvoiceFinance(user.id);
+      setPaidInvoices(inv.paid);
       setLoading(false);
     })();
   }, [user]);
@@ -129,11 +131,17 @@ export default function FinanceDashboard() {
   const thisMonth = rows.filter((r) => isSameMonth(new Date(r.booked_date || r.created_at), now));
   const lastMonth = rows.filter((r) => isSameMonth(new Date(r.booked_date || r.created_at), subMonths(now, 1)));
 
-  const totalCollected = rows.reduce((s, r) => s + calcPaid(r), 0);
+  const thisMonthStr = format(now, "yyyy-MM");
+  const lastMonthStr = format(subMonths(now, 1), "yyyy-MM");
+  const invoicesPaidTotal = paidInvoices.reduce((s, p) => s + p.paid_cents, 0);
+  const invoicesThisMonth = sumPaidByMonth(paidInvoices, thisMonthStr);
+  const invoicesLastMonth = sumPaidByMonth(paidInvoices, lastMonthStr);
+
+  const totalCollected = rows.reduce((s, r) => s + calcPaid(r), 0) + invoicesPaidTotal;
   const totalBalance   = rows.reduce((s, r) => s + calcBalance(r), 0);
   const avgTicket      = rows.length ? rows.reduce((s, r) => s + calcTotal(r), 0) / rows.length : 0;
-  const thisMonthRev   = thisMonth.reduce((s, r) => s + calcPaid(r), 0);
-  const lastMonthRev   = lastMonth.reduce((s, r) => s + calcPaid(r), 0);
+  const thisMonthRev   = thisMonth.reduce((s, r) => s + calcPaid(r), 0) + invoicesThisMonth;
+  const lastMonthRev   = lastMonth.reduce((s, r) => s + calcPaid(r), 0) + invoicesLastMonth;
   const monthDelta     = lastMonthRev === 0 ? null : ((thisMonthRev - lastMonthRev) / lastMonthRev) * 100;
 
   const depositRows = rows.filter((r) => r.payment_status === "deposit_paid");
@@ -143,7 +151,12 @@ export default function FinanceDashboard() {
   const manualDepositTotal = manualDeposits.reduce((s, r) => s + calcPaid(r), 0);
   const totalDepositAmount = stripeDepositTotal + manualDepositTotal;
 
-  const chartData = buildChart(rows);
+  const chartData = buildChart(rows).map((m) => {
+    const months = eachMonthOfInterval({ start: subMonths(startOfMonth(now), 5), end: startOfMonth(now) });
+    const idx = months.findIndex((d) => format(d, "MMM") === m.label);
+    const monthStr = idx >= 0 ? format(months[idx], "yyyy-MM") : "";
+    return { ...m, collected: m.collected + sumPaidByMonth(paidInvoices, monthStr) };
+  });
 
   const clientMap: Record<string, number> = {};
   rows.forEach((r) => { clientMap[r.client_name] = (clientMap[r.client_name] ?? 0) + calcTotal(r); });
