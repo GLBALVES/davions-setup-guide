@@ -213,12 +213,52 @@ function formatCurrencyBR(input: string): string {
 }
 
 /** Format phone number as Brazilian mobile/fixed line while typing */
+/** Format phone number as Brazilian mobile/fixed line while typing */
 function formatPhoneNumberBR(input: string): string {
   const d = input.replace(/\D/g, "").slice(0, 9);
   if (d.length <= 4) return d;
   if (d.length <= 8) return `${d.slice(0, 4)}-${d.slice(4)}`;
   return `${d.slice(0, 5)}-${d.slice(5)}`;
 }
+
+/** Format raw digits as 00000-000 (CEP) */
+function formatCEP(input: string): string {
+  const d = input.replace(/\D/g, "").slice(0, 8);
+  if (d.length <= 5) return d;
+  return `${d.slice(0, 5)}-${d.slice(5)}`;
+}
+
+/** Lookup address from ViaCEP, fallback enrich with IBGE municipalities */
+async function lookupCEP(cep: string): Promise<Partial<typeof DEFAULT_ADDRESS> | null> {
+  const digits = cep.replace(/\D/g, "");
+  if (digits.length !== 8) return null;
+  try {
+    const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+    const data = await res.json();
+    if (data?.erro) return null;
+    let city = data.localidade || "";
+    const state = data.uf || "";
+    // Enrich/verify city name via IBGE if ibge code present
+    if (data.ibge) {
+      try {
+        const ibgeRes = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/municipios/${data.ibge}`);
+        const ibgeData = await ibgeRes.json();
+        if (ibgeData?.nome) city = ibgeData.nome;
+      } catch {
+        // ignore
+      }
+    }
+    return {
+      street: data.logradouro || "",
+      neighborhood: data.bairro || "",
+      city,
+      state,
+    };
+  } catch {
+    return null;
+  }
+}
+
 
 
 
@@ -253,9 +293,28 @@ const AddressBlock = ({
   value: typeof DEFAULT_ADDRESS;
   onChange: (v: typeof DEFAULT_ADDRESS) => void;
   labels: { zip: string; street: string; number: string; complement: string; neighborhood: string; city: string; state: string };
-}) => (
+}) => {
+
+  const handleCepChange = async (v: string) => {
+    const masked = formatCEP(v);
+    const next = { ...value, zip_code: masked };
+    onChange(next);
+    if (masked.replace(/\D/g, "").length === 8) {
+      const found = await lookupCEP(masked);
+      if (found) {
+        onChange({
+          ...next,
+          street: found.street || next.street,
+          neighborhood: found.neighborhood || next.neighborhood,
+          city: found.city || next.city,
+          state: found.state || next.state,
+        });
+      }
+    }
+  };
+  return (
   <div className="grid grid-cols-12 gap-3">
-    <Field className="col-span-12 sm:col-span-3" label={labels.zip} value={value.zip_code} onChange={(v) => onChange({ ...value, zip_code: v })} placeholder="00000-000" />
+    <Field className="col-span-12 sm:col-span-3" label={labels.zip} value={value.zip_code} onChange={handleCepChange} placeholder="00000-000" />
     <Field className="col-span-12 sm:col-span-7" label={labels.street} value={value.street} onChange={(v) => onChange({ ...value, street: v })} />
     <Field className="col-span-6 sm:col-span-2" label={labels.number} value={value.street_number} onChange={(v) => onChange({ ...value, street_number: v })} />
     <Field className="col-span-12 sm:col-span-6" label={labels.complement} value={value.complementary} onChange={(v) => onChange({ ...value, complementary: v })} />
@@ -263,7 +322,10 @@ const AddressBlock = ({
     <Field className="col-span-8 sm:col-span-9" label={labels.city} value={value.city} onChange={(v) => onChange({ ...value, city: v })} />
     <Field className="col-span-4 sm:col-span-3" label={labels.state} value={value.state} onChange={(v) => onChange({ ...value, state: v.toUpperCase().slice(0, 2) })} placeholder="SP" />
   </div>
-);
+  );
+};
+
+
 
 export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuccess }: Props) {
   const { user } = useAuth();
