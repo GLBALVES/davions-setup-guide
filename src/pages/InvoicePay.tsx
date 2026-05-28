@@ -24,23 +24,16 @@ export default function InvoicePay() {
 
   useEffect(() => {
     if (!invoiceId) return;
+  useEffect(() => {
+    if (!invoiceId) return;
     (async () => {
       try {
-        const { data, error } = await (supabase as any)
-          .from("project_invoices")
-          .select("id, description, amount, paid_amount, status, photographers(business_name, full_name)")
-          .eq("id", invoiceId)
-          .maybeSingle();
-        if (error) throw error;
-        if (!data) throw new Error("Cobrança não encontrada");
-        setInfo({
-          id: data.id,
-          description: data.description,
-          amount: Number(data.amount),
-          paid_amount: Number(data.paid_amount ?? 0),
-          status: data.status,
-          studio_name: data.photographers?.business_name ?? data.photographers?.full_name ?? null,
+        const { data, error } = await supabase.functions.invoke("get-invoice-public", {
+          body: { invoice_id: invoiceId },
         });
+        if (error) throw error;
+        if (!data || (data as any).error) throw new Error((data as any)?.error || "Cobrança não encontrada");
+        setInfo(data as InvoiceInfo);
       } catch (e: any) {
         setError(e?.message || "Erro ao carregar cobrança");
       } finally {
@@ -48,8 +41,6 @@ export default function InvoicePay() {
       }
     })();
   }, [invoiceId]);
-
-  const pay = async () => {
     if (!invoiceId) return;
     setRedirecting(true);
     try {
