@@ -4,6 +4,13 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+export interface InvoiceItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
+  fee: number;
+}
+
 export interface PaidInvoice {
   id: string;
   project_id: string | null;
@@ -12,7 +19,9 @@ export interface PaidInvoice {
   paid_at: string; // ISO
   client_name: string | null;
   client_email: string | null;
+  items: InvoiceItem[];
 }
+
 
 export interface OutstandingInvoice {
   id: string;
