@@ -12,6 +12,21 @@ interface ResolvedIdentity {
 
 const identityCache = new Map<string, ResolvedIdentity>();
 
+const clearSupabaseAuthStorage = () => {
+  if (typeof window === "undefined") return;
+
+  const clearMatchingKeys = (storage: Storage) => {
+    Object.keys(storage).forEach((key) => {
+      if (key.startsWith("sb-") && key.includes("auth-token")) {
+        storage.removeItem(key);
+      }
+    });
+  };
+
+  clearMatchingKeys(window.localStorage);
+  clearMatchingKeys(window.sessionStorage);
+};
+
 async function resolveIdentity(userId: string, userEmail: string): Promise<ResolvedIdentity> {
   // Return cached result immediately — avoids repeated DB round-trips on navigation
   if (identityCache.has(userId)) {
@@ -201,12 +216,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setPhotographerId(null);
     setIsOwner(null);
 
-    // Fire the Supabase sign-out in the background — don't block the UI on it.
-    // We use scope:"local" so it clears the local session even if the network
-    // request to the auth server fails (e.g. NetworkError, offline, CORS).
-    supabase.auth.signOut({ scope: "local" }).catch(() => {
-      // Network failure — local storage is already cleared, that's enough.
-    });
+    // Clear the stored session before navigation. If we redirect first, the next
+    // page load can read the old token and immediately send the user back in.
+    try {
+      await supabase.auth.signOut({ scope: "local" });
+    } finally {
+      clearSupabaseAuthStorage();
+    }
 
     // Force a hard redirect to /login. This guarantees we leave the protected
     // area even if React Router fails to re-render in some edge cases (e.g.
