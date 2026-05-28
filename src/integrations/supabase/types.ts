@@ -3382,6 +3382,7 @@ export type Database = {
           due_date: string | null
           fee_amount: number
           id: string
+          items: Json
           notes: string | null
           paid_amount: number
           paid_at: string | null
@@ -3397,6 +3398,7 @@ export type Database = {
           due_date?: string | null
           fee_amount?: number
           id?: string
+          items?: Json
           notes?: string | null
           paid_amount?: number
           paid_at?: string | null
@@ -3412,6 +3414,7 @@ export type Database = {
           due_date?: string | null
           fee_amount?: number
           id?: string
+          items?: Json
           notes?: string | null
           paid_amount?: number
           paid_at?: string | null

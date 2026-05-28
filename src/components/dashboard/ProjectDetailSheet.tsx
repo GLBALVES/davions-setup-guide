@@ -460,16 +460,20 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const addPaymentLabel = lang === "pt" ? "Adicionar pagamento" : lang === "es" ? "Agregar pago" : "Add payment";
   const editLabel = lang === "pt" ? "Editar" : lang === "es" ? "Editar" : "Edit";
 
-  // Form state
-  const [formDesc, setFormDesc]       = useState("");
-  const [formAmount, setFormAmount]   = useState("");
-  const [formFee, setFormFee]         = useState("");
-  const [formFeeManual, setFormFeeManual] = useState(false);
+  // Form state — multiple line items
+  type ChargeItem = { description: string; quantity: string; unit_price: string; fee: string };
+  const blankItem = (): ChargeItem => ({ description: "", quantity: "1", unit_price: "", fee: "" });
+  const [formItems, setFormItems] = useState<ChargeItem[]>([blankItem()]);
+  const [formFeeManual, setFormFeeManual] = useState<Record<number, boolean>>({});
   const [formDue, setFormDue]         = useState("");
   const [formDueMode, setFormDueMode] = useState<"end" | "date">("end");
   const [formStatus, setFormStatus]   = useState<InvoiceStatus>("pending");
   const [formPaid, setFormPaid]       = useState("");
   const [shareInvoice, setShareInvoice] = useState<ProjectInvoice | null>(null);
+
+  const itemLineTotal = (it: ChargeItem) => (parseFloat(it.quantity) || 0) * (parseFloat(it.unit_price) || 0);
+  const formItemsTotal = formItems.reduce((s, it) => s + itemLineTotal(it), 0);
+  const formItemsFeeTotal = formItems.reduce((s, it) => s + (parseFloat(it.fee) || 0), 0);
 
   // Edit form state
   const [editDesc, setEditDesc] = useState("");
@@ -579,16 +583,17 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       businessCountry
     );
 
-  // Auto-compute charge fee from effective tax rate unless manually edited
+  // Auto-compute per-item fee from effective tax rate unless manually edited
   useEffect(() => {
-    if (formFeeManual || !sessionTaxRate) return;
-    const amt = parseFloat(formAmount);
-    if (!isFinite(amt) || amt <= 0) {
-      setFormFee("");
-      return;
-    }
-    setFormFee((amt * sessionTaxRate / 100).toFixed(2));
-  }, [formAmount, sessionTaxRate, formFeeManual]);
+    if (!sessionTaxRate) return;
+    setFormItems((prev) => prev.map((it, idx) => {
+      if (formFeeManual[idx]) return it;
+      const lineTotal = (parseFloat(it.quantity) || 0) * (parseFloat(it.unit_price) || 0);
+      const fee = lineTotal > 0 ? (lineTotal * sessionTaxRate / 100).toFixed(2) : "";
+      return it.fee === fee ? it : { ...it, fee };
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(formItems.map((i) => [i.quantity, i.unit_price])), sessionTaxRate, formFeeManual]);
   const { data: projectPayments = [] } = useQuery<ProjectPayment[]>({
     queryKey: ["project-payments", project.id],
     queryFn: async () => {
@@ -634,12 +639,30 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
 
   const addMutation = useMutation({
     mutationFn: async () => {
+      const cleanItems = formItems
+        .map((it) => ({
+          description: it.description.trim(),
+          quantity: parseFloat(it.quantity) || 0,
+          unit_price: parseFloat(it.unit_price) || 0,
+          fee: parseFloat(it.fee) || 0,
+        }))
+        .filter((it) => it.quantity > 0 && it.unit_price > 0);
+
+      if (cleanItems.length === 0) throw new Error("no_items");
+
+      const totalAmount = cleanItems.reduce((s, it) => s + it.quantity * it.unit_price, 0);
+      const totalFee = cleanItems.reduce((s, it) => s + it.fee, 0);
+      const summaryDesc = cleanItems.length === 1
+        ? (cleanItems[0].description || tp.chargeDescription)
+        : `${cleanItems.length} ${(lang === "pt" ? "itens" : lang === "es" ? "ítems" : "items")}`;
+
       const { error } = await supabase.from("project_invoices" as any).insert({
         project_id:      project.id,
         photographer_id: photographerId,
-        description:     formDesc.trim() || tp.chargeDescription,
-        amount:          parseFloat(formAmount) || 0,
-        fee_amount:      parseFloat(formFee) || 0,
+        description:     summaryDesc,
+        amount:          totalAmount,
+        fee_amount:      totalFee,
+        items:           cleanItems,
         due_date:        formDueMode === "date" && formDue ? formDue : null,
         status:          "pending",
       } as any);
@@ -649,9 +672,13 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       queryClient.invalidateQueries({ queryKey: qKey });
       toast.success(tp.chargeAdded);
       setShowForm(false);
-      setFormDesc(""); setFormAmount(""); setFormFee(""); setFormFeeManual(false); setFormDue(""); setFormDueMode("end"); setFormStatus("pending"); setFormPaid("");
+      setFormItems([blankItem()]);
+      setFormFeeManual({});
+      setFormDue(""); setFormDueMode("end"); setFormStatus("pending"); setFormPaid("");
     },
-    onError: () => toast.error(tp.errorAddingCharge),
+    onError: (e: any) => toast.error(e?.message === "no_items"
+      ? (lang === "pt" ? "Adicione ao menos um item" : lang === "es" ? "Agrega al menos un ítem" : "Add at least one item")
+      : tp.errorAddingCharge),
   });
 
   const updateStatusMutation = useMutation({
@@ -900,23 +927,110 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         <div className="rounded-md border border-border/60 bg-muted/20 p-3 flex flex-col gap-2.5">
           <p className="text-xs font-medium">{tp.newChargeTitle}</p>
 
-          <div className="flex flex-col gap-1">
-            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargeDescription}</Label>
-            <Input placeholder={tp.chargeDescriptionPlaceholder} value={formDesc}
-              onChange={(e) => setFormDesc(e.target.value)} className="h-7 text-xs" />
-          </div>
+          {/* Items list */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                {lang === "pt" ? "Itens" : lang === "es" ? "Ítems" : "Items"}
+              </Label>
+              <button
+                type="button"
+                onClick={() => setFormItems((prev) => [...prev, blankItem()])}
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Plus className="h-3 w-3" />
+                {lang === "pt" ? "Adicionar item" : lang === "es" ? "Agregar ítem" : "Add item"}
+              </button>
+            </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1">
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{tp.chargeAmount}</Label>
-              <Input type="number" placeholder="0,00" min={0} value={formAmount}
-                onChange={(e) => setFormAmount(e.target.value)} className="h-7 text-xs" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">{(tp as any).chargeFee ?? "Valor da taxa"}</Label>
-              <Input type="number" placeholder="0,00" min={0} value={formFee}
-                onChange={(e) => { setFormFeeManual(true); setFormFee(e.target.value); }} className="h-7 text-xs" />
-            </div>
+            {formItems.map((it, idx) => {
+              const lineTotal = itemLineTotal(it);
+              return (
+                <div key={idx} className="rounded-sm border border-border/40 bg-background/60 p-2 flex flex-col gap-1.5">
+                  <div className="flex items-start gap-1.5">
+                    <Input
+                      placeholder={tp.chargeDescriptionPlaceholder}
+                      value={it.description}
+                      maxLength={200}
+                      onChange={(e) => setFormItems((prev) => prev.map((p, i) => i === idx ? { ...p, description: e.target.value } : p))}
+                      className="h-7 text-xs flex-1"
+                    />
+                    {formItems.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormItems((prev) => prev.filter((_, i) => i !== idx));
+                          setFormFeeManual((prev) => {
+                            const next: Record<number, boolean> = {};
+                            Object.entries(prev).forEach(([k, v]) => {
+                              const ki = Number(k);
+                              if (ki < idx) next[ki] = v;
+                              else if (ki > idx) next[ki - 1] = v;
+                            });
+                            return next;
+                          });
+                        }}
+                        className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-sm border border-border/40 text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors"
+                        title={lang === "pt" ? "Remover" : lang === "es" ? "Eliminar" : "Remove"}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    <div className="flex flex-col gap-0.5">
+                      <Label className="text-[9px] text-muted-foreground/70 uppercase tracking-wider">
+                        {lang === "pt" ? "Qtd." : lang === "es" ? "Cant." : "Qty"}
+                      </Label>
+                      <Input
+                        type="number" min={0} step="1" value={it.quantity}
+                        onChange={(e) => setFormItems((prev) => prev.map((p, i) => i === idx ? { ...p, quantity: e.target.value } : p))}
+                        className="h-7 text-xs"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <Label className="text-[9px] text-muted-foreground/70 uppercase tracking-wider">
+                        {lang === "pt" ? "Unitário" : lang === "es" ? "Unitario" : "Unit"}
+                      </Label>
+                      <Input
+                        type="number" min={0} step="0.01" placeholder="0,00" value={it.unit_price}
+                        onChange={(e) => setFormItems((prev) => prev.map((p, i) => i === idx ? { ...p, unit_price: e.target.value } : p))}
+                        className="h-7 text-xs"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <Label className="text-[9px] text-muted-foreground/70 uppercase tracking-wider">
+                        {lang === "pt" ? "Total" : lang === "es" ? "Total" : "Total"}
+                      </Label>
+                      <Input
+                        readOnly value={lineTotal ? lineTotal.toFixed(2) : ""}
+                        className="h-7 text-xs bg-muted/30"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <Label className="text-[9px] text-muted-foreground/70 uppercase tracking-wider">
+                        {lang === "pt" ? "Taxa" : lang === "es" ? "Tasa" : "Fee"}
+                      </Label>
+                      <Input
+                        type="number" min={0} step="0.01" placeholder="0,00" value={it.fee}
+                        onChange={(e) => {
+                          setFormFeeManual((prev) => ({ ...prev, [idx]: true }));
+                          setFormItems((prev) => prev.map((p, i) => i === idx ? { ...p, fee: e.target.value } : p));
+                        }}
+                        className="h-7 text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {formItemsTotal > 0 && (
+              <div className="flex justify-end gap-4 text-[10px] text-muted-foreground pt-0.5">
+                <span>{lang === "pt" ? "Subtotal" : lang === "es" ? "Subtotal" : "Subtotal"}: <span className="font-semibold text-foreground tabular-nums">{formItemsTotal.toFixed(2)}</span></span>
+                <span>{lang === "pt" ? "Taxas" : lang === "es" ? "Tasas" : "Fees"}: <span className="font-semibold text-foreground tabular-nums">{formItemsFeeTotal.toFixed(2)}</span></span>
+              </div>
+            )}
           </div>
 
           {/* Due mode selector */}
@@ -962,11 +1076,11 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
 
           <div className="flex gap-2 justify-end pt-1">
             <Button variant="ghost" size="sm" className="h-7 text-xs"
-              onClick={() => { setShowForm(false); setFormDesc(""); setFormAmount(""); setFormFee(""); setFormFeeManual(false); setFormDue(""); setFormDueMode("end"); }}>
+              onClick={() => { setShowForm(false); setFormItems([blankItem()]); setFormFeeManual({}); setFormDue(""); setFormDueMode("end"); }}>
               {tp.chargeCancel}
             </Button>
             <Button size="sm" className="h-7 text-xs" onClick={() => addMutation.mutate()}
-              disabled={addMutation.isPending || !formAmount || (formDueMode === "date" && !formDue)}>
+              disabled={addMutation.isPending || formItemsTotal <= 0 || (formDueMode === "date" && !formDue)}>
               {addMutation.isPending ? tp.chargeSaving : tp.chargeSave}
             </Button>
           </div>
