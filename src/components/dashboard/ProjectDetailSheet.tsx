@@ -59,6 +59,13 @@ const STAGE_COLORS: Record<Stage, string> = {
 
 type InvoiceStatus = "pending" | "paid" | "partial" | "overdue" | "cancelled";
 
+interface ProjectInvoiceItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
+  fee: number;
+}
+
 interface ProjectInvoice {
   id: string;
   project_id: string;
@@ -72,7 +79,11 @@ interface ProjectInvoice {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  fee_amount?: number;
+  items?: ProjectInvoiceItem[] | null;
+  charge_timing?: "end" | "date" | "checkout" | null;
 }
+
 
 // Static style configs — colors only, labels come from translations
 const INVOICE_STATUS_STYLES: Record<InvoiceStatus, { color: string; bg: string; icon: typeof CheckCircle2 }> = {
