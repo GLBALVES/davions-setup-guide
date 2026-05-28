@@ -414,10 +414,10 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
             <div className="flex flex-col gap-3">
               <h4 className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-light">{t.yourData}</h4>
               <div className="grid grid-cols-12 gap-3">
-                <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pf.birthdate} onChange={(v: string) => setPf({ ...pf, birthdate: formatDateBR(v) })} placeholder="01/01/1990" />
+                <Field className="col-span-12 sm:col-span-7" label={t.name} value={pf.name} onChange={(v: string) => setPf({ ...pf, name: v })} />
                 <Field className="col-span-12 sm:col-span-5" label={t.cpf} value={pf.document} onChange={(v: string) => setPf({ ...pf, document: v })} placeholder="000.000.000-00" />
                 <Field className="col-span-12 sm:col-span-7" label={t.motherName} value={pf.mother_name} onChange={(v: string) => setPf({ ...pf, mother_name: v })} />
-                <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pf.birthdate} onChange={(v: string) => setPf({ ...pf, birthdate: v })} placeholder="01/01/1990" />
+                <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pf.birthdate} onChange={(v: string) => setPf({ ...pf, birthdate: formatDateBR(v) })} placeholder="01/01/1990" />
                 <Field className="col-span-6 sm:col-span-4" label={t.monthlyIncome} value={pf.monthly_income} onChange={(v: string) => setPf({ ...pf, monthly_income: v })} type="number" />
                 <Field className="col-span-2 sm:col-span-2" label={t.ddd} value={pf.phone.ddd} onChange={(v: string) => setPf({ ...pf, phone: { ...pf.phone, ddd: v } })} placeholder="11" />
                 <Field className="col-span-10 sm:col-span-6" label={t.phone} value={pf.phone.number} onChange={(v: string) => setPf({ ...pf, phone: { ...pf.phone, number: v } })} placeholder="999999999" />
