@@ -126,6 +126,10 @@ export default function InvoicePay() {
                 </p>
               )}
 
+              {error && (
+                <p className="text-xs text-destructive text-center">{error}</p>
+              )}
+
               <Button onClick={pay} disabled={redirecting} className="h-11 text-xs tracking-widest uppercase">
                 {redirecting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
