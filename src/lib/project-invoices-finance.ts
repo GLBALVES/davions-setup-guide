@@ -1,0 +1,79 @@
+// Helpers to merge project_invoices into the finance pages.
+// project_invoices.amount/paid_amount are stored in MAJOR units (e.g. 350.00).
+// The finance pages work in CENTS. All amounts returned here are in CENTS.
+
+import { supabase } from "@/integrations/supabase/client";
+
+export interface PaidInvoice {
+  id: string;
+  project_id: string | null;
+  description: string | null;
+  paid_cents: number;
+  paid_at: string; // ISO
+}
+
+export interface OutstandingInvoice {
+  id: string;
+  project_id: string | null;
+  description: string | null;
+  amount_cents: number;
+  paid_cents: number;
+  balance_cents: number;
+  status: string; // pending | partial
+  due_date: string | null;
+  created_at: string;
+}
+
+export async function fetchInvoiceFinance(photographerId: string): Promise<{
+  paid: PaidInvoice[];
+  outstanding: OutstandingInvoice[];
+}> {
+  const { data } = await supabase
+    .from("project_invoices")
+    .select("id, project_id, description, amount, paid_amount, status, paid_at, due_date, created_at")
+    .eq("photographer_id", photographerId);
+
+  const paid: PaidInvoice[] = [];
+  const outstanding: OutstandingInvoice[] = [];
+
+  for (const inv of (data ?? []) as any[]) {
+    const amount_cents = Math.round(Number(inv.amount ?? 0) * 100);
+    const paid_cents = Math.round(Number(inv.paid_amount ?? 0) * 100);
+    if (paid_cents > 0 && inv.paid_at) {
+      paid.push({
+        id: inv.id,
+        project_id: inv.project_id ?? null,
+        description: inv.description ?? null,
+        paid_cents,
+        paid_at: inv.paid_at,
+      });
+    }
+    if (inv.status === "pending" || inv.status === "partial") {
+      outstanding.push({
+        id: inv.id,
+        project_id: inv.project_id ?? null,
+        description: inv.description ?? null,
+        amount_cents,
+        paid_cents,
+        balance_cents: Math.max(0, amount_cents - paid_cents),
+        status: inv.status,
+        due_date: inv.due_date ?? null,
+        created_at: inv.created_at,
+      });
+    }
+  }
+
+  return { paid, outstanding };
+}
+
+export function sumPaidByMonth(paid: PaidInvoice[], monthStr: string): number {
+  return paid
+    .filter((p) => (p.paid_at ?? "").startsWith(monthStr))
+    .reduce((s, p) => s + p.paid_cents, 0);
+}
+
+export function sumOutstandingByMonth(items: OutstandingInvoice[], monthStr: string): number {
+  return items
+    .filter((p) => (p.due_date || p.created_at).startsWith(monthStr))
+    .reduce((s, p) => s + p.balance_cents, 0);
+}
