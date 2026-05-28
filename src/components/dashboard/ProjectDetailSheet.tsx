@@ -639,12 +639,30 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
 
   const addMutation = useMutation({
     mutationFn: async () => {
+      const cleanItems = formItems
+        .map((it) => ({
+          description: it.description.trim(),
+          quantity: parseFloat(it.quantity) || 0,
+          unit_price: parseFloat(it.unit_price) || 0,
+          fee: parseFloat(it.fee) || 0,
+        }))
+        .filter((it) => it.quantity > 0 && it.unit_price > 0);
+
+      if (cleanItems.length === 0) throw new Error("no_items");
+
+      const totalAmount = cleanItems.reduce((s, it) => s + it.quantity * it.unit_price, 0);
+      const totalFee = cleanItems.reduce((s, it) => s + it.fee, 0);
+      const summaryDesc = cleanItems.length === 1
+        ? (cleanItems[0].description || tp.chargeDescription)
+        : `${cleanItems.length} ${(lang === "pt" ? "itens" : lang === "es" ? "ítems" : "items")}`;
+
       const { error } = await supabase.from("project_invoices" as any).insert({
         project_id:      project.id,
         photographer_id: photographerId,
-        description:     formDesc.trim() || tp.chargeDescription,
-        amount:          parseFloat(formAmount) || 0,
-        fee_amount:      parseFloat(formFee) || 0,
+        description:     summaryDesc,
+        amount:          totalAmount,
+        fee_amount:      totalFee,
+        items:           cleanItems,
         due_date:        formDueMode === "date" && formDue ? formDue : null,
         status:          "pending",
       } as any);
@@ -654,9 +672,13 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       queryClient.invalidateQueries({ queryKey: qKey });
       toast.success(tp.chargeAdded);
       setShowForm(false);
-      setFormDesc(""); setFormAmount(""); setFormFee(""); setFormFeeManual(false); setFormDue(""); setFormDueMode("end"); setFormStatus("pending"); setFormPaid("");
+      setFormItems([blankItem()]);
+      setFormFeeManual({});
+      setFormDue(""); setFormDueMode("end"); setFormStatus("pending"); setFormPaid("");
     },
-    onError: () => toast.error(tp.errorAddingCharge),
+    onError: (e: any) => toast.error(e?.message === "no_items"
+      ? (lang === "pt" ? "Adicione ao menos um item" : lang === "es" ? "Agrega al menos un ítem" : "Add at least one item")
+      : tp.errorAddingCharge),
   });
 
   const updateStatusMutation = useMutation({
