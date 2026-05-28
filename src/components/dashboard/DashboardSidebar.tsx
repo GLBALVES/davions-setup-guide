@@ -214,7 +214,6 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       ],
     },
     {
-    {
       stableKey: "Workflows",
       title: t.nav.workflows,
       icon: GitBranch,
