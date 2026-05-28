@@ -114,7 +114,6 @@ export default function InvoicePay() {
           )}
 
           {!loading && info && info.status !== "paid" && status !== "paid" && (
-            <>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
                   Descrição
@@ -122,12 +121,29 @@ export default function InvoicePay() {
                 <span className="text-sm">{info.description}</span>
               </div>
 
-              <div className="flex items-baseline justify-between border-t border-border/60 pt-4">
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Valor
-                </span>
-                <span className="text-2xl font-light">{fmt(due)}</span>
-              </div>
+              {Array.isArray(info.items) && info.items.length > 0 && (
+                <div className="flex flex-col gap-1.5 border-t border-border/60 pt-4">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    Itens
+                  </span>
+                  <div className="flex flex-col divide-y divide-border/40 rounded-sm border border-border/40">
+                    {info.items.map((it, idx) => {
+                      const qty = Number(it.quantity) || 0;
+                      const unit = Number(it.unit_price) || 0;
+                      const lineTotal = qty * unit;
+                      return (
+                        <div key={idx} className="flex items-center gap-2 px-2.5 py-1.5 text-xs">
+                          <span className="text-muted-foreground tabular-nums shrink-0">{qty}×</span>
+                          <span className="flex-1 truncate">{it.description || "—"}</span>
+                          <span className="text-muted-foreground tabular-nums shrink-0">{fmt(unit)}</span>
+                          <span className="font-medium tabular-nums shrink-0 w-20 text-right">{fmt(lineTotal)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
 
               {status === "cancelled" && (
                 <p className="text-xs text-amber-600 text-center">
