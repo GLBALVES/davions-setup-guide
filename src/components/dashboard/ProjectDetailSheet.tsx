@@ -3553,7 +3553,29 @@ function ProjectBriefingSubsection({
   const sessionId = data?.sessionId ?? null;
   const briefing = data?.briefing ?? null;
 
-  const shareOrigin = "https://app.davions.com";
+  const { data: photographerSiteBase } = useQuery<string | null>({
+    queryKey: ["photographer-public-site-base", photographerId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("photographers")
+        .select("custom_domain, store_slug")
+        .eq("id", photographerId)
+        .maybeSingle();
+      if (error) throw error;
+
+      const customDomain = ((data as any)?.custom_domain as string | null)?.trim();
+      if (customDomain) {
+        const clean = customDomain.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+        return `https://${clean}`;
+      }
+
+      const storeSlug = ((data as any)?.store_slug as string | null)?.trim();
+      if (storeSlug) return `${window.location.origin}/vitrine/${storeSlug}`;
+      return window.location.origin;
+    },
+    enabled: !!photographerId,
+    staleTime: 60_000,
+  });
 
   const ensureBookingMutation = useMutation({
     mutationFn: async (): Promise<string> => {
@@ -3610,6 +3632,9 @@ function ProjectBriefingSubsection({
 
   const [pendingShareBookingId, setPendingShareBookingId] = useState<string | null>(null);
   const effectiveBookingId = bookingId ?? pendingShareBookingId;
+  const briefingShareUrl = effectiveBookingId
+    ? `${photographerSiteBase ?? window.location.origin}/booking/${effectiveBookingId}/confirm?step=briefing`
+    : "";
 
   const attachMutation = useMutation({
     mutationFn: async (briefingId: string) => {
@@ -3732,7 +3757,7 @@ function ProjectBriefingSubsection({
         <BriefingShareDialog
           open={shareOpen}
           onClose={() => setShareOpen(false)}
-          url={`${shareOrigin}/booking/${effectiveBookingId}/confirm?step=briefing`}
+          url={briefingShareUrl}
           briefingName={briefing.name}
         />
       )}
