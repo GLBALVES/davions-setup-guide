@@ -664,6 +664,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
         fee_amount:      totalFee,
         items:           cleanItems,
         due_date:        formDueMode === "date" && formDue ? formDue : null,
+        charge_timing:   formDueMode,
         status:          "pending",
       } as any);
       if (error) throw error;
