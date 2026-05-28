@@ -191,6 +191,16 @@ const COPY = {
   },
 };
 
+/** Format raw digits as dd/mm/yyyy while typing */
+function formatDateBR(input: string): string {
+  const d = input.replace(/\D/g, "").slice(0, 8);
+  if (d.length <= 2) return d;
+  if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`;
+  return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
+}
+
+
+
 interface FieldProps {
   label: string;
   value: string;
@@ -407,7 +417,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
                 <Field className="col-span-12 sm:col-span-7" label={t.name} value={pf.name} onChange={(v: string) => setPf({ ...pf, name: v })} />
                 <Field className="col-span-12 sm:col-span-5" label={t.cpf} value={pf.document} onChange={(v: string) => setPf({ ...pf, document: v })} placeholder="000.000.000-00" />
                 <Field className="col-span-12 sm:col-span-7" label={t.motherName} value={pf.mother_name} onChange={(v: string) => setPf({ ...pf, mother_name: v })} />
-                <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pf.birthdate} onChange={(v: string) => setPf({ ...pf, birthdate: v })} placeholder="01/01/1990" />
+                <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pf.birthdate} onChange={(v: string) => setPf({ ...pf, birthdate: formatDateBR(v) })} placeholder="01/01/1990" />
                 <Field className="col-span-6 sm:col-span-4" label={t.monthlyIncome} value={pf.monthly_income} onChange={(v: string) => setPf({ ...pf, monthly_income: v })} type="number" />
                 <Field className="col-span-2 sm:col-span-2" label={t.ddd} value={pf.phone.ddd} onChange={(v: string) => setPf({ ...pf, phone: { ...pf.phone, ddd: v } })} placeholder="11" />
                 <Field className="col-span-10 sm:col-span-6" label={t.phone} value={pf.phone.number} onChange={(v: string) => setPf({ ...pf, phone: { ...pf.phone, number: v } })} placeholder="999999999" />
@@ -430,7 +440,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
                 <Field className="col-span-12 sm:col-span-7" label={t.companyName} value={pj.company_name} onChange={(v: string) => setPj({ ...pj, company_name: v })} />
                 <Field className="col-span-12 sm:col-span-5" label={t.cnpj} value={pj.document} onChange={(v: string) => setPj({ ...pj, document: v })} placeholder="00.000.000/0000-00" />
                 <Field className="col-span-12 sm:col-span-7" label={t.tradingName} value={pj.trading_name} onChange={(v: string) => setPj({ ...pj, trading_name: v })} />
-                <Field className="col-span-6 sm:col-span-5" label={t.foundingDate} value={pj.founding_date} onChange={(v: string) => setPj({ ...pj, founding_date: v })} placeholder="01/01/2020" />
+                <Field className="col-span-6 sm:col-span-5" label={t.foundingDate} value={pj.founding_date} onChange={(v: string) => setPj({ ...pj, founding_date: formatDateBR(v) })} placeholder="01/01/2020" />
                 <Field className="col-span-12 sm:col-span-4" label={t.annualRevenue} value={pj.annual_revenue} onChange={(v: string) => setPj({ ...pj, annual_revenue: v })} type="number" />
                 <Field className="col-span-2" label={t.ddd} value={pj.phone.ddd} onChange={(v: string) => setPj({ ...pj, phone: { ...pj.phone, ddd: v } })} placeholder="11" />
                 <Field className="col-span-10 sm:col-span-6" label={t.phone} value={pj.phone.number} onChange={(v: string) => setPj({ ...pj, phone: { ...pj.phone, number: v } })} />
@@ -447,7 +457,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
                 <Field className="col-span-12 sm:col-span-7" label={t.name} value={pj.partner.name} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, name: v } })} />
                 <Field className="col-span-12 sm:col-span-5" label={t.cpf} value={pj.partner.document} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, document: v } })} />
                 <Field className="col-span-12 sm:col-span-7" label={t.motherName} value={pj.partner.mother_name} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, mother_name: v } })} />
-                <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pj.partner.birthdate} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, birthdate: v } })} placeholder="01/01/1990" />
+                <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pj.partner.birthdate} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, birthdate: formatDateBR(v) } })} placeholder="01/01/1990" />
                 <Field className="col-span-6 sm:col-span-4" label={t.monthlyIncome} value={pj.partner.monthly_income} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, monthly_income: v } })} type="number" />
                 <Field className="col-span-12 sm:col-span-8" label={t.email} value={pj.partner.email} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, email: v } })} type="email" />
                 <Field className="col-span-2" label={t.ddd} value={pj.partner.phone.ddd} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, phone: { ...pj.partner.phone, ddd: v } } })} />
