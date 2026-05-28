@@ -84,6 +84,7 @@ export default function FinanceDashboard() {
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
   const [rows, setRows] = useState<BookingRow[]>([]);
+  const [paidInvoices, setPaidInvoices] = useState<PaidInvoice[]>([]);
   const [loading, setLoading] = useState(true);
 
   const QUICK_LINKS = [
