@@ -325,7 +325,6 @@ const AddressBlock = ({
   );
 
 
-);
 
 export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuccess }: Props) {
   const { user } = useAuth();
