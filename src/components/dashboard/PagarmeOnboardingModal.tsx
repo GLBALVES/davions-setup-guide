@@ -292,7 +292,9 @@ const AddressBlock = ({
 }: {
   value: typeof DEFAULT_ADDRESS;
   onChange: (v: typeof DEFAULT_ADDRESS) => void;
+  labels: { zip: string; street: string; number: string; complement: string; neighborhood: string; city: string; state: string };
 }) => {
+
   const handleCepChange = async (v: string) => {
     const masked = formatCEP(v);
     const next = { ...value, zip_code: masked };
