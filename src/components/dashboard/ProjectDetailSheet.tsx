@@ -460,16 +460,20 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
   const addPaymentLabel = lang === "pt" ? "Adicionar pagamento" : lang === "es" ? "Agregar pago" : "Add payment";
   const editLabel = lang === "pt" ? "Editar" : lang === "es" ? "Editar" : "Edit";
 
-  // Form state
-  const [formDesc, setFormDesc]       = useState("");
-  const [formAmount, setFormAmount]   = useState("");
-  const [formFee, setFormFee]         = useState("");
-  const [formFeeManual, setFormFeeManual] = useState(false);
+  // Form state — multiple line items
+  type ChargeItem = { description: string; quantity: string; unit_price: string; fee: string };
+  const blankItem = (): ChargeItem => ({ description: "", quantity: "1", unit_price: "", fee: "" });
+  const [formItems, setFormItems] = useState<ChargeItem[]>([blankItem()]);
+  const [formFeeManual, setFormFeeManual] = useState<Record<number, boolean>>({});
   const [formDue, setFormDue]         = useState("");
   const [formDueMode, setFormDueMode] = useState<"end" | "date">("end");
   const [formStatus, setFormStatus]   = useState<InvoiceStatus>("pending");
   const [formPaid, setFormPaid]       = useState("");
   const [shareInvoice, setShareInvoice] = useState<ProjectInvoice | null>(null);
+
+  const itemLineTotal = (it: ChargeItem) => (parseFloat(it.quantity) || 0) * (parseFloat(it.unit_price) || 0);
+  const formItemsTotal = formItems.reduce((s, it) => s + itemLineTotal(it), 0);
+  const formItemsFeeTotal = formItems.reduce((s, it) => s + (parseFloat(it.fee) || 0), 0);
 
   // Edit form state
   const [editDesc, setEditDesc] = useState("");
