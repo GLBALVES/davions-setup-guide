@@ -243,45 +243,7 @@ async function lookupCEP(cep: string): Promise<Partial<typeof DEFAULT_ADDRESS> |
       try {
         const ibgeRes = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/municipios/${data.ibge}`);
         const ibgeData = await ibgeRes.json();
-);
-
-const PhoneField = ({
-  label,
-  ddd,
-  number,
-  onDddChange,
-  onNumberChange,
-  className = "",
-}: {
-  label: string;
-  ddd: string;
-  number: string;
-  onDddChange: (v: string) => void;
-  onNumberChange: (v: string) => void;
-  className?: string;
-}) => (
-  <div className={`flex flex-col gap-1.5 ${className}`}>
-    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-light">{label}</Label>
-    <div className="flex items-stretch rounded-md border border-input focus-within:ring-1 focus-within:ring-ring overflow-hidden bg-background">
-      <span className="flex items-center pl-2.5 pr-1 text-xs text-muted-foreground select-none">(</span>
-      <Input
-        value={ddd}
-        onChange={(e) => onDddChange(e.target.value.replace(/\D/g, "").slice(0, 2))}
-        placeholder="11"
-        inputMode="numeric"
-        className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 w-9 text-center px-0"
-      />
-      <span className="flex items-center pl-1 pr-2.5 text-xs text-muted-foreground select-none">)</span>
-      <Input
-        value={number}
-        onChange={(e) => onNumberChange(formatPhoneNumberBR(e.target.value))}
-        placeholder="99999-9999"
-        inputMode="numeric"
-        className="h-9 text-sm border-0 rounded-none focus-visible:ring-0 flex-1"
-      />
-    </div>
-  </div>
-);
+        if (ibgeData?.nome) city = ibgeData.nome;
 
       } catch {
         // ignore
