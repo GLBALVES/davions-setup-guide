@@ -661,14 +661,9 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   }, [user]);
 
   const translatedGroups = buildGroups(t);
+  // All menus are granted to every user — no permission/admin filtering.
+  const filterItems = (items: MenuItem[]): MenuItem[] => items;
 
-  // Filter a group's items based on permissions
-  const filterItems = (items: MenuItem[]): MenuItem[] => {
-    if (permsLoading) return items; // show all while loading
-    // Hide adminOnly items from non-admins
-    const filtered = items.filter((item) => !item.adminOnly || isAdmin);
-    if (isOwner) return filtered;      // owner sees everything (except adminOnly)
-    return filtered.filter((item) => !item.permKey || can(item.permKey));
   };
 
   const [pinnedKeys, setPinnedKeys] = useState<string[]>([]);
