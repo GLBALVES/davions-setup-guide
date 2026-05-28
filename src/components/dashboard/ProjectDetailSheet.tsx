@@ -583,16 +583,17 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
       businessCountry
     );
 
-  // Auto-compute charge fee from effective tax rate unless manually edited
+  // Auto-compute per-item fee from effective tax rate unless manually edited
   useEffect(() => {
-    if (formFeeManual || !sessionTaxRate) return;
-    const amt = parseFloat(formAmount);
-    if (!isFinite(amt) || amt <= 0) {
-      setFormFee("");
-      return;
-    }
-    setFormFee((amt * sessionTaxRate / 100).toFixed(2));
-  }, [formAmount, sessionTaxRate, formFeeManual]);
+    if (!sessionTaxRate) return;
+    setFormItems((prev) => prev.map((it, idx) => {
+      if (formFeeManual[idx]) return it;
+      const lineTotal = (parseFloat(it.quantity) || 0) * (parseFloat(it.unit_price) || 0);
+      const fee = lineTotal > 0 ? (lineTotal * sessionTaxRate / 100).toFixed(2) : "";
+      return it.fee === fee ? it : { ...it, fee };
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(formItems.map((i) => [i.quantity, i.unit_price])), sessionTaxRate, formFeeManual]);
   const { data: projectPayments = [] } = useQuery<ProjectPayment[]>({
     queryKey: ["project-payments", project.id],
     queryFn: async () => {
