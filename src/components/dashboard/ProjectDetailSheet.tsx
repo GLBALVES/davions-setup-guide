@@ -3550,6 +3550,26 @@ function ProjectBriefingSubsection({
   const sessionId = data?.sessionId ?? null;
   const briefing = data?.briefing ?? null;
 
+  const { data: photographerSite } = useQuery({
+    queryKey: ["photographer-share-domain", photographerId],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("photographers")
+        .select("custom_domain, store_slug")
+        .eq("id", photographerId)
+        .maybeSingle();
+      return data as { custom_domain: string | null; store_slug: string | null } | null;
+    },
+    enabled: !!photographerId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const shareOrigin = (() => {
+    const cd = photographerSite?.custom_domain?.trim();
+    if (cd) return `https://${cd.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
+    return "https://app.davions.com";
+  })();
+
   const attachMutation = useMutation({
     mutationFn: async (briefingId: string) => {
       if (!sessionId) throw new Error("Session not found");
@@ -3660,7 +3680,7 @@ function ProjectBriefingSubsection({
         <BriefingShareDialog
           open={shareOpen}
           onClose={() => setShareOpen(false)}
-          url={`https://app.davions.com/booking-success?booking=${bookingId ?? ""}&session=${sessionId}`}
+          url={`${shareOrigin}/booking-success?booking=${bookingId ?? ""}&session=${sessionId}`}
           briefingName={briefing.name}
         />
       )}
