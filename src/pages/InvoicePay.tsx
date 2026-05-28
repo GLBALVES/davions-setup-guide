@@ -4,6 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, AlertTriangle, ShieldCheck } from "lucide-react";
 
+interface InvoiceItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
+  fee?: number;
+}
+
 interface InvoiceInfo {
   id: string;
   description: string;
@@ -11,7 +18,9 @@ interface InvoiceInfo {
   paid_amount: number;
   status: string;
   studio_name: string | null;
+  items?: InvoiceItem[];
 }
+
 
 export default function InvoicePay() {
   const { invoiceId } = useParams<{ invoiceId: string }>();
