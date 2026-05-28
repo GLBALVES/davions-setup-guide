@@ -234,6 +234,8 @@ const BookingConfirm = () => {
       if (fnResult?.availability) setAvail(fnResult.availability as AvailData);
       if (fnResult?.photographer) setPhotographer(fnResult.photographer as PhotographerData);
       if (Array.isArray(fnResult?.contractCustomFields)) setContractCustomFields(fnResult.contractCustomFields);
+      if (fnResult?.briefing) setBriefing(fnResult.briefing as BriefingData);
+      if (fnResult?.alreadySubmittedBriefing) setAlreadySubmittedBriefing(true);
 
       if (fnResult?.client) {
         const existingClient = fnResult.client;
