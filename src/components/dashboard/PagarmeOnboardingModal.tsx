@@ -350,13 +350,13 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
         document: pj.document,
         company_name: pj.company_name,
         trading_name: pj.trading_name,
-        annual_revenue: Number(pj.annual_revenue),
+        annual_revenue: Number(pj.annual_revenue.replace(/\D/g, "")) / 100,
         founding_date: pj.founding_date,
         phone: pj.phone,
         address: pj.address,
         managing_partner: {
           ...pj.partner,
-          monthly_income: Number(pj.partner.monthly_income),
+          monthly_income: Number(pj.partner.monthly_income.replace(/\D/g, "")) / 100,
         },
         bank,
       };
