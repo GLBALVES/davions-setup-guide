@@ -62,7 +62,7 @@ import Personalize from "./pages/dashboard/Personalize";
 import CustomDomainDocs from "./pages/dashboard/CustomDomainDocs";
 import LightroomPlugin from "./pages/dashboard/LightroomPlugin";
 import LightroomPluginHelp from "./pages/dashboard/LightroomPluginHelp";
-import LightroomPluginHelp from "./pages/dashboard/LightroomPluginHelp";
+import ContractEditor from "./pages/dashboard/ContractEditor";
 import ContractEditor from "./pages/dashboard/ContractEditor";
 import Schedule from "./pages/dashboard/Schedule";
 import Clients from "./pages/dashboard/Clients";
