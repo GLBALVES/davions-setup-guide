@@ -102,9 +102,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useStudioPermissions } from "@/hooks/useStudioPermissions";
 
-const RESTRICTED_ADMINS: Record<string, string[]> = {
-  "me@palomaschell.com": ["AI", "Finance", "CRM", "Workflows", "Settings", "My Features"],
-};
+// All menus are visible to every user — no per-email restrictions.
+const RESTRICTED_ADMINS: Record<string, string[]> = {};
+
 import { useLanguage } from "@/contexts/LanguageContext";
 
 type MenuItem = {
