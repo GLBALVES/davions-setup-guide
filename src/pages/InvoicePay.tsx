@@ -80,7 +80,7 @@ export default function InvoicePay() {
             </div>
           )}
 
-          {!loading && error && (
+          {!loading && error && !info && (
             <div className="flex flex-col items-center gap-2 py-6 text-center">
               <AlertTriangle className="h-6 w-6 text-destructive" />
               <p className="text-sm text-foreground">{error}</p>
@@ -124,6 +124,10 @@ export default function InvoicePay() {
                 <p className="text-xs text-amber-600 text-center">
                   Pagamento cancelado. Tente novamente quando quiser.
                 </p>
+              )}
+
+              {error && (
+                <p className="text-xs text-destructive text-center">{error}</p>
               )}
 
               <Button onClick={pay} disabled={redirecting} className="h-11 text-xs tracking-widest uppercase">
