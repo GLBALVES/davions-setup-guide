@@ -212,6 +212,14 @@ function formatCurrencyBR(input: string): string {
   }).format(cents / 100);
 }
 
+/** Format phone number as Brazilian mobile/fixed line while typing */
+function formatPhoneNumberBR(input: string): string {
+  const d = input.replace(/\D/g, "").slice(0, 9);
+  if (d.length <= 4) return d;
+  if (d.length <= 8) return `${d.slice(0, 4)}-${d.slice(4)}`;
+  return `${d.slice(0, 5)}-${d.slice(5)}`;
+}
+
 
 
 
