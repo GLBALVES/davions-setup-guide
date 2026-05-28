@@ -803,6 +803,23 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
     setOpenGroups((prev) => ({ ...prev, [stableKey]: !prev[stableKey] }));
   };
 
+  // Keep the group containing the active route expanded
+  useEffect(() => {
+    setOpenGroups((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      groups.forEach((g) => {
+        if (groupHasActive(g) && !next[g.stableKey]) {
+          next[g.stableKey] = true;
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, location.search]);
+
+
   const renderRegularItem = (item: MenuItem, groupTitle: string) => {
     const pinned = isPinned(groupTitle, item.title);
     const badgeCount = item.badgeKey ? badges[item.badgeKey] : 0;
