@@ -715,7 +715,6 @@ const BookingConfirm = () => {
     }
     return steps;
   };
-  };
 
   const steps = buildSteps();
   const activeStep = steps[currentStep] ?? steps[0];
