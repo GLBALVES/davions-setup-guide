@@ -1038,8 +1038,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
           <div className="flex flex-col gap-1.5">
             <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">
               {lang === "pt" ? "Vencimento" : lang === "es" ? "Vencimiento" : "Due"}
-            </Label>
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5">
               <button
                 type="button"
                 onClick={() => { setFormDueMode("end"); setFormDue(""); }}
@@ -1054,6 +1053,18 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
               </button>
               <button
                 type="button"
+                onClick={() => { setFormDueMode("checkout"); setFormDue(""); }}
+                className={cn(
+                  "text-[10px] px-2 py-1.5 rounded-sm border transition-colors",
+                  formDueMode === "checkout"
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {lang === "pt" ? "Cobrar no checkout" : lang === "es" ? "Cobrar en checkout" : "Charge at checkout"}
+              </button>
+              <button
+                type="button"
                 onClick={() => setFormDueMode("date")}
                 className={cn(
                   "text-[10px] px-2 py-1.5 rounded-sm border transition-colors",
@@ -1064,6 +1075,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
               >
                 {lang === "pt" ? "Definir vencimento" : lang === "es" ? "Definir vencimiento" : "Set due date"}
               </button>
+            </div>
             </div>
             {formDueMode === "date" && (
               <Input
