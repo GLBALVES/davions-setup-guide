@@ -144,6 +144,7 @@ const App = () => {
                 <Route path="/shop" element={<PublicShopPage mode="custom-domain" />} />
                 <Route path="/blog" element={<PublicBlogListPage mode="custom-domain" />} />
                 <Route path="/blog/:postSlug" element={<PublicBlogPostPage mode="custom-domain" />} />
+                <Route path="/pay/invoice/:invoiceId" element={<InvoicePay />} />
                 <Route path="*" element={<CustomDomainStore />} />
               </>
             ) : (
