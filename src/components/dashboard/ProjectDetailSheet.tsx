@@ -3472,6 +3472,7 @@ export function ProjectDetailSheet({
 }
 
 function ProjectBriefingSubsection({
+  projectId,
   bookingId,
   sessionType,
   photographerId,
@@ -3479,12 +3480,14 @@ function ProjectBriefingSubsection({
   labelTitle,
   emptyText,
 }: {
+  projectId: string;
   bookingId: string | null;
   sessionType?: string | null;
   photographerId: string;
   briefings: { id: string; name: string }[];
   labelTitle: string;
   emptyText: string;
+}) {
 }) {
   const [open, setOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
