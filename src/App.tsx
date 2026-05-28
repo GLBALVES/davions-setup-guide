@@ -58,7 +58,7 @@ import EmailOneoffEditor from "./pages/dashboard/EmailOneoffEditor";
 import PushNotifications from "./pages/dashboard/PushNotifications";
 import Chat from "./pages/dashboard/Chat";
 import AIAgents from "./pages/dashboard/AIAgents";
-import Chat from "./pages/dashboard/Chat";
+import Personalize from "./pages/dashboard/Personalize";
 import Personalize from "./pages/dashboard/Personalize";
 import CustomDomainDocs from "./pages/dashboard/CustomDomainDocs";
 import LightroomPlugin from "./pages/dashboard/LightroomPlugin";
