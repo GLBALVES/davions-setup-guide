@@ -919,13 +919,54 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
             </div>
           </div>
 
+          {/* Due mode selector */}
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">
+              {lang === "pt" ? "Vencimento" : lang === "es" ? "Vencimiento" : "Due"}
+            </Label>
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                type="button"
+                onClick={() => { setFormDueMode("end"); setFormDue(""); }}
+                className={cn(
+                  "text-[10px] px-2 py-1.5 rounded-sm border transition-colors",
+                  formDueMode === "end"
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {lang === "pt" ? "Cobrar ao final" : lang === "es" ? "Cobrar al final" : "Charge at end"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormDueMode("date")}
+                className={cn(
+                  "text-[10px] px-2 py-1.5 rounded-sm border transition-colors",
+                  formDueMode === "date"
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {lang === "pt" ? "Definir vencimento" : lang === "es" ? "Definir vencimiento" : "Set due date"}
+              </button>
+            </div>
+            {formDueMode === "date" && (
+              <Input
+                type="date"
+                value={formDue}
+                onChange={(e) => setFormDue(e.target.value)}
+                className="h-7 text-xs mt-1"
+              />
+            )}
+          </div>
+
           <div className="flex gap-2 justify-end pt-1">
             <Button variant="ghost" size="sm" className="h-7 text-xs"
-              onClick={() => { setShowForm(false); setFormDesc(""); setFormAmount(""); setFormFee(""); setFormFeeManual(false); }}>
+              onClick={() => { setShowForm(false); setFormDesc(""); setFormAmount(""); setFormFee(""); setFormFeeManual(false); setFormDue(""); setFormDueMode("end"); }}>
               {tp.chargeCancel}
             </Button>
             <Button size="sm" className="h-7 text-xs" onClick={() => addMutation.mutate()}
-              disabled={addMutation.isPending || !formAmount}>
+              disabled={addMutation.isPending || !formAmount || (formDueMode === "date" && !formDue)}>
               {addMutation.isPending ? tp.chargeSaving : tp.chargeSave}
             </Button>
           </div>
