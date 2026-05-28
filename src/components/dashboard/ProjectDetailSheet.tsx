@@ -3678,13 +3678,14 @@ function ProjectBriefingSubsection({
           briefingId={briefing.id}
         />
       )}
-      {briefing && sessionId && (
+      {briefing && sessionId && bookingId && (
         <BriefingShareDialog
           open={shareOpen}
           onClose={() => setShareOpen(false)}
-          url={`${shareOrigin}/booking/${bookingId ?? ""}/confirm?step=briefing`}
+          url={`https://app.davions.com/booking/${bookingId}/confirm?step=briefing`}
           briefingName={briefing.name}
         />
+      )}
       )}
     </div>
   );
