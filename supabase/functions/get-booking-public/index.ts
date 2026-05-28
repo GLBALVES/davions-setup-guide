@@ -93,7 +93,20 @@ serve(async (req) => {
         .select("body")
         .eq("id", session.contract_id)
         .maybeSingle();
-      if (contractTemplate?.body) session.contract_text = contractTemplate.body;
+    let briefing: any = null;
+    let alreadySubmittedBriefing = false;
+    if (session?.briefing_id) {
+      const [{ data: brData }, { data: existingResp }] = await Promise.all([
+        supabase.from("briefings").select("id, name, questions").eq("id", session.briefing_id).single(),
+        supabase
+          .from("booking_briefing_responses")
+          .select("id")
+          .eq("booking_id", booking.id)
+          .eq("briefing_id", session.briefing_id)
+          .maybeSingle(),
+      ]);
+      briefing = brData ?? null;
+      alreadySubmittedBriefing = !!existingResp;
     }
 
     return new Response(
@@ -104,6 +117,8 @@ serve(async (req) => {
         photographer: photographerRes.data,
         client: clientRes.data,
         contractCustomFields: customFieldsRes.data ?? [],
+        briefing,
+        alreadySubmittedBriefing,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
