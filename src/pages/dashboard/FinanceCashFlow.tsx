@@ -11,6 +11,7 @@ import {
 import { format, startOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getBillableTaxRate } from "@/lib/tax-utils";
+import { fetchInvoiceFinance, sumPaidByMonth, sumOutstandingByMonth, type PaidInvoice, type OutstandingInvoice } from "@/lib/project-invoices-finance";
 
 interface BookingRow {
   created_at: string;
