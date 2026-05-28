@@ -3686,7 +3686,6 @@ function ProjectBriefingSubsection({
           briefingName={briefing.name}
         />
       )}
-      )}
     </div>
   );
 }
