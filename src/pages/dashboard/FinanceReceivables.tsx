@@ -52,12 +52,14 @@ export default function FinanceReceivables() {
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
   const [rows, setRows] = useState<BookingRow[]>([]);
+  const [invoices, setInvoices] = useState<OutstandingInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   const STATUS_LABEL: Record<string, string> = {
     pending: t.finance.notPaid,
     deposit_paid: t.finance.depositOnly,
+    partial: t.finance.depositOnly,
   };
 
   useEffect(() => {
@@ -89,6 +91,8 @@ export default function FinanceReceivables() {
           business_country: b.photographers?.business_country ?? null,
         })));
       }
+      const inv = await fetchInvoiceFinance(user.id);
+      setInvoices(inv.outstanding);
       setLoading(false);
     })();
   }, [user]);
