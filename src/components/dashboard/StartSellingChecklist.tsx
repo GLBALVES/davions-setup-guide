@@ -276,5 +276,7 @@ export function StartSellingChecklist() {
           )}
         </AnimatePresence>
       </motion.div>
+      </motion.div>
     </AnimatePresence>
   );
+}
