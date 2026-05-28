@@ -407,7 +407,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
           <TabsList className="grid grid-cols-2 w-full">
             <TabsTrigger value="individual">{t.individual}</TabsTrigger>
             <TabsTrigger value="corporation">{t.corporation}</TabsTrigger>
-                <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pf.birthdate} onChange={(v: string) => setPf({ ...pf, birthdate: formatDateBR(v) })} placeholder="01/01/1990" />
+          </TabsList>
 
           {/* ── PF ── */}
           <TabsContent value="individual" className="flex flex-col gap-6 pt-4">
