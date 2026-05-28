@@ -228,6 +228,32 @@ function formatCEP(input: string): string {
   return `${d.slice(0, 5)}-${d.slice(5)}`;
 }
 
+/** Format raw digits as CPF 000.000.000-00 */
+function formatCPF(input: string): string {
+  const d = input.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 3) return d;
+  if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+  if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+}
+
+/** Format raw digits as CNPJ 00.000.000/0000-00 */
+function formatCNPJ(input: string): string {
+  const d = input.replace(/\D/g, "").slice(0, 14);
+  if (d.length <= 2) return d;
+  if (d.length <= 5) return `${d.slice(0, 2)}.${d.slice(2)}`;
+  if (d.length <= 8) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5)}`;
+  if (d.length <= 12) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8)}`;
+  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+}
+
+/** Auto-detect CPF or CNPJ based on digit count */
+function formatDocument(input: string): string {
+  const digits = input.replace(/\D/g, "");
+  if (digits.length <= 11) return formatCPF(input);
+  return formatCNPJ(input);
+}
+
 /** Lookup address from ViaCEP, fallback enrich with IBGE municipalities */
 async function lookupCEP(cep: string): Promise<Partial<typeof DEFAULT_ADDRESS> | null> {
   const digits = cep.replace(/\D/g, "");
@@ -244,7 +270,6 @@ async function lookupCEP(cep: string): Promise<Partial<typeof DEFAULT_ADDRESS> |
         const ibgeRes = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/municipios/${data.ibge}`);
         const ibgeData = await ibgeRes.json();
         if (ibgeData?.nome) city = ibgeData.nome;
-
       } catch {
         // ignore
       }
@@ -259,11 +284,6 @@ async function lookupCEP(cep: string): Promise<Partial<typeof DEFAULT_ADDRESS> |
     return null;
   }
 }
-
-
-
-
-
 interface FieldProps {
   label: string;
   value: string;
@@ -501,7 +521,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
       {/* Titular */}
       <div className="grid grid-cols-12 gap-3">
         <Field className="col-span-12 sm:col-span-7" label={t.holderName} value={bank.holder_name} onChange={(v: string) => setBank({ ...bank, holder_name: v })} />
-        <Field className="col-span-12 sm:col-span-5" label={t.holderDoc} value={bank.holder_document} onChange={(v: string) => setBank({ ...bank, holder_document: v })} placeholder="000.000.000-00" />
+        <Field className="col-span-12 sm:col-span-5" label={t.holderDoc} value={bank.holder_document} onChange={(v: string) => setBank({ ...bank, holder_document: formatDocument(v) })} placeholder="000.000.000-00" />
       </div>
 
       {/* Banco + Agência (com dígito agrupado) */}
@@ -592,7 +612,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
               <h4 className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-light">{t.yourData}</h4>
               <div className="grid grid-cols-12 gap-3">
                 <Field className="col-span-12 sm:col-span-7" label={t.name} value={pf.name} onChange={(v: string) => setPf({ ...pf, name: v })} />
-                <Field className="col-span-12 sm:col-span-5" label={t.cpf} value={pf.document} onChange={(v: string) => setPf({ ...pf, document: v })} placeholder="000.000.000-00" />
+                <Field className="col-span-12 sm:col-span-5" label={t.cpf} value={pf.document} onChange={(v: string) => setPf({ ...pf, document: formatCPF(v) })} placeholder="000.000.000-00" />
                 <Field className="col-span-12 sm:col-span-7" label={t.motherName} value={pf.mother_name} onChange={(v: string) => setPf({ ...pf, mother_name: v })} />
                 <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pf.birthdate} onChange={(v: string) => setPf({ ...pf, birthdate: formatDateBR(v) })} placeholder="01/01/1990" />
                 <Field className="col-span-6 sm:col-span-4" label={t.monthlyIncome} value={pf.monthly_income} onChange={(v: string) => setPf({ ...pf, monthly_income: formatCurrencyBR(v) })} />
@@ -615,7 +635,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
               <h4 className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-light">{t.company}</h4>
               <div className="grid grid-cols-12 gap-3">
                 <Field className="col-span-12 sm:col-span-7" label={t.companyName} value={pj.company_name} onChange={(v: string) => setPj({ ...pj, company_name: v })} />
-                <Field className="col-span-12 sm:col-span-5" label={t.cnpj} value={pj.document} onChange={(v: string) => setPj({ ...pj, document: v })} placeholder="00.000.000/0000-00" />
+                <Field className="col-span-12 sm:col-span-5" label={t.cnpj} value={pj.document} onChange={(v: string) => setPj({ ...pj, document: formatCNPJ(v) })} placeholder="00.000.000/0000-00" />
                 <Field className="col-span-12 sm:col-span-7" label={t.tradingName} value={pj.trading_name} onChange={(v: string) => setPj({ ...pj, trading_name: v })} />
                 <Field className="col-span-6 sm:col-span-5" label={t.foundingDate} value={pj.founding_date} onChange={(v: string) => setPj({ ...pj, founding_date: formatDateBR(v) })} placeholder="01/01/2020" />
                 <Field className="col-span-12 sm:col-span-4" label={t.annualRevenue} value={pj.annual_revenue} onChange={(v: string) => setPj({ ...pj, annual_revenue: formatCurrencyBR(v) })} />
@@ -632,7 +652,7 @@ export function PagarmeOnboardingModal({ open, onOpenChange, defaultEmail, onSuc
               <h4 className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-light">{t.partner}</h4>
               <div className="grid grid-cols-12 gap-3">
                 <Field className="col-span-12 sm:col-span-7" label={t.name} value={pj.partner.name} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, name: v } })} />
-                <Field className="col-span-12 sm:col-span-5" label={t.cpf} value={pj.partner.document} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, document: v } })} />
+                <Field className="col-span-12 sm:col-span-5" label={t.cpf} value={pj.partner.document} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, document: formatCPF(v) } })} placeholder="000.000.000-00" />
                 <Field className="col-span-12 sm:col-span-7" label={t.motherName} value={pj.partner.mother_name} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, mother_name: v } })} />
                 <Field className="col-span-6 sm:col-span-5" label={t.birthdate} value={pj.partner.birthdate} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, birthdate: formatDateBR(v) } })} placeholder="01/01/1990" />
                 <Field className="col-span-6 sm:col-span-4" label={t.monthlyIncome} value={pj.partner.monthly_income} onChange={(v: string) => setPj({ ...pj, partner: { ...pj.partner, monthly_income: formatCurrencyBR(v) } })} />
