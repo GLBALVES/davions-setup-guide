@@ -340,6 +340,9 @@ export default function Revenue() {
                           date: r.booked_date || r.created_at,
                           data: r,
                         }));
+                        const invoiceRows: Row[] =
+                          paymentFilter === "all" || paymentFilter === "paid"
+                            ? paidInvoices
                                 .filter((inv) => {
                                   if (!search) return true;
                                   const q = search.toLowerCase();
@@ -349,6 +352,8 @@ export default function Revenue() {
                                     (inv.client_email ?? "").toLowerCase().includes(q)
                                   );
                                 })
+                                .map((inv) => ({ kind: "invoice", date: inv.paid_at, data: inv }))
+                            : [];
                         const all = [...bookingRows, ...invoiceRows].sort(
                           (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
                         );
@@ -361,6 +366,7 @@ export default function Revenue() {
                               <tr key={`inv-${inv.id}`} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                                 <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                                   {format(new Date(inv.paid_at), "MMM d, yyyy")}
+                                </td>
                                 <td className="px-4 py-3">
                                   <p className="font-normal">{inv.client_name || "—"}</p>
                                   {inv.client_email && (
