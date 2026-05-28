@@ -430,8 +430,7 @@ export default function Revenue() {
                               </td>
                             </tr>
                           );
-                        })}
-                    </tbody>
+                  </table>
 
                     </tbody>
                   </table>
