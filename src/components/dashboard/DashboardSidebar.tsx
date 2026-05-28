@@ -664,7 +664,7 @@ export function DashboardSidebar({ onSignOut, userEmail }: DashboardSidebarProps
   // All menus are granted to every user — no permission/admin filtering.
   const filterItems = (items: MenuItem[]): MenuItem[] => items;
 
-  };
+
 
   const [pinnedKeys, setPinnedKeys] = useState<string[]>([]);
   const [editMode, setEditMode] = useState(false);
