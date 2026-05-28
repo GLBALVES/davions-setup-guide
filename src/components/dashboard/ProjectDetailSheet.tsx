@@ -1309,6 +1309,7 @@ function InvoiceShareDialog({
       hello: (n: string) => n ? `Olá ${n}!` : "Olá!",
       body: (desc: string, amt: string, due: string) =>
         `Segue a cobrança "${desc}" no valor de ${amt}${due ? ` com vencimento em ${due}` : ""}.`,
+      payLine: (link: string) => `Pague com segurança aqui: ${link}`,
       copy: "Copiar mensagem",
       copied: "Mensagem copiada",
       copyError: "Não foi possível copiar",
@@ -1317,12 +1318,15 @@ function InvoiceShareDialog({
       sms: "SMS",
       telegram: "Telegram",
       emailSubject: "Cobrança",
+      linkLabel: "Link de pagamento",
+      copyLink: "Copiar link",
     },
     es: {
       title: "Compartir cobro",
       hello: (n: string) => n ? `¡Hola ${n}!` : "¡Hola!",
       body: (desc: string, amt: string, due: string) =>
         `Aquí está el cobro "${desc}" por ${amt}${due ? ` con vencimiento el ${due}` : ""}.`,
+      payLine: (link: string) => `Paga de forma segura aquí: ${link}`,
       copy: "Copiar mensaje",
       copied: "Mensaje copiado",
       copyError: "No se pudo copiar",
@@ -1331,12 +1335,15 @@ function InvoiceShareDialog({
       sms: "SMS",
       telegram: "Telegram",
       emailSubject: "Cobro",
+      linkLabel: "Enlace de pago",
+      copyLink: "Copiar enlace",
     },
     en: {
       title: "Share charge",
       hello: (n: string) => n ? `Hi ${n}!` : "Hi!",
       body: (desc: string, amt: string, due: string) =>
         `Here is the charge "${desc}" for ${amt}${due ? `, due on ${due}` : ""}.`,
+      payLine: (link: string) => `Pay securely here: ${link}`,
       copy: "Copy message",
       copied: "Message copied",
       copyError: "Unable to copy",
@@ -1345,6 +1352,8 @@ function InvoiceShareDialog({
       sms: "SMS",
       telegram: "Telegram",
       emailSubject: "Charge",
+      linkLabel: "Payment link",
+      copyLink: "Copy link",
     },
   }[lang === "pt" ? "pt" : lang === "es" ? "es" : "en"];
 
@@ -1353,7 +1362,8 @@ function InvoiceShareDialog({
     { style: "currency", currency: "BRL" }
   ).format(Number(invoice.amount));
   const dueStr = invoice.due_date ? format(parseISO(invoice.due_date), "d MMM yyyy") : "";
-  const message = `${t.hello(clientName)} ${t.body(invoice.description, fmtAmt, dueStr)}`;
+  const payUrl = `${window.location.origin}/pay/invoice/${invoice.id}`;
+  const message = `${t.hello(clientName)} ${t.body(invoice.description, fmtAmt, dueStr)}\n\n${t.payLine(payUrl)}`;
 
   const copy = async () => {
     try {
