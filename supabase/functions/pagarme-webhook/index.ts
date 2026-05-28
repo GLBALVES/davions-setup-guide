@@ -89,7 +89,12 @@ serve(async (req) => {
 
     // Handle key Pagar.me v5 events
     const data = event?.data ?? {};
-    const metadata = data?.metadata ?? data?.charges?.[0]?.metadata ?? {};
+    const metadata =
+      data?.metadata ??
+      data?.charges?.[0]?.metadata ??
+      data?.last_transaction?.metadata ??
+      data?.order?.metadata ??
+      {};
     const bookingId: string | undefined = metadata?.booking_id;
     const invoiceId: string | undefined = metadata?.invoice_id;
     const paymentKindTop: string | undefined = metadata?.payment_kind;
