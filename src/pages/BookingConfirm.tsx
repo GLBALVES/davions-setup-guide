@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -159,6 +159,8 @@ interface StepDef {
 
 const BookingConfirm = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
+  const [searchParams] = useSearchParams();
+  const briefingOnly = searchParams.get("step") === "briefing";
   const { t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
@@ -691,9 +693,13 @@ const BookingConfirm = () => {
     if (contractAccepted) setContractAccepted(false);
   };
 
-  /* ── Build steps dynamically ── */
   const buildSteps = (): StepDef[] => {
     if (!session) return [];
+    if (briefingOnly) {
+      return briefing
+        ? [{ key: "briefing", label: "Briefing", icon: <ClipboardList className="h-4 w-4" /> }]
+        : [];
+    }
     const steps: StepDef[] = [
       { key: "details", label: "Details", icon: <Calendar className="h-4 w-4" /> },
       { key: "client_info", label: "Your Info", icon: <UserCircle className="h-4 w-4" /> },
