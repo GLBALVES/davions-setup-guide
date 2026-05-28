@@ -3679,7 +3679,7 @@ function ProjectBriefingSubsection({
       {briefing && sessionId && (
         <BriefingShareDialog
           open={shareOpen}
-          onClose={() => setShareOpen(false)}
+          url={`${shareOrigin}/booking/${bookingId ?? ""}/confirm?step=briefing`}
           url={`${shareOrigin}/booking-success?booking=${bookingId ?? ""}&session=${sessionId}`}
           briefingName={briefing.name}
         />
