@@ -994,8 +994,8 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                         {lang === "pt" ? "Unitário" : lang === "es" ? "Unitario" : "Unit"}
                       </Label>
                       <Input
-                        type="number" min={0} step="0.01" placeholder="0,00" value={it.unit_price}
-                        onChange={(e) => setFormItems((prev) => prev.map((p, i) => i === idx ? { ...p, unit_price: e.target.value } : p))}
+                        type="text" placeholder={currencyPlaceholder(currencyLang)} value={formatCurrencyInput(it.unit_price, currencyLang)}
+                        onChange={(e) => setFormItems((prev) => prev.map((p, i) => i === idx ? { ...p, unit_price: parseCurrencyInput(e.target.value, currencyLang) } : p))}
                         className="h-7 text-xs"
                       />
                     </div>
