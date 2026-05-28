@@ -10,6 +10,8 @@ export interface PaidInvoice {
   description: string | null;
   paid_cents: number;
   paid_at: string; // ISO
+  client_name: string | null;
+  client_email: string | null;
 }
 
 export interface OutstandingInvoice {
@@ -22,6 +24,8 @@ export interface OutstandingInvoice {
   status: string; // pending | partial
   due_date: string | null;
   created_at: string;
+  client_name: string | null;
+  client_email: string | null;
 }
 
 export async function fetchInvoiceFinance(photographerId: string): Promise<{
@@ -30,7 +34,7 @@ export async function fetchInvoiceFinance(photographerId: string): Promise<{
 }> {
   const { data } = await supabase
     .from("project_invoices")
-    .select("id, project_id, description, amount, paid_amount, status, paid_at, due_date, created_at")
+    .select("id, project_id, description, amount, paid_amount, status, paid_at, due_date, created_at, client_projects ( client_name, client_email )")
     .eq("photographer_id", photographerId);
 
   const paid: PaidInvoice[] = [];
@@ -39,6 +43,10 @@ export async function fetchInvoiceFinance(photographerId: string): Promise<{
   for (const inv of (data ?? []) as any[]) {
     const amount_cents = Math.round(Number(inv.amount ?? 0) * 100);
     const paid_cents = Math.round(Number(inv.paid_amount ?? 0) * 100);
+    const cp = inv.client_projects as { client_name?: string; client_email?: string } | null;
+    const client_name = cp?.client_name ?? null;
+    const client_email = cp?.client_email ?? null;
+
     if (paid_cents > 0 && inv.paid_at) {
       paid.push({
         id: inv.id,
@@ -46,6 +54,8 @@ export async function fetchInvoiceFinance(photographerId: string): Promise<{
         description: inv.description ?? null,
         paid_cents,
         paid_at: inv.paid_at,
+        client_name,
+        client_email,
       });
     }
     if (inv.status === "pending" || inv.status === "partial") {
@@ -59,6 +69,8 @@ export async function fetchInvoiceFinance(photographerId: string): Promise<{
         status: inv.status,
         due_date: inv.due_date ?? null,
         created_at: inv.created_at,
+        client_name,
+        client_email,
       });
     }
   }
