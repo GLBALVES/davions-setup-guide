@@ -40,7 +40,17 @@ export interface OutstandingInvoice {
 export async function fetchInvoiceFinance(photographerId: string): Promise<{
   paid: PaidInvoice[];
   outstanding: OutstandingInvoice[];
+}> {
+  const { data } = await supabase
+    .from("project_invoices")
+    .select("id, project_id, description, amount, paid_amount, status, paid_at, due_date, created_at, items, client_projects ( client_name, client_email )")
+    .eq("photographer_id", photographerId);
+
+  const paid: PaidInvoice[] = [];
+  const outstanding: OutstandingInvoice[] = [];
+
   for (const inv of (data ?? []) as any[]) {
+
     const amount_cents = Math.round(Number(inv.amount ?? 0) * 100);
     const paid_cents = Math.round(Number(inv.paid_amount ?? 0) * 100);
     const cp = inv.client_projects as { client_name?: string; client_email?: string } | null;
