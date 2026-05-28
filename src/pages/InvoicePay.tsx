@@ -143,8 +143,15 @@ export default function InvoicePay() {
                       );
                     })}
                   </div>
-                </div>
-              )}
+
+              <div className="flex items-baseline justify-between border-t border-border/60 pt-4">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Valor
+                </span>
+                <span className="text-2xl font-light">{fmt(due)}</span>
+              </div>
+
+              {status === "cancelled" && (
 
 
               {status === "cancelled" && (
