@@ -459,6 +459,7 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
 
   const addPaymentLabel = lang === "pt" ? "Adicionar pagamento" : lang === "es" ? "Agregar pago" : "Add payment";
   const editLabel = lang === "pt" ? "Editar" : lang === "es" ? "Editar" : "Edit";
+  const currencyLang: CurrencyLang = lang === "pt" ? "pt" : lang === "es" ? "es" : "en";
 
   // Form state — multiple line items
   type ChargeItem = { description: string; quantity: string; unit_price: string; fee: string };
@@ -994,8 +995,8 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                         {lang === "pt" ? "Unitário" : lang === "es" ? "Unitario" : "Unit"}
                       </Label>
                       <Input
-                        type="number" min={0} step="0.01" placeholder="0,00" value={it.unit_price}
-                        onChange={(e) => setFormItems((prev) => prev.map((p, i) => i === idx ? { ...p, unit_price: e.target.value } : p))}
+                        type="text" placeholder={currencyPlaceholder(currencyLang)} value={formatCurrencyInput(it.unit_price, currencyLang)}
+                        onChange={(e) => setFormItems((prev) => prev.map((p, i) => i === idx ? { ...p, unit_price: parseCurrencyInput(e.target.value, currencyLang) } : p))}
                         className="h-7 text-xs"
                       />
                     </div>
@@ -1013,10 +1014,10 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                         {lang === "pt" ? "Taxa" : lang === "es" ? "Tasa" : "Fee"}
                       </Label>
                       <Input
-                        type="number" min={0} step="0.01" placeholder="0,00" value={it.fee}
+                        type="text" placeholder={currencyPlaceholder(currencyLang)} value={formatCurrencyInput(it.fee, currencyLang)}
                         onChange={(e) => {
                           setFormFeeManual((prev) => ({ ...prev, [idx]: true }));
-                          setFormItems((prev) => prev.map((p, i) => i === idx ? { ...p, fee: e.target.value } : p));
+                          setFormItems((prev) => prev.map((p, i) => i === idx ? { ...p, fee: parseCurrencyInput(e.target.value, currencyLang) } : p));
                         }}
                         className="h-7 text-xs"
                       />
