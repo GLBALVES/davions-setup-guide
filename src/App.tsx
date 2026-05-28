@@ -28,6 +28,7 @@ import SessionDetailPage from "./pages/store/SessionDetailPage";
 import SiteSubPage from "./pages/store/SiteSubPage";
 import BookingSuccess from "./pages/BookingSuccess";
 import BookingConfirm from "./pages/BookingConfirm";
+import InvoicePay from "./pages/InvoicePay";
 import NotFound from "./pages/NotFound";
 import { useLocation } from "react-router-dom";
 
