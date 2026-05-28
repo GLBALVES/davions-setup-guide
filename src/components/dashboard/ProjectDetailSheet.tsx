@@ -1197,6 +1197,27 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
 
               {isOpen && editingInvoiceId !== inv.id && (
                 <div className="border-t border-border/40 px-3 py-2.5 flex flex-col gap-2.5 bg-background/50 rounded-b-md">
+                  {Array.isArray(inv.items) && inv.items.length > 0 && (
+                    <div className="flex flex-col gap-1">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                        {lang === "pt" ? "Itens" : lang === "es" ? "Ítems" : "Items"}
+                      </p>
+                      <div className="flex flex-col divide-y divide-border/40 rounded-sm border border-border/40 bg-background/60">
+                        {inv.items.map((it, idx) => {
+                          const lineTotal = (Number(it.quantity) || 0) * (Number(it.unit_price) || 0);
+                          return (
+                            <div key={idx} className="flex items-center gap-2 px-2 py-1.5 text-[11px]">
+                              <span className="text-muted-foreground tabular-nums shrink-0">{it.quantity}×</span>
+                              <span className="flex-1 truncate">{it.description || "—"}</span>
+                              <span className="text-muted-foreground tabular-nums shrink-0">{fmt(Number(it.unit_price) || 0)}</span>
+                              <span className="font-medium tabular-nums shrink-0 w-20 text-right">{fmt(lineTotal)}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-3 gap-2 text-[10px]">
                     <div>
                       <p className="text-muted-foreground uppercase tracking-wider mb-0.5">{tp.chargeValue}</p>
