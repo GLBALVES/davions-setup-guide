@@ -34,7 +34,6 @@ import {
   CalendarCheck2,
   UserPlus,
   Columns,
-  RefreshCw,
   UserCircle,
   ShieldCheck,
   PlusSquare,
@@ -219,9 +218,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       title: t.nav.workflows,
       icon: GitBranch,
       disabled: true,
-      items: [
-        { title: t.nav.recurringWorkflows, icon: RefreshCw, to: "/dashboard/recurring", permKey: "recurring" },
-      ],
+      items: [],
     },
     {
       stableKey: "Settings",
@@ -291,10 +288,7 @@ const groups: MenuGroup[] = [
     { title: "Clients", icon: UserCircle, to: "/dashboard/clients", permKey: "clients" },
     { title: "Leads", icon: UserPlus },
   ]},
-  { stableKey: "Workflows", title: "Workflows", icon: GitBranch, disabled: true, items: [
-    
-    { title: "Recurring Workflows", icon: RefreshCw, to: "/dashboard/recurring", permKey: "recurring" },
-  ]},
+  { stableKey: "Workflows", title: "Workflows", icon: GitBranch, disabled: true, items: [] },
   { stableKey: "Settings", title: "Settings", icon: Settings, items: [
     { title: "My Profile", icon: UserCircle, to: "/dashboard/settings" },
     { title: "Billing", icon: CreditCard, to: "/dashboard/billing" },
