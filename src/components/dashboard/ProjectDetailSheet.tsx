@@ -1362,8 +1362,27 @@ function InvoiceShareDialog({
     { style: "currency", currency: "BRL" }
   ).format(Number(invoice.amount));
   const dueStr = invoice.due_date ? format(parseISO(invoice.due_date), "d MMM yyyy") : "";
-  const payUrl = `${window.location.origin}/pay/invoice/${invoice.id}`;
+
+  const { data: customDomain } = useQuery<string | null>({
+    queryKey: ["photographer-custom-domain", invoice.photographer_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("photographers")
+        .select("custom_domain")
+        .eq("id", invoice.photographer_id)
+        .maybeSingle();
+      return ((data as any)?.custom_domain as string | null) ?? null;
+    },
+    enabled: !!invoice.photographer_id,
+    staleTime: 60_000,
+  });
+
+  const payBase = customDomain && customDomain.trim()
+    ? `https://${customDomain.trim().replace(/^https?:\/\//, "").replace(/\/+$/, "")}`
+    : window.location.origin;
+  const payUrl = `${payBase}/pay/invoice/${invoice.id}`;
   const message = `${t.hello(clientName)} ${t.body(invoice.description, fmtAmt, dueStr)}\n\n${t.payLine(payUrl)}`;
+
 
   const copy = async () => {
     try {
