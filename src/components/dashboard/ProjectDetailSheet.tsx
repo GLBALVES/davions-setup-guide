@@ -3701,33 +3701,38 @@ function ProjectBriefingSubsection({
             </span>
           )}
           <button
-            onClick={() => {
-              if (!bookingId) {
-                toast.error("Vincule um booking ao projeto para compartilhar o briefing.");
-                return;
+            onClick={async () => {
+              try {
+                if (!bookingId) {
+                  const id = await ensureBookingMutation.mutateAsync();
+                  setPendingShareBookingId(id);
+                }
+                setShareOpen(true);
+              } catch (e: any) {
+                toast.error(e?.message || "Erro ao preparar compartilhamento");
               }
-              setShareOpen(true);
             }}
+            disabled={ensureBookingMutation.isPending}
             title="Compartilhar briefing"
-            className="inline-flex items-center justify-center h-7 w-7 rounded-sm border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            className="inline-flex items-center justify-center h-7 w-7 rounded-sm border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors disabled:opacity-50"
           >
             <Share2 className="h-3.5 w-3.5" />
           </button>
         </div>
       )}
-      {briefing && bookingId && (
+      {briefing && effectiveBookingId && (
         <BriefingDialog
           open={open}
           onClose={() => setOpen(false)}
-          bookingId={bookingId}
+          bookingId={effectiveBookingId}
           briefingId={briefing.id}
         />
       )}
-      {briefing && sessionId && bookingId && (
+      {briefing && sessionId && effectiveBookingId && (
         <BriefingShareDialog
           open={shareOpen}
           onClose={() => setShareOpen(false)}
-          url={`https://app.davions.com/booking/${bookingId}/confirm?step=briefing`}
+          url={`${shareOrigin}/booking/${effectiveBookingId}/confirm?step=briefing`}
           briefingName={briefing.name}
         />
       )}
