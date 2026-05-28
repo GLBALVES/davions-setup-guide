@@ -228,38 +228,33 @@ function formatCEP(input: string): string {
   return `${d.slice(0, 5)}-${d.slice(5)}`;
 }
 
-/** Lookup address from ViaCEP, fallback enrich with IBGE municipalities */
-async function lookupCEP(cep: string): Promise<Partial<typeof DEFAULT_ADDRESS> | null> {
-  const digits = cep.replace(/\D/g, "");
-  if (digits.length !== 8) return null;
-  try {
-    const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
-    const data = await res.json();
-    if (data?.erro) return null;
-    let city = data.localidade || "";
-    const state = data.uf || "";
-    // Enrich/verify city name via IBGE if ibge code present
-    if (data.ibge) {
-      try {
-        const ibgeRes = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/municipios/${data.ibge}`);
-        const ibgeData = await ibgeRes.json();
-        if (ibgeData?.nome) city = ibgeData.nome;
-
-      } catch {
-        // ignore
-      }
-    }
-    return {
-      street: data.logradouro || "",
-      neighborhood: data.bairro || "",
-      city,
-      state,
-    };
-  } catch {
-    return null;
-  }
+/** Format raw digits as CPF 000.000.000-00 */
+function formatCPF(input: string): string {
+  const d = input.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 3) return d;
+  if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+  if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
 }
 
+/** Format raw digits as CNPJ 00.000.000/0000-00 */
+function formatCNPJ(input: string): string {
+  const d = input.replace(/\D/g, "").slice(0, 14);
+  if (d.length <= 2) return d;
+  if (d.length <= 5) return `${d.slice(0, 2)}.${d.slice(2)}`;
+  if (d.length <= 8) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5)}`;
+  if (d.length <= 12) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8)}`;
+  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+}
+
+/** Auto-detect CPF or CNPJ based on digit count */
+function formatDocument(input: string): string {
+  const digits = input.replace(/\D/g, "");
+  if (digits.length <= 11) return formatCPF(input);
+  return formatCNPJ(input);
+}
+
+/** Lookup address from ViaCEP, fallback enrich with IBGE municipalities */
 
 
 
