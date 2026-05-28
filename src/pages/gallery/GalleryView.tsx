@@ -599,7 +599,11 @@ const GalleryView = () => {
     setTogglingFav((prev) => new Set(prev).add(photo.id));
     const isFav = favorites.has(photo.id);
     if (isFav) {
-      await supabase.from("photo_favorites").delete().eq("photo_id", photo.id).eq("client_token", clientToken);
+      await supabase.rpc("delete_gallery_favorite_by_token", {
+        _gallery_id: gallery.id,
+        _photo_id: photo.id,
+        _client_token: clientToken,
+      });
       setFavorites((prev) => { const s = new Set(prev); s.delete(photo.id); return s; });
     } else {
       await supabase.from("photo_favorites").insert({ photo_id: photo.id, gallery_id: gallery.id, client_token: clientToken });

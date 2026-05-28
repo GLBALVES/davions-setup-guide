@@ -4981,6 +4981,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_gallery_favorite_by_token: {
+        Args: { _client_token: string; _gallery_id: string; _photo_id: string }
+        Returns: undefined
+      }
       get_gallery_favorites_by_token: {
         Args: { _client_token: string; _gallery_id: string }
         Returns: {
