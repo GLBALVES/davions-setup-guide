@@ -1,6 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import {
+  buildSplitRules,
+  getPaymentSettings,
+  resolveFeePercent,
+} from "../_shared/pagarme-split.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +18,8 @@ const PLAN_SPLITS: Record<string, number> = {
   "prod_U8PXjCdBxWHHvT": 3,
   "prod_U8PYo2ocBqxIFO": 1,
 };
+
+const PAGARME_BASE = "https://api.pagar.me/core/v5";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -30,9 +37,6 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
-      apiVersion: "2025-08-27.basil",
-    });
 
     const { data: invoice, error: invErr } = await supabase
       .from("project_invoices")
@@ -56,14 +60,117 @@ serve(async (req) => {
 
     const { data: photo } = await supabase
       .from("photographers")
-      .select("stripe_account_id, email, business_name, full_name")
+      .select("stripe_account_id, pagarme_recipient_id, business_country, email, business_name, full_name")
       .eq("id", (invoice as any).photographer_id)
       .single();
 
-    const stripeAccountId = (photo as any)?.stripe_account_id;
-    if (!stripeAccountId) throw new Error("Photographer not connected to Stripe");
+    const origin = originIn || "https://davions.com";
+    const studioName = (photo as any).business_name || (photo as any).full_name || "Studio";
+    const country = String((photo as any)?.business_country ?? "").toUpperCase();
+    const isBR = country === "BR" || country === "BRA" || country === "BRAZIL" || country === "BRASIL";
+    const pagarmeRecipientId = (photo as any)?.pagarme_recipient_id as string | null;
 
-    // Determine platform split based on subscription plan
+    const successUrl = `${origin}/pay/invoice/${(invoice as any).id}?status=paid`;
+    const cancelUrl = `${origin}/pay/invoice/${(invoice as any).id}?status=cancelled`;
+
+    // ── BRAZIL: Pagar.me ──
+    if (isBR || pagarmeRecipientId) {
+      if (!pagarmeRecipientId) {
+        throw new Error("Fotógrafo não concluiu o cadastro no Pagar.me");
+      }
+      const apiKey = Deno.env.get("PAGARME_API_KEY");
+      if (!apiKey) throw new Error("PAGARME_API_KEY not configured");
+
+      const settings = await getPaymentSettings(supabase);
+      const feePercent = await resolveFeePercent(
+        supabase,
+        (invoice as any).photographer_id,
+        settings.default_fee_percent,
+      );
+      const split_rules = buildSplitRules({
+        photographerRecipientId: pagarmeRecipientId,
+        masterRecipientId: settings.pagarme_master_recipient_id ?? "",
+        feePercent,
+      });
+
+      const clientEmail = (project as any)?.client_email || "cliente@exemplo.com";
+      const clientName = (project as any)?.client_name || clientEmail;
+
+      const orderPayload = {
+        items: [{
+          amount: amountCents,
+          description: ((invoice as any).description || "Cobrança").slice(0, 256),
+          quantity: 1,
+          code: (invoice as any).id,
+        }],
+        customer: {
+          name: clientName,
+          email: clientEmail,
+          type: "individual",
+        },
+        closed: false,
+        payments: [{
+          payment_method: "checkout",
+          checkout: {
+            expires_in: 120,
+            default_payment_method: "credit_card",
+            accepted_payment_methods: ["credit_card", "pix", "boleto"],
+            success_url: successUrl,
+            customer_editable: true,
+            credit_card: {
+              installments: [{ number: 1, total: amountCents }],
+              statement_descriptor: "DAVIONS",
+            },
+            pix: { expires_in: 3600 },
+            boleto: {
+              instructions: "Pagar até a data de vencimento.",
+              due_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+            },
+          },
+          split: split_rules,
+        }],
+        metadata: {
+          invoice_id: (invoice as any).id,
+          project_id: (invoice as any).project_id,
+          payment_kind: "project_invoice",
+        },
+      };
+
+      const auth = btoa(`${apiKey}:`);
+      const resp = await fetch(`${PAGARME_BASE}/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Basic ${auth}` },
+        body: JSON.stringify(orderPayload),
+      });
+      const order = await resp.json();
+      if (!resp.ok) {
+        console.error("Pagar.me order error:", order);
+        throw new Error(order?.message ?? "Failed to create Pagar.me order");
+      }
+      const checkoutUrl =
+        order?.checkouts?.[0]?.payment_url ??
+        order?.charges?.[0]?.last_transaction?.url ??
+        null;
+      if (!checkoutUrl) throw new Error("Pagar.me did not return a checkout URL");
+
+      await supabase
+        .from("project_invoices")
+        .update({ pagarme_order_id: order.id })
+        .eq("id", (invoice as any).id);
+
+      return new Response(JSON.stringify({ url: checkoutUrl, provider: "pagarme" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── INTERNATIONAL: Stripe Connect ──
+    const stripeAccountId = (photo as any)?.stripe_account_id;
+    if (!stripeAccountId) throw new Error("Photographer not connected to a payment provider");
+
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
+      apiVersion: "2025-08-27.basil",
+    });
+
     let splitPercent = 5;
     try {
       const platformCustomers = await stripe.customers.list({ email: (photo as any).email, limit: 1 });
@@ -79,10 +186,7 @@ serve(async (req) => {
     } catch (_) {}
 
     const applicationFeeAmount = Math.round(amountCents * (splitPercent / 100));
-    const origin = originIn || "https://davions.com";
-    const studioName = (photo as any).business_name || (photo as any).full_name || "Studio";
 
-    // Ensure the connected account has a business name (required for Checkout)
     try {
       const acct = await stripe.accounts.retrieve(stripeAccountId);
       if (!(acct as any)?.business_profile?.name && !(acct as any)?.settings?.dashboard?.display_name) {
@@ -100,7 +204,7 @@ serve(async (req) => {
         mode: "payment",
         line_items: [{
           price_data: {
-            currency: "brl",
+            currency: "usd",
             product_data: {
               name: (invoice as any).description || "Cobrança",
               description: `${studioName}`,
@@ -115,13 +219,13 @@ serve(async (req) => {
           project_id: (invoice as any).project_id,
           payment_kind: "project_invoice",
         },
-        success_url: `${origin}/pay/invoice/${(invoice as any).id}?status=paid`,
-        cancel_url: `${origin}/pay/invoice/${(invoice as any).id}?status=cancelled`,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
       },
       { stripeAccount: stripeAccountId },
     );
 
-    return new Response(JSON.stringify({ url: checkout.url, amount: amountCents }), {
+    return new Response(JSON.stringify({ url: checkout.url, provider: "stripe", amount: amountCents }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

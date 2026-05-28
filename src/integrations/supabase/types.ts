@@ -3385,6 +3385,7 @@ export type Database = {
           id: string
           items: Json
           notes: string | null
+          pagarme_order_id: string | null
           paid_amount: number
           paid_at: string | null
           photographer_id: string
@@ -3402,6 +3403,7 @@ export type Database = {
           id?: string
           items?: Json
           notes?: string | null
+          pagarme_order_id?: string | null
           paid_amount?: number
           paid_at?: string | null
           photographer_id: string
@@ -3419,6 +3421,7 @@ export type Database = {
           id?: string
           items?: Json
           notes?: string | null
+          pagarme_order_id?: string | null
           paid_amount?: number
           paid_at?: string | null
           photographer_id?: string
