@@ -389,7 +389,9 @@ export default function Revenue() {
                               <span className={`text-[10px] tracking-wider uppercase ${bookConf.color}`}>
                                 {bookConf.label}
                               </span>
+                            </td>
                           </tr>
+
                         );
                       })}
                       {(paymentFilter === "all" || paymentFilter === "paid") && paidInvoices
