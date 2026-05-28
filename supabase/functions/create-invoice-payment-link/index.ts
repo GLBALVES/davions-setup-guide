@@ -80,7 +80,20 @@ serve(async (req) => {
 
     const applicationFeeAmount = Math.round(amountCents * (splitPercent / 100));
     const origin = originIn || "https://davions.com";
+    const origin = originIn || "https://davions.com";
     const studioName = (photo as any).business_name || (photo as any).full_name || "Studio";
+
+    // Ensure the connected account has a business name (required for Checkout)
+    try {
+      const acct = await stripe.accounts.retrieve(stripeAccountId);
+      if (!(acct as any)?.business_profile?.name && !(acct as any)?.settings?.dashboard?.display_name) {
+        await stripe.accounts.update(stripeAccountId, {
+          business_profile: { name: studioName },
+        });
+      }
+    } catch (acctErr) {
+      console.warn("Could not ensure account business name:", acctErr);
+    }
 
     const checkout = await stripe.checkout.sessions.create(
       {
