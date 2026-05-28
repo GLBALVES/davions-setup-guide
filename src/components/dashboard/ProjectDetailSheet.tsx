@@ -1078,7 +1078,6 @@ function PaymentsSection({ project, photographerId }: { project: ProjectSheetDat
                 {lang === "pt" ? "Definir vencimento" : lang === "es" ? "Definir vencimiento" : "Set due date"}
               </button>
             </div>
-            </div>
             {formDueMode === "date" && (
               <Input
                 type="date"
