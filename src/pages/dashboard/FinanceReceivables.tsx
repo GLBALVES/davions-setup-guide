@@ -104,7 +104,16 @@ export default function FinanceReceivables() {
     r.session_title.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalDue = filtered.reduce((s, r) => s + calcBalance(r), 0);
+  const filteredInvoices = invoices.filter((i) =>
+    !search ||
+    (i.description ?? "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalDue =
+    filtered.reduce((s, r) => s + calcBalance(r), 0) +
+    filteredInvoices.reduce((s, i) => s + i.balance_cents, 0);
+
+  const isEmpty = filtered.length === 0 && filteredInvoices.length === 0;
 
   return (
     <SidebarProvider>
