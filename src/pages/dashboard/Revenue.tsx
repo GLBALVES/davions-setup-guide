@@ -389,10 +389,48 @@ export default function Revenue() {
                               <span className={`text-[10px] tracking-wider uppercase ${bookConf.color}`}>
                                 {bookConf.label}
                               </span>
-                            </td>
                           </tr>
                         );
                       })}
+                      {(paymentFilter === "all" || paymentFilter === "paid") && paidInvoices
+                        .filter((inv) => {
+                          if (!search) return true;
+                          const q = search.toLowerCase();
+                          return (inv.description ?? "").toLowerCase().includes(q) ||
+                                 "cobrança de projeto".includes(q);
+                        })
+                        .map((inv) => {
+                          const fee = calcFee(inv.paid_cents);
+                          const net = inv.paid_cents - fee;
+                          return (
+                            <tr key={`inv-${inv.id}`} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                              <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                                {format(new Date(inv.paid_at), "MMM d, yyyy")}
+                              </td>
+                              <td className="px-4 py-3">
+                                <p className="font-normal text-muted-foreground italic">Cobrança de projeto</p>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap">{inv.description ?? "—"}</td>
+                              <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums">{fmt(inv.paid_cents)}</td>
+                              <td className="px-4 py-3 whitespace-nowrap"><span className="text-muted-foreground/40">—</span></td>
+                              <td className="px-4 py-3 whitespace-nowrap font-normal tabular-nums text-foreground">{fmt(inv.paid_cents)}</td>
+                              <td className="px-4 py-3 whitespace-nowrap tabular-nums text-amber-600">−{fmt(fee)}</td>
+                              <td className="px-4 py-3 whitespace-nowrap tabular-nums font-normal">{fmt(net)}</td>
+                              <td className="px-4 py-3 whitespace-nowrap"><span className="text-muted-foreground/50">—</span></td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <Badge variant="default" className="gap-1 text-[10px] tracking-wide uppercase font-light">
+                                  <CheckCircle2 className="h-2.5 w-2.5" />
+                                  {t.finance.paid}
+                                </Badge>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                <span className="text-[10px] tracking-wider uppercase text-green-600">Project</span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+
                     </tbody>
                   </table>
                 </div>
