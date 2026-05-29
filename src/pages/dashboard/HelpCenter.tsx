@@ -201,6 +201,29 @@ const categoriesData: Record<Lang, Omit<Category, "icon">[]> = {
         { q: "The plugin isn't connecting. What do I do?", a: "Make sure you are logged in to the platform and that your API key is correctly entered in the plugin settings. You can regenerate your API key in **Settings → Personalize → Galleries**. Check the **LR Plugin Help** page for detailed troubleshooting steps." },
       ],
     },
+    {
+      id: "clients",
+      title: "Clients (CRM)",
+      description: "Manage your client base, import, filter, and export",
+      articles: [
+        { q: "How do I add a new client?", a: "Go to **Clients** and click **Add Client**. Fill in the email, name, phone, Instagram, address, and notes. Clients are also created automatically when someone completes a booking through your store." },
+        { q: "How do I import clients from a CSV?", a: "On the **Clients** page, click **Import**. Upload a CSV file or paste rows directly. The importer recognizes column names in EN/PT/ES (email, name, phone, address, etc.) and skips invalid rows. Existing clients (matched by email) are updated, not duplicated." },
+        { q: "How do filters, search and sorting work?", a: "Use the search bar to find clients by name, email, phone, or Instagram. Use the **Filter** dropdown to show only returning clients, clients with/without bookings, or paying clients. Use **Sort** to order by most recent, name, total spent, or number of bookings. Click **Clear** to reset." },
+        { q: "Can I export my client list?", a: "Yes. Apply any filters or search you want, then click **Export CSV**. The exported file contains the visible clients with their booking count and total spent — useful for backups or external mailing tools." },
+      ],
+    },
+    {
+      id: "workflows",
+      title: "Projects & Workflows",
+      description: "Kanban board, contracts, briefings, and follow-ups",
+      articles: [
+        { q: "What is the Workflow Kanban?", a: "**Workflows** organizes every project into stages (Lead, Booked, Shot, Delivered, etc.) on a Kanban board. Drag a card between columns to change its stage. Projects auto-advance to **Shot** once the shoot date has passed." },
+        { q: "How do automated stage emails work?", a: "Each workflow stage can trigger an email template. When a project moves into that stage, the email is sent to the client with dynamic variables (name, session, date) already filled in. Configure templates under **Workflows → Email Templates**." },
+        { q: "How do contracts work?", a: "Go to **Contracts** to design templates with the rich text editor. Drag smart fields (client name, session, price, date) into the document. When a client books, the contract HTML is frozen onto the booking so future template edits don't change signed contracts." },
+        { q: "What is the Briefing System?", a: "Briefings are custom questionnaires you build per session type. Clients fill them out after booking on the success page. Answers are saved with the booking so you arrive prepared on shoot day." },
+        { q: "How do push notifications work?", a: "Enable web push under **Push Notifications** to receive real-time alerts (new bookings, payments, messages) on desktop and mobile — even when the dashboard tab is closed." },
+      ],
+    },
   ],
   pt: [
     {
