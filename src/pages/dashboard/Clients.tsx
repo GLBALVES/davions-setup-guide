@@ -9,7 +9,10 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Input } from "@/components/ui/input";
 import { cn, formatTime12 } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
-import { Search, User, Mail, ChevronRight, CalendarDays, Hash, X } from "lucide-react";
+import { Search, User, Mail, ChevronRight, CalendarDays, Hash, X, Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ImportClientsDialog } from "@/components/dashboard/ImportClientsDialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -59,6 +62,21 @@ export default function Clients() {
   const cl = t.clients;
   const [search, setSearch] = useState("");
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: importedClients = [] } = useQuery<any[]>({
+    queryKey: ["clients-imported", photographerId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("clients")
+        .select("email, full_name, created_at")
+        .eq("photographer_id", photographerId!);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!photographerId,
+  });
 
   const { data: bookings = [], isLoading } = useQuery<RawBooking[]>({
     queryKey: ["clients-bookings", photographerId],
@@ -104,13 +122,27 @@ export default function Clients() {
         }
       }
     }
+    // Merge in imported clients that have no bookings yet
+    for (const ic of importedClients) {
+      const key = (ic.email || "").toLowerCase();
+      if (!key || map.has(key)) continue;
+      map.set(key, {
+        email: ic.email,
+        name: ic.full_name || ic.email,
+        bookingCount: 0,
+        lastBookingDate: null,
+        totalSpent: 0,
+        bookings: [],
+      });
+    }
     // sort by most recent booking
     return Array.from(map.values()).sort((a, b) => {
+      if (!a.lastBookingDate && !b.lastBookingDate) return a.name.localeCompare(b.name);
       if (!a.lastBookingDate) return 1;
       if (!b.lastBookingDate) return -1;
       return b.lastBookingDate.localeCompare(a.lastBookingDate);
     });
-  }, [bookings]);
+  }, [bookings, importedClients]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return clients;
@@ -139,9 +171,20 @@ export default function Clients() {
             )}>
               {/* Header */}
               <div className="px-6 py-5 border-b border-border flex flex-col gap-3">
-                <div>
-                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">{cl.crm}</p>
-                  <h1 className="text-lg font-light tracking-wide">{cl.title}</h1>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">{cl.crm}</p>
+                    <h1 className="text-lg font-light tracking-wide">{cl.title}</h1>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setImportOpen(true)}
+                    className="text-[10px] tracking-[0.2em] uppercase font-light h-8 rounded-none border border-border hover:bg-muted"
+                  >
+                    <Upload className="h-3 w-3 mr-2" />
+                    {cl.importCsv}
+                  </Button>
                 </div>
                 {/* Stats row */}
                 {!isLoading && (
@@ -336,6 +379,11 @@ export default function Clients() {
           </main>
         </div>
       </div>
+      <ImportClientsDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImported={() => queryClient.invalidateQueries({ queryKey: ["clients-imported", photographerId] })}
+      />
     </SidebarProvider>
   );
 }
