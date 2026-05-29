@@ -682,12 +682,6 @@ export default function FinancePayables() {
               <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
                 {t.finance.dueDate}
               </Label>
-              <Input
-                type="date"
-                value={form.due_date}
-                onChange={(e) => setForm({ ...form, due_date: e.target.value })}
-                style={{ display: "none" }}
-              />
               <DateField
                 value={form.due_date}
                 onChange={(v) => setForm({ ...form, due_date: v })}
