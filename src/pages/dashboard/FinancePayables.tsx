@@ -205,6 +205,7 @@ export default function FinancePayables() {
   const [toDate, setToDate] = useState<string>("");
   const [sortBy, setSortBy] = useState<"due_date" | "description" | "supplier" | "category" | "amount" | "status">("due_date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [pendingPeriod, setPendingPeriod] = useState<"month" | "quarter" | "year" | "all">("month");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [form, setForm] = useState(emptyForm);
