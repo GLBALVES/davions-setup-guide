@@ -761,6 +761,17 @@ export default function FinancePayables() {
                   >
                     {langKey === "pt" ? "Adicionar" : langKey === "es" ? "Agregar" : "Add"}
                   </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setNewCatInput("");
+                      setAddingCat(false);
+                    }}
+                  >
+                    {langKey === "pt" ? "Cancelar" : langKey === "es" ? "Cancelar" : "Cancel"}
+                  </Button>
                 </div>
               ) : (
                 <button
