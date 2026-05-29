@@ -1873,7 +1873,6 @@ export type Database = {
           notes: string | null
           paid_at: string | null
           photographer_id: string
-          recurrence_count: number | null
           recurrence_interval: string
           recurrence_until: string | null
           recurring: boolean
@@ -1892,7 +1891,6 @@ export type Database = {
           notes?: string | null
           paid_at?: string | null
           photographer_id: string
-          recurrence_count?: number | null
           recurrence_interval?: string
           recurrence_until?: string | null
           recurring?: boolean
@@ -1911,7 +1909,6 @@ export type Database = {
           notes?: string | null
           paid_at?: string | null
           photographer_id?: string
-          recurrence_count?: number | null
           recurrence_interval?: string
           recurrence_until?: string | null
           recurring?: boolean
