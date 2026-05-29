@@ -239,9 +239,11 @@ export default function FinancePayables() {
     // When marking a recurring expense as paid, spawn the next occurrence.
     if (next === "paid" && e.recurrence_interval && e.recurrence_interval !== "none" && e.due_date) {
       const nextDue = addRecurrence(e.due_date, e.recurrence_interval);
-      const untilOk = !e.recurrence_until || (nextDue && nextDue <= e.recurrence_until);
-      if (nextDue && untilOk && user) {
-        // Avoid duplicating: only create if no pending occurrence already exists for this due date.
+      // recurrence_count is the number of REMAINING installments including this one.
+      // permanent => null; fixed => stop when count <= 1.
+      const isPermanent = e.recurrence_count == null;
+      const hasMore = isPermanent || (e.recurrence_count != null && e.recurrence_count > 1);
+      if (nextDue && hasMore && user) {
         const { data: existing } = await supabase
           .from("expenses")
           .select("id")
@@ -262,11 +264,14 @@ export default function FinancePayables() {
             status: "pending",
             notes: e.notes,
             recurrence_interval: e.recurrence_interval,
-            recurrence_until: e.recurrence_until,
+            recurrence_until: null,
+            recurrence_count: isPermanent ? null : (e.recurrence_count as number) - 1,
             recurring: true,
           });
           toast({ title: recFields.nextCreated });
         }
+      } else if (!hasMore) {
+        toast({ title: recFields.finished });
       }
     }
     load();
