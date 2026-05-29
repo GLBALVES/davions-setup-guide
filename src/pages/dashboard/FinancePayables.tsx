@@ -4,6 +4,7 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { ArrowUpCircle, ShoppingCart, Wrench, Users2, Building2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
 
 export default function FinancePayables() {
   const { user, signOut } = useAuth();
