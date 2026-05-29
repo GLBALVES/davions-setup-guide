@@ -122,13 +122,27 @@ export default function Clients() {
         }
       }
     }
+    // Merge in imported clients that have no bookings yet
+    for (const ic of importedClients) {
+      const key = (ic.email || "").toLowerCase();
+      if (!key || map.has(key)) continue;
+      map.set(key, {
+        email: ic.email,
+        name: ic.full_name || ic.email,
+        bookingCount: 0,
+        lastBookingDate: null,
+        totalSpent: 0,
+        bookings: [],
+      });
+    }
     // sort by most recent booking
     return Array.from(map.values()).sort((a, b) => {
+      if (!a.lastBookingDate && !b.lastBookingDate) return a.name.localeCompare(b.name);
       if (!a.lastBookingDate) return 1;
       if (!b.lastBookingDate) return -1;
       return b.lastBookingDate.localeCompare(a.lastBookingDate);
     });
-  }, [bookings]);
+  }, [bookings, importedClients]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return clients;
