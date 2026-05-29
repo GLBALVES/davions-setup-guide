@@ -171,9 +171,20 @@ export default function Clients() {
             )}>
               {/* Header */}
               <div className="px-6 py-5 border-b border-border flex flex-col gap-3">
-                <div>
-                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">{cl.crm}</p>
-                  <h1 className="text-lg font-light tracking-wide">{cl.title}</h1>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">{cl.crm}</p>
+                    <h1 className="text-lg font-light tracking-wide">{cl.title}</h1>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setImportOpen(true)}
+                    className="text-[10px] tracking-[0.2em] uppercase font-light h-8 rounded-none border border-border hover:bg-muted"
+                  >
+                    <Upload className="h-3 w-3 mr-2" />
+                    {cl.importCsv}
+                  </Button>
                 </div>
                 {/* Stats row */}
                 {!isLoading && (
