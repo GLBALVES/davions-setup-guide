@@ -10,8 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   Search, Camera, CalendarDays, Images, DollarSign,
   Globe, Settings, Bot, Mail, HelpCircle, ChevronDown,
-  ArrowRight, Bug, BookOpen, Zap,
+  ArrowRight, Bug, BookOpen, Zap, Users, Kanban,
 } from "lucide-react";
+
 
 type Lang = "en" | "pt" | "es";
 
@@ -176,6 +177,9 @@ const categoriesData: Record<Lang, Omit<Category, "icon">[]> = {
         { q: "What is supervised mode for AI agents?", a: "In **supervised mode**, the AI generates a draft reply that you review before it is sent to the client. In **auto-reply mode**, the AI sends the response directly. Switch between modes in the Chat Commander Bar at the top of the Chat page." },
         { q: "How do I add knowledge to an agent?", a: "Open **AI Agents**, edit an agent, and go to the **Knowledge Base** tab. Add topics with a title and content. This knowledge is injected into the agent's context so it can answer questions specific to your business." },
         { q: "What are Recurring Workflows?", a: "Recurring Workflows are tasks that repeat on a schedule (daily, weekly, monthly, etc.). Go to **Workflows → Recurring** and create a task with a frequency, start date, and optional owner. The system generates task instances automatically." },
+        { q: "What is the Help Assistant?", a: "The sparkle icon at the top of the dashboard opens the **Davions Help Assistant** — a contextual AI chat that knows the platform and your current page. Use it for quick answers without leaving your workflow. Chat history persists across sessions." },
+        { q: "What is the Carousel AI?", a: "Go to **Creative Studio → Carousel** to generate Instagram-ready carousels. The AI writes captions, picks layouts, and creates backgrounds from a single prompt. Export each slide as a polished image ready to publish." },
+        { q: "How does AI Blog generation work?", a: "Go to **Blog → AI Generator**, describe the topic and tone, and the system writes the full post, suggests SEO metadata, and produces a cover image. Review, edit, and publish in one click." },
       ],
     },
     {
@@ -196,6 +200,29 @@ const categoriesData: Record<Lang, Omit<Category, "icon">[]> = {
         { q: "How do I install the Lightroom plugin?", a: "Go to **Settings → Personalize → Galleries** tab and download the DavionsConnect plugin. In Lightroom Classic, go to **File → Plug-in Manager**, click **Add**, and select the downloaded `.lrplugin` folder." },
         { q: "How do I upload photos from Lightroom?", a: "Select the photos you want to export in Lightroom, then go to **File → Export → Export with Preset → Davions** or use the Publish service. Choose the target gallery and click Export/Publish." },
         { q: "The plugin isn't connecting. What do I do?", a: "Make sure you are logged in to the platform and that your API key is correctly entered in the plugin settings. You can regenerate your API key in **Settings → Personalize → Galleries**. Check the **LR Plugin Help** page for detailed troubleshooting steps." },
+      ],
+    },
+    {
+      id: "clients",
+      title: "Clients (CRM)",
+      description: "Manage your client base, import, filter, and export",
+      articles: [
+        { q: "How do I add a new client?", a: "Go to **Clients** and click **Add Client**. Fill in the email, name, phone, Instagram, address, and notes. Clients are also created automatically when someone completes a booking through your store." },
+        { q: "How do I import clients from a CSV?", a: "On the **Clients** page, click **Import**. Upload a CSV file or paste rows directly. The importer recognizes column names in EN/PT/ES (email, name, phone, address, etc.) and skips invalid rows. Existing clients (matched by email) are updated, not duplicated." },
+        { q: "How do filters, search and sorting work?", a: "Use the search bar to find clients by name, email, phone, or Instagram. Use the **Filter** dropdown to show only returning clients, clients with/without bookings, or paying clients. Use **Sort** to order by most recent, name, total spent, or number of bookings. Click **Clear** to reset." },
+        { q: "Can I export my client list?", a: "Yes. Apply any filters or search you want, then click **Export CSV**. The exported file contains the visible clients with their booking count and total spent — useful for backups or external mailing tools." },
+      ],
+    },
+    {
+      id: "workflows",
+      title: "Projects & Workflows",
+      description: "Kanban board, contracts, briefings, and follow-ups",
+      articles: [
+        { q: "What is the Workflow Kanban?", a: "**Workflows** organizes every project into stages (Lead, Booked, Shot, Delivered, etc.) on a Kanban board. Drag a card between columns to change its stage. Projects auto-advance to **Shot** once the shoot date has passed." },
+        { q: "How do automated stage emails work?", a: "Each workflow stage can trigger an email template. When a project moves into that stage, the email is sent to the client with dynamic variables (name, session, date) already filled in. Configure templates under **Workflows → Email Templates**." },
+        { q: "How do contracts work?", a: "Go to **Contracts** to design templates with the rich text editor. Drag smart fields (client name, session, price, date) into the document. When a client books, the contract HTML is frozen onto the booking so future template edits don't change signed contracts." },
+        { q: "What is the Briefing System?", a: "Briefings are custom questionnaires you build per session type. Clients fill them out after booking on the success page. Answers are saved with the booking so you arrive prepared on shoot day." },
+        { q: "How do push notifications work?", a: "Enable web push under **Push Notifications** to receive real-time alerts (new bookings, payments, messages) on desktop and mobile — even when the dashboard tab is closed." },
       ],
     },
   ],
@@ -267,6 +294,9 @@ const categoriesData: Record<Lang, Omit<Category, "icon">[]> = {
         { q: "O que é o modo supervisionado para agentes de IA?", a: "No modo **supervisionado**, a IA gera uma resposta rascunho que você revisa antes de enviar ao cliente. No modo **resposta automática**, a IA envia a resposta diretamente. Alterne entre os modos na Barra de Comando do Chat no topo da página de Chat." },
         { q: "Como adiciono conhecimento a um agente?", a: "Abra **Agentes de IA**, edite um agente e acesse a aba **Base de Conhecimento**. Adicione tópicos com título e conteúdo. Esse conhecimento é injetado no contexto do agente para que ele possa responder perguntas específicas do seu negócio." },
         { q: "O que são Workflows Recorrentes?", a: "Workflows Recorrentes são tarefas que se repetem em uma agenda (diária, semanal, mensal, etc.). Acesse **Workflows → Recorrentes** e crie uma tarefa com frequência, data de início e responsável opcional. O sistema gera instâncias de tarefas automaticamente." },
+        { q: "O que é o Assistente de Ajuda?", a: "O ícone de brilho no topo do dashboard abre o **Assistente Davions** — um chat de IA contextual que conhece a plataforma e a página atual. Use para tirar dúvidas rápidas sem sair do seu fluxo. O histórico fica salvo entre sessões." },
+        { q: "O que é o Carrossel com IA?", a: "Acesse **Creative Studio → Carrossel** para gerar carrosséis prontos para o Instagram. A IA escreve legendas, escolhe layouts e cria fundos a partir de um único prompt. Exporte cada slide como imagem pronta para postar." },
+        { q: "Como funciona a geração de Blog com IA?", a: "Vá em **Blog → Gerador IA**, descreva o tema e o tom, e o sistema escreve o post inteiro, sugere metadados de SEO e gera uma imagem de capa. Revise, edite e publique em um clique." },
       ],
     },
     {
@@ -287,6 +317,29 @@ const categoriesData: Record<Lang, Omit<Category, "icon">[]> = {
         { q: "Como instalo o plugin do Lightroom?", a: "Acesse **Configurações → Personalizar → aba Galerias** e baixe o plugin DavionsConnect. No Lightroom Classic, vá em **Arquivo → Gerenciador de Plug-ins**, clique em **Adicionar** e selecione a pasta `.lrplugin` baixada." },
         { q: "Como faço upload de fotos pelo Lightroom?", a: "Selecione as fotos que deseja exportar no Lightroom, depois vá em **Arquivo → Exportar → Exportar com Predefinição → Davions** ou use o serviço de Publicação. Escolha a galeria de destino e clique em Exportar/Publicar." },
         { q: "O plugin não está conectando. O que faço?", a: "Verifique se você está logado na plataforma e se sua chave de API está corretamente inserida nas configurações do plugin. Você pode regenerar sua chave de API em **Configurações → Personalizar → Galerias**. Consulte a página **Ajuda do Plugin LR** para etapas detalhadas de solução de problemas." },
+      ],
+    },
+    {
+      id: "clients",
+      title: "Clientes (CRM)",
+      description: "Gerencie sua base de clientes, importe, filtre e exporte",
+      articles: [
+        { q: "Como adiciono um novo cliente?", a: "Acesse **Clientes** e clique em **Adicionar Cliente**. Preencha e-mail, nome, telefone, Instagram, endereço e notas. Clientes também são criados automaticamente quando alguém conclui um agendamento pela sua loja." },
+        { q: "Como importo clientes de um CSV?", a: "Na página **Clientes**, clique em **Importar**. Envie um arquivo CSV ou cole as linhas diretamente. O importador reconhece nomes de colunas em PT/EN/ES (email, nome, telefone, endereço, etc.) e ignora linhas inválidas. Clientes existentes (combinados pelo e-mail) são atualizados, não duplicados." },
+        { q: "Como funcionam filtros, busca e ordenação?", a: "Use a barra de busca para encontrar clientes por nome, e-mail, telefone ou Instagram. Use o menu **Filtrar** para mostrar apenas clientes recorrentes, com/sem agendamentos ou pagantes. Use **Ordenar** para ordenar por mais recentes, nome, total gasto ou número de agendamentos. Clique em **Limpar** para resetar." },
+        { q: "Posso exportar minha lista de clientes?", a: "Sim. Aplique os filtros ou busca desejados e clique em **Exportar CSV**. O arquivo exportado contém os clientes visíveis com contagem de agendamentos e total gasto — útil para backups ou ferramentas externas de e-mail." },
+      ],
+    },
+    {
+      id: "workflows",
+      title: "Projetos e Workflows",
+      description: "Quadro Kanban, contratos, briefings e follow-ups",
+      articles: [
+        { q: "O que é o Kanban de Workflows?", a: "**Workflows** organiza cada projeto em estágios (Lead, Agendado, Fotografado, Entregue, etc.) em um quadro Kanban. Arraste um cartão entre colunas para mudar o estágio. Projetos avançam automaticamente para **Fotografado** após a data do ensaio." },
+        { q: "Como funcionam os e-mails automáticos por estágio?", a: "Cada estágio do workflow pode disparar um template de e-mail. Quando um projeto entra no estágio, o e-mail é enviado ao cliente com variáveis dinâmicas (nome, sessão, data) já preenchidas. Configure os templates em **Workflows → Templates de E-mail**." },
+        { q: "Como funcionam os contratos?", a: "Acesse **Contratos** para criar templates com o editor de texto rico. Arraste campos inteligentes (nome do cliente, sessão, valor, data) para o documento. Quando o cliente agenda, o HTML do contrato é congelado no agendamento — edições futuras no template não alteram contratos já assinados." },
+        { q: "O que é o sistema de Briefing?", a: "Briefings são questionários personalizados que você cria por tipo de sessão. O cliente responde após o agendamento na página de sucesso. As respostas ficam salvas com o agendamento para você chegar preparado no dia do ensaio." },
+        { q: "Como funcionam as notificações push?", a: "Ative o push web em **Notificações Push** para receber alertas em tempo real (novos agendamentos, pagamentos, mensagens) no desktop e mobile — mesmo com a aba do dashboard fechada." },
       ],
     },
   ],
@@ -358,6 +411,9 @@ const categoriesData: Record<Lang, Omit<Category, "icon">[]> = {
         { q: "¿Qué es el modo supervisado para agentes de IA?", a: "En el modo **supervisado**, la IA genera un borrador de respuesta que revisas antes de enviarlo al cliente. En el modo **respuesta automática**, la IA envía la respuesta directamente. Cambia entre modos en la Barra de Comandos del Chat en la parte superior de la página de Chat." },
         { q: "¿Cómo agrego conocimiento a un agente?", a: "Abre **Agentes de IA**, edita un agente y ve a la pestaña **Base de Conocimiento**. Agrega temas con un título y contenido. Este conocimiento se inyecta en el contexto del agente para que pueda responder preguntas específicas de tu negocio." },
         { q: "¿Qué son los Flujos de Trabajo Recurrentes?", a: "Los Flujos de Trabajo Recurrentes son tareas que se repiten en un horario (diario, semanal, mensual, etc.). Ve a **Flujos de Trabajo → Recurrentes** y crea una tarea con frecuencia, fecha de inicio y propietario opcional. El sistema genera instancias de tareas automáticamente." },
+        { q: "¿Qué es el Asistente de Ayuda?", a: "El ícono de destello en la parte superior del dashboard abre el **Asistente Davions** — un chat de IA contextual que conoce la plataforma y la página actual. Úsalo para respuestas rápidas sin salir de tu flujo. El historial se guarda entre sesiones." },
+        { q: "¿Qué es el Carrusel con IA?", a: "Ve a **Creative Studio → Carrusel** para generar carruseles listos para Instagram. La IA escribe leyendas, elige layouts y crea fondos a partir de un solo prompt. Exporta cada slide como imagen lista para publicar." },
+        { q: "¿Cómo funciona la generación de Blog con IA?", a: "Ve a **Blog → Generador IA**, describe el tema y tono, y el sistema escribe el post completo, sugiere metadatos SEO y produce una imagen de portada. Revisa, edita y publica en un clic." },
       ],
     },
     {
@@ -380,8 +436,32 @@ const categoriesData: Record<Lang, Omit<Category, "icon">[]> = {
         { q: "El plugin no se conecta. ¿Qué hago?", a: "Asegúrate de estar logueado en la plataforma y de que tu clave de API esté correctamente ingresada en la configuración del plugin. Puedes regenerar tu clave de API en **Configuración → Personalizar → Galerías**. Consulta la página **Ayuda del Plugin LR** para pasos detallados de solución de problemas." },
       ],
     },
+    {
+      id: "clients",
+      title: "Clientes (CRM)",
+      description: "Gestiona tu base de clientes, importa, filtra y exporta",
+      articles: [
+        { q: "¿Cómo agrego un nuevo cliente?", a: "Ve a **Clientes** y haz clic en **Agregar Cliente**. Completa email, nombre, teléfono, Instagram, dirección y notas. Los clientes también se crean automáticamente cuando alguien completa una reserva a través de tu tienda." },
+        { q: "¿Cómo importo clientes desde un CSV?", a: "En la página **Clientes**, haz clic en **Importar**. Sube un archivo CSV o pega las filas directamente. El importador reconoce nombres de columnas en ES/EN/PT (email, nombre, teléfono, dirección, etc.) y omite filas inválidas. Los clientes existentes (coincidentes por email) se actualizan, no se duplican." },
+        { q: "¿Cómo funcionan los filtros, búsqueda y ordenación?", a: "Usa la barra de búsqueda para encontrar clientes por nombre, email, teléfono o Instagram. Usa el menú **Filtrar** para mostrar solo clientes recurrentes, con/sin reservas o pagantes. Usa **Ordenar** para ordenar por más recientes, nombre, total gastado o número de reservas. Haz clic en **Limpiar** para reiniciar." },
+        { q: "¿Puedo exportar mi lista de clientes?", a: "Sí. Aplica los filtros o búsqueda que quieras, luego haz clic en **Exportar CSV**. El archivo exportado contiene los clientes visibles con su conteo de reservas y total gastado — útil para respaldos o herramientas externas de correo." },
+      ],
+    },
+    {
+      id: "workflows",
+      title: "Proyectos y Flujos de Trabajo",
+      description: "Tablero Kanban, contratos, briefings y seguimientos",
+      articles: [
+        { q: "¿Qué es el Kanban de Flujos de Trabajo?", a: "**Flujos de Trabajo** organiza cada proyecto en etapas (Lead, Reservado, Fotografiado, Entregado, etc.) en un tablero Kanban. Arrastra una tarjeta entre columnas para cambiar su etapa. Los proyectos avanzan automáticamente a **Fotografiado** una vez pasada la fecha del shoot." },
+        { q: "¿Cómo funcionan los emails automáticos por etapa?", a: "Cada etapa del flujo de trabajo puede activar una plantilla de email. Cuando un proyecto entra en esa etapa, el email se envía al cliente con variables dinámicas (nombre, sesión, fecha) ya completadas. Configura las plantillas en **Flujos de Trabajo → Plantillas de Email**." },
+        { q: "¿Cómo funcionan los contratos?", a: "Ve a **Contratos** para diseñar plantillas con el editor de texto enriquecido. Arrastra campos inteligentes (nombre del cliente, sesión, precio, fecha) al documento. Cuando un cliente reserva, el HTML del contrato se congela en la reserva — ediciones futuras a la plantilla no cambian contratos ya firmados." },
+        { q: "¿Qué es el sistema de Briefing?", a: "Los Briefings son cuestionarios personalizados que creas por tipo de sesión. El cliente los completa después de reservar en la página de éxito. Las respuestas se guardan con la reserva para que llegues preparado al día del shoot." },
+        { q: "¿Cómo funcionan las notificaciones push?", a: "Activa el push web en **Notificaciones Push** para recibir alertas en tiempo real (nuevas reservas, pagos, mensajes) en desktop y móvil — incluso con la pestaña del dashboard cerrada." },
+      ],
+    },
   ],
 };
+
 
 const categoryIcons: Record<string, React.ElementType> = {
   "getting-started": HelpCircle,
@@ -392,13 +472,15 @@ const categoryIcons: Record<string, React.ElementType> = {
   "ai": Bot,
   "settings": Settings,
   "lightroom": Camera,
+  "clients": Users,
+  "workflows": Kanban,
 };
 
 const QUICK_START_IDS: Array<{ catId: string; articleIndex: number }> = [
   { catId: "getting-started", articleIndex: 2 },
   { catId: "sessions", articleIndex: 0 },
-  { catId: "galleries", articleIndex: 1 },
-  { catId: "ai", articleIndex: 0 },
+  { catId: "clients", articleIndex: 1 },
+  { catId: "workflows", articleIndex: 0 },
 ];
 
 const LANG_OPTIONS: { value: Lang; label: string; flag: string }[] = [
