@@ -269,7 +269,7 @@ export default function FinancePayables() {
     setForm({
       description: e.description,
       supplier: e.supplier ?? "",
-      category: (CATEGORY_KEYS.includes(e.category as CategoryKey) ? e.category : "other") as CategoryKey,
+      category: e.category || "other",
       amount: String(e.amount_cents || 0),
       due_date: e.due_date ?? "",
       paid_at: e.paid_at ?? "",
