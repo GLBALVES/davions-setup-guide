@@ -25,6 +25,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 import {
   ArrowUpCircle,
   Search,
@@ -33,7 +36,74 @@ import {
   CheckCircle2,
   Pencil,
   Trash2,
+  CalendarIcon,
+  X,
 } from "lucide-react";
+
+function DateField({
+  value,
+  onChange,
+  locale,
+  placeholder,
+  allowClear,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  locale: string;
+  placeholder?: string;
+  allowClear?: boolean;
+}) {
+  const date = value ? new Date(`${value}T00:00:00`) : undefined;
+  const display = date ? date.toLocaleDateString(locale) : "";
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          className={cn(
+            "w-full justify-between font-normal h-10",
+            !date && "text-muted-foreground"
+          )}
+        >
+          <span className="flex items-center gap-2">
+            <CalendarIcon className="h-4 w-4 opacity-60" />
+            {display || placeholder || "—"}
+          </span>
+          {allowClear && date && (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onChange("");
+              }}
+              className="opacity-60 hover:opacity-100"
+            >
+              <X className="h-3.5 w-3.5" />
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0 z-[60]" align="start">
+        <Calendar
+          mode="single"
+          selected={date}
+          onSelect={(d) => {
+            if (!d) return;
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            onChange(`${y}-${m}-${day}`);
+          }}
+          initialFocus
+          className={cn("p-3 pointer-events-auto")}
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
