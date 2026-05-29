@@ -204,9 +204,28 @@ export default function FinancePayables() {
       recurrence_until: form.recurrence_until || null,
       recurring: form.recurrence_interval !== "none",
     };
-    const { error } = editing
-      ? await supabase.from("expenses").update(payload).eq("id", editing.id)
-      : await supabase.from("expenses").insert(payload);
+    let error;
+    if (editing) {
+      ({ error } = await supabase.from("expenses").update(payload).eq("id", editing.id));
+    } else if (
+      form.recurrence_interval !== "none" &&
+      form.recurrence_until &&
+      form.due_date &&
+      form.recurrence_until >= form.due_date
+    ) {
+      // Generate ALL occurrences upfront when an end date is set.
+      const rows: any[] = [];
+      let cursor: string | null = form.due_date;
+      let guard = 0;
+      while (cursor && cursor <= form.recurrence_until && guard < 500) {
+        rows.push({ ...payload, due_date: cursor });
+        cursor = addRecurrence(cursor, form.recurrence_interval);
+        guard++;
+      }
+      ({ error } = await supabase.from("expenses").insert(rows));
+    } else {
+      ({ error } = await supabase.from("expenses").insert(payload));
+    }
     setSaving(false);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
