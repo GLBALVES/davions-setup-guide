@@ -581,6 +581,25 @@ export default function FinancePayables() {
                     <ArrowUpCircle className="h-3.5 w-3.5 text-muted-foreground/30" />
                   </div>
                   <p className="text-xl font-light tabular-nums">{studioFmt.fmt(totals.pending)}</p>
+                  <Select value={pendingPeriod} onValueChange={(v) => setPendingPeriod(v as any)}>
+                    <SelectTrigger className="h-7 text-[10px] tracking-[0.15em] uppercase font-light border-border w-auto gap-2 px-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="z-[60]">
+                      <SelectItem value="month">
+                        {langKey === "pt" ? "Até fim do mês" : langKey === "es" ? "Hasta fin de mes" : "Until end of month"}
+                      </SelectItem>
+                      <SelectItem value="quarter">
+                        {langKey === "pt" ? "Próximos 3 meses" : langKey === "es" ? "Próximos 3 meses" : "Next 3 months"}
+                      </SelectItem>
+                      <SelectItem value="year">
+                        {langKey === "pt" ? "Até fim do ano" : langKey === "es" ? "Hasta fin de año" : "Until end of year"}
+                      </SelectItem>
+                      <SelectItem value="all">
+                        {langKey === "pt" ? "Todo o período" : langKey === "es" ? "Todo el período" : "All time"}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="border border-border p-5 flex flex-col gap-2">
                   <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
