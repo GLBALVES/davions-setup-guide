@@ -426,6 +426,16 @@ export default function FinancePayables() {
 
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const pendingCutoff = useMemo(() => {
+    if (pendingPeriod === "all") return null;
+    if (pendingPeriod === "month") return new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    if (pendingPeriod === "quarter") return new Date(now.getFullYear(), now.getMonth() + 3, 0);
+    return new Date(now.getFullYear(), 11, 31);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingPeriod]);
+  const pendingCutoffISO = pendingCutoff
+    ? `${pendingCutoff.getFullYear()}-${String(pendingCutoff.getMonth() + 1).padStart(2, "0")}-${String(pendingCutoff.getDate()).padStart(2, "0")}`
+    : null;
 
   const enriched = useMemo(
     () =>
