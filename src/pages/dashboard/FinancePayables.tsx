@@ -684,22 +684,30 @@ export default function FinancePayables() {
                   <table className="w-full text-xs font-light">
                     <thead>
                       <tr className="border-b border-border bg-muted/20">
-                        {[
-                          t.finance.dueDate,
-                          t.finance.expenseDescription,
-                          t.finance.supplier,
-                          t.finance.category,
-                          t.finance.amount,
-                          t.finance.status,
-                          "",
-                        ].map((h, i) => (
-                          <th
-                            key={i}
-                            className="text-left px-4 py-3 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light whitespace-nowrap"
-                          >
-                            {h}
-                          </th>
-                        ))}
+                        {([
+                          { key: "due_date", label: t.finance.dueDate },
+                          { key: "description", label: t.finance.expenseDescription },
+                          { key: "supplier", label: t.finance.supplier },
+                          { key: "category", label: t.finance.category },
+                          { key: "amount", label: t.finance.amount },
+                          { key: "status", label: t.finance.status },
+                        ] as const).map((col) => {
+                          const active = sortBy === col.key;
+                          const Icon = active ? (sortDir === "asc" ? ChevronUp : ChevronDown) : ChevronsUpDown;
+                          return (
+                            <th
+                              key={col.key}
+                              onClick={() => toggleSort(col.key)}
+                              className={`text-left px-4 py-3 text-[10px] tracking-[0.2em] uppercase font-light whitespace-nowrap cursor-pointer select-none hover:text-foreground transition-colors ${active ? "text-foreground" : "text-muted-foreground"}`}
+                            >
+                              <span className="inline-flex items-center gap-1">
+                                {col.label}
+                                <Icon className={`h-3 w-3 ${active ? "opacity-100" : "opacity-40"}`} />
+                              </span>
+                            </th>
+                          );
+                        })}
+                        <th className="px-4 py-3" />
                       </tr>
                     </thead>
                     <tbody>
