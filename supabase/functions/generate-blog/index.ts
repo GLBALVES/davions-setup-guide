@@ -12,6 +12,29 @@ serve(async (req) => {
   }
 
   try {
+    // ── Require authenticated caller ──
+    const __authHeader = req.headers.get("Authorization") ?? req.headers.get("authorization");
+    if (!__authHeader?.toLowerCase().startsWith("bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    {
+      const { createClient: __createClient } = await import("https://esm.sh/@supabase/supabase-js@2.57.2");
+      const __sb = __createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+      );
+      const __token = __authHeader.slice(7).trim();
+      const { data: __u, error: __e } = await __sb.auth.getUser(__token);
+      if (__e || !__u?.user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
     const { title, keyword, secondaryKeywords, tone, articleSize, structure, cta, language } = await req.json();
 
     if (!title || !keyword) {
