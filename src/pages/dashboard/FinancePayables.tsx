@@ -437,20 +437,87 @@ export default function FinancePayables() {
     [items]
   );
 
-  const filtered = enriched.filter((e) => {
-    if (statusFilter === "pending" && e.status !== "pending") return false;
-    if (statusFilter === "paid" && e.status !== "paid") return false;
-    if (statusFilter === "overdue" && !e.isOverdue) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      if (
-        !e.description.toLowerCase().includes(q) &&
-        !(e.supplier ?? "").toLowerCase().includes(q)
-      )
-        return false;
+  const uniqueSuppliers = useMemo(() => {
+    const set = new Set<string>();
+    for (const it of items) {
+      const s = (it.supplier ?? "").trim();
+      if (s) set.add(s);
     }
-    return true;
-  });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [items]);
+
+  const filtered = useMemo(() => {
+    const list = enriched.filter((e) => {
+      if (statusFilter === "pending" && e.status !== "pending") return false;
+      if (statusFilter === "paid" && e.status !== "paid") return false;
+      if (statusFilter === "overdue" && !e.isOverdue) return false;
+      if (categoryFilter !== "all" && e.category !== categoryFilter) return false;
+      if (supplierFilter !== "all" && (e.supplier ?? "") !== supplierFilter) return false;
+      if (fromDate && (!e.due_date || e.due_date < fromDate)) return false;
+      if (toDate && (!e.due_date || e.due_date > toDate)) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        if (
+          !e.description.toLowerCase().includes(q) &&
+          !(e.supplier ?? "").toLowerCase().includes(q)
+        )
+          return false;
+      }
+      return true;
+    });
+
+    const dir = sortDir === "asc" ? 1 : -1;
+    const cmp = (a: string | number | null, b: string | number | null) => {
+      if (a == null && b == null) return 0;
+      if (a == null) return 1; // nulls last
+      if (b == null) return -1;
+      if (typeof a === "number" && typeof b === "number") return (a - b) * dir;
+      return String(a).localeCompare(String(b)) * dir;
+    };
+
+    list.sort((a, b) => {
+      switch (sortBy) {
+        case "due_date": return cmp(a.due_date, b.due_date);
+        case "description": return cmp(a.description.toLowerCase(), b.description.toLowerCase());
+        case "supplier": return cmp((a.supplier ?? "").toLowerCase(), (b.supplier ?? "").toLowerCase());
+        case "category": return cmp(labelForCategory(a.category).toLowerCase(), labelForCategory(b.category).toLowerCase());
+        case "amount": return cmp(a.amount_cents, b.amount_cents);
+        case "status": {
+          const rank = (e: typeof a) => e.isOverdue ? 0 : e.status === "pending" ? 1 : 2;
+          return (rank(a) - rank(b)) * dir;
+        }
+        default: return 0;
+      }
+    });
+    return list;
+  }, [enriched, statusFilter, categoryFilter, supplierFilter, fromDate, toDate, search, sortBy, sortDir, labelForCategory]);
+
+  function toggleSort(col: typeof sortBy) {
+    if (sortBy === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortBy(col); setSortDir("asc"); }
+  }
+
+  function clearFilters() {
+    setSearch("");
+    setStatusFilter("all");
+    setCategoryFilter("all");
+    setSupplierFilter("all");
+    setFromDate("");
+    setToDate("");
+  }
+
+  const hasActiveFilters = !!(search || statusFilter !== "all" || categoryFilter !== "all" || supplierFilter !== "all" || fromDate || toDate);
+
+  const txt = {
+    category: langKey === "pt" ? "Categoria" : langKey === "es" ? "Categoría" : "Category",
+    supplier: langKey === "pt" ? "Fornecedor" : langKey === "es" ? "Proveedor" : "Supplier",
+    from: langKey === "pt" ? "De" : langKey === "es" ? "Desde" : "From",
+    to: langKey === "pt" ? "Até" : langKey === "es" ? "Hasta" : "To",
+    all: langKey === "pt" ? "Todas" : langKey === "es" ? "Todas" : "All",
+    allM: langKey === "pt" ? "Todos" : langKey === "es" ? "Todos" : "All",
+    clear: langKey === "pt" ? "Limpar filtros" : langKey === "es" ? "Limpiar filtros" : "Clear filters",
+  };
+
 
   const totals = useMemo(() => {
     let pending = 0;
