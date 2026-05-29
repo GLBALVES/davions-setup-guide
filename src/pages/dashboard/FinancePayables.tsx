@@ -203,6 +203,8 @@ export default function FinancePayables() {
   const [supplierFilter, setSupplierFilter] = useState<string>("all");
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
+  const [fromPreset, setFromPreset] = useState<"" | "month" | "quarter_back" | "year_start" | "custom">("");
+  const [toPreset, setToPreset] = useState<"" | "month" | "quarter" | "year_end" | "custom">("");
   const [sortBy, setSortBy] = useState<"due_date" | "description" | "supplier" | "category" | "amount" | "status">("due_date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [pendingPeriod, setPendingPeriod] = useState<"month" | "quarter" | "year" | "all">("month");
@@ -227,6 +229,35 @@ export default function FinancePayables() {
     setCustomCats(next);
     try { localStorage.setItem(customCatsKey, JSON.stringify(next)); } catch {}
   }
+
+  useEffect(() => {
+    const now = new Date();
+    if (fromPreset === "month") {
+      setFromDate(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`);
+    } else if (fromPreset === "quarter_back") {
+      const d = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+      setFromDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`);
+    } else if (fromPreset === "year_start") {
+      setFromDate(`${now.getFullYear()}-01-01`);
+    } else if (fromPreset === "") {
+      setFromDate("");
+    }
+  }, [fromPreset]);
+
+  useEffect(() => {
+    const now = new Date();
+    if (toPreset === "month") {
+      const d = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      setToDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
+    } else if (toPreset === "quarter") {
+      const d = new Date(now.getFullYear(), now.getMonth() + 3, 0);
+      setToDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
+    } else if (toPreset === "year_end") {
+      setToDate(`${now.getFullYear()}-12-31`);
+    } else if (toPreset === "") {
+      setToDate("");
+    }
+  }, [toPreset]);
 
   const BASE_CAT_LABEL: Record<CategoryKey, string> = {
     supplier: t.finance.catSupplier,
@@ -515,9 +546,11 @@ export default function FinancePayables() {
     setSupplierFilter("all");
     setFromDate("");
     setToDate("");
+    setFromPreset("");
+    setToPreset("");
   }
 
-  const hasActiveFilters = !!(search || statusFilter !== "all" || categoryFilter !== "all" || supplierFilter !== "all" || fromDate || toDate);
+  const hasActiveFilters = !!(search || statusFilter !== "all" || categoryFilter !== "all" || supplierFilter !== "all" || fromDate || toDate || fromPreset || toPreset);
 
   const txt = {
     category: langKey === "pt" ? "Categoria" : langKey === "es" ? "Categoría" : "Category",
@@ -527,6 +560,12 @@ export default function FinancePayables() {
     all: langKey === "pt" ? "Todas" : langKey === "es" ? "Todas" : "All",
     allM: langKey === "pt" ? "Todos" : langKey === "es" ? "Todos" : "All",
     clear: langKey === "pt" ? "Limpar filtros" : langKey === "es" ? "Limpiar filtros" : "Clear filters",
+    thisMonth: langKey === "pt" ? "Este mês" : langKey === "es" ? "Este mes" : "This month",
+    threeMonthsAgo: langKey === "pt" ? "3 meses atrás" : langKey === "es" ? "3 meses atrás" : "3 months ago",
+    yearStart: langKey === "pt" ? "Início do ano" : langKey === "es" ? "Inicio del año" : "Start of year",
+    next3Months: langKey === "pt" ? "Próximos 3 meses" : langKey === "es" ? "Próximos 3 meses" : "Next 3 months",
+    yearEnd: langKey === "pt" ? "Até fim do ano" : langKey === "es" ? "Hasta fin de año" : "Until end of year",
+    custom: langKey === "pt" ? "Personalizado" : langKey === "es" ? "Personalizado" : "Custom",
   };
 
 
