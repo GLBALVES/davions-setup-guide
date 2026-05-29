@@ -199,6 +199,12 @@ export default function FinancePayables() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "paid" | "overdue">("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [supplierFilter, setSupplierFilter] = useState<string>("all");
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
+  const [sortBy, setSortBy] = useState<"due_date" | "description" | "supplier" | "category" | "amount" | "status">("due_date");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [form, setForm] = useState(emptyForm);
