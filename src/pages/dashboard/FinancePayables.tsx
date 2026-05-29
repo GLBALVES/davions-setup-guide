@@ -227,6 +227,39 @@ export default function FinancePayables() {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
     }
+    // When marking a recurring expense as paid, spawn the next occurrence.
+    if (next === "paid" && e.recurrence_interval && e.recurrence_interval !== "none" && e.due_date) {
+      const nextDue = addRecurrence(e.due_date, e.recurrence_interval);
+      const untilOk = !e.recurrence_until || (nextDue && nextDue <= e.recurrence_until);
+      if (nextDue && untilOk && user) {
+        // Avoid duplicating: only create if no pending occurrence already exists for this due date.
+        const { data: existing } = await supabase
+          .from("expenses")
+          .select("id")
+          .eq("photographer_id", user.id)
+          .eq("description", e.description)
+          .eq("due_date", nextDue)
+          .limit(1);
+        if (!existing || existing.length === 0) {
+          await supabase.from("expenses").insert({
+            photographer_id: user.id,
+            description: e.description,
+            supplier: e.supplier,
+            category: e.category,
+            amount_cents: e.amount_cents,
+            currency: e.currency,
+            due_date: nextDue,
+            paid_at: null,
+            status: "pending",
+            notes: e.notes,
+            recurrence_interval: e.recurrence_interval,
+            recurrence_until: e.recurrence_until,
+            recurring: true,
+          });
+          toast({ title: recFields.nextCreated });
+        }
+      }
+    }
     load();
   }
 
