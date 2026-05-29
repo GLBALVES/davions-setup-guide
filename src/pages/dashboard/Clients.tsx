@@ -379,6 +379,11 @@ export default function Clients() {
           </main>
         </div>
       </div>
+      <ImportClientsDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImported={() => queryClient.invalidateQueries({ queryKey: ["clients-imported", photographerId] })}
+      />
     </SidebarProvider>
   );
 }
