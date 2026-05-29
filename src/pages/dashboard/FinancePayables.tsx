@@ -50,12 +50,14 @@ function DateField({
   locale,
   placeholder,
   allowClear,
+  compact,
 }: {
   value: string;
   onChange: (v: string) => void;
   locale: string;
   placeholder?: string;
   allowClear?: boolean;
+  compact?: boolean;
 }) {
   const date = value ? new Date(`${value}T00:00:00`) : undefined;
   const display = date ? date.toLocaleDateString(locale) : "";
@@ -66,13 +68,14 @@ function DateField({
           type="button"
           variant="outline"
           className={cn(
-            "w-full justify-between font-normal h-10",
+            "w-full justify-between font-normal",
+            compact ? "h-8 text-xs font-light px-2" : "h-10",
             !date && "text-muted-foreground"
           )}
         >
-          <span className="flex items-center gap-2">
-            <CalendarIcon className="h-4 w-4 opacity-60" />
-            {display || placeholder || "—"}
+          <span className="flex items-center gap-2 truncate">
+            <CalendarIcon className={cn(compact ? "h-3.5 w-3.5" : "h-4 w-4", "opacity-60 shrink-0")} />
+            <span className="truncate">{display || placeholder || "—"}</span>
           </span>
           {allowClear && date && (
             <span
@@ -83,9 +86,9 @@ function DateField({
                 e.stopPropagation();
                 onChange("");
               }}
-              className="opacity-60 hover:opacity-100"
+              className="opacity-60 hover:opacity-100 shrink-0"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className={cn(compact ? "h-3 w-3" : "h-3.5 w-3.5")} />
             </span>
           )}
         </Button>
@@ -108,6 +111,7 @@ function DateField({
     </Popover>
   );
 }
+
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
