@@ -587,7 +587,7 @@ export default function FinancePayables() {
                     </SelectTrigger>
                     <SelectContent className="z-[60]">
                       <SelectItem value="month">
-                        {langKey === "pt" ? "Até fim do mês" : langKey === "es" ? "Hasta fin de mes" : "Until end of month"}
+                        {langKey === "pt" ? "Este mês" : langKey === "es" ? "Este mes" : "This month"}
                       </SelectItem>
                       <SelectItem value="quarter">
                         {langKey === "pt" ? "Próximos 3 meses" : langKey === "es" ? "Próximos 3 meses" : "Next 3 months"}
