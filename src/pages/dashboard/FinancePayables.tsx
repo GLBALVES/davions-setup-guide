@@ -738,10 +738,11 @@ export default function FinancePayables() {
                 <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
                   {recFields.until}
                 </Label>
-                <Input
-                  type="date"
+                <DateField
                   value={form.recurrence_until}
-                  onChange={(e) => setForm({ ...form, recurrence_until: e.target.value })}
+                  onChange={(v) => setForm({ ...form, recurrence_until: v })}
+                  locale={studioFmt.locale}
+                  allowClear
                 />
               </div>
             )}
