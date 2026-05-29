@@ -175,7 +175,7 @@ function parseLocal(d: string | null) {
 const emptyForm = {
   description: "",
   supplier: "",
-  category: "other" as CategoryKey,
+  category: "other" as string,
   amount: "",
   due_date: todayISO(),
   paid_at: "",
@@ -199,9 +199,25 @@ export default function FinancePayables() {
   const [editing, setEditing] = useState<Expense | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [customCats, setCustomCats] = useState<string[]>([]);
+  const [newCatInput, setNewCatInput] = useState("");
+  const [addingCat, setAddingCat] = useState(false);
   const studioFmt = useStudioCurrency();
 
-  const CAT_LABEL: Record<CategoryKey, string> = {
+  const customCatsKey = user ? `expense_custom_cats_${user.id}` : "";
+  useEffect(() => {
+    if (!customCatsKey) return;
+    try {
+      const raw = localStorage.getItem(customCatsKey);
+      if (raw) setCustomCats(JSON.parse(raw));
+    } catch {}
+  }, [customCatsKey]);
+  function persistCats(next: string[]) {
+    setCustomCats(next);
+    try { localStorage.setItem(customCatsKey, JSON.stringify(next)); } catch {}
+  }
+
+  const BASE_CAT_LABEL: Record<CategoryKey, string> = {
     supplier: t.finance.catSupplier,
     equipment: t.finance.catEquipment,
     contractor: t.finance.catContractor,
@@ -212,6 +228,20 @@ export default function FinancePayables() {
     travel: t.finance.catTravel,
     other: t.finance.catOther,
   };
+  // Merge custom categories discovered from existing items so old data still shows a label
+  const allCustomCats = useMemo(() => {
+    const fromItems = items
+      .map((it) => it.category)
+      .filter((c) => c && !CATEGORY_KEYS.includes(c as CategoryKey));
+    const merged = Array.from(new Set([...customCats, ...fromItems]));
+    return merged;
+  }, [customCats, items]);
+  const labelForCategory = (c: string) =>
+    (BASE_CAT_LABEL as Record<string, string>)[c] ?? c;
+  const addCatLabel =
+    langKey === "pt" ? "Adicionar categoria"
+    : langKey === "es" ? "Agregar categoría"
+    : "Add category";
 
   async function load() {
     if (!user) return;
@@ -239,7 +269,7 @@ export default function FinancePayables() {
     setForm({
       description: e.description,
       supplier: e.supplier ?? "",
-      category: (CATEGORY_KEYS.includes(e.category as CategoryKey) ? e.category : "other") as CategoryKey,
+      category: e.category || "other",
       amount: String(e.amount_cents || 0),
       due_date: e.due_date ?? "",
       paid_at: e.paid_at ?? "",
@@ -566,7 +596,7 @@ export default function FinancePayables() {
                               {e.supplier ?? "—"}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                              {CAT_LABEL[e.category as CategoryKey] ?? e.category}
+                              {labelForCategory(e.category)}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap tabular-nums font-normal">
                               {studioFmt.fmt(e.amount_cents)}
@@ -667,17 +697,74 @@ export default function FinancePayables() {
               </Label>
               <Select
                 value={form.category}
-                onValueChange={(v) => setForm({ ...form, category: v as CategoryKey })}
+                onValueChange={(v) => setForm({ ...form, category: v })}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent className="z-[60]">
                   {CATEGORY_KEYS.map((k) => (
                     <SelectItem key={k} value={k}>
-                      {CAT_LABEL[k]}
+                      {BASE_CAT_LABEL[k]}
+                    </SelectItem>
+                  ))}
+                  {allCustomCats.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {addingCat ? (
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    autoFocus
+                    value={newCatInput}
+                    onChange={(e) => setNewCatInput(e.target.value)}
+                    placeholder={addCatLabel}
+                    className="h-9"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const v = newCatInput.trim();
+                        if (!v) return;
+                        if (!allCustomCats.includes(v) && !CATEGORY_KEYS.includes(v as CategoryKey)) {
+                          persistCats([...customCats, v]);
+                        }
+                        setForm({ ...form, category: v as any });
+                        setNewCatInput("");
+                        setAddingCat(false);
+                      } else if (e.key === "Escape") {
+                        setNewCatInput("");
+                        setAddingCat(false);
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const v = newCatInput.trim();
+                      if (!v) { setAddingCat(false); return; }
+                      if (!allCustomCats.includes(v) && !CATEGORY_KEYS.includes(v as CategoryKey)) {
+                        persistCats([...customCats, v]);
+                      }
+                      setForm({ ...form, category: v as any });
+                      setNewCatInput("");
+                      setAddingCat(false);
+                    }}
+                  >
+                    {langKey === "pt" ? "Adicionar" : langKey === "es" ? "Agregar" : "Add"}
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setAddingCat(true)}
+                  className="text-[11px] text-muted-foreground hover:text-foreground self-start mt-1 inline-flex items-center gap-1"
+                >
+                  <Plus className="h-3 w-3" /> {addCatLabel}
+                </button>
+              )}
             </div>
             <div className="flex flex-col gap-1.5">
               <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
