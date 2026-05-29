@@ -38,6 +38,7 @@ import {
   Trash2,
   CalendarIcon,
   X,
+  Check,
 } from "lucide-react";
 
 function DateField({
