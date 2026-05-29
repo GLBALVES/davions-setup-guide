@@ -318,6 +318,29 @@ const categoriesData: Record<Lang, Omit<Category, "icon">[]> = {
         { q: "O plugin não está conectando. O que faço?", a: "Verifique se você está logado na plataforma e se sua chave de API está corretamente inserida nas configurações do plugin. Você pode regenerar sua chave de API em **Configurações → Personalizar → Galerias**. Consulte a página **Ajuda do Plugin LR** para etapas detalhadas de solução de problemas." },
       ],
     },
+    {
+      id: "clients",
+      title: "Clientes (CRM)",
+      description: "Gerencie sua base de clientes, importe, filtre e exporte",
+      articles: [
+        { q: "Como adiciono um novo cliente?", a: "Acesse **Clientes** e clique em **Adicionar Cliente**. Preencha e-mail, nome, telefone, Instagram, endereço e notas. Clientes também são criados automaticamente quando alguém conclui um agendamento pela sua loja." },
+        { q: "Como importo clientes de um CSV?", a: "Na página **Clientes**, clique em **Importar**. Envie um arquivo CSV ou cole as linhas diretamente. O importador reconhece nomes de colunas em PT/EN/ES (email, nome, telefone, endereço, etc.) e ignora linhas inválidas. Clientes existentes (combinados pelo e-mail) são atualizados, não duplicados." },
+        { q: "Como funcionam filtros, busca e ordenação?", a: "Use a barra de busca para encontrar clientes por nome, e-mail, telefone ou Instagram. Use o menu **Filtrar** para mostrar apenas clientes recorrentes, com/sem agendamentos ou pagantes. Use **Ordenar** para ordenar por mais recentes, nome, total gasto ou número de agendamentos. Clique em **Limpar** para resetar." },
+        { q: "Posso exportar minha lista de clientes?", a: "Sim. Aplique os filtros ou busca desejados e clique em **Exportar CSV**. O arquivo exportado contém os clientes visíveis com contagem de agendamentos e total gasto — útil para backups ou ferramentas externas de e-mail." },
+      ],
+    },
+    {
+      id: "workflows",
+      title: "Projetos e Workflows",
+      description: "Quadro Kanban, contratos, briefings e follow-ups",
+      articles: [
+        { q: "O que é o Kanban de Workflows?", a: "**Workflows** organiza cada projeto em estágios (Lead, Agendado, Fotografado, Entregue, etc.) em um quadro Kanban. Arraste um cartão entre colunas para mudar o estágio. Projetos avançam automaticamente para **Fotografado** após a data do ensaio." },
+        { q: "Como funcionam os e-mails automáticos por estágio?", a: "Cada estágio do workflow pode disparar um template de e-mail. Quando um projeto entra no estágio, o e-mail é enviado ao cliente com variáveis dinâmicas (nome, sessão, data) já preenchidas. Configure os templates em **Workflows → Templates de E-mail**." },
+        { q: "Como funcionam os contratos?", a: "Acesse **Contratos** para criar templates com o editor de texto rico. Arraste campos inteligentes (nome do cliente, sessão, valor, data) para o documento. Quando o cliente agenda, o HTML do contrato é congelado no agendamento — edições futuras no template não alteram contratos já assinados." },
+        { q: "O que é o sistema de Briefing?", a: "Briefings são questionários personalizados que você cria por tipo de sessão. O cliente responde após o agendamento na página de sucesso. As respostas ficam salvas com o agendamento para você chegar preparado no dia do ensaio." },
+        { q: "Como funcionam as notificações push?", a: "Ative o push web em **Notificações Push** para receber alertas em tempo real (novos agendamentos, pagamentos, mensagens) no desktop e mobile — mesmo com a aba do dashboard fechada." },
+      ],
+    },
   ],
   es: [
     {
