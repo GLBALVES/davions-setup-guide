@@ -620,6 +620,40 @@ export default function FinancePayables() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                {recFields.recurrence}
+              </Label>
+              <Select
+                value={form.recurrence_interval}
+                onValueChange={(v) =>
+                  setForm({
+                    ...form,
+                    recurrence_interval: v as RecurrenceInterval,
+                    recurrence_until: v === "none" ? "" : form.recurrence_until,
+                  })
+                }
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent className="z-[60]">
+                  {RECURRENCE_KEYS.map((k) => (
+                    <SelectItem key={k} value={k}>{recLabels[k]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {form.recurrence_interval !== "none" && (
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                  {recFields.until}
+                </Label>
+                <Input
+                  type="date"
+                  value={form.recurrence_until}
+                  onChange={(e) => setForm({ ...form, recurrence_until: e.target.value })}
+                />
+              </div>
+            )}
             {form.status === "paid" && (
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
