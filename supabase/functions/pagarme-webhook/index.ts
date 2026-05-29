@@ -152,6 +152,8 @@ serve(async (req) => {
 
 
 
+
+
     if (bookingId) {
       if (eventType === "charge.paid" || eventType === "order.paid") {
         const amountPaid =
