@@ -38,6 +38,7 @@ import {
   Trash2,
   CalendarIcon,
   X,
+  Check,
 } from "lucide-react";
 
 function DateField({
@@ -262,6 +263,8 @@ export default function FinancePayables() {
   function openNew() {
     setEditing(null);
     setForm({ ...emptyForm, due_date: todayISO() });
+    setAddingCat(false);
+    setNewCatInput("");
     setDialogOpen(true);
   }
   function openEdit(e: Expense) {
@@ -278,6 +281,8 @@ export default function FinancePayables() {
       recurrence_interval: (RECURRENCE_KEYS.includes(e.recurrence_interval) ? e.recurrence_interval : "none") as RecurrenceInterval,
       recurrence_until: e.recurrence_until ?? "",
     });
+    setAddingCat(false);
+    setNewCatInput("");
     setDialogOpen(true);
   }
 
@@ -666,6 +671,8 @@ export default function FinancePayables() {
         if (!open) {
           setAddingCat(false);
           setNewCatInput("");
+          setEditing(null);
+          setForm({ ...emptyForm, due_date: todayISO() });
         }
         setDialogOpen(open);
       }}>
@@ -720,13 +727,13 @@ export default function FinancePayables() {
                 </SelectContent>
               </Select>
               {addingCat ? (
-                <div className="flex gap-2 mt-1">
+                <div className="flex items-center gap-1 mt-1">
                   <Input
                     autoFocus
                     value={newCatInput}
                     onChange={(e) => setNewCatInput(e.target.value)}
                     placeholder={addCatLabel}
-                    className="h-9"
+                    className="h-9 flex-1 min-w-0"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -746,8 +753,10 @@ export default function FinancePayables() {
                   />
                   <Button
                     type="button"
-                    size="sm"
-                    variant="outline"
+                    size="icon"
+                    variant="ghost"
+                    className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
+                    aria-label={langKey === "pt" ? "Adicionar" : langKey === "es" ? "Agregar" : "Add"}
                     onClick={() => {
                       const v = newCatInput.trim();
                       if (!v) { setAddingCat(false); return; }
@@ -759,18 +768,20 @@ export default function FinancePayables() {
                       setAddingCat(false);
                     }}
                   >
-                    {langKey === "pt" ? "Adicionar" : langKey === "es" ? "Agregar" : "Add"}
+                    <Check className="h-4 w-4" />
                   </Button>
                   <Button
                     type="button"
-                    size="sm"
+                    size="icon"
                     variant="ghost"
+                    className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
+                    aria-label={langKey === "pt" ? "Cancelar" : langKey === "es" ? "Cancelar" : "Cancel"}
                     onClick={() => {
                       setNewCatInput("");
                       setAddingCat(false);
                     }}
                   >
-                    {langKey === "pt" ? "Cancelar" : langKey === "es" ? "Cancelar" : "Cancel"}
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
               ) : (
