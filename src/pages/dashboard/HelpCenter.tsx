@@ -472,13 +472,15 @@ const categoryIcons: Record<string, React.ElementType> = {
   "ai": Bot,
   "settings": Settings,
   "lightroom": Camera,
+  "clients": Users,
+  "workflows": Kanban,
 };
 
 const QUICK_START_IDS: Array<{ catId: string; articleIndex: number }> = [
   { catId: "getting-started", articleIndex: 2 },
   { catId: "sessions", articleIndex: 0 },
-  { catId: "galleries", articleIndex: 1 },
-  { catId: "ai", articleIndex: 0 },
+  { catId: "clients", articleIndex: 1 },
+  { catId: "workflows", articleIndex: 0 },
 ];
 
 const LANG_OPTIONS: { value: Lang; label: string; flag: string }[] = [
