@@ -149,7 +149,12 @@ export function ImportClientsDialog({ open, onOpenChange, onImported }: Props) {
         full_name: r.full_name || "",
         phone: r.phone ?? null,
         instagram: r.instagram ?? null,
-        notes: r.notes ?? null,
+        notes: [r.company ? `Company: ${r.company}` : null, r.notes].filter(Boolean).join("\n") || null,
+        address_street: r.address_street ?? null,
+        address_city: r.address_city ?? null,
+        address_state: r.address_state ?? null,
+        address_zip: r.address_zip ?? null,
+        address_country: r.address_country ?? null,
       }));
       const { error } = await (supabase as any)
         .from("clients")
