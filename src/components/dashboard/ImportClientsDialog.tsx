@@ -15,6 +15,12 @@ interface ParsedRow {
   phone?: string;
   instagram?: string;
   notes?: string;
+  company?: string;
+  address_street?: string;
+  address_city?: string;
+  address_state?: string;
+  address_zip?: string;
+  address_country?: string;
 }
 
 function parseCSV(text: string): ParsedRow[] {
@@ -42,13 +48,25 @@ function parseCSV(text: string): ParsedRow[] {
     return out.map((s) => s.trim());
   };
 
-  const headers = splitLine(lines[0]).map((h) => h.toLowerCase().replace(/^"|"$/g, ""));
-  const norm = (h: string): keyof ParsedRow | null => {
+  type Field = "email" | "full_name" | "first_name" | "last_name" | "phone" | "instagram" | "notes" | "company" | "address_street" | "address_street2" | "address_city" | "address_state" | "address_zip" | "address_country";
+
+  const headers = splitLine(lines[0]).map((h) => h.toLowerCase().replace(/^"|"$/g, "").trim());
+  const norm = (h: string): Field | null => {
     if (["email", "e-mail", "mail", "correo"].includes(h)) return "email";
-    if (["name", "full_name", "fullname", "nome", "nombre", "client", "cliente"].includes(h)) return "full_name";
+    if (["first name", "firstname", "first_name", "nome", "primer nombre"].includes(h)) return "first_name";
+    if (["last name", "lastname", "last_name", "sobrenome", "apellido"].includes(h)) return "last_name";
+    if (["name", "full_name", "fullname", "full name", "nombre", "client", "cliente"].includes(h)) return "full_name";
     if (["phone", "telefone", "celular", "telefono", "tel"].includes(h)) return "phone";
     if (["instagram", "ig"].includes(h)) return "instagram";
     if (["notes", "note", "obs", "observacao", "observação", "notas"].includes(h)) return "notes";
+    if (["company", "empresa", "compañia", "compania"].includes(h)) return "company";
+    if (["address line 1", "address", "address_street", "street", "endereco", "endereço", "direccion", "dirección"].includes(h)) return "address_street";
+    if (["address line 2", "address2", "complement", "complemento"].includes(h)) return "address_street2";
+    if (["city", "cidade", "ciudad"].includes(h)) return "address_city";
+    if (["state", "province", "state/province", "estado", "provincia"].includes(h)) return "address_state";
+    if (["zip", "postal code", "zip/postal code", "zip code", "cep", "codigo postal", "código postal"].includes(h)) return "address_zip";
+    if (["country", "pais", "país"].includes(h)) return "address_country";
+    if (["type", "tipo"].includes(h)) return null;
     return null;
   };
   const mapped = headers.map(norm);
@@ -59,20 +77,38 @@ function parseCSV(text: string): ParsedRow[] {
     const row: any = {};
     cols.forEach((v, idx) => {
       const key = mapped[idx];
-      if (key) row[key] = v.replace(/^"|"$/g, "");
+      if (!key) return;
+      const clean = v.replace(/^"|"$/g, "").trim();
+      if (!clean) return;
+      if (key === "address_street2") {
+        row.address_street = row.address_street ? `${row.address_street}, ${clean}` : clean;
+      } else {
+        row[key] = clean;
+      }
     });
     if (row.email && /\S+@\S+\.\S+/.test(row.email)) {
+      const composedName =
+        row.full_name ||
+        [row.first_name, row.last_name].filter(Boolean).join(" ").trim() ||
+        row.email.split("@")[0];
       rows.push({
         email: row.email.toLowerCase(),
-        full_name: row.full_name || row.email.split("@")[0],
+        full_name: composedName,
         phone: row.phone || undefined,
         instagram: row.instagram || undefined,
         notes: row.notes || undefined,
+        company: row.company || undefined,
+        address_street: row.address_street || undefined,
+        address_city: row.address_city || undefined,
+        address_state: row.address_state || undefined,
+        address_zip: row.address_zip || undefined,
+        address_country: row.address_country || undefined,
       });
     }
   }
   return rows;
 }
+
 
 interface Props {
   open: boolean;
