@@ -48,6 +48,7 @@ interface BookingData {
   availability_id: string;
   session_id: string;
   photographer_id: string;
+  client_token?: string | null;
 }
 
 interface SessionData {
