@@ -17,6 +17,7 @@ import { format, startOfMonth, eachMonthOfInterval, subMonths, isSameMonth } fro
 import { getBillableTaxRate } from "@/lib/tax-utils";
 import { fetchInvoiceFinance, sumPaidByMonth, type PaidInvoice } from "@/lib/project-invoices-finance";
 import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
+import { useStudioCurrency } from "@/hooks/useStudioCurrency";
 
 interface BookingRow {
   id: string;
@@ -62,11 +63,7 @@ function buildChart(rows: BookingRow[]) {
   });
 }
 
-function fmt(cents: number) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
-}
-
-function ChartTooltip({ active, payload, label }: any) {
+function ChartTooltip({ active, payload, label, fmt }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className="border border-border bg-background px-3 py-2 text-xs shadow-sm space-y-1">
@@ -84,6 +81,7 @@ function ChartTooltip({ active, payload, label }: any) {
 export default function FinanceDashboard() {
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
+  const { fmt, symbol } = useStudioCurrency();
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [paidInvoices, setPaidInvoices] = useState<PaidInvoice[]>([]);
   const [loading, setLoading] = useState(true);
