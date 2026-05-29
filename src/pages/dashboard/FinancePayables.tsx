@@ -34,7 +34,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import { format } from "date-fns";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
 import { toast } from "@/hooks/use-toast";
