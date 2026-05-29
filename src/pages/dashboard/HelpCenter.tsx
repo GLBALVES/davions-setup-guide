@@ -410,6 +410,9 @@ const categoriesData: Record<Lang, Omit<Category, "icon">[]> = {
         { q: "¿Qué es el modo supervisado para agentes de IA?", a: "En el modo **supervisado**, la IA genera un borrador de respuesta que revisas antes de enviarlo al cliente. En el modo **respuesta automática**, la IA envía la respuesta directamente. Cambia entre modos en la Barra de Comandos del Chat en la parte superior de la página de Chat." },
         { q: "¿Cómo agrego conocimiento a un agente?", a: "Abre **Agentes de IA**, edita un agente y ve a la pestaña **Base de Conocimiento**. Agrega temas con un título y contenido. Este conocimiento se inyecta en el contexto del agente para que pueda responder preguntas específicas de tu negocio." },
         { q: "¿Qué son los Flujos de Trabajo Recurrentes?", a: "Los Flujos de Trabajo Recurrentes son tareas que se repiten en un horario (diario, semanal, mensual, etc.). Ve a **Flujos de Trabajo → Recurrentes** y crea una tarea con frecuencia, fecha de inicio y propietario opcional. El sistema genera instancias de tareas automáticamente." },
+        { q: "¿Qué es el Asistente de Ayuda?", a: "El ícono de destello en la parte superior del dashboard abre el **Asistente Davions** — un chat de IA contextual que conoce la plataforma y la página actual. Úsalo para respuestas rápidas sin salir de tu flujo. El historial se guarda entre sesiones." },
+        { q: "¿Qué es el Carrusel con IA?", a: "Ve a **Creative Studio → Carrusel** para generar carruseles listos para Instagram. La IA escribe leyendas, elige layouts y crea fondos a partir de un solo prompt. Exporta cada slide como imagen lista para publicar." },
+        { q: "¿Cómo funciona la generación de Blog con IA?", a: "Ve a **Blog → Generador IA**, describe el tema y tono, y el sistema escribe el post completo, sugiere metadatos SEO y produce una imagen de portada. Revisa, edita y publica en un clic." },
       ],
     },
     {
