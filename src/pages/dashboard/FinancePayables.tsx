@@ -199,9 +199,25 @@ export default function FinancePayables() {
   const [editing, setEditing] = useState<Expense | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [customCats, setCustomCats] = useState<string[]>([]);
+  const [newCatInput, setNewCatInput] = useState("");
+  const [addingCat, setAddingCat] = useState(false);
   const studioFmt = useStudioCurrency();
 
-  const CAT_LABEL: Record<CategoryKey, string> = {
+  const customCatsKey = user ? `expense_custom_cats_${user.id}` : "";
+  useEffect(() => {
+    if (!customCatsKey) return;
+    try {
+      const raw = localStorage.getItem(customCatsKey);
+      if (raw) setCustomCats(JSON.parse(raw));
+    } catch {}
+  }, [customCatsKey]);
+  function persistCats(next: string[]) {
+    setCustomCats(next);
+    try { localStorage.setItem(customCatsKey, JSON.stringify(next)); } catch {}
+  }
+
+  const BASE_CAT_LABEL: Record<CategoryKey, string> = {
     supplier: t.finance.catSupplier,
     equipment: t.finance.catEquipment,
     contractor: t.finance.catContractor,
@@ -212,6 +228,20 @@ export default function FinancePayables() {
     travel: t.finance.catTravel,
     other: t.finance.catOther,
   };
+  // Merge custom categories discovered from existing items so old data still shows a label
+  const allCustomCats = useMemo(() => {
+    const fromItems = items
+      .map((it) => it.category)
+      .filter((c) => c && !CATEGORY_KEYS.includes(c as CategoryKey));
+    const merged = Array.from(new Set([...customCats, ...fromItems]));
+    return merged;
+  }, [customCats, items]);
+  const labelForCategory = (c: string) =>
+    (BASE_CAT_LABEL as Record<string, string>)[c] ?? c;
+  const addCatLabel =
+    langKey === "pt" ? "Adicionar categoria"
+    : langKey === "es" ? "Agregar categoría"
+    : "Add category";
 
   async function load() {
     if (!user) return;
