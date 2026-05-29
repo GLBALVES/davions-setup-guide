@@ -9,8 +9,9 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Input } from "@/components/ui/input";
 import { cn, formatTime12 } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
-import { Search, User, Mail, ChevronRight, CalendarDays, Hash, X, Upload } from "lucide-react";
+import { Search, User, Mail, ChevronRight, CalendarDays, Hash, X, Upload, Download, ArrowUpDown, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImportClientsDialog } from "@/components/dashboard/ImportClientsDialog";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -63,6 +64,8 @@ export default function Clients() {
   const [search, setSearch] = useState("");
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<"recent" | "oldest" | "nameAZ" | "nameZA" | "spentHigh" | "spentLow" | "mostBookings">("recent");
+  const [filterBy, setFilterBy] = useState<"all" | "returning" | "withBookings" | "noBookings" | "paying">("all");
   const queryClient = useQueryClient();
 
   const { data: importedClients = [] } = useQuery<any[]>({
@@ -145,12 +148,74 @@ export default function Clients() {
   }, [bookings, importedClients]);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return clients;
-    const q = search.toLowerCase();
-    return clients.filter(
-      (c) => c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q)
-    );
-  }, [clients, search]);
+    let list = clients;
+
+    // Filter
+    if (filterBy === "returning") list = list.filter((c) => c.bookingCount > 1);
+    else if (filterBy === "withBookings") list = list.filter((c) => c.bookingCount > 0);
+    else if (filterBy === "noBookings") list = list.filter((c) => c.bookingCount === 0);
+    else if (filterBy === "paying") list = list.filter((c) => c.totalSpent > 0);
+
+    // Search
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (c) => c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q)
+      );
+    }
+
+    // Sort
+    const sorted = [...list].sort((a, b) => {
+      switch (sortBy) {
+        case "nameAZ": return a.name.localeCompare(b.name);
+        case "nameZA": return b.name.localeCompare(a.name);
+        case "spentHigh": return b.totalSpent - a.totalSpent;
+        case "spentLow": return a.totalSpent - b.totalSpent;
+        case "mostBookings": return b.bookingCount - a.bookingCount;
+        case "oldest": {
+          if (!a.lastBookingDate && !b.lastBookingDate) return a.name.localeCompare(b.name);
+          if (!a.lastBookingDate) return 1;
+          if (!b.lastBookingDate) return -1;
+          return a.lastBookingDate.localeCompare(b.lastBookingDate);
+        }
+        case "recent":
+        default: {
+          if (!a.lastBookingDate && !b.lastBookingDate) return a.name.localeCompare(b.name);
+          if (!a.lastBookingDate) return 1;
+          if (!b.lastBookingDate) return -1;
+          return b.lastBookingDate.localeCompare(a.lastBookingDate);
+        }
+      }
+    });
+    return sorted;
+  }, [clients, search, sortBy, filterBy]);
+
+  const hasActiveFilters = search.trim() !== "" || filterBy !== "all" || sortBy !== "recent";
+
+  const handleExportCsv = () => {
+    const headers = ["First Name", "Last Name", "Company", "Email", "Type", "Phone", "Address Line 1", "Address Line 2", "City", "State/Province", "Zip/Postal Code", "Country", "Notes"];
+    const rows = filtered.map((c) => {
+      const parts = (c.name || "").trim().split(/\s+/);
+      const first = parts[0] ?? "";
+      const last = parts.slice(1).join(" ");
+      const notes = `Bookings: ${c.bookingCount}; Total paid: $${(c.totalSpent / 100).toFixed(2)}${c.lastBookingDate ? `; Last: ${c.lastBookingDate}` : ""}`;
+      return [first, last, "", c.email, "", "", "", "", "", "", "", "", notes];
+    });
+    const escape = (v: string) => {
+      const s = String(v ?? "");
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = [headers, ...rows].map((r) => r.map(escape).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `clients-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const selected = selectedEmail ? clients.find((c) => c.email.toLowerCase() === selectedEmail.toLowerCase()) ?? null : null;
 
@@ -176,15 +241,27 @@ export default function Clients() {
                     <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">{cl.crm}</p>
                     <h1 className="text-lg font-light tracking-wide">{cl.title}</h1>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setImportOpen(true)}
-                    className="text-[10px] tracking-[0.2em] uppercase font-light h-8 rounded-none border border-border hover:bg-muted"
-                  >
-                    <Upload className="h-3 w-3 mr-2" />
-                    {cl.importCsv}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleExportCsv}
+                      disabled={filtered.length === 0}
+                      className="text-[10px] tracking-[0.2em] uppercase font-light h-8 rounded-none border border-border hover:bg-muted"
+                    >
+                      <Download className="h-3 w-3 mr-2" />
+                      {cl.exportCsv}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setImportOpen(true)}
+                      className="text-[10px] tracking-[0.2em] uppercase font-light h-8 rounded-none border border-border hover:bg-muted"
+                    >
+                      <Upload className="h-3 w-3 mr-2" />
+                      {cl.importCsv}
+                    </Button>
+                  </div>
                 </div>
                 {/* Stats row */}
                 {!isLoading && (
@@ -214,6 +291,63 @@ export default function Clients() {
                     onChange={(e) => setSearch(e.target.value)}
                     className="pl-9 h-8 text-xs rounded-none"
                   />
+                  {search && (
+                    <button
+                      onClick={() => setSearch("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground/50 hover:text-foreground"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
+                {/* Filters + Sort */}
+                <div className="flex items-center gap-2">
+                  <Select value={filterBy} onValueChange={(v: any) => setFilterBy(v)}>
+                    <SelectTrigger className="h-8 text-[10px] tracking-[0.15em] uppercase font-light rounded-none flex-1">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <Filter className="h-3 w-3 shrink-0" />
+                        <SelectValue />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="z-[60]">
+                      <SelectItem value="all" className="text-xs">{cl.filterAll}</SelectItem>
+                      <SelectItem value="returning" className="text-xs">{cl.filterReturning}</SelectItem>
+                      <SelectItem value="withBookings" className="text-xs">{cl.filterWithBookings}</SelectItem>
+                      <SelectItem value="noBookings" className="text-xs">{cl.filterNoBookings}</SelectItem>
+                      <SelectItem value="paying" className="text-xs">{cl.filterPaying}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+                    <SelectTrigger className="h-8 text-[10px] tracking-[0.15em] uppercase font-light rounded-none flex-1">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <ArrowUpDown className="h-3 w-3 shrink-0" />
+                        <SelectValue />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="z-[60]">
+                      <SelectItem value="recent" className="text-xs">{cl.sortRecent}</SelectItem>
+                      <SelectItem value="oldest" className="text-xs">{cl.sortOldest}</SelectItem>
+                      <SelectItem value="nameAZ" className="text-xs">{cl.sortNameAZ}</SelectItem>
+                      <SelectItem value="nameZA" className="text-xs">{cl.sortNameZA}</SelectItem>
+                      <SelectItem value="spentHigh" className="text-xs">{cl.sortSpentHigh}</SelectItem>
+                      <SelectItem value="spentLow" className="text-xs">{cl.sortSpentLow}</SelectItem>
+                      <SelectItem value="mostBookings" className="text-xs">{cl.sortMostBookings}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* Result count + clear */}
+                <div className="flex items-center justify-between text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                  <span>
+                    {cl.resultCount.replace("{count}", String(filtered.length)).replace("{total}", String(clients.length))}
+                  </span>
+                  {hasActiveFilters && (
+                    <button
+                      onClick={() => { setSearch(""); setFilterBy("all"); setSortBy("recent"); }}
+                      className="text-foreground hover:underline"
+                    >
+                      {cl.clearFilters}
+                    </button>
+                  )}
                 </div>
               </div>
 
