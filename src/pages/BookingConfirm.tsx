@@ -645,11 +645,12 @@ const BookingConfirm = () => {
   /* ── Persist contract snapshot when accepted ── */
   const handleAcceptContract = async (checked: boolean) => {
     setContractAccepted(checked);
-    if (checked && booking?.id && resolvedContractHtml) {
+    if (checked && booking?.id && resolvedContractHtml && booking.client_token) {
       try {
         await supabase.functions.invoke("register-contract-acceptance", {
           body: {
             booking_id: booking.id,
+            client_token: booking.client_token,
             contract_html: resolvedContractHtml,
             client_tax_id: clientInfo.tax_id?.trim() || null,
             signature_data: signatureData,
