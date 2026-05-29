@@ -50,6 +50,8 @@ interface Expense {
   paid_at: string | null;
   status: "pending" | "paid";
   notes: string | null;
+  recurrence_interval: RecurrenceInterval;
+  recurrence_until: string | null;
   created_at: string;
 }
 
@@ -66,6 +68,31 @@ const CATEGORY_KEYS = [
 ] as const;
 
 type CategoryKey = (typeof CATEGORY_KEYS)[number];
+
+const RECURRENCE_KEYS = ["none", "weekly", "monthly", "quarterly", "yearly"] as const;
+type RecurrenceInterval = (typeof RECURRENCE_KEYS)[number];
+
+const RECURRENCE_LABELS: Record<"en" | "pt" | "es", Record<RecurrenceInterval, string>> = {
+  en: { none: "No recurrence", weekly: "Weekly", monthly: "Monthly", quarterly: "Quarterly", yearly: "Yearly" },
+  pt: { none: "Sem recorrência", weekly: "Semanal", monthly: "Mensal", quarterly: "Trimestral", yearly: "Anual" },
+  es: { none: "Sin recurrencia", weekly: "Semanal", monthly: "Mensual", quarterly: "Trimestral", yearly: "Anual" },
+};
+
+const RECURRENCE_FIELD_LABELS: Record<"en" | "pt" | "es", { recurrence: string; until: string; nextCreated: string }> = {
+  en: { recurrence: "Recurrence", until: "Repeat until (optional)", nextCreated: "Next occurrence created" },
+  pt: { recurrence: "Recorrência", until: "Repetir até (opcional)", nextCreated: "Próxima ocorrência criada" },
+  es: { recurrence: "Recurrencia", until: "Repetir hasta (opcional)", nextCreated: "Próxima ocurrencia creada" },
+};
+
+function addRecurrence(dateISO: string, interval: RecurrenceInterval): string | null {
+  if (interval === "none" || !dateISO) return null;
+  const d = new Date(`${dateISO}T00:00:00`);
+  if (interval === "weekly") d.setDate(d.getDate() + 7);
+  else if (interval === "monthly") d.setMonth(d.getMonth() + 1);
+  else if (interval === "quarterly") d.setMonth(d.getMonth() + 3);
+  else if (interval === "yearly") d.setFullYear(d.getFullYear() + 1);
+  return d.toISOString().slice(0, 10);
+}
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -84,6 +111,8 @@ const emptyForm = {
   paid_at: "",
   status: "pending" as "pending" | "paid",
   notes: "",
+  recurrence_interval: "none" as RecurrenceInterval,
+  recurrence_until: "",
 };
 
 export default function FinancePayables() {
