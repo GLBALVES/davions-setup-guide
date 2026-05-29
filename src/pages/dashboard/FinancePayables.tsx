@@ -203,8 +203,8 @@ export default function FinancePayables() {
   const [supplierFilter, setSupplierFilter] = useState<string>("all");
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
-  const [fromPreset, setFromPreset] = useState<"" | "month" | "quarter_back" | "year_start" | "custom">("");
-  const [toPreset, setToPreset] = useState<"" | "month" | "quarter" | "year_end" | "custom">("");
+  const [fromPreset, setFromPreset] = useState<"none" | "month" | "quarter_back" | "year_start" | "custom">("");
+  const [toPreset, setToPreset] = useState<"none" | "month" | "quarter" | "year_end" | "custom">("");
   const [sortBy, setSortBy] = useState<"due_date" | "description" | "supplier" | "category" | "amount" | "status">("due_date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [pendingPeriod, setPendingPeriod] = useState<"month" | "quarter" | "year" | "all">("month");
