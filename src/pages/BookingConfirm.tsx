@@ -48,6 +48,7 @@ interface BookingData {
   availability_id: string;
   session_id: string;
   photographer_id: string;
+  client_token?: string | null;
 }
 
 interface SessionData {
@@ -484,11 +485,12 @@ const BookingConfirm = () => {
       // Always persist the resolved contract snapshot before payment, so it
       // survives even if the accept-checkbox handler didn't fire (or fired
       // before resolvedContractHtml was ready).
-      if (session.contract_text && resolvedContractHtml) {
+      if (session.contract_text && resolvedContractHtml && booking.client_token) {
         try {
           await supabase.functions.invoke("register-contract-acceptance", {
             body: {
               booking_id: booking.id,
+              client_token: booking.client_token,
               contract_html: resolvedContractHtml,
               client_tax_id: clientInfo.tax_id?.trim() || null,
               signature_data: signatureData,
@@ -643,11 +645,12 @@ const BookingConfirm = () => {
   /* ── Persist contract snapshot when accepted ── */
   const handleAcceptContract = async (checked: boolean) => {
     setContractAccepted(checked);
-    if (checked && booking?.id && resolvedContractHtml) {
+    if (checked && booking?.id && resolvedContractHtml && booking.client_token) {
       try {
         await supabase.functions.invoke("register-contract-acceptance", {
           body: {
             booking_id: booking.id,
+            client_token: booking.client_token,
             contract_html: resolvedContractHtml,
             client_tax_id: clientInfo.tax_id?.trim() || null,
             signature_data: signatureData,
@@ -671,11 +674,12 @@ const BookingConfirm = () => {
       if (dataUrl && typeof dataUrl === "string" && dataUrl.startsWith("data:image")) {
         setSignatureData(dataUrl);
         // Persist immediately so it survives even if user abandons before payment
-        if (booking?.id && resolvedContractHtml) {
+        if (booking?.id && resolvedContractHtml && booking.client_token) {
           supabase.functions
             .invoke("register-contract-acceptance", {
               body: {
                 booking_id: booking.id,
+                client_token: booking.client_token,
                 contract_html: resolvedContractHtml,
                 client_tax_id: clientInfo.tax_id?.trim() || null,
                 signature_data: dataUrl,

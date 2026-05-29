@@ -25,9 +25,21 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
   );
 
-  // Optional Basic Auth validation
+  // Always require Basic Auth — refuse if the secret was not configured.
   const expectedAuth = Deno.env.get("PAGARME_WEBHOOK_AUTH");
-  if (expectedAuth) {
+  if (!expectedAuth) {
+    await logWebhookEvent(supabase, {
+      provider: "pagarme",
+      status: "error",
+      error_message: "Misconfiguration: PAGARME_WEBHOOK_AUTH is not set",
+      duration_ms: Date.now() - startedAt,
+    });
+    return new Response("Server misconfiguration", {
+      status: 500,
+      headers: corsHeaders,
+    });
+  }
+  {
     const provided = req.headers.get("authorization") ?? "";
     if (provided !== `Basic ${expectedAuth}` && provided !== expectedAuth) {
       await logWebhookEvent(supabase, {
@@ -135,8 +147,9 @@ serve(async (req) => {
           }
         }
       }
-      }
     }
+
+
 
 
 

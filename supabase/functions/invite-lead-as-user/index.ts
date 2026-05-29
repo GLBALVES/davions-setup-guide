@@ -5,9 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const ADMIN_EMAILS = [
-  "gilberto@giombelli.com.br",
-];
+// Admin status is determined exclusively via the public.user_roles table.
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -41,7 +39,7 @@ Deno.serve(async (req) => {
       .eq("role", "admin")
       .maybeSingle();
 
-    const isAdmin = !!roleRow || ADMIN_EMAILS.includes((user.email || "").toLowerCase());
+    const isAdmin = !!roleRow;
     if (!isAdmin) return json({ error: "Forbidden" }, 403);
 
     const { lead_id, redirect_to } = await req.json();

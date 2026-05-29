@@ -43,7 +43,7 @@ serve(async (req) => {
 
     const { data: booking, error } = await supabase
       .from("bookings")
-      .select("id, status, payment_status, booked_date, session_id, photographer_id, availability_id, client_name, client_email, stripe_checkout_session_id")
+      .select("id, status, payment_status, booked_date, session_id, photographer_id, availability_id, client_name, client_email, stripe_checkout_session_id, client_token, contract_locked")
       .eq("id", booking_id)
       .single();
 

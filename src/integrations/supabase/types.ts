@@ -727,6 +727,7 @@ export type Database = {
           client_email: string
           client_name: string
           client_tax_id: string | null
+          client_token: string | null
           consent_given_at: string | null
           contract_html_snapshot: string | null
           contract_locked: boolean
@@ -757,6 +758,7 @@ export type Database = {
           client_email: string
           client_name: string
           client_tax_id?: string | null
+          client_token?: string | null
           consent_given_at?: string | null
           contract_html_snapshot?: string | null
           contract_locked?: boolean
@@ -787,6 +789,7 @@ export type Database = {
           client_email?: string
           client_name?: string
           client_tax_id?: string | null
+          client_token?: string | null
           consent_given_at?: string | null
           contract_html_snapshot?: string | null
           contract_locked?: boolean
