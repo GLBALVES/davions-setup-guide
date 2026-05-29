@@ -241,15 +241,27 @@ export default function Clients() {
                     <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">{cl.crm}</p>
                     <h1 className="text-lg font-light tracking-wide">{cl.title}</h1>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setImportOpen(true)}
-                    className="text-[10px] tracking-[0.2em] uppercase font-light h-8 rounded-none border border-border hover:bg-muted"
-                  >
-                    <Upload className="h-3 w-3 mr-2" />
-                    {cl.importCsv}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleExportCsv}
+                      disabled={filtered.length === 0}
+                      className="text-[10px] tracking-[0.2em] uppercase font-light h-8 rounded-none border border-border hover:bg-muted"
+                    >
+                      <Download className="h-3 w-3 mr-2" />
+                      {cl.exportCsv}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setImportOpen(true)}
+                      className="text-[10px] tracking-[0.2em] uppercase font-light h-8 rounded-none border border-border hover:bg-muted"
+                    >
+                      <Upload className="h-3 w-3 mr-2" />
+                      {cl.importCsv}
+                    </Button>
+                  </div>
                 </div>
                 {/* Stats row */}
                 {!isLoading && (
@@ -279,6 +291,63 @@ export default function Clients() {
                     onChange={(e) => setSearch(e.target.value)}
                     className="pl-9 h-8 text-xs rounded-none"
                   />
+                  {search && (
+                    <button
+                      onClick={() => setSearch("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground/50 hover:text-foreground"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
+                {/* Filters + Sort */}
+                <div className="flex items-center gap-2">
+                  <Select value={filterBy} onValueChange={(v: any) => setFilterBy(v)}>
+                    <SelectTrigger className="h-8 text-[10px] tracking-[0.15em] uppercase font-light rounded-none flex-1">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <Filter className="h-3 w-3 shrink-0" />
+                        <SelectValue />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="z-[60]">
+                      <SelectItem value="all" className="text-xs">{cl.filterAll}</SelectItem>
+                      <SelectItem value="returning" className="text-xs">{cl.filterReturning}</SelectItem>
+                      <SelectItem value="withBookings" className="text-xs">{cl.filterWithBookings}</SelectItem>
+                      <SelectItem value="noBookings" className="text-xs">{cl.filterNoBookings}</SelectItem>
+                      <SelectItem value="paying" className="text-xs">{cl.filterPaying}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+                    <SelectTrigger className="h-8 text-[10px] tracking-[0.15em] uppercase font-light rounded-none flex-1">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <ArrowUpDown className="h-3 w-3 shrink-0" />
+                        <SelectValue />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="z-[60]">
+                      <SelectItem value="recent" className="text-xs">{cl.sortRecent}</SelectItem>
+                      <SelectItem value="oldest" className="text-xs">{cl.sortOldest}</SelectItem>
+                      <SelectItem value="nameAZ" className="text-xs">{cl.sortNameAZ}</SelectItem>
+                      <SelectItem value="nameZA" className="text-xs">{cl.sortNameZA}</SelectItem>
+                      <SelectItem value="spentHigh" className="text-xs">{cl.sortSpentHigh}</SelectItem>
+                      <SelectItem value="spentLow" className="text-xs">{cl.sortSpentLow}</SelectItem>
+                      <SelectItem value="mostBookings" className="text-xs">{cl.sortMostBookings}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* Result count + clear */}
+                <div className="flex items-center justify-between text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                  <span>
+                    {cl.resultCount.replace("{count}", String(filtered.length)).replace("{total}", String(clients.length))}
+                  </span>
+                  {hasActiveFilters && (
+                    <button
+                      onClick={() => { setSearch(""); setFilterBy("all"); setSortBy("recent"); }}
+                      className="text-foreground hover:underline"
+                    >
+                      {cl.clearFilters}
+                    </button>
+                  )}
                 </div>
               </div>
 
