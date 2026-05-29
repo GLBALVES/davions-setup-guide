@@ -205,6 +205,7 @@ export default function FinancePayables() {
   const [toDate, setToDate] = useState<string>("");
   const [sortBy, setSortBy] = useState<"due_date" | "description" | "supplier" | "category" | "amount" | "status">("due_date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [pendingPeriod, setPendingPeriod] = useState<"month" | "quarter" | "year" | "all">("month");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -425,6 +426,16 @@ export default function FinancePayables() {
 
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const pendingCutoff = useMemo(() => {
+    if (pendingPeriod === "all") return null;
+    if (pendingPeriod === "month") return new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    if (pendingPeriod === "quarter") return new Date(now.getFullYear(), now.getMonth() + 3, 0);
+    return new Date(now.getFullYear(), 11, 31);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingPeriod]);
+  const pendingCutoffISO = pendingCutoff
+    ? `${pendingCutoff.getFullYear()}-${String(pendingCutoff.getMonth() + 1).padStart(2, "0")}-${String(pendingCutoff.getDate()).padStart(2, "0")}`
+    : null;
 
   const enriched = useMemo(
     () =>
@@ -525,7 +536,9 @@ export default function FinancePayables() {
     let paidMonth = 0;
     for (const e of enriched) {
       if (e.status === "pending") {
-        pending += e.amount_cents;
+        const withinPeriod =
+          !pendingCutoffISO || (e.due_date && e.due_date <= pendingCutoffISO) || e.isOverdue;
+        if (withinPeriod) pending += e.amount_cents;
         if (e.isOverdue) overdue += e.amount_cents;
       } else if (e.status === "paid" && e.paid_at) {
         const p = parseLocal(e.paid_at);
@@ -534,7 +547,7 @@ export default function FinancePayables() {
     }
     return { pending, overdue, paidMonth };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enriched]);
+  }, [enriched, pendingCutoffISO]);
 
   return (
     <SidebarProvider>
@@ -568,6 +581,25 @@ export default function FinancePayables() {
                     <ArrowUpCircle className="h-3.5 w-3.5 text-muted-foreground/30" />
                   </div>
                   <p className="text-xl font-light tabular-nums">{studioFmt.fmt(totals.pending)}</p>
+                  <Select value={pendingPeriod} onValueChange={(v) => setPendingPeriod(v as any)}>
+                    <SelectTrigger className="h-7 text-[10px] tracking-[0.15em] uppercase font-light border-border w-auto gap-2 px-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="z-[60]">
+                      <SelectItem value="month">
+                        {langKey === "pt" ? "Até fim do mês" : langKey === "es" ? "Hasta fin de mes" : "Until end of month"}
+                      </SelectItem>
+                      <SelectItem value="quarter">
+                        {langKey === "pt" ? "Próximos 3 meses" : langKey === "es" ? "Próximos 3 meses" : "Next 3 months"}
+                      </SelectItem>
+                      <SelectItem value="year">
+                        {langKey === "pt" ? "Até fim do ano" : langKey === "es" ? "Hasta fin de año" : "Until end of year"}
+                      </SelectItem>
+                      <SelectItem value="all">
+                        {langKey === "pt" ? "Todo o período" : langKey === "es" ? "Todo el período" : "All time"}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="border border-border p-5 flex flex-col gap-2">
                   <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
