@@ -50,6 +50,8 @@ interface Expense {
   paid_at: string | null;
   status: "pending" | "paid";
   notes: string | null;
+  recurrence_interval: RecurrenceInterval;
+  recurrence_until: string | null;
   created_at: string;
 }
 
@@ -66,6 +68,31 @@ const CATEGORY_KEYS = [
 ] as const;
 
 type CategoryKey = (typeof CATEGORY_KEYS)[number];
+
+const RECURRENCE_KEYS = ["none", "weekly", "monthly", "quarterly", "yearly"] as const;
+type RecurrenceInterval = (typeof RECURRENCE_KEYS)[number];
+
+const RECURRENCE_LABELS: Record<"en" | "pt" | "es", Record<RecurrenceInterval, string>> = {
+  en: { none: "No recurrence", weekly: "Weekly", monthly: "Monthly", quarterly: "Quarterly", yearly: "Yearly" },
+  pt: { none: "Sem recorrência", weekly: "Semanal", monthly: "Mensal", quarterly: "Trimestral", yearly: "Anual" },
+  es: { none: "Sin recurrencia", weekly: "Semanal", monthly: "Mensual", quarterly: "Trimestral", yearly: "Anual" },
+};
+
+const RECURRENCE_FIELD_LABELS: Record<"en" | "pt" | "es", { recurrence: string; until: string; nextCreated: string }> = {
+  en: { recurrence: "Recurrence", until: "Repeat until (optional)", nextCreated: "Next occurrence created" },
+  pt: { recurrence: "Recorrência", until: "Repetir até (opcional)", nextCreated: "Próxima ocorrência criada" },
+  es: { recurrence: "Recurrencia", until: "Repetir hasta (opcional)", nextCreated: "Próxima ocurrencia creada" },
+};
+
+function addRecurrence(dateISO: string, interval: RecurrenceInterval): string | null {
+  if (interval === "none" || !dateISO) return null;
+  const d = new Date(`${dateISO}T00:00:00`);
+  if (interval === "weekly") d.setDate(d.getDate() + 7);
+  else if (interval === "monthly") d.setMonth(d.getMonth() + 1);
+  else if (interval === "quarterly") d.setMonth(d.getMonth() + 3);
+  else if (interval === "yearly") d.setFullYear(d.getFullYear() + 1);
+  return d.toISOString().slice(0, 10);
+}
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -84,11 +111,16 @@ const emptyForm = {
   paid_at: "",
   status: "pending" as "pending" | "paid",
   notes: "",
+  recurrence_interval: "none" as RecurrenceInterval,
+  recurrence_until: "",
 };
 
 export default function FinancePayables() {
   const { user, signOut } = useAuth();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const langKey: "en" | "pt" | "es" = lang === "pt" ? "pt" : lang === "es" ? "es" : "en";
+  const recLabels = RECURRENCE_LABELS[langKey];
+  const recFields = RECURRENCE_FIELD_LABELS[langKey];
   const [items, setItems] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -143,6 +175,8 @@ export default function FinancePayables() {
       paid_at: e.paid_at ?? "",
       status: e.status,
       notes: e.notes ?? "",
+      recurrence_interval: (RECURRENCE_KEYS.includes(e.recurrence_interval) ? e.recurrence_interval : "none") as RecurrenceInterval,
+      recurrence_until: e.recurrence_until ?? "",
     });
     setDialogOpen(true);
   }
@@ -166,6 +200,9 @@ export default function FinancePayables() {
       paid_at: form.status === "paid" ? (form.paid_at || todayISO()) : null,
       status: form.status,
       notes: form.notes.trim() || null,
+      recurrence_interval: form.recurrence_interval,
+      recurrence_until: form.recurrence_until || null,
+      recurring: form.recurrence_interval !== "none",
     };
     const { error } = editing
       ? await supabase.from("expenses").update(payload).eq("id", editing.id)
@@ -189,6 +226,39 @@ export default function FinancePayables() {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
       return;
+    }
+    // When marking a recurring expense as paid, spawn the next occurrence.
+    if (next === "paid" && e.recurrence_interval && e.recurrence_interval !== "none" && e.due_date) {
+      const nextDue = addRecurrence(e.due_date, e.recurrence_interval);
+      const untilOk = !e.recurrence_until || (nextDue && nextDue <= e.recurrence_until);
+      if (nextDue && untilOk && user) {
+        // Avoid duplicating: only create if no pending occurrence already exists for this due date.
+        const { data: existing } = await supabase
+          .from("expenses")
+          .select("id")
+          .eq("photographer_id", user.id)
+          .eq("description", e.description)
+          .eq("due_date", nextDue)
+          .limit(1);
+        if (!existing || existing.length === 0) {
+          await supabase.from("expenses").insert({
+            photographer_id: user.id,
+            description: e.description,
+            supplier: e.supplier,
+            category: e.category,
+            amount_cents: e.amount_cents,
+            currency: e.currency,
+            due_date: nextDue,
+            paid_at: null,
+            status: "pending",
+            notes: e.notes,
+            recurrence_interval: e.recurrence_interval,
+            recurrence_until: e.recurrence_until,
+            recurring: true,
+          });
+          toast({ title: recFields.nextCreated });
+        }
+      }
     }
     load();
   }
@@ -550,6 +620,40 @@ export default function FinancePayables() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                {recFields.recurrence}
+              </Label>
+              <Select
+                value={form.recurrence_interval}
+                onValueChange={(v) =>
+                  setForm({
+                    ...form,
+                    recurrence_interval: v as RecurrenceInterval,
+                    recurrence_until: v === "none" ? "" : form.recurrence_until,
+                  })
+                }
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent className="z-[60]">
+                  {RECURRENCE_KEYS.map((k) => (
+                    <SelectItem key={k} value={k}>{recLabels[k]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {form.recurrence_interval !== "none" && (
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                  {recFields.until}
+                </Label>
+                <Input
+                  type="date"
+                  value={form.recurrence_until}
+                  onChange={(e) => setForm({ ...form, recurrence_until: e.target.value })}
+                />
+              </div>
+            )}
             {form.status === "paid" && (
               <div className="flex flex-col gap-1.5">
                 <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
