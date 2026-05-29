@@ -263,6 +263,8 @@ export default function FinancePayables() {
   function openNew() {
     setEditing(null);
     setForm({ ...emptyForm, due_date: todayISO() });
+    setAddingCat(false);
+    setNewCatInput("");
     setDialogOpen(true);
   }
   function openEdit(e: Expense) {
@@ -279,6 +281,8 @@ export default function FinancePayables() {
       recurrence_interval: (RECURRENCE_KEYS.includes(e.recurrence_interval) ? e.recurrence_interval : "none") as RecurrenceInterval,
       recurrence_until: e.recurrence_until ?? "",
     });
+    setAddingCat(false);
+    setNewCatInput("");
     setDialogOpen(true);
   }
 
