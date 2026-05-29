@@ -518,22 +518,6 @@ export default function FinancePayables() {
             </div>
             <div className="flex flex-col gap-1.5">
               <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
-                Moeda
-              </Label>
-              <Select
-                value={form.currency}
-                onValueChange={(v) => setForm({ ...form, currency: v })}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent className="z-[60]">
-                  {["BRL", "USD", "EUR", "MXN", "ARS", "GBP"].map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
                 {t.finance.dueDate}
               </Label>
               <Input
