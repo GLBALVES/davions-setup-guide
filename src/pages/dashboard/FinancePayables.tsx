@@ -74,20 +74,12 @@ function parseLocal(d: string | null) {
   if (!d) return null;
   return new Date(`${d}T00:00:00`);
 }
-function fmtMoney(cents: number, currency: string) {
-  try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(cents / 100);
-  } catch {
-    return `${(cents / 100).toFixed(2)} ${currency}`;
-  }
-}
 
 const emptyForm = {
   description: "",
   supplier: "",
   category: "other" as CategoryKey,
   amount: "",
-  currency: "BRL",
   due_date: todayISO(),
   paid_at: "",
   status: "pending" as "pending" | "paid",
