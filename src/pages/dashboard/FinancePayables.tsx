@@ -288,11 +288,27 @@ export default function FinancePayables() {
       let cursor: string | null = form.due_date;
       let guard = 0;
       while (cursor && cursor <= form.recurrence_until && guard < 500) {
-        rows.push({ ...payload, due_date: cursor });
+        rows.push({
+          ...payload,
+          due_date: cursor,
+          // Children are independent entries — don't keep spawning
+          recurrence_interval: "none",
+          recurrence_until: null,
+          recurring: false,
+        });
         cursor = addRecurrence(cursor, form.recurrence_interval);
         guard++;
       }
-      ({ error } = await supabase.from("expenses").insert(rows));
+      console.log("[FinancePayables] bulk insert rows:", rows.length, {
+        from: form.due_date,
+        until: form.recurrence_until,
+        interval: form.recurrence_interval,
+      });
+      if (rows.length === 0) {
+        ({ error } = await supabase.from("expenses").insert(payload));
+      } else {
+        ({ error } = await supabase.from("expenses").insert(rows));
+      }
     } else {
       ({ error } = await supabase.from("expenses").insert(payload));
     }
