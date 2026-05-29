@@ -181,7 +181,6 @@ export const translations = {
       schedule: "Schedule",
       searchPlaceholder: "Search client or session…",
       all: "All",
-      pending: "Pending",
       confirmed: "Confirmed",
       cancelled: "Cancelled",
       loading: "Loading…",
