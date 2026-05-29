@@ -52,6 +52,7 @@ interface Expense {
   notes: string | null;
   recurrence_interval: RecurrenceInterval;
   recurrence_until: string | null;
+  recurrence_count: number | null;
   created_at: string;
 }
 
@@ -78,10 +79,10 @@ const RECURRENCE_LABELS: Record<"en" | "pt" | "es", Record<RecurrenceInterval, s
   es: { none: "Sin recurrencia", weekly: "Semanal", monthly: "Mensual", quarterly: "Trimestral", yearly: "Anual" },
 };
 
-const RECURRENCE_FIELD_LABELS: Record<"en" | "pt" | "es", { recurrence: string; until: string; nextCreated: string }> = {
-  en: { recurrence: "Recurrence", until: "Repeat until (optional)", nextCreated: "Next occurrence created" },
-  pt: { recurrence: "Recorrência", until: "Repetir até (opcional)", nextCreated: "Próxima ocorrência criada" },
-  es: { recurrence: "Recurrencia", until: "Repetir hasta (opcional)", nextCreated: "Próxima ocurrencia creada" },
+const RECURRENCE_FIELD_LABELS: Record<"en" | "pt" | "es", { recurrence: string; mode: string; permanent: string; fixed: string; installments: string; remaining: string; nextCreated: string; finished: string }> = {
+  en: { recurrence: "Recurrence", mode: "Duration", permanent: "Permanent", fixed: "Fixed installments", installments: "Installments", remaining: "remaining", nextCreated: "Next occurrence created", finished: "Recurrence finished" },
+  pt: { recurrence: "Recorrência", mode: "Duração", permanent: "Permanente", fixed: "Parcelas fixas", installments: "Parcelas", remaining: "restantes", nextCreated: "Próxima ocorrência criada", finished: "Recorrência finalizada" },
+  es: { recurrence: "Recurrencia", mode: "Duración", permanent: "Permanente", fixed: "Cuotas fijas", installments: "Cuotas", remaining: "restantes", nextCreated: "Próxima ocurrencia creada", finished: "Recurrencia finalizada" },
 };
 
 function addRecurrence(dateISO: string, interval: RecurrenceInterval): string | null {
@@ -113,6 +114,8 @@ const emptyForm = {
   notes: "",
   recurrence_interval: "none" as RecurrenceInterval,
   recurrence_until: "",
+  recurrence_mode: "permanent" as "permanent" | "fixed",
+  recurrence_count: "",
 };
 
 export default function FinancePayables() {
