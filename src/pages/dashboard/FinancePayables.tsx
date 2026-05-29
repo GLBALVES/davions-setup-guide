@@ -117,7 +117,10 @@ const emptyForm = {
 
 export default function FinancePayables() {
   const { user, signOut } = useAuth();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const langKey: "en" | "pt" | "es" = lang === "pt" ? "pt" : lang === "es" ? "es" : "en";
+  const recLabels = RECURRENCE_LABELS[langKey];
+  const recFields = RECURRENCE_FIELD_LABELS[langKey];
   const [items, setItems] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
