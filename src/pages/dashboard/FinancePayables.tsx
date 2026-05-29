@@ -596,7 +596,7 @@ export default function FinancePayables() {
                               {e.supplier ?? "—"}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                              {CAT_LABEL[e.category as CategoryKey] ?? e.category}
+                              {labelForCategory(e.category)}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap tabular-nums font-normal">
                               {studioFmt.fmt(e.amount_cents)}
