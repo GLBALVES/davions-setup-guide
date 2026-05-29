@@ -662,7 +662,13 @@ export default function FinancePayables() {
         </div>
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setAddingCat(false);
+          setNewCatInput("");
+        }
+        setDialogOpen(open);
+      }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-light tracking-wide">
@@ -754,6 +760,17 @@ export default function FinancePayables() {
                     }}
                   >
                     {langKey === "pt" ? "Adicionar" : langKey === "es" ? "Agregar" : "Add"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setNewCatInput("");
+                      setAddingCat(false);
+                    }}
+                  >
+                    {langKey === "pt" ? "Cancelar" : langKey === "es" ? "Cancelar" : "Cancel"}
                   </Button>
                 </div>
               ) : (
