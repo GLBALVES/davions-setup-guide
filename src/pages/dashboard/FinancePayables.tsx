@@ -623,6 +623,52 @@ export default function FinancePayables() {
                 </div>
               </div>
 
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex flex-col gap-1 min-w-[160px]">
+                  <Label className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground">{txt.category}</Label>
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger className="h-8 text-xs font-light"><SelectValue /></SelectTrigger>
+                    <SelectContent className="z-[60]">
+                      <SelectItem value="all">{txt.all}</SelectItem>
+                      {CATEGORY_KEYS.map((k) => (
+                        <SelectItem key={k} value={k}>{BASE_CAT_LABEL[k]}</SelectItem>
+                      ))}
+                      {allCustomCats.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-1 min-w-[160px]">
+                  <Label className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground">{txt.supplier}</Label>
+                  <Select value={supplierFilter} onValueChange={setSupplierFilter}>
+                    <SelectTrigger className="h-8 text-xs font-light"><SelectValue /></SelectTrigger>
+                    <SelectContent className="z-[60]">
+                      <SelectItem value="all">{txt.allM}</SelectItem>
+                      {uniqueSuppliers.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-1 w-[160px]">
+                  <Label className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground">{txt.from}</Label>
+                  <DateField value={fromDate} onChange={setFromDate} locale={studioFmt.locale} placeholder="—" allowClear />
+                </div>
+                <div className="flex flex-col gap-1 w-[160px]">
+                  <Label className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground">{txt.to}</Label>
+                  <DateField value={toDate} onChange={setToDate} locale={studioFmt.locale} placeholder="—" allowClear />
+                </div>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="self-end h-10 px-3 text-[10px] tracking-[0.15em] uppercase border border-border text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors inline-flex items-center gap-1"
+                  >
+                    <X className="h-3 w-3" /> {txt.clear}
+                  </button>
+                )}
+              </div>
+
               {loading ? (
                 <p className="text-xs text-muted-foreground tracking-widest uppercase animate-pulse py-20 text-center">
                   {t.common.loading}
