@@ -662,7 +662,13 @@ export default function FinancePayables() {
         </div>
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setAddingCat(false);
+          setNewCatInput("");
+        }
+        setDialogOpen(open);
+      }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-light tracking-wide">
