@@ -599,27 +599,29 @@ export default function FinancePayables() {
                 onChange={(e) => setForm({ ...form, due_date: e.target.value })}
               />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
-                {t.finance.status}
-              </Label>
-              <Select
-                value={form.status}
-                onValueChange={(v) =>
-                  setForm({
-                    ...form,
-                    status: v as "pending" | "paid",
-                    paid_at: v === "paid" && !form.paid_at ? todayISO() : form.paid_at,
-                  })
-                }
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent className="z-[60]">
-                  <SelectItem value="pending">{t.finance.pending}</SelectItem>
-                  <SelectItem value="paid">{t.finance.paidStatus}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {editing && (
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                  {t.finance.status}
+                </Label>
+                <Select
+                  value={form.status}
+                  onValueChange={(v) =>
+                    setForm({
+                      ...form,
+                      status: v as "pending" | "paid",
+                      paid_at: v === "paid" && !form.paid_at ? todayISO() : form.paid_at,
+                    })
+                  }
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="z-[60]">
+                    <SelectItem value="pending">{t.finance.pending}</SelectItem>
+                    <SelectItem value="paid">{t.finance.paidStatus}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="flex flex-col gap-1.5">
               <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
                 {recFields.recurrence}
