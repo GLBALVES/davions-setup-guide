@@ -127,6 +127,7 @@ export default function FinanceCashFlow() {
           <DashboardHeader />
           <main className="flex-1 p-6 md:p-10 overflow-y-auto">
             <div className="flex flex-col gap-8">
+              <FinancePanelTabs active="cashflow" />
 
               <div className="flex items-end justify-between gap-4 flex-wrap">
                 <div>
