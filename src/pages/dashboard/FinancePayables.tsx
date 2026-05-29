@@ -727,37 +727,76 @@ export default function FinancePayables() {
                   </Select>
                 </div>
                 <div className="flex flex-col gap-1 min-w-[160px]">
-                  <Label className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground">{txt.from}</Label>
-                  <Select value={fromPreset} onValueChange={(v) => { setFromPreset(v as any); }}>
-                    <SelectTrigger className="h-8 text-xs font-light"><SelectValue placeholder="—" /></SelectTrigger>
-                    <SelectContent className="z-[60]">
-                      <SelectItem value="none">—</SelectItem>
-                      <SelectItem value="month">{txt.thisMonth}</SelectItem>
-                      <SelectItem value="quarter_back">{txt.threeMonthsAgo}</SelectItem>
-                      <SelectItem value="year_start">{txt.yearStart}</SelectItem>
-                      <SelectItem value="custom">{txt.custom}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {fromPreset === "custom" && (
-                    <DateField value={fromDate} onChange={(v) => { setFromDate(v); if (!v) setFromPreset("none"); }} locale={studioFmt.locale} placeholder="—" allowClear />
+                  <div className="flex items-center justify-between h-3">
+                    <Label className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground">{txt.from}</Label>
+                    {fromPreset === "custom" && (
+                      <button
+                        type="button"
+                        onClick={() => { setFromPreset("none"); setFromDate(""); }}
+                        className="text-[9px] tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {txt.presets}
+                      </button>
+                    )}
+                  </div>
+                  {fromPreset === "custom" ? (
+                    <DateField
+                      value={fromDate}
+                      onChange={(v) => { setFromDate(v); }}
+                      locale={studioFmt.locale}
+                      placeholder={txt.pickDate}
+                      allowClear
+                      compact
+                    />
+                  ) : (
+                    <Select value={fromPreset} onValueChange={(v) => { setFromPreset(v as any); }}>
+                      <SelectTrigger className="h-8 text-xs font-light"><SelectValue placeholder="—" /></SelectTrigger>
+                      <SelectContent className="z-[60]">
+                        <SelectItem value="none">—</SelectItem>
+                        <SelectItem value="month">{txt.thisMonth}</SelectItem>
+                        <SelectItem value="quarter_back">{txt.threeMonthsAgo}</SelectItem>
+                        <SelectItem value="year_start">{txt.yearStart}</SelectItem>
+                        <SelectItem value="custom">{txt.custom}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   )}
                 </div>
                 <div className="flex flex-col gap-1 min-w-[160px]">
-                  <Label className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground">{txt.to}</Label>
-                  <Select value={toPreset} onValueChange={(v) => { setToPreset(v as any); }}>
-                    <SelectTrigger className="h-8 text-xs font-light"><SelectValue placeholder="—" /></SelectTrigger>
-                    <SelectContent className="z-[60]">
-                      <SelectItem value="none">—</SelectItem>
-                      <SelectItem value="month">{txt.thisMonth}</SelectItem>
-                      <SelectItem value="quarter">{txt.next3Months}</SelectItem>
-                      <SelectItem value="year_end">{txt.yearEnd}</SelectItem>
-                      <SelectItem value="custom">{txt.custom}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {toPreset === "custom" && (
-                    <DateField value={toDate} onChange={(v) => { setToDate(v); if (!v) setToPreset("none"); }} locale={studioFmt.locale} placeholder="—" allowClear />
+                  <div className="flex items-center justify-between h-3">
+                    <Label className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground">{txt.to}</Label>
+                    {toPreset === "custom" && (
+                      <button
+                        type="button"
+                        onClick={() => { setToPreset("none"); setToDate(""); }}
+                        className="text-[9px] tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {txt.presets}
+                      </button>
+                    )}
+                  </div>
+                  {toPreset === "custom" ? (
+                    <DateField
+                      value={toDate}
+                      onChange={(v) => { setToDate(v); }}
+                      locale={studioFmt.locale}
+                      placeholder={txt.pickDate}
+                      allowClear
+                      compact
+                    />
+                  ) : (
+                    <Select value={toPreset} onValueChange={(v) => { setToPreset(v as any); }}>
+                      <SelectTrigger className="h-8 text-xs font-light"><SelectValue placeholder="—" /></SelectTrigger>
+                      <SelectContent className="z-[60]">
+                        <SelectItem value="none">—</SelectItem>
+                        <SelectItem value="month">{txt.thisMonth}</SelectItem>
+                        <SelectItem value="quarter">{txt.next3Months}</SelectItem>
+                        <SelectItem value="year_end">{txt.yearEnd}</SelectItem>
+                        <SelectItem value="custom">{txt.custom}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   )}
                 </div>
+
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
