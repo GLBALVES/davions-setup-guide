@@ -5067,6 +5067,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_studio_permission: {
+        Args: { _perm: string; _photographer_id: string }
+        Returns: boolean
+      }
       slugify: { Args: { input: string }; Returns: string }
     }
     Enums: {
