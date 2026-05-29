@@ -9,8 +9,9 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Input } from "@/components/ui/input";
 import { cn, formatTime12 } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
-import { Search, User, Mail, ChevronRight, CalendarDays, Hash, X, Upload } from "lucide-react";
+import { Search, User, Mail, ChevronRight, CalendarDays, Hash, X, Upload, Download, ArrowUpDown, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImportClientsDialog } from "@/components/dashboard/ImportClientsDialog";
 import { useQueryClient } from "@tanstack/react-query";
 
