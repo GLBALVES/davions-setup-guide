@@ -180,6 +180,8 @@ export default function FinancePayables() {
       notes: e.notes ?? "",
       recurrence_interval: (RECURRENCE_KEYS.includes(e.recurrence_interval) ? e.recurrence_interval : "none") as RecurrenceInterval,
       recurrence_until: e.recurrence_until ?? "",
+      recurrence_mode: e.recurrence_count == null ? "permanent" : "fixed",
+      recurrence_count: e.recurrence_count != null ? String(e.recurrence_count) : "",
     });
     setDialogOpen(true);
   }
@@ -204,7 +206,11 @@ export default function FinancePayables() {
       status: form.status,
       notes: form.notes.trim() || null,
       recurrence_interval: form.recurrence_interval,
-      recurrence_until: form.recurrence_until || null,
+      recurrence_until: null,
+      recurrence_count:
+        form.recurrence_interval !== "none" && form.recurrence_mode === "fixed"
+          ? Math.max(1, parseInt(form.recurrence_count, 10) || 1)
+          : null,
       recurring: form.recurrence_interval !== "none",
     };
     const { error } = editing
@@ -646,16 +652,42 @@ export default function FinancePayables() {
               </Select>
             </div>
             {form.recurrence_interval !== "none" && (
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
-                  {recFields.until}
-                </Label>
-                <Input
-                  type="date"
-                  value={form.recurrence_until}
-                  onChange={(e) => setForm({ ...form, recurrence_until: e.target.value })}
-                />
-              </div>
+              <>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                    {recFields.mode}
+                  </Label>
+                  <Select
+                    value={form.recurrence_mode}
+                    onValueChange={(v) =>
+                      setForm({ ...form, recurrence_mode: v as "permanent" | "fixed" })
+                    }
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent className="z-[60]">
+                      <SelectItem value="permanent">{recFields.permanent}</SelectItem>
+                      <SelectItem value="fixed">{recFields.fixed}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {form.recurrence_mode === "fixed" && (
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
+                      {recFields.installments}
+                    </Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={form.recurrence_count}
+                      onChange={(e) =>
+                        setForm({ ...form, recurrence_count: e.target.value.replace(/\D/g, "") })
+                      }
+                      placeholder="12"
+                    />
+                  </div>
+                )}
+              </>
             )}
             {form.status === "paid" && (
               <div className="flex flex-col gap-1.5">
