@@ -10,6 +10,7 @@ import { format, startOfMonth, startOfYear, subMonths } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getBillableTaxRate } from "@/lib/tax-utils";
 import { usePlatformFee } from "@/hooks/usePlatformFee";
+import { useStudioCurrency } from "@/hooks/useStudioCurrency";
 
 interface BookingRow {
   id: string;
@@ -43,9 +44,6 @@ function calcPaid(r: BookingRow) {
 }
 function calcBalance(r: BookingRow) { return calcTotal(r) - calcPaid(r); }
 
-function fmt(cents: number) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
-}
 
 type Period = "this_month" | "last_month" | "this_year" | "all_time";
 
@@ -96,6 +94,7 @@ export default function FinanceReports() {
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
   const { feePercent } = usePlatformFee();
+  const { fmt } = useStudioCurrency();
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<Period>("this_month");
