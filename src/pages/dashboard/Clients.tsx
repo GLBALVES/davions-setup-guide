@@ -9,7 +9,10 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Input } from "@/components/ui/input";
 import { cn, formatTime12 } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
-import { Search, User, Mail, ChevronRight, CalendarDays, Hash, X } from "lucide-react";
+import { Search, User, Mail, ChevronRight, CalendarDays, Hash, X, Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ImportClientsDialog } from "@/components/dashboard/ImportClientsDialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
