@@ -485,11 +485,12 @@ const BookingConfirm = () => {
       // Always persist the resolved contract snapshot before payment, so it
       // survives even if the accept-checkbox handler didn't fire (or fired
       // before resolvedContractHtml was ready).
-      if (session.contract_text && resolvedContractHtml) {
+      if (session.contract_text && resolvedContractHtml && booking.client_token) {
         try {
           await supabase.functions.invoke("register-contract-acceptance", {
             body: {
               booking_id: booking.id,
+              client_token: booking.client_token,
               contract_html: resolvedContractHtml,
               client_tax_id: clientInfo.tax_id?.trim() || null,
               signature_data: signatureData,
