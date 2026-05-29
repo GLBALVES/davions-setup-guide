@@ -34,7 +34,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import { format } from "date-fns";
+
 import { useLanguage } from "@/contexts/LanguageContext";
 import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
 import { toast } from "@/hooks/use-toast";
@@ -449,7 +449,7 @@ export default function FinancePayables() {
                             className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
                           >
                             <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                              {due ? format(due, "MMM d, yyyy") : "—"}
+                              {due ? due.toLocaleDateString(studioFmt.locale) : "—"}
                             </td>
                             <td className="px-4 py-3">
                               <p className="font-normal">{e.description}</p>
