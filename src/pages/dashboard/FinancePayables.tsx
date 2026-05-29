@@ -39,6 +39,9 @@ import {
   CalendarIcon,
   X,
   Check,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
 } from "lucide-react";
 
 function DateField({
@@ -196,6 +199,12 @@ export default function FinancePayables() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "paid" | "overdue">("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [supplierFilter, setSupplierFilter] = useState<string>("all");
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
+  const [sortBy, setSortBy] = useState<"due_date" | "description" | "supplier" | "category" | "amount" | "status">("due_date");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -428,20 +437,87 @@ export default function FinancePayables() {
     [items]
   );
 
-  const filtered = enriched.filter((e) => {
-    if (statusFilter === "pending" && e.status !== "pending") return false;
-    if (statusFilter === "paid" && e.status !== "paid") return false;
-    if (statusFilter === "overdue" && !e.isOverdue) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      if (
-        !e.description.toLowerCase().includes(q) &&
-        !(e.supplier ?? "").toLowerCase().includes(q)
-      )
-        return false;
+  const uniqueSuppliers = useMemo(() => {
+    const set = new Set<string>();
+    for (const it of items) {
+      const s = (it.supplier ?? "").trim();
+      if (s) set.add(s);
     }
-    return true;
-  });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [items]);
+
+  const filtered = useMemo(() => {
+    const list = enriched.filter((e) => {
+      if (statusFilter === "pending" && e.status !== "pending") return false;
+      if (statusFilter === "paid" && e.status !== "paid") return false;
+      if (statusFilter === "overdue" && !e.isOverdue) return false;
+      if (categoryFilter !== "all" && e.category !== categoryFilter) return false;
+      if (supplierFilter !== "all" && (e.supplier ?? "") !== supplierFilter) return false;
+      if (fromDate && (!e.due_date || e.due_date < fromDate)) return false;
+      if (toDate && (!e.due_date || e.due_date > toDate)) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        if (
+          !e.description.toLowerCase().includes(q) &&
+          !(e.supplier ?? "").toLowerCase().includes(q)
+        )
+          return false;
+      }
+      return true;
+    });
+
+    const dir = sortDir === "asc" ? 1 : -1;
+    const cmp = (a: string | number | null, b: string | number | null) => {
+      if (a == null && b == null) return 0;
+      if (a == null) return 1; // nulls last
+      if (b == null) return -1;
+      if (typeof a === "number" && typeof b === "number") return (a - b) * dir;
+      return String(a).localeCompare(String(b)) * dir;
+    };
+
+    list.sort((a, b) => {
+      switch (sortBy) {
+        case "due_date": return cmp(a.due_date, b.due_date);
+        case "description": return cmp(a.description.toLowerCase(), b.description.toLowerCase());
+        case "supplier": return cmp((a.supplier ?? "").toLowerCase(), (b.supplier ?? "").toLowerCase());
+        case "category": return cmp(labelForCategory(a.category).toLowerCase(), labelForCategory(b.category).toLowerCase());
+        case "amount": return cmp(a.amount_cents, b.amount_cents);
+        case "status": {
+          const rank = (e: typeof a) => e.isOverdue ? 0 : e.status === "pending" ? 1 : 2;
+          return (rank(a) - rank(b)) * dir;
+        }
+        default: return 0;
+      }
+    });
+    return list;
+  }, [enriched, statusFilter, categoryFilter, supplierFilter, fromDate, toDate, search, sortBy, sortDir, labelForCategory]);
+
+  function toggleSort(col: typeof sortBy) {
+    if (sortBy === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortBy(col); setSortDir("asc"); }
+  }
+
+  function clearFilters() {
+    setSearch("");
+    setStatusFilter("all");
+    setCategoryFilter("all");
+    setSupplierFilter("all");
+    setFromDate("");
+    setToDate("");
+  }
+
+  const hasActiveFilters = !!(search || statusFilter !== "all" || categoryFilter !== "all" || supplierFilter !== "all" || fromDate || toDate);
+
+  const txt = {
+    category: langKey === "pt" ? "Categoria" : langKey === "es" ? "Categoría" : "Category",
+    supplier: langKey === "pt" ? "Fornecedor" : langKey === "es" ? "Proveedor" : "Supplier",
+    from: langKey === "pt" ? "De" : langKey === "es" ? "Desde" : "From",
+    to: langKey === "pt" ? "Até" : langKey === "es" ? "Hasta" : "To",
+    all: langKey === "pt" ? "Todas" : langKey === "es" ? "Todas" : "All",
+    allM: langKey === "pt" ? "Todos" : langKey === "es" ? "Todos" : "All",
+    clear: langKey === "pt" ? "Limpar filtros" : langKey === "es" ? "Limpiar filtros" : "Clear filters",
+  };
+
 
   const totals = useMemo(() => {
     let pending = 0;
@@ -547,6 +623,52 @@ export default function FinancePayables() {
                 </div>
               </div>
 
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex flex-col gap-1 min-w-[160px]">
+                  <Label className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground">{txt.category}</Label>
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger className="h-8 text-xs font-light"><SelectValue /></SelectTrigger>
+                    <SelectContent className="z-[60]">
+                      <SelectItem value="all">{txt.all}</SelectItem>
+                      {CATEGORY_KEYS.map((k) => (
+                        <SelectItem key={k} value={k}>{BASE_CAT_LABEL[k]}</SelectItem>
+                      ))}
+                      {allCustomCats.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-1 min-w-[160px]">
+                  <Label className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground">{txt.supplier}</Label>
+                  <Select value={supplierFilter} onValueChange={setSupplierFilter}>
+                    <SelectTrigger className="h-8 text-xs font-light"><SelectValue /></SelectTrigger>
+                    <SelectContent className="z-[60]">
+                      <SelectItem value="all">{txt.allM}</SelectItem>
+                      {uniqueSuppliers.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-1 w-[160px]">
+                  <Label className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground">{txt.from}</Label>
+                  <DateField value={fromDate} onChange={setFromDate} locale={studioFmt.locale} placeholder="—" allowClear />
+                </div>
+                <div className="flex flex-col gap-1 w-[160px]">
+                  <Label className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground">{txt.to}</Label>
+                  <DateField value={toDate} onChange={setToDate} locale={studioFmt.locale} placeholder="—" allowClear />
+                </div>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="self-end h-10 px-3 text-[10px] tracking-[0.15em] uppercase border border-border text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors inline-flex items-center gap-1"
+                  >
+                    <X className="h-3 w-3" /> {txt.clear}
+                  </button>
+                )}
+              </div>
+
               {loading ? (
                 <p className="text-xs text-muted-foreground tracking-widest uppercase animate-pulse py-20 text-center">
                   {t.common.loading}
@@ -562,22 +684,30 @@ export default function FinancePayables() {
                   <table className="w-full text-xs font-light">
                     <thead>
                       <tr className="border-b border-border bg-muted/20">
-                        {[
-                          t.finance.dueDate,
-                          t.finance.expenseDescription,
-                          t.finance.supplier,
-                          t.finance.category,
-                          t.finance.amount,
-                          t.finance.status,
-                          "",
-                        ].map((h, i) => (
-                          <th
-                            key={i}
-                            className="text-left px-4 py-3 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light whitespace-nowrap"
-                          >
-                            {h}
-                          </th>
-                        ))}
+                        {([
+                          { key: "due_date", label: t.finance.dueDate },
+                          { key: "description", label: t.finance.expenseDescription },
+                          { key: "supplier", label: t.finance.supplier },
+                          { key: "category", label: t.finance.category },
+                          { key: "amount", label: t.finance.amount },
+                          { key: "status", label: t.finance.status },
+                        ] as const).map((col) => {
+                          const active = sortBy === col.key;
+                          const Icon = active ? (sortDir === "asc" ? ChevronUp : ChevronDown) : ChevronsUpDown;
+                          return (
+                            <th
+                              key={col.key}
+                              onClick={() => toggleSort(col.key)}
+                              className={`text-left px-4 py-3 text-[10px] tracking-[0.2em] uppercase font-light whitespace-nowrap cursor-pointer select-none hover:text-foreground transition-colors ${active ? "text-foreground" : "text-muted-foreground"}`}
+                            >
+                              <span className="inline-flex items-center gap-1">
+                                {col.label}
+                                <Icon className={`h-3 w-3 ${active ? "opacity-100" : "opacity-40"}`} />
+                              </span>
+                            </th>
+                          );
+                        })}
+                        <th className="px-4 py-3" />
                       </tr>
                     </thead>
                     <tbody>
