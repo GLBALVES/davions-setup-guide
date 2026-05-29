@@ -1858,6 +1858,57 @@ export type Database = {
         }
         Relationships: []
       }
+      expenses: {
+        Row: {
+          amount_cents: number
+          category: string
+          created_at: string
+          currency: string
+          description: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          paid_at: string | null
+          photographer_id: string
+          recurring: boolean
+          status: string
+          supplier: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_cents?: number
+          category?: string
+          created_at?: string
+          currency?: string
+          description: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          photographer_id: string
+          recurring?: boolean
+          status?: string
+          supplier?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          category?: string
+          created_at?: string
+          currency?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          photographer_id?: string
+          recurring?: boolean
+          status?: string
+          supplier?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       followup_email_templates: {
         Row: {
           created_at: string
