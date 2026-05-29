@@ -331,7 +331,7 @@ export default function Clients() {
                 </div>
 
                 {/* Booking history */}
-                <div className="px-8 py-6 flex flex-col gap-4">
+                <div className="px-8 py-6 flex flex-col gap-4 overflow-y-auto" style={{ maxHeight: '60vh' }}>
                   <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground">{cl.bookingHistory}</p>
                   <div className="flex flex-col gap-2">
                     {selected.bookings.map((b) => {
