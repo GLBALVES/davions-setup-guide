@@ -16,6 +16,7 @@ import {
 import { format, startOfMonth, eachMonthOfInterval, subMonths, isSameMonth } from "date-fns";
 import { getBillableTaxRate } from "@/lib/tax-utils";
 import { fetchInvoiceFinance, sumPaidByMonth, type PaidInvoice } from "@/lib/project-invoices-finance";
+import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
 
 interface BookingRow {
   id: string;
