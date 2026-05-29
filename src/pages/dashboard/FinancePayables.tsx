@@ -138,7 +138,7 @@ export default function FinancePayables() {
       description: e.description,
       supplier: e.supplier ?? "",
       category: (CATEGORY_KEYS.includes(e.category as CategoryKey) ? e.category : "other") as CategoryKey,
-      amount: (e.amount_cents / 100).toString(),
+      amount: String(e.amount_cents || 0),
       due_date: e.due_date ?? "",
       paid_at: e.paid_at ?? "",
       status: e.status,
@@ -154,7 +154,7 @@ export default function FinancePayables() {
       return;
     }
     setSaving(true);
-    const amount_cents = Math.round(parseFloat(form.amount.replace(",", ".")) * 100);
+    const amount_cents = parseInt(form.amount, 10) || 0;
     const payload = {
       photographer_id: user.id,
       description: form.description.trim(),
@@ -509,11 +509,14 @@ export default function FinancePayables() {
                 {t.finance.amount}
               </Label>
               <Input
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                type="text"
+                inputMode="numeric"
+                value={form.amount ? studioFmt.fmt(parseInt(form.amount, 10) || 0) : ""}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, "");
+                  setForm({ ...form, amount: digits });
+                }}
+                placeholder={studioFmt.fmt(0)}
               />
             </div>
             <div className="flex flex-col gap-1.5">
