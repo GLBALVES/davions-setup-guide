@@ -172,6 +172,8 @@ export default function FinancePayables() {
       paid_at: e.paid_at ?? "",
       status: e.status,
       notes: e.notes ?? "",
+      recurrence_interval: (RECURRENCE_KEYS.includes(e.recurrence_interval) ? e.recurrence_interval : "none") as RecurrenceInterval,
+      recurrence_until: e.recurrence_until ?? "",
     });
     setDialogOpen(true);
   }
@@ -195,6 +197,9 @@ export default function FinancePayables() {
       paid_at: form.status === "paid" ? (form.paid_at || todayISO()) : null,
       status: form.status,
       notes: form.notes.trim() || null,
+      recurrence_interval: form.recurrence_interval,
+      recurrence_until: form.recurrence_until || null,
+      recurring: form.recurrence_interval !== "none",
     };
     const { error } = editing
       ? await supabase.from("expenses").update(payload).eq("id", editing.id)
