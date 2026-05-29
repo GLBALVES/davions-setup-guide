@@ -10,8 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   Search, Camera, CalendarDays, Images, DollarSign,
   Globe, Settings, Bot, Mail, HelpCircle, ChevronDown,
-  ArrowRight, Bug, BookOpen, Zap,
+  ArrowRight, Bug, BookOpen, Zap, Users, Kanban,
 } from "lucide-react";
+
 
 type Lang = "en" | "pt" | "es";
 
