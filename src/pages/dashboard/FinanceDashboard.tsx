@@ -263,8 +263,8 @@ export default function FinanceDashboard() {
                         <BarChart data={chartData} barSize={14} barCategoryGap="30%">
                           <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                           <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                          <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 100).toFixed(0)}`} width={48} />
-                          <Tooltip content={<ChartTooltip />} cursor={{ fill: "hsl(var(--muted)/0.4)" }} />
+                          <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${symbol}${(v / 100).toFixed(0)}`} width={48} />
+                          <Tooltip content={<ChartTooltip fmt={fmt} />} cursor={{ fill: "hsl(var(--muted)/0.4)" }} />
                           <Bar dataKey="collected" fill="hsl(var(--foreground))" radius={[2, 2, 0, 0]} />
                           <Bar dataKey="outstanding" fill="hsl(var(--muted-foreground)/0.25)" radius={[2, 2, 0, 0]} />
                         </BarChart>
