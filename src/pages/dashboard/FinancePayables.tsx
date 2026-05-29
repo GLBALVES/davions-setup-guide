@@ -570,6 +570,8 @@ export default function FinancePayables() {
     next3Months: langKey === "pt" ? "Próximos 3 meses" : langKey === "es" ? "Próximos 3 meses" : "Next 3 months",
     yearEnd: langKey === "pt" ? "Até fim do ano" : langKey === "es" ? "Hasta fin de año" : "Until end of year",
     custom: langKey === "pt" ? "Personalizado" : langKey === "es" ? "Personalizado" : "Custom",
+    presets: langKey === "pt" ? "Predefinidos" : langKey === "es" ? "Predefinidos" : "Presets",
+    pickDate: langKey === "pt" ? "Escolher data" : langKey === "es" ? "Elegir fecha" : "Pick a date",
   };
 
 
