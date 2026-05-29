@@ -435,8 +435,32 @@ const categoriesData: Record<Lang, Omit<Category, "icon">[]> = {
         { q: "El plugin no se conecta. ¿Qué hago?", a: "Asegúrate de estar logueado en la plataforma y de que tu clave de API esté correctamente ingresada en la configuración del plugin. Puedes regenerar tu clave de API en **Configuración → Personalizar → Galerías**. Consulta la página **Ayuda del Plugin LR** para pasos detallados de solución de problemas." },
       ],
     },
+    {
+      id: "clients",
+      title: "Clientes (CRM)",
+      description: "Gestiona tu base de clientes, importa, filtra y exporta",
+      articles: [
+        { q: "¿Cómo agrego un nuevo cliente?", a: "Ve a **Clientes** y haz clic en **Agregar Cliente**. Completa email, nombre, teléfono, Instagram, dirección y notas. Los clientes también se crean automáticamente cuando alguien completa una reserva a través de tu tienda." },
+        { q: "¿Cómo importo clientes desde un CSV?", a: "En la página **Clientes**, haz clic en **Importar**. Sube un archivo CSV o pega las filas directamente. El importador reconoce nombres de columnas en ES/EN/PT (email, nombre, teléfono, dirección, etc.) y omite filas inválidas. Los clientes existentes (coincidentes por email) se actualizan, no se duplican." },
+        { q: "¿Cómo funcionan los filtros, búsqueda y ordenación?", a: "Usa la barra de búsqueda para encontrar clientes por nombre, email, teléfono o Instagram. Usa el menú **Filtrar** para mostrar solo clientes recurrentes, con/sin reservas o pagantes. Usa **Ordenar** para ordenar por más recientes, nombre, total gastado o número de reservas. Haz clic en **Limpiar** para reiniciar." },
+        { q: "¿Puedo exportar mi lista de clientes?", a: "Sí. Aplica los filtros o búsqueda que quieras, luego haz clic en **Exportar CSV**. El archivo exportado contiene los clientes visibles con su conteo de reservas y total gastado — útil para respaldos o herramientas externas de correo." },
+      ],
+    },
+    {
+      id: "workflows",
+      title: "Proyectos y Flujos de Trabajo",
+      description: "Tablero Kanban, contratos, briefings y seguimientos",
+      articles: [
+        { q: "¿Qué es el Kanban de Flujos de Trabajo?", a: "**Flujos de Trabajo** organiza cada proyecto en etapas (Lead, Reservado, Fotografiado, Entregado, etc.) en un tablero Kanban. Arrastra una tarjeta entre columnas para cambiar su etapa. Los proyectos avanzan automáticamente a **Fotografiado** una vez pasada la fecha del shoot." },
+        { q: "¿Cómo funcionan los emails automáticos por etapa?", a: "Cada etapa del flujo de trabajo puede activar una plantilla de email. Cuando un proyecto entra en esa etapa, el email se envía al cliente con variables dinámicas (nombre, sesión, fecha) ya completadas. Configura las plantillas en **Flujos de Trabajo → Plantillas de Email**." },
+        { q: "¿Cómo funcionan los contratos?", a: "Ve a **Contratos** para diseñar plantillas con el editor de texto enriquecido. Arrastra campos inteligentes (nombre del cliente, sesión, precio, fecha) al documento. Cuando un cliente reserva, el HTML del contrato se congela en la reserva — ediciones futuras a la plantilla no cambian contratos ya firmados." },
+        { q: "¿Qué es el sistema de Briefing?", a: "Los Briefings son cuestionarios personalizados que creas por tipo de sesión. El cliente los completa después de reservar en la página de éxito. Las respuestas se guardan con la reserva para que llegues preparado al día del shoot." },
+        { q: "¿Cómo funcionan las notificaciones push?", a: "Activa el push web en **Notificaciones Push** para recibir alertas en tiempo real (nuevas reservas, pagos, mensajes) en desktop y móvil — incluso con la pestaña del dashboard cerrada." },
+      ],
+    },
   ],
 };
+
 
 const categoryIcons: Record<string, React.ElementType> = {
   "getting-started": HelpCircle,
