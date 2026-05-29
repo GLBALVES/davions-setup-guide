@@ -697,17 +697,74 @@ export default function FinancePayables() {
               </Label>
               <Select
                 value={form.category}
-                onValueChange={(v) => setForm({ ...form, category: v as CategoryKey })}
+                onValueChange={(v) => setForm({ ...form, category: v })}
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent className="z-[60]">
                   {CATEGORY_KEYS.map((k) => (
                     <SelectItem key={k} value={k}>
-                      {CAT_LABEL[k]}
+                      {BASE_CAT_LABEL[k]}
+                    </SelectItem>
+                  ))}
+                  {allCustomCats.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {addingCat ? (
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    autoFocus
+                    value={newCatInput}
+                    onChange={(e) => setNewCatInput(e.target.value)}
+                    placeholder={addCatLabel}
+                    className="h-9"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const v = newCatInput.trim();
+                        if (!v) return;
+                        if (!allCustomCats.includes(v) && !CATEGORY_KEYS.includes(v as CategoryKey)) {
+                          persistCats([...customCats, v]);
+                        }
+                        setForm({ ...form, category: v as any });
+                        setNewCatInput("");
+                        setAddingCat(false);
+                      } else if (e.key === "Escape") {
+                        setNewCatInput("");
+                        setAddingCat(false);
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const v = newCatInput.trim();
+                      if (!v) { setAddingCat(false); return; }
+                      if (!allCustomCats.includes(v) && !CATEGORY_KEYS.includes(v as CategoryKey)) {
+                        persistCats([...customCats, v]);
+                      }
+                      setForm({ ...form, category: v as any });
+                      setNewCatInput("");
+                      setAddingCat(false);
+                    }}
+                  >
+                    {langKey === "pt" ? "Adicionar" : langKey === "es" ? "Agregar" : "Add"}
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setAddingCat(true)}
+                  className="text-[11px] text-muted-foreground hover:text-foreground self-start mt-1 inline-flex items-center gap-1"
+                >
+                  <Plus className="h-3 w-3" /> {addCatLabel}
+                </button>
+              )}
             </div>
             <div className="flex flex-col gap-1.5">
               <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
