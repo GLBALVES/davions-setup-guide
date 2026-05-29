@@ -183,6 +183,8 @@ export default function FinanceDashboard() {
                 <h1 className="text-2xl font-light tracking-wide">{t.finance.financialDashboard}</h1>
               </div>
 
+              <FinancePanelTabs active="overview" />
+
               {loading ? (
                 <p className="text-xs text-muted-foreground tracking-widest uppercase animate-pulse py-20 text-center">{t.common.loading}</p>
               ) : (
