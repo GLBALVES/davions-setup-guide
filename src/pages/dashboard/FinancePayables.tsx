@@ -671,6 +671,8 @@ export default function FinancePayables() {
         if (!open) {
           setAddingCat(false);
           setNewCatInput("");
+          setEditing(null);
+          setForm({ ...emptyForm, due_date: todayISO() });
         }
         setDialogOpen(open);
       }}>
