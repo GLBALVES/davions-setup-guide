@@ -5,7 +5,7 @@ export function FinancePanelTabs({ active }: { active: "overview" | "revenue" | 
   const { t } = useLanguage();
 
   const tabs: { key: typeof active; label: string; to: string; end?: boolean }[] = [
-    { key: "overview",    label: t.nav.overview ?? "Overview", to: "/dashboard/finance", end: true },
+    { key: "overview",    label: t.dashboard.overview,         to: "/dashboard/finance", end: true },
     { key: "revenue",     label: t.nav.revenue,                to: "/dashboard/revenue" },
     { key: "payables",    label: t.nav.payables,               to: "/dashboard/finance/payables" },
     { key: "receivables", label: t.nav.receivables,            to: "/dashboard/finance/receivables" },
