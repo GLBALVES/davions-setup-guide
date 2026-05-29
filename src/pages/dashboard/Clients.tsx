@@ -148,12 +148,74 @@ export default function Clients() {
   }, [bookings, importedClients]);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return clients;
-    const q = search.toLowerCase();
-    return clients.filter(
-      (c) => c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q)
-    );
-  }, [clients, search]);
+    let list = clients;
+
+    // Filter
+    if (filterBy === "returning") list = list.filter((c) => c.bookingCount > 1);
+    else if (filterBy === "withBookings") list = list.filter((c) => c.bookingCount > 0);
+    else if (filterBy === "noBookings") list = list.filter((c) => c.bookingCount === 0);
+    else if (filterBy === "paying") list = list.filter((c) => c.totalSpent > 0);
+
+    // Search
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (c) => c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q)
+      );
+    }
+
+    // Sort
+    const sorted = [...list].sort((a, b) => {
+      switch (sortBy) {
+        case "nameAZ": return a.name.localeCompare(b.name);
+        case "nameZA": return b.name.localeCompare(a.name);
+        case "spentHigh": return b.totalSpent - a.totalSpent;
+        case "spentLow": return a.totalSpent - b.totalSpent;
+        case "mostBookings": return b.bookingCount - a.bookingCount;
+        case "oldest": {
+          if (!a.lastBookingDate && !b.lastBookingDate) return a.name.localeCompare(b.name);
+          if (!a.lastBookingDate) return 1;
+          if (!b.lastBookingDate) return -1;
+          return a.lastBookingDate.localeCompare(b.lastBookingDate);
+        }
+        case "recent":
+        default: {
+          if (!a.lastBookingDate && !b.lastBookingDate) return a.name.localeCompare(b.name);
+          if (!a.lastBookingDate) return 1;
+          if (!b.lastBookingDate) return -1;
+          return b.lastBookingDate.localeCompare(a.lastBookingDate);
+        }
+      }
+    });
+    return sorted;
+  }, [clients, search, sortBy, filterBy]);
+
+  const hasActiveFilters = search.trim() !== "" || filterBy !== "all" || sortBy !== "recent";
+
+  const handleExportCsv = () => {
+    const headers = ["First Name", "Last Name", "Company", "Email", "Type", "Phone", "Address Line 1", "Address Line 2", "City", "State/Province", "Zip/Postal Code", "Country", "Notes"];
+    const rows = filtered.map((c) => {
+      const parts = (c.name || "").trim().split(/\s+/);
+      const first = parts[0] ?? "";
+      const last = parts.slice(1).join(" ");
+      const notes = `Bookings: ${c.bookingCount}; Total paid: $${(c.totalSpent / 100).toFixed(2)}${c.lastBookingDate ? `; Last: ${c.lastBookingDate}` : ""}`;
+      return [first, last, "", c.email, "", "", "", "", "", "", "", "", notes];
+    });
+    const escape = (v: string) => {
+      const s = String(v ?? "");
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const csv = [headers, ...rows].map((r) => r.map(escape).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `clients-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const selected = selectedEmail ? clients.find((c) => c.email.toLowerCase() === selectedEmail.toLowerCase()) ?? null : null;
 
