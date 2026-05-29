@@ -550,7 +550,7 @@ export default function FinancePayables() {
     setToPreset("none");
   }
 
-  const hasActiveFilters = !!(search || statusFilter !== "all" || categoryFilter !== "all" || supplierFilter !== "all" || fromDate || toDate || fromPreset || toPreset);
+  const hasActiveFilters = !!(search || statusFilter !== "all" || categoryFilter !== "all" || supplierFilter !== "all" || fromDate || toDate || (fromPreset !== "none") || (toPreset !== "none"));
 
   const txt = {
     category: langKey === "pt" ? "Categoria" : langKey === "es" ? "Categoría" : "Category",
