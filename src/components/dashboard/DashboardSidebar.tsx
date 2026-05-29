@@ -194,11 +194,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       icon: DollarSign,
       disabled: true,
       items: [
-        { title: t.nav.revenue,           icon: TrendingUp,      to: "/dashboard/revenue" },
         { title: t.nav.financeDashboard,  icon: LayoutDashboard, to: "/dashboard/finance", end: true },
-        { title: t.nav.receivables,       icon: ArrowDownCircle, to: "/dashboard/finance/receivables" },
-        { title: t.nav.payables,          icon: ArrowUpCircle,   to: "/dashboard/finance/payables" },
-        { title: t.nav.cashFlow,          icon: TrendingUp,      to: "/dashboard/finance/cashflow" },
         { title: t.nav.reports,           icon: BarChart3,       to: "/dashboard/finance/reports" },
         { title: t.nav.pagarmeBalance,    icon: Wallet,          to: "/dashboard/finance/balance" },
       ],
