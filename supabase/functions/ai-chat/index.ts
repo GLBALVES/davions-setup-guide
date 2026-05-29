@@ -7,12 +7,23 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function jsonResp(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const body = await req.json();
-    const { ticket_id, message, agent_slug, mode, messages: directMessages } = body;
+    // ── Require authenticated caller ──
+    const authHeader = req.headers.get("Authorization") ?? req.headers.get("authorization");
+    if (!authHeader?.toLowerCase().startsWith("bearer ")) {
+      return jsonResp({ error: "Unauthorized" }, 401);
+    }
+    const token = authHeader.slice(7).trim();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -22,15 +33,45 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    const { data: userData, error: userErr } = await supabase.auth.getUser(token);
+    if (userErr || !userData?.user) return jsonResp({ error: "Unauthorized" }, 401);
+    const userId = userData.user.id;
+
+    const body = await req.json();
+    const { ticket_id, message, agent_slug, mode, messages: directMessages } = body;
+
     // Determine if this is a direct/test call (no ticket_id, has messages array)
     const isDirectMode = !ticket_id && Array.isArray(directMessages);
+
+    // ── For ticket mode, verify the ticket belongs to the caller (or caller is admin) ──
+    if (!isDirectMode) {
+      if (!ticket_id || typeof ticket_id !== "string") {
+        return jsonResp({ error: "ticket_id required" }, 400);
+      }
+      const { data: ticket } = await supabase
+        .from("support_tickets")
+        .select("id, photographer_id")
+        .eq("id", ticket_id)
+        .maybeSingle();
+      if (!ticket) return jsonResp({ error: "Ticket not found" }, 404);
+
+      if (ticket.photographer_id !== userId) {
+        const { data: adminRole } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .eq("role", "admin")
+          .maybeSingle();
+        if (!adminRole) return jsonResp({ error: "Forbidden" }, 403);
+      }
+    }
 
     // Fetch agent config
     let systemPrompt = "You are a helpful customer support assistant. Be polite, concise, and professional.";
     let model = "google/gemini-3-flash-preview";
     let temperature = 0.7;
 
-    if (agent_slug) {
+    if (agent_slug && typeof agent_slug === "string") {
       const { data: agent } = await supabase
         .from("ai_agents")
         .select("*")
@@ -43,7 +84,6 @@ serve(async (req) => {
         model = agent.model || model;
         temperature = agent.temperature ?? temperature;
 
-        // Append knowledge base to system prompt (support both "title" and "topic" field names)
         const kb = agent.knowledge_base as Array<{ title?: string; topic?: string; content: string }>;
         if (kb && kb.length > 0) {
           systemPrompt += "\n\n## Knowledge Base\n";
@@ -58,13 +98,11 @@ serve(async (req) => {
     let messages: Array<{ role: string; content: string }>;
 
     if (isDirectMode) {
-      // Direct mode: use provided messages, no DB interaction
       messages = [
         { role: "system", content: systemPrompt },
         ...directMessages,
       ];
     } else {
-      // Ticket mode: fetch conversation history from DB
       const { data: history } = await supabase
         .from("support_messages")
         .select("role, content")
@@ -81,7 +119,6 @@ serve(async (req) => {
         })),
       ];
 
-      // Add latest user message if provided
       if (message) {
         messages.push({ role: "user", content: message });
       }
@@ -98,16 +135,10 @@ serve(async (req) => {
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResp({ error: "Rate limit exceeded. Please try again later." }, 429);
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required. Please add credits." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResp({ error: "Payment required. Please add credits." }, 402);
       }
       const t = await response.text();
       console.error("AI gateway error:", response.status, t);
@@ -117,14 +148,10 @@ serve(async (req) => {
     const data = await response.json();
     const aiContent = data.choices?.[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
 
-    // In direct mode, just return the reply without saving to DB
     if (isDirectMode) {
-      return new Response(JSON.stringify({ reply: aiContent }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResp({ reply: aiContent });
     }
 
-    // Ticket mode: determine role based on mode and save to DB
     const insertRole = mode === "supervised" ? "assistant_draft" : "assistant";
 
     const { error: insertError } = await supabase
@@ -140,14 +167,9 @@ serve(async (req) => {
       throw new Error("Failed to save AI response");
     }
 
-    return new Response(JSON.stringify({ content: aiContent, role: insertRole }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResp({ content: aiContent, role: insertRole });
   } catch (e) {
     console.error("ai-chat error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonResp({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
   }
 });
