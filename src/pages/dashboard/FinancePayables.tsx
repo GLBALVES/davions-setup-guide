@@ -686,6 +686,12 @@ export default function FinancePayables() {
                 type="date"
                 value={form.due_date}
                 onChange={(e) => setForm({ ...form, due_date: e.target.value })}
+                style={{ display: "none" }}
+              />
+              <DateField
+                value={form.due_date}
+                onChange={(v) => setForm({ ...form, due_date: v })}
+                locale={studioFmt.locale}
               />
             </div>
             {editing && (
