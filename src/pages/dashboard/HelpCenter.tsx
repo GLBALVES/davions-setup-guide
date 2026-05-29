@@ -176,6 +176,9 @@ const categoriesData: Record<Lang, Omit<Category, "icon">[]> = {
         { q: "What is supervised mode for AI agents?", a: "In **supervised mode**, the AI generates a draft reply that you review before it is sent to the client. In **auto-reply mode**, the AI sends the response directly. Switch between modes in the Chat Commander Bar at the top of the Chat page." },
         { q: "How do I add knowledge to an agent?", a: "Open **AI Agents**, edit an agent, and go to the **Knowledge Base** tab. Add topics with a title and content. This knowledge is injected into the agent's context so it can answer questions specific to your business." },
         { q: "What are Recurring Workflows?", a: "Recurring Workflows are tasks that repeat on a schedule (daily, weekly, monthly, etc.). Go to **Workflows → Recurring** and create a task with a frequency, start date, and optional owner. The system generates task instances automatically." },
+        { q: "What is the Help Assistant?", a: "The sparkle icon at the top of the dashboard opens the **Davions Help Assistant** — a contextual AI chat that knows the platform and your current page. Use it for quick answers without leaving your workflow. Chat history persists across sessions." },
+        { q: "What is the Carousel AI?", a: "Go to **Creative Studio → Carousel** to generate Instagram-ready carousels. The AI writes captions, picks layouts, and creates backgrounds from a single prompt. Export each slide as a polished image ready to publish." },
+        { q: "How does AI Blog generation work?", a: "Go to **Blog → AI Generator**, describe the topic and tone, and the system writes the full post, suggests SEO metadata, and produces a cover image. Review, edit, and publish in one click." },
       ],
     },
     {
