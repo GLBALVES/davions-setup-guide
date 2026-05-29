@@ -16,6 +16,7 @@ import {
 import { format, startOfMonth, eachMonthOfInterval, subMonths, isSameMonth } from "date-fns";
 import { getBillableTaxRate } from "@/lib/tax-utils";
 import { fetchInvoiceFinance, sumPaidByMonth, type PaidInvoice } from "@/lib/project-invoices-finance";
+import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
 
 interface BookingRow {
   id: string;
@@ -181,6 +182,8 @@ export default function FinanceDashboard() {
                 </p>
                 <h1 className="text-2xl font-light tracking-wide">{t.finance.financialDashboard}</h1>
               </div>
+
+              <FinancePanelTabs active="overview" />
 
               {loading ? (
                 <p className="text-xs text-muted-foreground tracking-widest uppercase animate-pulse py-20 text-center">{t.common.loading}</p>

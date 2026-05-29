@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -210,6 +211,8 @@ export default function Revenue() {
 
           <main className="flex-1 p-6 md:p-10 overflow-y-auto">
             <div className="flex flex-col gap-8">
+              <FinancePanelTabs active="revenue" />
+
 
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">

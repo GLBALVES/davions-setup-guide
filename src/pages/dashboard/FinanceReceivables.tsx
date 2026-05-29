@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getBillableTaxRate } from "@/lib/tax-utils";
 import { fetchInvoiceFinance, type OutstandingInvoice } from "@/lib/project-invoices-finance";
+import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
 
 interface BookingRow {
   id: string;
@@ -123,6 +124,7 @@ export default function FinanceReceivables() {
           <DashboardHeader />
           <main className="flex-1 p-6 md:p-10 overflow-y-auto">
             <div className="flex flex-col gap-8">
+              <FinancePanelTabs active="receivables" />
 
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">

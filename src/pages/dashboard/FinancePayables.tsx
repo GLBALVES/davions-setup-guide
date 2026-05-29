@@ -4,6 +4,7 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { ArrowUpCircle, ShoppingCart, Wrench, Users2, Building2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
 
 export default function FinancePayables() {
   const { user, signOut } = useAuth();
@@ -24,6 +25,8 @@ export default function FinancePayables() {
           <DashboardHeader />
           <main className="flex-1 p-6 md:p-10 overflow-y-auto">
             <div className="flex flex-col gap-8">
+              <FinancePanelTabs active="payables" />
+
 
               <div>
                 <p className="text-[10px] tracking-[0.3em] uppercase text-muted-foreground flex items-center gap-3 mb-2">

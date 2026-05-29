@@ -12,6 +12,7 @@ import { format, startOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getBillableTaxRate } from "@/lib/tax-utils";
 import { fetchInvoiceFinance, sumPaidByMonth, sumOutstandingByMonth, type PaidInvoice, type OutstandingInvoice } from "@/lib/project-invoices-finance";
+import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
 
 interface BookingRow {
   created_at: string;
@@ -126,6 +127,7 @@ export default function FinanceCashFlow() {
           <DashboardHeader />
           <main className="flex-1 p-6 md:p-10 overflow-y-auto">
             <div className="flex flex-col gap-8">
+              <FinancePanelTabs active="cashflow" />
 
               <div className="flex items-end justify-between gap-4 flex-wrap">
                 <div>

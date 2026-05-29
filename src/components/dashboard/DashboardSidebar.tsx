@@ -194,11 +194,7 @@ function buildGroups(t: ReturnType<typeof useLanguage>["t"]): MenuGroup[] {
       icon: DollarSign,
       disabled: true,
       items: [
-        { title: t.nav.revenue,           icon: TrendingUp,      to: "/dashboard/revenue" },
         { title: t.nav.financeDashboard,  icon: LayoutDashboard, to: "/dashboard/finance", end: true },
-        { title: t.nav.receivables,       icon: ArrowDownCircle, to: "/dashboard/finance/receivables" },
-        { title: t.nav.payables,          icon: ArrowUpCircle,   to: "/dashboard/finance/payables" },
-        { title: t.nav.cashFlow,          icon: TrendingUp,      to: "/dashboard/finance/cashflow" },
         { title: t.nav.reports,           icon: BarChart3,       to: "/dashboard/finance/reports" },
         { title: t.nav.pagarmeBalance,    icon: Wallet,          to: "/dashboard/finance/balance" },
       ],
@@ -277,12 +273,9 @@ const groups: MenuGroup[] = [
     { title: "Creative Assistant", icon: Wand2 },
   ]},
   { stableKey: "Finance", title: "Finance", icon: DollarSign, disabled: true, items: [
-    { title: "Revenue", icon: TrendingUp, to: "/dashboard/revenue" },
     { title: "Dashboard", icon: LayoutDashboard, to: "/dashboard/finance", end: true },
-    { title: "Receivables", icon: ArrowDownCircle, to: "/dashboard/finance/receivables" },
-    { title: "Payables", icon: ArrowUpCircle, to: "/dashboard/finance/payables" },
-    { title: "Cash Flow", icon: TrendingUp, to: "/dashboard/finance/cashflow" },
     { title: "Reports", icon: BarChart3, to: "/dashboard/finance/reports" },
+    { title: "Balance", icon: Wallet, to: "/dashboard/finance/balance" },
   ]},
   { stableKey: "CRM", title: "CRM", icon: Users2, disabled: true, items: [
     { title: "Clients", icon: UserCircle, to: "/dashboard/clients", permKey: "clients" },
