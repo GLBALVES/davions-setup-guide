@@ -7,6 +7,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useStudioCurrency } from "@/hooks/useStudioCurrency";
 import {
   DollarSign, TrendingUp, CheckCircle2, Clock, XCircle,
   Search, ArrowUpRight, Wallet, BarChart3,
@@ -100,6 +101,7 @@ function ChartTooltip({ active, payload, label, fmt }: any) {
 export default function Revenue() {
   const { user, signOut, photographerId } = useAuth();
   const { t } = useLanguage();
+  const { fmt: studioFmt, symbol: studioSymbol } = useStudioCurrency();
   const { feePercent } = usePlatformFee();
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [paidInvoices, setPaidInvoices] = useState<PaidInvoice[]>([]);
@@ -198,8 +200,7 @@ export default function Revenue() {
     return { ...m, revenue: m.revenue + sumPaidByMonth(paidInvoices, monthStr) };
   });
 
-  const fmt = (cents: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
+  const fmt = studioFmt;
 
   return (
     <SidebarProvider>
@@ -244,7 +245,7 @@ export default function Revenue() {
                       <BarChart data={chartData} barSize={20}>
                         <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                         <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 100).toFixed(0)}`} width={48} />
+                        <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${studioSymbol}${(v / 100).toFixed(0)}`} width={48} />
                         <Tooltip content={<ChartTooltip fmt={fmt} />} cursor={{ fill: "hsl(var(--muted)/0.4)" }} />
                         <Bar dataKey="revenue" fill="hsl(var(--foreground))" radius={[2, 2, 0, 0]} />
                       </BarChart>
