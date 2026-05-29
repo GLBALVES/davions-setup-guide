@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getBillableTaxRate } from "@/lib/tax-utils";
 import { fetchInvoiceFinance, type OutstandingInvoice } from "@/lib/project-invoices-finance";
+import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
 
 interface BookingRow {
   id: string;
