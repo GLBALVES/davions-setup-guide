@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useStudioCurrency } from "@/hooks/useStudioCurrency";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -73,20 +74,12 @@ function parseLocal(d: string | null) {
   if (!d) return null;
   return new Date(`${d}T00:00:00`);
 }
-function fmtMoney(cents: number, currency: string) {
-  try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(cents / 100);
-  } catch {
-    return `${(cents / 100).toFixed(2)} ${currency}`;
-  }
-}
 
 const emptyForm = {
   description: "",
   supplier: "",
   category: "other" as CategoryKey,
   amount: "",
-  currency: "BRL",
   due_date: todayISO(),
   paid_at: "",
   status: "pending" as "pending" | "paid",
@@ -104,6 +97,7 @@ export default function FinancePayables() {
   const [editing, setEditing] = useState<Expense | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const studioFmt = useStudioCurrency();
 
   const CAT_LABEL: Record<CategoryKey, string> = {
     supplier: t.finance.catSupplier,
@@ -145,7 +139,6 @@ export default function FinancePayables() {
       supplier: e.supplier ?? "",
       category: (CATEGORY_KEYS.includes(e.category as CategoryKey) ? e.category : "other") as CategoryKey,
       amount: (e.amount_cents / 100).toString(),
-      currency: e.currency,
       due_date: e.due_date ?? "",
       paid_at: e.paid_at ?? "",
       status: e.status,
@@ -168,7 +161,7 @@ export default function FinancePayables() {
       supplier: form.supplier.trim() || null,
       category: form.category,
       amount_cents,
-      currency: form.currency.toUpperCase(),
+      currency: studioFmt.currency,
       due_date: form.due_date || null,
       paid_at: form.status === "paid" ? (form.paid_at || todayISO()) : null,
       status: form.status,
@@ -244,7 +237,6 @@ export default function FinancePayables() {
     let pending = 0;
     let overdue = 0;
     let paidMonth = 0;
-    const currency = enriched[0]?.currency ?? "BRL";
     for (const e of enriched) {
       if (e.status === "pending") {
         pending += e.amount_cents;
@@ -254,7 +246,7 @@ export default function FinancePayables() {
         if (p && p >= startOfMonth) paidMonth += e.amount_cents;
       }
     }
-    return { pending, overdue, paidMonth, currency };
+    return { pending, overdue, paidMonth };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enriched]);
 
@@ -289,21 +281,21 @@ export default function FinancePayables() {
                     </p>
                     <ArrowUpCircle className="h-3.5 w-3.5 text-muted-foreground/30" />
                   </div>
-                  <p className="text-xl font-light tabular-nums">{fmtMoney(totals.pending, totals.currency)}</p>
+                  <p className="text-xl font-light tabular-nums">{studioFmt.fmt(totals.pending)}</p>
                 </div>
                 <div className="border border-border p-5 flex flex-col gap-2">
                   <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
                     {t.finance.totalOverdue}
                   </p>
                   <p className="text-xl font-light tabular-nums text-yellow-600">
-                    {fmtMoney(totals.overdue, totals.currency)}
+                    {studioFmt.fmt(totals.overdue)}
                   </p>
                 </div>
                 <div className="border border-border p-5 flex flex-col gap-2">
                   <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
                     {t.finance.totalPaidMonth}
                   </p>
-                  <p className="text-xl font-light tabular-nums">{fmtMoney(totals.paidMonth, totals.currency)}</p>
+                  <p className="text-xl font-light tabular-nums">{studioFmt.fmt(totals.paidMonth)}</p>
                 </div>
               </div>
 
@@ -402,7 +394,7 @@ export default function FinancePayables() {
                               {CAT_LABEL[e.category as CategoryKey] ?? e.category}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap tabular-nums font-normal">
-                              {fmtMoney(e.amount_cents, e.currency)}
+                              {studioFmt.fmt(e.amount_cents)}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
                               {e.status === "paid" ? (
@@ -523,22 +515,6 @@ export default function FinancePayables() {
                 value={form.amount}
                 onChange={(e) => setForm({ ...form, amount: e.target.value })}
               />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
-                Moeda
-              </Label>
-              <Select
-                value={form.currency}
-                onValueChange={(v) => setForm({ ...form, currency: v })}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent className="z-[60]">
-                  {["BRL", "USD", "EUR", "MXN", "ARS", "GBP"].map((c) => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
             <div className="flex flex-col gap-1.5">
               <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
