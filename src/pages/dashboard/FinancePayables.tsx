@@ -175,7 +175,7 @@ function parseLocal(d: string | null) {
 const emptyForm = {
   description: "",
   supplier: "",
-  category: "other" as CategoryKey,
+  category: "other" as string,
   amount: "",
   due_date: todayISO(),
   paid_at: "",
