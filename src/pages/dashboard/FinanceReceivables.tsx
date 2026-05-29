@@ -12,6 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { getBillableTaxRate } from "@/lib/tax-utils";
 import { fetchInvoiceFinance, type OutstandingInvoice } from "@/lib/project-invoices-finance";
 import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
+import { useStudioCurrency } from "@/hooks/useStudioCurrency";
 
 interface BookingRow {
   id: string;
@@ -45,13 +46,10 @@ function calcPaid(r: BookingRow) {
 function calcBalance(r: BookingRow) {
   return calcTotal(r) - calcPaid(r);
 }
-function fmt(cents: number) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
-}
-
 export default function FinanceReceivables() {
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
+  const { fmt } = useStudioCurrency();
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [invoices, setInvoices] = useState<OutstandingInvoice[]>([]);
   const [loading, setLoading] = useState(true);

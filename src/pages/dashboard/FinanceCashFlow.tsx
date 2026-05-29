@@ -13,6 +13,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { getBillableTaxRate } from "@/lib/tax-utils";
 import { fetchInvoiceFinance, sumPaidByMonth, sumOutstandingByMonth, type PaidInvoice, type OutstandingInvoice } from "@/lib/project-invoices-finance";
 import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
+import { useStudioCurrency } from "@/hooks/useStudioCurrency";
 
 interface BookingRow {
   created_at: string;
@@ -40,10 +41,6 @@ function calcPaid(r: BookingRow) {
   return (r.deposit_type === "percent" || r.deposit_type === "percentage") ? total * (r.deposit_amount / 100) : r.deposit_amount;
 }
 function calcBalance(r: BookingRow) { return calcTotal(r) - calcPaid(r); }
-function fmt(cents: number) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
-}
-
 function buildMonths(
   rows: BookingRow[],
   paid: PaidInvoice[],
@@ -62,7 +59,7 @@ function buildMonths(
   });
 }
 
-function ChartTooltip({ active, payload, label }: any) {
+function ChartTooltip({ active, payload, label, fmt }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className="border border-border bg-background px-3 py-2 text-xs shadow-sm space-y-1">
@@ -80,6 +77,7 @@ function ChartTooltip({ active, payload, label }: any) {
 export default function FinanceCashFlow() {
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
+  const { fmt, symbol } = useStudioCurrency();
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [paidInvoices, setPaidInvoices] = useState<PaidInvoice[]>([]);
   const [outstandingInvoices, setOutstandingInvoices] = useState<OutstandingInvoice[]>([]);
@@ -189,8 +187,8 @@ export default function FinanceCashFlow() {
                         <BarChart data={months} barSize={12} barCategoryGap="30%">
                           <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                           <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                          <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 100).toFixed(0)}`} width={52} />
-                          <Tooltip content={<ChartTooltip />} cursor={{ fill: "hsl(var(--muted)/0.4)" }} />
+                          <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${symbol}${(v / 100).toFixed(0)}`} width={52} />
+                          <Tooltip content={<ChartTooltip fmt={fmt} />} cursor={{ fill: "hsl(var(--muted)/0.4)" }} />
                           <Bar dataKey="collected" name={t.finance.collected} stackId="a" fill="hsl(var(--foreground))" radius={[0, 0, 0, 0]} />
                           <Bar dataKey="outstanding" name={t.finance.outstanding} stackId="a" fill="hsl(var(--muted-foreground)/0.25)" radius={[2, 2, 0, 0]} />
                         </BarChart>
