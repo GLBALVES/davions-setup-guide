@@ -536,7 +536,9 @@ export default function FinancePayables() {
     let paidMonth = 0;
     for (const e of enriched) {
       if (e.status === "pending") {
-        pending += e.amount_cents;
+        const withinPeriod =
+          !pendingCutoffISO || (e.due_date && e.due_date <= pendingCutoffISO) || e.isOverdue;
+        if (withinPeriod) pending += e.amount_cents;
         if (e.isOverdue) overdue += e.amount_cents;
       } else if (e.status === "paid" && e.paid_at) {
         const p = parseLocal(e.paid_at);
@@ -545,7 +547,7 @@ export default function FinancePayables() {
     }
     return { pending, overdue, paidMonth };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enriched]);
+  }, [enriched, pendingCutoffISO]);
 
   return (
     <SidebarProvider>
