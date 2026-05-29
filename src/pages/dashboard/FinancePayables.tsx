@@ -157,7 +157,7 @@ export default function FinancePayables() {
   async function save() {
     if (!user) return;
     if (!form.description.trim() || !form.amount) {
-      toast({ title: t.common.error ?? "Error", description: t.finance.expenseDescription, variant: "destructive" });
+      toast({ title: "Error", description: t.finance.expenseDescription, variant: "destructive" });
       return;
     }
     setSaving(true);
