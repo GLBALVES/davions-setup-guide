@@ -1,0 +1,2 @@
+CREATE POLICY "Photographers can insert own clients" ON public.clients FOR INSERT TO authenticated WITH CHECK (has_studio_permission(photographer_id, 'clients'));
+CREATE POLICY "Photographers can delete own clients" ON public.clients FOR DELETE TO authenticated USING (has_studio_permission(photographer_id, 'clients'));
