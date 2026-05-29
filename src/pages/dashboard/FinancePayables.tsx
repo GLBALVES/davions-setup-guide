@@ -50,12 +50,14 @@ function DateField({
   locale,
   placeholder,
   allowClear,
+  compact,
 }: {
   value: string;
   onChange: (v: string) => void;
   locale: string;
   placeholder?: string;
   allowClear?: boolean;
+  compact?: boolean;
 }) {
   const date = value ? new Date(`${value}T00:00:00`) : undefined;
   const display = date ? date.toLocaleDateString(locale) : "";
@@ -66,13 +68,14 @@ function DateField({
           type="button"
           variant="outline"
           className={cn(
-            "w-full justify-between font-normal h-10",
+            "w-full justify-between font-normal",
+            compact ? "h-8 text-xs font-light px-2" : "h-10",
             !date && "text-muted-foreground"
           )}
         >
-          <span className="flex items-center gap-2">
-            <CalendarIcon className="h-4 w-4 opacity-60" />
-            {display || placeholder || "—"}
+          <span className="flex items-center gap-2 truncate">
+            <CalendarIcon className={cn(compact ? "h-3.5 w-3.5" : "h-4 w-4", "opacity-60 shrink-0")} />
+            <span className="truncate">{display || placeholder || "—"}</span>
           </span>
           {allowClear && date && (
             <span
@@ -83,9 +86,9 @@ function DateField({
                 e.stopPropagation();
                 onChange("");
               }}
-              className="opacity-60 hover:opacity-100"
+              className="opacity-60 hover:opacity-100 shrink-0"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className={cn(compact ? "h-3 w-3" : "h-3.5 w-3.5")} />
             </span>
           )}
         </Button>
@@ -108,6 +111,7 @@ function DateField({
     </Popover>
   );
 }
+
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
@@ -566,6 +570,8 @@ export default function FinancePayables() {
     next3Months: langKey === "pt" ? "Próximos 3 meses" : langKey === "es" ? "Próximos 3 meses" : "Next 3 months",
     yearEnd: langKey === "pt" ? "Até fim do ano" : langKey === "es" ? "Hasta fin de año" : "Until end of year",
     custom: langKey === "pt" ? "Personalizado" : langKey === "es" ? "Personalizado" : "Custom",
+    presets: langKey === "pt" ? "Predefinidos" : langKey === "es" ? "Predefinidos" : "Presets",
+    pickDate: langKey === "pt" ? "Escolher data" : langKey === "es" ? "Elegir fecha" : "Pick a date",
   };
 
 
@@ -723,37 +729,76 @@ export default function FinancePayables() {
                   </Select>
                 </div>
                 <div className="flex flex-col gap-1 min-w-[160px]">
-                  <Label className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground">{txt.from}</Label>
-                  <Select value={fromPreset} onValueChange={(v) => { setFromPreset(v as any); }}>
-                    <SelectTrigger className="h-8 text-xs font-light"><SelectValue placeholder="—" /></SelectTrigger>
-                    <SelectContent className="z-[60]">
-                      <SelectItem value="none">—</SelectItem>
-                      <SelectItem value="month">{txt.thisMonth}</SelectItem>
-                      <SelectItem value="quarter_back">{txt.threeMonthsAgo}</SelectItem>
-                      <SelectItem value="year_start">{txt.yearStart}</SelectItem>
-                      <SelectItem value="custom">{txt.custom}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {fromPreset === "custom" && (
-                    <DateField value={fromDate} onChange={(v) => { setFromDate(v); if (!v) setFromPreset("none"); }} locale={studioFmt.locale} placeholder="—" allowClear />
+                  <div className="flex items-center justify-between h-3">
+                    <Label className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground">{txt.from}</Label>
+                    {fromPreset === "custom" && (
+                      <button
+                        type="button"
+                        onClick={() => { setFromPreset("none"); setFromDate(""); }}
+                        className="text-[9px] tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {txt.presets}
+                      </button>
+                    )}
+                  </div>
+                  {fromPreset === "custom" ? (
+                    <DateField
+                      value={fromDate}
+                      onChange={(v) => { setFromDate(v); }}
+                      locale={studioFmt.locale}
+                      placeholder={txt.pickDate}
+                      allowClear
+                      compact
+                    />
+                  ) : (
+                    <Select value={fromPreset} onValueChange={(v) => { setFromPreset(v as any); }}>
+                      <SelectTrigger className="h-8 text-xs font-light"><SelectValue placeholder="—" /></SelectTrigger>
+                      <SelectContent className="z-[60]">
+                        <SelectItem value="none">—</SelectItem>
+                        <SelectItem value="month">{txt.thisMonth}</SelectItem>
+                        <SelectItem value="quarter_back">{txt.threeMonthsAgo}</SelectItem>
+                        <SelectItem value="year_start">{txt.yearStart}</SelectItem>
+                        <SelectItem value="custom">{txt.custom}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   )}
                 </div>
                 <div className="flex flex-col gap-1 min-w-[160px]">
-                  <Label className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground">{txt.to}</Label>
-                  <Select value={toPreset} onValueChange={(v) => { setToPreset(v as any); }}>
-                    <SelectTrigger className="h-8 text-xs font-light"><SelectValue placeholder="—" /></SelectTrigger>
-                    <SelectContent className="z-[60]">
-                      <SelectItem value="none">—</SelectItem>
-                      <SelectItem value="month">{txt.thisMonth}</SelectItem>
-                      <SelectItem value="quarter">{txt.next3Months}</SelectItem>
-                      <SelectItem value="year_end">{txt.yearEnd}</SelectItem>
-                      <SelectItem value="custom">{txt.custom}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {toPreset === "custom" && (
-                    <DateField value={toDate} onChange={(v) => { setToDate(v); if (!v) setToPreset("none"); }} locale={studioFmt.locale} placeholder="—" allowClear />
+                  <div className="flex items-center justify-between h-3">
+                    <Label className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground">{txt.to}</Label>
+                    {toPreset === "custom" && (
+                      <button
+                        type="button"
+                        onClick={() => { setToPreset("none"); setToDate(""); }}
+                        className="text-[9px] tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {txt.presets}
+                      </button>
+                    )}
+                  </div>
+                  {toPreset === "custom" ? (
+                    <DateField
+                      value={toDate}
+                      onChange={(v) => { setToDate(v); }}
+                      locale={studioFmt.locale}
+                      placeholder={txt.pickDate}
+                      allowClear
+                      compact
+                    />
+                  ) : (
+                    <Select value={toPreset} onValueChange={(v) => { setToPreset(v as any); }}>
+                      <SelectTrigger className="h-8 text-xs font-light"><SelectValue placeholder="—" /></SelectTrigger>
+                      <SelectContent className="z-[60]">
+                        <SelectItem value="none">—</SelectItem>
+                        <SelectItem value="month">{txt.thisMonth}</SelectItem>
+                        <SelectItem value="quarter">{txt.next3Months}</SelectItem>
+                        <SelectItem value="year_end">{txt.yearEnd}</SelectItem>
+                        <SelectItem value="custom">{txt.custom}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   )}
                 </div>
+
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
