@@ -751,10 +751,10 @@ export default function FinancePayables() {
                 <Label className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">
                   {t.finance.paidAt}
                 </Label>
-                <Input
-                  type="date"
+                <DateField
                   value={form.paid_at}
-                  onChange={(e) => setForm({ ...form, paid_at: e.target.value })}
+                  onChange={(v) => setForm({ ...form, paid_at: v })}
+                  locale={studioFmt.locale}
                 />
               </div>
             )}
