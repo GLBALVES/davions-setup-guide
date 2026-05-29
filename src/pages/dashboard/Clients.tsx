@@ -62,6 +62,21 @@ export default function Clients() {
   const cl = t.clients;
   const [search, setSearch] = useState("");
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: importedClients = [] } = useQuery<any[]>({
+    queryKey: ["clients-imported", photographerId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("clients")
+        .select("email, full_name, created_at")
+        .eq("photographer_id", photographerId!);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!photographerId,
+  });
 
   const { data: bookings = [], isLoading } = useQuery<RawBooking[]>({
     queryKey: ["clients-bookings", photographerId],
