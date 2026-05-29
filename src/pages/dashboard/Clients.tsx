@@ -64,6 +64,8 @@ export default function Clients() {
   const [search, setSearch] = useState("");
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<"recent" | "oldest" | "nameAZ" | "nameZA" | "spentHigh" | "spentLow" | "mostBookings">("recent");
+  const [filterBy, setFilterBy] = useState<"all" | "returning" | "withBookings" | "noBookings" | "paying">("all");
   const queryClient = useQueryClient();
 
   const { data: importedClients = [] } = useQuery<any[]>({
