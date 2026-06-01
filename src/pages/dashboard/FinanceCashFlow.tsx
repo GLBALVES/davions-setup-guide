@@ -4,14 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet } from "lucide-react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from "recharts";
-import { format, startOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
+import { format, startOfMonth, eachMonthOfInterval, subMonths, addMonths, isBefore, isSameMonth } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getBillableTaxRate } from "@/lib/tax-utils";
-import { fetchInvoiceFinance, sumPaidByMonth, sumOutstandingByMonth, type PaidInvoice, type OutstandingInvoice } from "@/lib/project-invoices-finance";
+import { fetchInvoiceFinance, type PaidInvoice, type OutstandingInvoice } from "@/lib/project-invoices-finance";
 import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
 import { useStudioCurrency } from "@/hooks/useStudioCurrency";
 
@@ -28,6 +28,13 @@ interface BookingRow {
   business_country: string | null;
 }
 
+interface ExpenseRow {
+  amount_cents: number;
+  due_date: string | null;
+  paid_at: string | null;
+  status: string | null;
+}
+
 function calcTotal(r: BookingRow) {
   const base = r.session_price + r.extras_total;
   const taxRate = getBillableTaxRate(r.tax_rate, r.business_country);
@@ -41,57 +48,126 @@ function calcPaid(r: BookingRow) {
   return (r.deposit_type === "percent" || r.deposit_type === "percentage") ? total * (r.deposit_amount / 100) : r.deposit_amount;
 }
 function calcBalance(r: BookingRow) { return calcTotal(r) - calcPaid(r); }
+
+interface MonthRow {
+  month: string;
+  label: string;
+  inflows: number;
+  outflows: number;
+  net: number;
+  balance: number;
+  isFuture: boolean;
+}
+
 function buildMonths(
   rows: BookingRow[],
-  paid: PaidInvoice[],
-  outstanding: OutstandingInvoice[],
-  n: number,
-) {
+  paidInv: PaidInvoice[],
+  outstandingInv: OutstandingInvoice[],
+  expenses: ExpenseRow[],
+  pastN: number,
+  futureN: number,
+): MonthRow[] {
   const now = new Date();
-  const months = eachMonthOfInterval({ start: subMonths(startOfMonth(now), n - 1), end: startOfMonth(now) });
+  const currentMonth = startOfMonth(now);
+  const months = eachMonthOfInterval({
+    start: subMonths(currentMonth, pastN),
+    end: addMonths(currentMonth, futureN),
+  });
+
+  let running = 0;
   return months.map((m) => {
     const ms = format(m, "yyyy-MM");
-    const monthRows = rows.filter((r) => (r.booked_date || r.created_at).startsWith(ms));
-    const collected = monthRows.reduce((s, r) => s + calcPaid(r), 0) + sumPaidByMonth(paid, ms);
-    const outstandingTotal = monthRows.reduce((s, r) => s + calcBalance(r), 0) + sumOutstandingByMonth(outstanding, ms);
-    const net = collected;
-    return { month: format(m, "MMM yyyy"), label: format(m, "MMM"), collected, outstanding: outstandingTotal, net };
+    const isFuture = isBefore(currentMonth, m); // strictly future
+
+    let inflows = 0;
+    let outflows = 0;
+
+    if (!isFuture) {
+      // Realized (past + current month): use actual paid timestamps
+      inflows += rows
+        .filter((r) => (r.booked_date || r.created_at).startsWith(ms))
+        .reduce((s, r) => s + calcPaid(r), 0);
+      inflows += paidInv
+        .filter((p) => (p.paid_at ?? "").startsWith(ms))
+        .reduce((s, p) => s + p.paid_cents, 0);
+      outflows += expenses
+        .filter((e) => (e.paid_at ?? "").startsWith(ms))
+        .reduce((s, e) => s + (e.amount_cents ?? 0), 0);
+    } else {
+      // Future: expected (outstanding balances due that month)
+      inflows += rows
+        .filter((r) => (r.booked_date || "").startsWith(ms))
+        .reduce((s, r) => s + calcBalance(r), 0);
+      inflows += outstandingInv
+        .filter((p) => (p.due_date || p.created_at).startsWith(ms))
+        .reduce((s, p) => s + p.balance_cents, 0);
+      outflows += expenses
+        .filter((e) => !e.paid_at && (e.due_date ?? "").startsWith(ms))
+        .reduce((s, e) => s + (e.amount_cents ?? 0), 0);
+    }
+
+    const net = inflows - outflows;
+    running += net;
+    return {
+      month: format(m, "MMM yyyy"),
+      label: format(m, "MMM"),
+      inflows,
+      outflows,
+      net,
+      balance: running,
+      isFuture: isFuture || isSameMonth(m, currentMonth),
+    };
   });
 }
 
 function ChartTooltip({ active, payload, label, fmt }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="border border-border bg-background px-3 py-2 text-xs shadow-sm space-y-1">
+    <div className="border border-border bg-background px-3 py-2 text-xs shadow-sm space-y-1 min-w-[180px]">
       <p className="text-[10px] tracking-wide uppercase text-muted-foreground mb-1">{label}</p>
       {payload.map((p: any) => (
         <p key={p.dataKey} className="text-foreground flex justify-between gap-4">
           <span className="text-muted-foreground capitalize">{p.name}</span>
-          <span>{fmt(p.value)}</span>
+          <span className="tabular-nums">{fmt(Math.abs(p.value))}</span>
         </p>
       ))}
     </div>
   );
 }
 
+const txt = {
+  en: { inflows: "Inflows", outflows: "Outflows", balance: "Balance", projected: "Projected", realized: "Realized", endBalance: "Projected end balance", today: "Today" },
+  "pt-BR": { inflows: "Entradas", outflows: "Saídas", balance: "Saldo", projected: "Previsto", realized: "Realizado", endBalance: "Saldo final projetado", today: "Hoje" },
+  es: { inflows: "Ingresos", outflows: "Salidas", balance: "Saldo", projected: "Previsto", realized: "Realizado", endBalance: "Saldo final proyectado", today: "Hoy" },
+} as const;
+
 export default function FinanceCashFlow() {
   const { user, signOut } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const L = (txt as any)[language] ?? txt.en;
   const { fmt, symbol } = useStudioCurrency();
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [paidInvoices, setPaidInvoices] = useState<PaidInvoice[]>([]);
   const [outstandingInvoices, setOutstandingInvoices] = useState<OutstandingInvoice[]>([]);
+  const [expenses, setExpenses] = useState<ExpenseRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [range, setRange] = useState<6 | 12>(12);
+  const [range, setRange] = useState<6 | 12>(6);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from("bookings")
-        .select(`created_at, booked_date, payment_status, extras_total, sessions(price, deposit_enabled, deposit_amount, deposit_type, tax_rate), photographers(business_country)`)
-        .eq("photographer_id", user.id);
+      const [{ data }, inv, { data: exp }] = await Promise.all([
+        supabase
+          .from("bookings")
+          .select(`created_at, booked_date, payment_status, extras_total, sessions(price, deposit_enabled, deposit_amount, deposit_type, tax_rate), photographers(business_country)`)
+          .eq("photographer_id", user.id),
+        fetchInvoiceFinance(user.id),
+        supabase
+          .from("expenses")
+          .select("amount_cents, due_date, paid_at, status")
+          .eq("photographer_id", user.id),
+      ]);
       if (data) {
         setRows((data as any[]).map((b) => ({
           created_at: b.created_at,
@@ -106,16 +182,21 @@ export default function FinanceCashFlow() {
           business_country: b.photographers?.business_country ?? null,
         })));
       }
-      const inv = await fetchInvoiceFinance(user.id);
       setPaidInvoices(inv.paid);
       setOutstandingInvoices(inv.outstanding);
+      setExpenses((exp as ExpenseRow[]) ?? []);
       setLoading(false);
     })();
   }, [user]);
 
-  const months = buildMonths(rows, paidInvoices, outstandingInvoices, range);
-  const totalCollected = months.reduce((s, m) => s + m.collected, 0);
-  const totalOutstanding = months.reduce((s, m) => s + m.outstanding, 0);
+  const months = buildMonths(rows, paidInvoices, outstandingInvoices, expenses, range, range);
+  const totalInflows = months.reduce((s, m) => s + m.inflows, 0);
+  const totalOutflows = months.reduce((s, m) => s + m.outflows, 0);
+  const endBalance = months[months.length - 1]?.balance ?? 0;
+
+  // Shift outflows negative for chart visualization
+  const chartData = months.map((m) => ({ ...m, outflowsNeg: -m.outflows }));
+  const todayLabel = months.find((m) => !m.isFuture || m.balance === endBalance) ? format(startOfMonth(new Date()), "MMM") : "";
 
   return (
     <SidebarProvider>
@@ -133,6 +214,7 @@ export default function FinanceCashFlow() {
                     <span className="inline-block w-6 h-px bg-border" />{t.finance.sectionLabel}
                   </p>
                   <h1 className="text-2xl font-light tracking-wide">{t.finance.cashFlow}</h1>
+                  <p className="text-xs text-muted-foreground/70 mt-1 font-light">±{range} {t.finance.months}</p>
                 </div>
                 <div className="flex items-center gap-1 border border-border">
                   {([6, 12] as const).map((r) => (
@@ -141,32 +223,37 @@ export default function FinanceCashFlow() {
                       onClick={() => setRange(r)}
                       className={`px-4 py-1.5 text-[10px] tracking-widest uppercase font-light transition-colors ${range === r ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
                     >
-                      {r}M
+                      ±{r}M
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="border border-foreground p-5 flex flex-col gap-2">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="border border-border p-5 flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.finance.collected}</p>
+                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{L.inflows}</p>
                     <TrendingUp className="h-3.5 w-3.5 text-muted-foreground/30" />
                   </div>
-                  <p className="text-xl font-light tabular-nums">{fmt(totalCollected)}</p>
-                  <p className="text-[10px] text-muted-foreground/60">{t.finance.last} {range} {t.finance.months}</p>
+                  <p className="text-xl font-light tabular-nums">{fmt(totalInflows)}</p>
                 </div>
                 <div className="border border-border p-5 flex flex-col gap-2">
-                  <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.finance.outstanding}</p>
-                  <p className="text-xl font-light tabular-nums">{fmt(totalOutstanding)}</p>
-                  <p className="text-[10px] text-muted-foreground/60">{t.finance.balanceNotYetPaid}</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{L.outflows}</p>
+                    <TrendingDown className="h-3.5 w-3.5 text-muted-foreground/30" />
+                  </div>
+                  <p className="text-xl font-light tabular-nums">{fmt(totalOutflows)}</p>
                 </div>
                 <div className="border border-border p-5 flex flex-col gap-2">
-                  <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.finance.collectionRate}</p>
-                  <p className="text-xl font-light tabular-nums">
-                    {totalCollected + totalOutstanding === 0 ? "—" : `${((totalCollected / (totalCollected + totalOutstanding)) * 100).toFixed(0)}%`}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground/60">{t.finance.paidDivTotal}</p>
+                  <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.finance.net}</p>
+                  <p className={`text-xl font-light tabular-nums ${totalInflows - totalOutflows < 0 ? "text-red-600" : ""}`}>{fmt(totalInflows - totalOutflows)}</p>
+                </div>
+                <div className="border border-foreground p-5 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{L.endBalance}</p>
+                    <Wallet className="h-3.5 w-3.5 text-muted-foreground/30" />
+                  </div>
+                  <p className={`text-xl font-light tabular-nums ${endBalance < 0 ? "text-red-600" : ""}`}>{fmt(endBalance)}</p>
                 </div>
               </div>
 
@@ -175,23 +262,27 @@ export default function FinanceCashFlow() {
               ) : (
                 <>
                   <div className="border border-border p-5 flex flex-col gap-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
                       <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t.finance.monthlyCashFlow}</p>
                       <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
-                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-foreground inline-block" />{t.finance.collected}</span>
-                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-muted-foreground/30 inline-block" />{t.finance.outstanding}</span>
+                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-foreground inline-block" />{L.inflows}</span>
+                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-muted-foreground/40 inline-block" />{L.outflows}</span>
+                        <span className="flex items-center gap-1.5"><span className="w-3 h-[2px] bg-yellow-600 inline-block" />{L.balance}</span>
                       </div>
                     </div>
-                    <div className="h-64">
+                    <div className="h-72">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={months} barSize={12} barCategoryGap="30%">
+                        <ComposedChart data={chartData} barSize={10} barCategoryGap="25%">
                           <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                           <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                          <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${symbol}${(v / 100).toFixed(0)}`} width={52} />
+                          <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${symbol}${(v / 100).toFixed(0)}`} width={56} />
+                          <ReferenceLine y={0} stroke="hsl(var(--border))" />
+                          {todayLabel && <ReferenceLine x={todayLabel} stroke="hsl(var(--muted-foreground)/0.5)" strokeDasharray="2 4" label={{ value: L.today, fontSize: 9, fill: "hsl(var(--muted-foreground))", position: "insideTopRight" }} />}
                           <Tooltip content={<ChartTooltip fmt={fmt} />} cursor={{ fill: "hsl(var(--muted)/0.4)" }} />
-                          <Bar dataKey="collected" name={t.finance.collected} stackId="a" fill="hsl(var(--foreground))" radius={[0, 0, 0, 0]} />
-                          <Bar dataKey="outstanding" name={t.finance.outstanding} stackId="a" fill="hsl(var(--muted-foreground)/0.25)" radius={[2, 2, 0, 0]} />
-                        </BarChart>
+                          <Bar dataKey="inflows" name={L.inflows} fill="hsl(var(--foreground))" radius={[2, 2, 0, 0]} />
+                          <Bar dataKey="outflowsNeg" name={L.outflows} fill="hsl(var(--muted-foreground)/0.45)" radius={[0, 0, 2, 2]} />
+                          <Line type="monotone" dataKey="balance" name={L.balance} stroke="hsl(45 90% 45%)" strokeWidth={2} dot={{ r: 3, fill: "hsl(45 90% 45%)" }} />
+                        </ComposedChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
@@ -200,18 +291,22 @@ export default function FinanceCashFlow() {
                     <table className="w-full text-xs font-light">
                       <thead>
                         <tr className="border-b border-border bg-muted/20">
-                          {[t.finance.month, t.finance.collected, t.finance.outstanding, t.finance.net].map((h) => (
-                            <th key={h} className="text-left px-4 py-3 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{h}</th>
+                          {[t.finance.month, L.inflows, L.outflows, t.finance.net, L.balance, ""].map((h, i) => (
+                            <th key={i} className="text-left px-4 py-3 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{h}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {[...months].reverse().map((m) => (
-                          <tr key={m.month} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                        {months.map((m) => (
+                          <tr key={m.month} className={`border-b border-border last:border-0 hover:bg-muted/30 transition-colors ${m.isFuture ? "text-muted-foreground" : ""}`}>
                             <td className="px-4 py-3 font-normal">{m.month}</td>
-                            <td className="px-4 py-3 tabular-nums">{fmt(m.collected)}</td>
-                            <td className="px-4 py-3 tabular-nums text-yellow-600">{m.outstanding > 0 ? fmt(m.outstanding) : <span className="text-muted-foreground/40">—</span>}</td>
-                            <td className="px-4 py-3 tabular-nums font-normal">{fmt(m.net)}</td>
+                            <td className="px-4 py-3 tabular-nums">{m.inflows > 0 ? fmt(m.inflows) : <span className="text-muted-foreground/40">—</span>}</td>
+                            <td className="px-4 py-3 tabular-nums">{m.outflows > 0 ? fmt(m.outflows) : <span className="text-muted-foreground/40">—</span>}</td>
+                            <td className={`px-4 py-3 tabular-nums ${m.net < 0 ? "text-red-600" : ""}`}>{fmt(m.net)}</td>
+                            <td className={`px-4 py-3 tabular-nums font-normal ${m.balance < 0 ? "text-red-600" : "text-foreground"}`}>{fmt(m.balance)}</td>
+                            <td className="px-4 py-3 text-[10px] tracking-widest uppercase">
+                              <span className={m.isFuture ? "text-muted-foreground/60" : "text-foreground/60"}>{m.isFuture ? L.projected : L.realized}</span>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
