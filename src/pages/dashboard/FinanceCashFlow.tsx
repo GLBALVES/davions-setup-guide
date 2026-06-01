@@ -143,8 +143,8 @@ const txt = {
 
 export default function FinanceCashFlow() {
   const { user, signOut } = useAuth();
-  const { t, language } = useLanguage();
-  const L = (txt as any)[language] ?? txt.en;
+  const { t, lang } = useLanguage();
+  const L = lang === "pt" ? txt["pt-BR"] : lang === "es" ? txt.es : txt.en;
   const { fmt, symbol } = useStudioCurrency();
   const [rows, setRows] = useState<BookingRow[]>([]);
   const [paidInvoices, setPaidInvoices] = useState<PaidInvoice[]>([]);
