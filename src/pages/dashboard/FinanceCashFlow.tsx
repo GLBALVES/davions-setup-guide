@@ -8,12 +8,19 @@ import { TrendingUp, TrendingDown, Wallet } from "lucide-react";
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from "recharts";
-import { format, startOfMonth, eachMonthOfInterval, subMonths, addMonths, isBefore, isSameMonth } from "date-fns";
+import {
+  format, startOfDay, startOfWeek, startOfMonth,
+  eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval,
+  subDays, subWeeks, subMonths, addDays, addWeeks, addMonths,
+  endOfDay, endOfWeek, endOfMonth, isBefore, isWithinInterval, isSameDay,
+} from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getBillableTaxRate } from "@/lib/tax-utils";
 import { fetchInvoiceFinance, type PaidInvoice, type OutstandingInvoice } from "@/lib/project-invoices-finance";
 import { FinancePanelTabs } from "@/components/dashboard/FinancePanelTabs";
 import { useStudioCurrency } from "@/hooks/useStudioCurrency";
+
+type Granularity = "day" | "week" | "month";
 
 interface BookingRow {
   created_at: string;
@@ -49,73 +56,109 @@ function calcPaid(r: BookingRow) {
 }
 function calcBalance(r: BookingRow) { return calcTotal(r) - calcPaid(r); }
 
-interface MonthRow {
-  month: string;
+interface PeriodRow {
+  key: string;
   label: string;
+  fullLabel: string;
   inflows: number;
   outflows: number;
   net: number;
   balance: number;
   isFuture: boolean;
+  isCurrent: boolean;
 }
 
-function buildMonths(
+function parseDate(s: string | null | undefined): Date | null {
+  if (!s) return null;
+  // Treat date-only strings as local to avoid TZ drift
+  const onlyDate = /^\d{4}-\d{2}-\d{2}$/.test(s);
+  const d = new Date(onlyDate ? s + "T00:00:00" : s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function buildPeriods(
+  granularity: Granularity,
   rows: BookingRow[],
   paidInv: PaidInvoice[],
   outstandingInv: OutstandingInvoice[],
   expenses: ExpenseRow[],
   pastN: number,
   futureN: number,
-): MonthRow[] {
+): PeriodRow[] {
   const now = new Date();
-  const currentMonth = startOfMonth(now);
-  const months = eachMonthOfInterval({
-    start: subMonths(currentMonth, pastN),
-    end: addMonths(currentMonth, futureN),
-  });
+  let starts: Date[];
+  let rangeFor: (d: Date) => { start: Date; end: Date };
+  let currentStart: Date;
+  let labelFmt: string;
+  let fullFmt: string;
+
+  if (granularity === "day") {
+    currentStart = startOfDay(now);
+    starts = eachDayOfInterval({ start: subDays(currentStart, pastN), end: addDays(currentStart, futureN) });
+    rangeFor = (d) => ({ start: startOfDay(d), end: endOfDay(d) });
+    labelFmt = "d/MM";
+    fullFmt = "MMM d, yyyy";
+  } else if (granularity === "week") {
+    currentStart = startOfWeek(now, { weekStartsOn: 1 });
+    starts = eachWeekOfInterval({ start: subWeeks(currentStart, pastN), end: addWeeks(currentStart, futureN) }, { weekStartsOn: 1 });
+    rangeFor = (d) => ({ start: startOfWeek(d, { weekStartsOn: 1 }), end: endOfWeek(d, { weekStartsOn: 1 }) });
+    labelFmt = "d/MM";
+    fullFmt = "'Sem.' w · MMM d";
+  } else {
+    currentStart = startOfMonth(now);
+    starts = eachMonthOfInterval({ start: subMonths(currentStart, pastN), end: addMonths(currentStart, futureN) });
+    rangeFor = (d) => ({ start: startOfMonth(d), end: endOfMonth(d) });
+    labelFmt = "MMM";
+    fullFmt = "MMM yyyy";
+  }
 
   let running = 0;
-  return months.map((m) => {
-    const ms = format(m, "yyyy-MM");
-    const isFuture = isBefore(currentMonth, m); // strictly future
+  return starts.map((p) => {
+    const { start, end } = rangeFor(p);
+    const isCurrent = isWithinInterval(now, { start, end });
+    const isFuture = isBefore(currentStart, p) && !isCurrent;
+    const inRange = (s: string | null | undefined) => {
+      const d = parseDate(s);
+      return d ? isWithinInterval(d, { start, end }) : false;
+    };
 
     let inflows = 0;
     let outflows = 0;
 
     if (!isFuture) {
-      // Realized (past + current month): use actual paid timestamps
       inflows += rows
-        .filter((r) => (r.booked_date || r.created_at).startsWith(ms))
+        .filter((r) => inRange(r.booked_date || r.created_at))
         .reduce((s, r) => s + calcPaid(r), 0);
       inflows += paidInv
-        .filter((p) => (p.paid_at ?? "").startsWith(ms))
+        .filter((p) => inRange(p.paid_at))
         .reduce((s, p) => s + p.paid_cents, 0);
       outflows += expenses
-        .filter((e) => (e.paid_at ?? "").startsWith(ms))
+        .filter((e) => inRange(e.paid_at))
         .reduce((s, e) => s + (e.amount_cents ?? 0), 0);
     } else {
-      // Future: expected (outstanding balances due that month)
       inflows += rows
-        .filter((r) => (r.booked_date || "").startsWith(ms))
+        .filter((r) => inRange(r.booked_date))
         .reduce((s, r) => s + calcBalance(r), 0);
       inflows += outstandingInv
-        .filter((p) => (p.due_date || p.created_at).startsWith(ms))
+        .filter((p) => inRange(p.due_date || p.created_at))
         .reduce((s, p) => s + p.balance_cents, 0);
       outflows += expenses
-        .filter((e) => !e.paid_at && (e.due_date ?? "").startsWith(ms))
+        .filter((e) => !e.paid_at && inRange(e.due_date))
         .reduce((s, e) => s + (e.amount_cents ?? 0), 0);
     }
 
     const net = inflows - outflows;
     running += net;
     return {
-      month: format(m, "MMM yyyy"),
-      label: format(m, "MMM"),
+      key: format(p, "yyyy-MM-dd"),
+      label: format(p, labelFmt),
+      fullLabel: format(p, fullFmt),
       inflows,
       outflows,
       net,
       balance: running,
-      isFuture: isFuture || isSameMonth(m, currentMonth),
+      isFuture: isFuture || isCurrent,
+      isCurrent,
     };
   });
 }
@@ -136,10 +179,16 @@ function ChartTooltip({ active, payload, label, fmt }: any) {
 }
 
 const txt = {
-  en: { inflows: "Inflows", outflows: "Outflows", balance: "Balance", projected: "Projected", realized: "Realized", endBalance: "Projected end balance", today: "Today" },
-  "pt-BR": { inflows: "Entradas", outflows: "Saídas", balance: "Saldo", projected: "Previsto", realized: "Realizado", endBalance: "Saldo final projetado", today: "Hoje" },
-  es: { inflows: "Ingresos", outflows: "Salidas", balance: "Saldo", projected: "Previsto", realized: "Realizado", endBalance: "Saldo final proyectado", today: "Hoy" },
+  en: { inflows: "Inflows", outflows: "Outflows", balance: "Balance", projected: "Projected", realized: "Realized", endBalance: "Projected end balance", today: "Today", daily: "Daily", weekly: "Weekly", monthly: "Monthly", period: "Period", days: "days", weeks: "weeks", months: "months" },
+  "pt-BR": { inflows: "Entradas", outflows: "Saídas", balance: "Saldo", projected: "Previsto", realized: "Realizado", endBalance: "Saldo final projetado", today: "Hoje", daily: "Diário", weekly: "Semanal", monthly: "Mensal", period: "Período", days: "dias", weeks: "semanas", months: "meses" },
+  es: { inflows: "Ingresos", outflows: "Salidas", balance: "Saldo", projected: "Previsto", realized: "Realizado", endBalance: "Saldo final proyectado", today: "Hoy", daily: "Diario", weekly: "Semanal", monthly: "Mensual", period: "Período", days: "días", weeks: "semanas", months: "meses" },
 } as const;
+
+const RANGE_OPTIONS: Record<Granularity, { short: number; long: number; unitKey: "days" | "weeks" | "months" }> = {
+  day: { short: 14, long: 30, unitKey: "days" },
+  week: { short: 8, long: 16, unitKey: "weeks" },
+  month: { short: 6, long: 12, unitKey: "months" },
+};
 
 export default function FinanceCashFlow() {
   const { user, signOut } = useAuth();
@@ -151,7 +200,8 @@ export default function FinanceCashFlow() {
   const [outstandingInvoices, setOutstandingInvoices] = useState<OutstandingInvoice[]>([]);
   const [expenses, setExpenses] = useState<ExpenseRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [range, setRange] = useState<6 | 12>(6);
+  const [granularity, setGranularity] = useState<Granularity>("month");
+  const [rangeMode, setRangeMode] = useState<"short" | "long">("short");
 
   useEffect(() => {
     if (!user) return;
@@ -189,14 +239,22 @@ export default function FinanceCashFlow() {
     })();
   }, [user]);
 
-  const months = buildMonths(rows, paidInvoices, outstandingInvoices, expenses, range, range);
-  const totalInflows = months.reduce((s, m) => s + m.inflows, 0);
-  const totalOutflows = months.reduce((s, m) => s + m.outflows, 0);
-  const endBalance = months[months.length - 1]?.balance ?? 0;
+  const opt = RANGE_OPTIONS[granularity];
+  const rangeN = rangeMode === "short" ? opt.short : opt.long;
+  const periods = buildPeriods(granularity, rows, paidInvoices, outstandingInvoices, expenses, rangeN, rangeN);
+  const totalInflows = periods.reduce((s, m) => s + m.inflows, 0);
+  const totalOutflows = periods.reduce((s, m) => s + m.outflows, 0);
+  const endBalance = periods[periods.length - 1]?.balance ?? 0;
 
-  // Shift outflows negative for chart visualization
-  const chartData = months.map((m) => ({ ...m, outflowsNeg: -m.outflows }));
-  const todayLabel = months.find((m) => !m.isFuture || m.balance === endBalance) ? format(startOfMonth(new Date()), "MMM") : "";
+  const chartData = periods.map((m) => ({ ...m, outflowsNeg: -m.outflows }));
+  const todayPeriod = periods.find((m) => m.isCurrent);
+  const todayLabel = todayPeriod?.label ?? "";
+
+  const GRANULARITIES: { key: Granularity; label: string }[] = [
+    { key: "day", label: L.daily },
+    { key: "week", label: L.weekly },
+    { key: "month", label: L.monthly },
+  ];
 
   return (
     <SidebarProvider>
@@ -214,18 +272,31 @@ export default function FinanceCashFlow() {
                     <span className="inline-block w-6 h-px bg-border" />{t.finance.sectionLabel}
                   </p>
                   <h1 className="text-2xl font-light tracking-wide">{t.finance.cashFlow}</h1>
-                  <p className="text-xs text-muted-foreground/70 mt-1 font-light">±{range} {t.finance.months}</p>
+                  <p className="text-xs text-muted-foreground/70 mt-1 font-light">±{rangeN} {L[opt.unitKey]}</p>
                 </div>
-                <div className="flex items-center gap-1 border border-border">
-                  {([6, 12] as const).map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => setRange(r)}
-                      className={`px-4 py-1.5 text-[10px] tracking-widest uppercase font-light transition-colors ${range === r ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
-                    >
-                      ±{r}M
-                    </button>
-                  ))}
+                <div className="flex flex-col items-end gap-2">
+                  <div className="flex items-center border border-border">
+                    {GRANULARITIES.map((g) => (
+                      <button
+                        key={g.key}
+                        onClick={() => { setGranularity(g.key); setRangeMode("short"); }}
+                        className={`px-4 py-1.5 text-[10px] tracking-widest uppercase font-light transition-colors border-r border-border last:border-r-0 ${granularity === g.key ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
+                      >
+                        {g.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center border border-border">
+                    {(["short", "long"] as const).map((r) => (
+                      <button
+                        key={r}
+                        onClick={() => setRangeMode(r)}
+                        className={`px-4 py-1.5 text-[10px] tracking-widest uppercase font-light transition-colors border-r border-border last:border-r-0 ${rangeMode === r ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
+                      >
+                        ±{r === "short" ? opt.short : opt.long}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -272,16 +343,16 @@ export default function FinanceCashFlow() {
                     </div>
                     <div className="h-72">
                       <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart data={chartData} barSize={10} barCategoryGap="25%">
+                        <ComposedChart data={chartData} barSize={granularity === "day" ? 6 : 10} barCategoryGap="25%">
                           <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
-                          <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                          <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
                           <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${symbol}${(v / 100).toFixed(0)}`} width={56} />
                           <ReferenceLine y={0} stroke="hsl(var(--border))" />
                           {todayLabel && <ReferenceLine x={todayLabel} stroke="hsl(var(--muted-foreground)/0.5)" strokeDasharray="2 4" label={{ value: L.today, fontSize: 9, fill: "hsl(var(--muted-foreground))", position: "insideTopRight" }} />}
                           <Tooltip content={<ChartTooltip fmt={fmt} />} cursor={{ fill: "hsl(var(--muted)/0.4)" }} />
                           <Bar dataKey="inflows" name={L.inflows} fill="hsl(var(--foreground))" radius={[2, 2, 0, 0]} />
                           <Bar dataKey="outflowsNeg" name={L.outflows} fill="hsl(var(--muted-foreground)/0.45)" radius={[0, 0, 2, 2]} />
-                          <Line type="monotone" dataKey="balance" name={L.balance} stroke="hsl(45 90% 45%)" strokeWidth={2} dot={{ r: 3, fill: "hsl(45 90% 45%)" }} />
+                          <Line type="monotone" dataKey="balance" name={L.balance} stroke="hsl(45 90% 45%)" strokeWidth={2} dot={{ r: granularity === "day" ? 1.5 : 3, fill: "hsl(45 90% 45%)" }} />
                         </ComposedChart>
                       </ResponsiveContainer>
                     </div>
@@ -291,15 +362,15 @@ export default function FinanceCashFlow() {
                     <table className="w-full text-xs font-light">
                       <thead>
                         <tr className="border-b border-border bg-muted/20">
-                          {[t.finance.month, L.inflows, L.outflows, t.finance.net, L.balance, ""].map((h, i) => (
+                          {[L.period, L.inflows, L.outflows, t.finance.net, L.balance, ""].map((h, i) => (
                             <th key={i} className="text-left px-4 py-3 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-light">{h}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {months.map((m) => (
-                          <tr key={m.month} className={`border-b border-border last:border-0 hover:bg-muted/30 transition-colors ${m.isFuture ? "text-muted-foreground" : ""}`}>
-                            <td className="px-4 py-3 font-normal">{m.month}</td>
+                        {periods.map((m) => (
+                          <tr key={m.key} className={`border-b border-border last:border-0 hover:bg-muted/30 transition-colors ${m.isFuture && !m.isCurrent ? "text-muted-foreground" : ""}`}>
+                            <td className="px-4 py-3 font-normal">{m.fullLabel}</td>
                             <td className="px-4 py-3 tabular-nums">{m.inflows > 0 ? fmt(m.inflows) : <span className="text-muted-foreground/40">—</span>}</td>
                             <td className="px-4 py-3 tabular-nums">{m.outflows > 0 ? fmt(m.outflows) : <span className="text-muted-foreground/40">—</span>}</td>
                             <td className={`px-4 py-3 tabular-nums ${m.net < 0 ? "text-red-600" : ""}`}>{fmt(m.net)}</td>
